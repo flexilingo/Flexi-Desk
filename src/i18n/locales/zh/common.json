@@ -1,0 +1,131 @@
+{
+  "app": {
+    "name": "FlexiDesk",
+    "tagline": "您的桌面语言学习伙伴"
+  },
+  "nav": {
+    "dashboard": "仪表板",
+    "review": "间隔复习",
+    "reading": "阅读",
+    "tutor": "AI导师",
+    "caption": "实时字幕",
+    "pronunciation": "发音",
+    "writing": "写作",
+    "exam": "考试模拟器",
+    "podcast": "播客",
+    "settings": "设置"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "仪表板",
+      "subtitle": "您的学习概览"
+    },
+    "review": {
+      "title": "间隔复习",
+      "subtitle": "间隔重复闪卡"
+    },
+    "reading": {
+      "title": "阅读模式",
+      "subtitle": "交互式文本分析"
+    },
+    "tutor": {
+      "title": "AI导师",
+      "subtitle": "会话练习"
+    },
+    "caption": {
+      "title": "实时字幕",
+      "subtitle": "全系统字幕"
+    },
+    "pronunciation": {
+      "title": "发音实验室",
+      "subtitle": "语音练习"
+    },
+    "writing": {
+      "title": "写作教练",
+      "subtitle": "AI驱动的纠正"
+    },
+    "exam": {
+      "title": "考试模拟器",
+      "subtitle": "语言模拟测试"
+    },
+    "podcast": {
+      "title": "播客",
+      "subtitle": "从音频内容中学习"
+    },
+    "settings": {
+      "title": "设置",
+      "subtitle": "配置您的学习"
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "search": "搜索...",
+    "noResults": "未找到结果",
+    "comingSoon": "即将推出",
+    "poweredBy": "由FlexiLingo提供支持"
+  },
+  "theme": {
+    "light": "浅色",
+    "dark": "深色",
+    "system": "系统"
+  },
+  "cefr": {
+    "a1": "入门",
+    "a2": "基础",
+    "b1": "中级",
+    "b2": "中高级",
+    "c1": "高级",
+    "c2": "精通"
+  },
+  "podcast": {
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "ccLabel": "CC",
+    "noteLabel": "Note",
+    "askLena": "Ask Lena",
+    "translateLabel": "Translate",
+    "grammarLabel": "Grammar",
+    "syncLabel": "Sync",
+    "subtitleLabel": "Subtitle",
+    "focusLabel": "Focus",
+    "helpLabel": "Help",
+    "exitLabel": "Exit",
+    "subtitleSettings": "Subtitle Settings",
+    "fontSize": "Font Size",
+    "backgroundOpacity": "Background Opacity",
+    "translationAlignment": "Translation Alignment",
+    "autoPauseLabel": "Auto-pause on boundary",
+    "pauseOnWordHover": "Pause on word hover",
+    "showEstimatedCefr": "Show estimated CEFR",
+    "waitingForSubtitle": "Waiting for subtitle...",
+    "cefrBeginner": "Beginner",
+    "cefrElementary": "Elementary",
+    "cefrIntermediate": "Intermediate",
+    "cefrAdvanced": "Advanced",
+    "cefrProficiency": "Proficiency",
+    "cefrPhrase": "Phrase",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "addToDeck": "Add to Deck",
+    "startingTranscription": "Starting transcription...",
+    "transcribingSegments": "Transcribing... {{count}} segments",
+    "downloadEpisode": "Download Episode",
+    "resumePlayback": "Resume Playback",
+    "playEpisode": "Play Episode",
+    "back": "Back",
+    "transcribe": "Transcribe",
+    "transcribing": "Transcribing...",
+    "episodeInfo": "Episode Info",
+    "downloaded": "Downloaded",
+    "translate": "Translate",
+    "note": "Note"
+  }
+}

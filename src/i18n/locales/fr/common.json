@@ -1,0 +1,131 @@
+{
+  "app": {
+    "name": "FlexiDesk",
+    "tagline": "Votre compagnon linguistique de bureau"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "review": "Révision",
+    "reading": "Lecture",
+    "tutor": "Tuteur IA",
+    "caption": "Sous-titres en direct",
+    "pronunciation": "Prononciation",
+    "writing": "Écriture",
+    "exam": "Simulateur d'examen",
+    "podcast": "Podcast",
+    "settings": "Paramètres"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Tableau de bord",
+      "subtitle": "Aperçu de votre apprentissage"
+    },
+    "review": {
+      "title": "Révision",
+      "subtitle": "Cartes mémoire à répétition espacée"
+    },
+    "reading": {
+      "title": "Mode lecture",
+      "subtitle": "Analyse de texte interactive"
+    },
+    "tutor": {
+      "title": "Tuteur IA",
+      "subtitle": "Pratique de conversation"
+    },
+    "caption": {
+      "title": "Sous-titres en direct",
+      "subtitle": "Sous-titres à l'échelle du système"
+    },
+    "pronunciation": {
+      "title": "Labo de prononciation",
+      "subtitle": "Pratique orale"
+    },
+    "writing": {
+      "title": "Coach d'écriture",
+      "subtitle": "Corrections par IA"
+    },
+    "exam": {
+      "title": "Simulateur d'examen",
+      "subtitle": "Tests de langue simulés"
+    },
+    "podcast": {
+      "title": "Podcast",
+      "subtitle": "Apprendre du contenu audio"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "subtitle": "Configurer votre apprentissage"
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "search": "Rechercher...",
+    "noResults": "Aucun résultat trouvé",
+    "comingSoon": "Bientôt disponible",
+    "poweredBy": "Propulsé par FlexiLingo"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "cefr": {
+    "a1": "Débutant",
+    "a2": "Élémentaire",
+    "b1": "Intermédiaire",
+    "b2": "Intermédiaire supérieur",
+    "c1": "Avancé",
+    "c2": "Maîtrise"
+  },
+  "podcast": {
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "ccLabel": "CC",
+    "noteLabel": "Note",
+    "askLena": "Ask Lena",
+    "translateLabel": "Translate",
+    "grammarLabel": "Grammar",
+    "syncLabel": "Sync",
+    "subtitleLabel": "Subtitle",
+    "focusLabel": "Focus",
+    "helpLabel": "Help",
+    "exitLabel": "Exit",
+    "subtitleSettings": "Subtitle Settings",
+    "fontSize": "Font Size",
+    "backgroundOpacity": "Background Opacity",
+    "translationAlignment": "Translation Alignment",
+    "autoPauseLabel": "Auto-pause on boundary",
+    "pauseOnWordHover": "Pause on word hover",
+    "showEstimatedCefr": "Show estimated CEFR",
+    "waitingForSubtitle": "Waiting for subtitle...",
+    "cefrBeginner": "Beginner",
+    "cefrElementary": "Elementary",
+    "cefrIntermediate": "Intermediate",
+    "cefrAdvanced": "Advanced",
+    "cefrProficiency": "Proficiency",
+    "cefrPhrase": "Phrase",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "addToDeck": "Add to Deck",
+    "startingTranscription": "Starting transcription...",
+    "transcribingSegments": "Transcribing... {{count}} segments",
+    "downloadEpisode": "Download Episode",
+    "resumePlayback": "Resume Playback",
+    "playEpisode": "Play Episode",
+    "back": "Back",
+    "transcribe": "Transcribe",
+    "transcribing": "Transcribing...",
+    "episodeInfo": "Episode Info",
+    "downloaded": "Downloaded",
+    "translate": "Translate",
+    "note": "Note"
+  }
+}

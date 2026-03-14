@@ -1,0 +1,97 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+/* FlexiDesk Theme */
+@theme {
+  --color-primary: #0e240a;
+  --color-primary-light: #8bb7a3;
+  --color-primary-dark: #6b705c;
+  --color-accent: #c58c6e;
+  --color-accent-foreground: #fffef7;
+  --color-success: #8bb7a3;
+  --color-error: #ef4444;
+  --color-warning: #c58c6e;
+  --color-info: #6b705c;
+
+  --color-background: #fffef7;
+  --color-foreground: #1a1a1a;
+  --color-card: #ffffff;
+  --color-card-foreground: #1a1a1a;
+  --color-muted: #f5f5f0;
+  --color-muted-foreground: #6b705c;
+  --color-border: #e5e2d9;
+
+  --color-sidebar: #f5f5f0;
+  --color-sidebar-foreground: #1a1a1a;
+  --color-sidebar-accent: #8bb7a3;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* Dark mode overrides */
+@theme {
+  --color-primary-dark-mode: #8bb7a3;
+  --color-primary-light-dark-mode: #a8ccbb;
+}
+
+.dark {
+  --color-primary: #8bb7a3;
+  --color-primary-light: #a8ccbb;
+  --color-primary-dark: #6b705c;
+  --color-accent: #c58c6e;
+  --color-accent-foreground: #fffef7;
+
+  --color-background: #0f172a;
+  --color-foreground: #f1f5f9;
+  --color-card: #1e293b;
+  --color-card-foreground: #f1f5f9;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #334155;
+
+  --color-sidebar: #0f172a;
+  --color-sidebar-foreground: #f1f5f9;
+  --color-sidebar-accent: #8bb7a3;
+}
+
+/* CEFR level colors */
+@theme {
+  --color-cefr-a1: #22c55e;
+  --color-cefr-a2: #22c55e;
+  --color-cefr-b1: #eab308;
+  --color-cefr-b2: #eab308;
+  --color-cefr-c1: #ef4444;
+  --color-cefr-c2: #ef4444;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1a1a1a;
+  --color-destructive: #ef4444;
+  --color-primary-foreground: #fffef7;
+}
+
+.dark {
+  --color-popover: #1e293b;
+  --color-popover-foreground: #f1f5f9;
+  --color-primary-foreground: #0f172a;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Audio visualizer animation */
+@keyframes audio-visualize {
+  0%,
+  100% {
+    height: 20%;
+  }
+  50% {
+    height: 80%;
+  }
+}
+.animate-audio-visualize {
+  animation: audio-visualize 0.8s ease-in-out infinite;
+}

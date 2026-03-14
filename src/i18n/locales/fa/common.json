@@ -1,0 +1,131 @@
+{
+  "app": {
+    "name": "فلکسی‌دسک",
+    "tagline": "همراه یادگیری زبان روی دسکتاپ"
+  },
+  "nav": {
+    "dashboard": "داشبورد",
+    "review": "مرور",
+    "reading": "خواندن",
+    "tutor": "معلم هوشمند",
+    "caption": "زیرنویس زنده",
+    "pronunciation": "تلفظ",
+    "writing": "نوشتن",
+    "exam": "شبیه‌ساز آزمون",
+    "podcast": "پادکست",
+    "settings": "تنظیمات"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "داشبورد",
+      "subtitle": "نمای کلی یادگیری شما"
+    },
+    "review": {
+      "title": "مرور",
+      "subtitle": "فلش‌کارت‌های مرور فاصله‌دار"
+    },
+    "reading": {
+      "title": "حالت خواندن",
+      "subtitle": "تحلیل تعاملی متن"
+    },
+    "tutor": {
+      "title": "معلم هوشمند",
+      "subtitle": "تمرین مکالمه"
+    },
+    "caption": {
+      "title": "زیرنویس زنده",
+      "subtitle": "زیرنویس سراسری سیستم"
+    },
+    "pronunciation": {
+      "title": "آزمایشگاه تلفظ",
+      "subtitle": "تمرین گفتار"
+    },
+    "writing": {
+      "title": "مربی نوشتن",
+      "subtitle": "اصلاحات با هوش مصنوعی"
+    },
+    "exam": {
+      "title": "شبیه‌ساز آزمون",
+      "subtitle": "آزمون‌های زبان آزمایشی"
+    },
+    "podcast": {
+      "title": "پادکست",
+      "subtitle": "یادگیری از محتوای صوتی"
+    },
+    "settings": {
+      "title": "تنظیمات",
+      "subtitle": "پیکربندی یادگیری شما"
+    }
+  },
+  "common": {
+    "loading": "در حال بارگذاری...",
+    "error": "خطایی رخ داد",
+    "save": "ذخیره",
+    "cancel": "لغو",
+    "delete": "حذف",
+    "edit": "ویرایش",
+    "close": "بستن",
+    "search": "جستجو...",
+    "noResults": "نتیجه‌ای یافت نشد",
+    "comingSoon": "به زودی",
+    "poweredBy": "با قدرت فلکسی‌لینگو"
+  },
+  "theme": {
+    "light": "روشن",
+    "dark": "تاریک",
+    "system": "سیستم"
+  },
+  "cefr": {
+    "a1": "مبتدی",
+    "a2": "پایه",
+    "b1": "متوسط",
+    "b2": "بالاتر از متوسط",
+    "c1": "پیشرفته",
+    "c2": "تسلط"
+  },
+  "podcast": {
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "ccLabel": "CC",
+    "noteLabel": "Note",
+    "askLena": "Ask Lena",
+    "translateLabel": "Translate",
+    "grammarLabel": "Grammar",
+    "syncLabel": "Sync",
+    "subtitleLabel": "Subtitle",
+    "focusLabel": "Focus",
+    "helpLabel": "Help",
+    "exitLabel": "Exit",
+    "subtitleSettings": "Subtitle Settings",
+    "fontSize": "Font Size",
+    "backgroundOpacity": "Background Opacity",
+    "translationAlignment": "Translation Alignment",
+    "autoPauseLabel": "Auto-pause on boundary",
+    "pauseOnWordHover": "Pause on word hover",
+    "showEstimatedCefr": "Show estimated CEFR",
+    "waitingForSubtitle": "Waiting for subtitle...",
+    "cefrBeginner": "Beginner",
+    "cefrElementary": "Elementary",
+    "cefrIntermediate": "Intermediate",
+    "cefrAdvanced": "Advanced",
+    "cefrProficiency": "Proficiency",
+    "cefrPhrase": "Phrase",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "addToDeck": "Add to Deck",
+    "startingTranscription": "Starting transcription...",
+    "transcribingSegments": "Transcribing... {{count}} segments",
+    "downloadEpisode": "Download Episode",
+    "resumePlayback": "Resume Playback",
+    "playEpisode": "Play Episode",
+    "back": "Back",
+    "transcribe": "Transcribe",
+    "transcribing": "Transcribing...",
+    "episodeInfo": "Episode Info",
+    "downloaded": "Downloaded",
+    "translate": "Translate",
+    "note": "Note"
+  }
+}

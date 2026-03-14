@@ -1,0 +1,2 @@
+cd flexi-lingo-desk
+pnpm lint-staged

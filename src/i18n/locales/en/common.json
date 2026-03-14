@@ -1,0 +1,131 @@
+{
+  "app": {
+    "name": "FlexiDesk",
+    "tagline": "Your Desktop Language Companion"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "review": "SRS Review",
+    "reading": "Reading",
+    "tutor": "AI Tutor",
+    "caption": "Live Caption",
+    "pronunciation": "Pronunciation",
+    "writing": "Writing",
+    "exam": "Exam Simulator",
+    "podcast": "Podcast",
+    "settings": "Settings"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Your learning overview"
+    },
+    "review": {
+      "title": "SRS Review",
+      "subtitle": "Spaced repetition flashcards"
+    },
+    "reading": {
+      "title": "Reading Mode",
+      "subtitle": "Interactive text analysis"
+    },
+    "tutor": {
+      "title": "AI Tutor",
+      "subtitle": "Conversation practice"
+    },
+    "caption": {
+      "title": "Live Caption",
+      "subtitle": "System-wide subtitles"
+    },
+    "pronunciation": {
+      "title": "Pronunciation Lab",
+      "subtitle": "Speech practice"
+    },
+    "writing": {
+      "title": "Writing Coach",
+      "subtitle": "AI-powered corrections"
+    },
+    "exam": {
+      "title": "Exam Simulator",
+      "subtitle": "Mock language tests"
+    },
+    "podcast": {
+      "title": "Podcast",
+      "subtitle": "Learn from audio content"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Configure your learning"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search...",
+    "noResults": "No results found",
+    "comingSoon": "Coming soon",
+    "poweredBy": "Powered by FlexiLingo"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "cefr": {
+    "a1": "Beginner",
+    "a2": "Elementary",
+    "b1": "Intermediate",
+    "b2": "Upper Intermediate",
+    "c1": "Advanced",
+    "c2": "Mastery"
+  },
+  "podcast": {
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "ccLabel": "CC",
+    "noteLabel": "Note",
+    "askLena": "Ask Lena",
+    "translateLabel": "Translate",
+    "grammarLabel": "Grammar",
+    "syncLabel": "Sync",
+    "subtitleLabel": "Subtitle",
+    "focusLabel": "Focus",
+    "helpLabel": "Help",
+    "exitLabel": "Exit",
+    "subtitleSettings": "Subtitle Settings",
+    "fontSize": "Font Size",
+    "backgroundOpacity": "Background Opacity",
+    "translationAlignment": "Translation Alignment",
+    "autoPauseLabel": "Auto-pause on boundary",
+    "pauseOnWordHover": "Pause on word hover",
+    "showEstimatedCefr": "Show estimated CEFR",
+    "waitingForSubtitle": "Waiting for subtitle...",
+    "cefrBeginner": "Beginner",
+    "cefrElementary": "Elementary",
+    "cefrIntermediate": "Intermediate",
+    "cefrAdvanced": "Advanced",
+    "cefrProficiency": "Proficiency",
+    "cefrPhrase": "Phrase",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "addToDeck": "Add to Deck",
+    "startingTranscription": "Starting transcription...",
+    "transcribingSegments": "Transcribing... {{count}} segments",
+    "downloadEpisode": "Download Episode",
+    "resumePlayback": "Resume Playback",
+    "playEpisode": "Play Episode",
+    "back": "Back",
+    "transcribe": "Transcribe",
+    "transcribing": "Transcribing...",
+    "episodeInfo": "Episode Info",
+    "downloaded": "Downloaded",
+    "translate": "Translate",
+    "note": "Note"
+  }
+}

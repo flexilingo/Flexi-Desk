@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Tauri
+src-tauri/target/
+src-tauri/sidecars/
+
+# Test
+coverage/
+
+# Models (downloaded at runtime)
+models/

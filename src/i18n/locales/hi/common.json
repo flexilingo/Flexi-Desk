@@ -1,0 +1,131 @@
+{
+  "app": {
+    "name": "फ्लेक्सीडेस्क",
+    "tagline": "आपका डेस्कटॉप भाषा साथी"
+  },
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "review": "SRS समीक्षा",
+    "reading": "पठन",
+    "tutor": "AI ट्यूटर",
+    "caption": "लाइव कैप्शन",
+    "pronunciation": "उच्चारण",
+    "writing": "लेखन",
+    "exam": "परीक्षा सिम्युलेटर",
+    "podcast": "पॉडकास्ट",
+    "settings": "सेटिंग्स"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "डैशबोर्ड",
+      "subtitle": "आपकी सीखने की सारांश"
+    },
+    "review": {
+      "title": "SRS समीक्षा",
+      "subtitle": "अंतराल पुनरावृत्ति फ्लैशकार्ड"
+    },
+    "reading": {
+      "title": "पठन मोड",
+      "subtitle": "इंटरैक्टिव टेक्स्ट विश्लेषण"
+    },
+    "tutor": {
+      "title": "AI ट्यूटर",
+      "subtitle": "बातचीत अभ्यास"
+    },
+    "caption": {
+      "title": "लाइव कैप्शन",
+      "subtitle": "सिस्टम-व्यापी उपशीर्षक"
+    },
+    "pronunciation": {
+      "title": "उच्चारण प्रयोगशाला",
+      "subtitle": "भाषण अभ्यास"
+    },
+    "writing": {
+      "title": "लेखन कोच",
+      "subtitle": "AI-संचालित सुधार"
+    },
+    "exam": {
+      "title": "परीक्षा सिम्युलेटर",
+      "subtitle": "मॉक भाषा परीक्षण"
+    },
+    "podcast": {
+      "title": "पॉडकास्ट",
+      "subtitle": "ऑडियो सामग्री से सीखें"
+    },
+    "settings": {
+      "title": "सेटिंग्स",
+      "subtitle": "अपनी सीखने को कॉन्फ़िगर करें"
+    }
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "error": "एक त्रुटि हुई",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "close": "बंद करें",
+    "search": "खोजें...",
+    "noResults": "कोई परिणाम नहीं मिला",
+    "comingSoon": "जल्द आ रहा है",
+    "poweredBy": "फ्लेक्सीलिंगो द्वारा संचालित"
+  },
+  "theme": {
+    "light": "लाइट",
+    "dark": "डार्क",
+    "system": "सिस्टम"
+  },
+  "cefr": {
+    "a1": "शुरुआती",
+    "a2": "प्रारंभिक",
+    "b1": "मध्यवर्ती",
+    "b2": "उच्च मध्यवर्ती",
+    "c1": "उन्नत",
+    "c2": "दक्षता"
+  },
+  "podcast": {
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "ccLabel": "CC",
+    "noteLabel": "Note",
+    "askLena": "Ask Lena",
+    "translateLabel": "Translate",
+    "grammarLabel": "Grammar",
+    "syncLabel": "Sync",
+    "subtitleLabel": "Subtitle",
+    "focusLabel": "Focus",
+    "helpLabel": "Help",
+    "exitLabel": "Exit",
+    "subtitleSettings": "Subtitle Settings",
+    "fontSize": "Font Size",
+    "backgroundOpacity": "Background Opacity",
+    "translationAlignment": "Translation Alignment",
+    "autoPauseLabel": "Auto-pause on boundary",
+    "pauseOnWordHover": "Pause on word hover",
+    "showEstimatedCefr": "Show estimated CEFR",
+    "waitingForSubtitle": "Waiting for subtitle...",
+    "cefrBeginner": "Beginner",
+    "cefrElementary": "Elementary",
+    "cefrIntermediate": "Intermediate",
+    "cefrAdvanced": "Advanced",
+    "cefrProficiency": "Proficiency",
+    "cefrPhrase": "Phrase",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "addToDeck": "Add to Deck",
+    "startingTranscription": "Starting transcription...",
+    "transcribingSegments": "Transcribing... {{count}} segments",
+    "downloadEpisode": "Download Episode",
+    "resumePlayback": "Resume Playback",
+    "playEpisode": "Play Episode",
+    "back": "Back",
+    "transcribe": "Transcribe",
+    "transcribing": "Transcribing...",
+    "episodeInfo": "Episode Info",
+    "downloaded": "Downloaded",
+    "translate": "Translate",
+    "note": "Note"
+  }
+}

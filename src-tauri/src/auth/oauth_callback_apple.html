@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>FlexiLingo</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #fffef7; color: #333; }
+    .card { text-align: center; padding: 3rem; border-radius: 1rem; background: white; box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 400px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #eee; border-top-color: #8BB7A3; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .success { color: #8BB7A3; font-size: 2rem; }
+    .error { color: #ef4444; }
+    .hide { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner" id="spinner"></div>
+    <p id="status">Completing sign-in...</p>
+    <p id="done" class="hide"><span class="success">&#10003;</span><br>Signed in! You can close this window.</p>
+    <p id="fail" class="hide"><span class="error">Sign-in failed.</span><br><br>Please close this window and try again.</p>
+  </div>
+  <script>
+    (function() {
+      var hash = window.location.hash.substring(1);
+      var params = new URLSearchParams(hash);
+      var accessToken = params.get('access_token');
+      var refreshToken = params.get('refresh_token') || '';
+      if (!accessToken) {
+        document.getElementById('spinner').className = 'hide';
+        document.getElementById('status').className = 'hide';
+        document.getElementById('fail').className = '';
+        return;
+      }
+      fetch('/auth/supabase-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken })
+      }).then(function() {
+        document.getElementById('spinner').className = 'hide';
+        document.getElementById('status').className = 'hide';
+        document.getElementById('done').className = '';
+      }).catch(function() {
+        document.getElementById('spinner').className = 'hide';
+        document.getElementById('status').className = 'hide';
+        document.getElementById('fail').className = '';
+      });
+    })();
+  </script>
+</body>
+</html>
