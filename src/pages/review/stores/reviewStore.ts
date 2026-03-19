@@ -32,6 +32,7 @@ interface ReviewState {
   cardsRemaining: number;
   isLoadingCard: boolean;
   isRating: boolean;
+  cardStartTime: number | null;
 
   // Summary
   sessionComplete: boolean;
@@ -69,6 +70,7 @@ interface ReviewState {
   completeSession: () => Promise<void>;
   resetSession: () => void;
   clearError: () => void;
+  mergeDecks: (sourceDeckId: string, targetDeckId: string, deleteSource: boolean) => Promise<void>;
 }
 
 export const useReviewStore = create<ReviewState>()(
@@ -85,6 +87,7 @@ export const useReviewStore = create<ReviewState>()(
     cardsRemaining: 0,
     isLoadingCard: false,
     isRating: false,
+    cardStartTime: null,
     sessionComplete: false,
     summary: null,
     error: null,
@@ -234,6 +237,7 @@ export const useReviewStore = create<ReviewState>()(
           s.sessionComplete = false;
           s.summary = null;
           s.isLoadingCard = false;
+          s.cardStartTime = Date.now();
         });
       } catch (e) {
         set((s) => {
@@ -250,8 +254,10 @@ export const useReviewStore = create<ReviewState>()(
     },
 
     rateCard: async (rating) => {
-      const { session, currentCard } = get();
+      const { session, currentCard, cardStartTime } = get();
       if (!session || !currentCard) return;
+
+      const timeSpentMs = cardStartTime ? Date.now() - cardStartTime : 0;
 
       set((s) => {
         s.isRating = true;
@@ -261,6 +267,7 @@ export const useReviewStore = create<ReviewState>()(
           sessionId: session.id,
           cardId: currentCard.id,
           rating,
+          timeSpentMs,
         });
 
         const nextIndex = session.currentIndex + 1;
@@ -290,6 +297,7 @@ export const useReviewStore = create<ReviewState>()(
               s.session!.correctCount += 1;
             }
             s.isRating = false;
+            s.cardStartTime = Date.now();
           });
         }
       } catch (e) {
@@ -327,6 +335,7 @@ export const useReviewStore = create<ReviewState>()(
         s.sessionComplete = false;
         s.summary = null;
         s.error = null;
+        s.cardStartTime = null;
       });
     },
 
@@ -334,6 +343,21 @@ export const useReviewStore = create<ReviewState>()(
       set((s) => {
         s.error = null;
       });
+    },
+
+    mergeDecks: async (sourceDeckId, targetDeckId, deleteSource) => {
+      try {
+        await invoke('srs_merge_decks', {
+          sourceDeckId,
+          targetDeckId,
+          deleteSource,
+        });
+        await get().fetchDecks();
+      } catch (e) {
+        set((s) => {
+          s.error = String(e);
+        });
+      }
     },
   })),
 );

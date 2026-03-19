@@ -1,15 +1,22 @@
+use crate::tutor::scenarios::get_scenarios;
+
 /// Build the system prompt for the AI tutor.
 pub fn build_system_prompt(
     language: &str,
     cefr_level: &str,
     native_language: &str,
-    scenario: Option<&str>,
+    scenario_id: Option<&str>,
 ) -> String {
     let lang_name = language_name(language);
     let native_name = language_name(native_language);
     let level_instructions = get_level_instructions(cefr_level);
-    let scenario_block = scenario
-        .map(|s| format!("\n## Scenario\n{s}\nStay in character throughout the conversation.\n"))
+    let scenario_block = scenario_id
+        .and_then(|id| {
+            get_scenarios()
+                .into_iter()
+                .find(|s| s.id == id)
+                .map(|s| format!("\n## Scenario\n{}\nStay in character throughout the conversation.\n", s.opening_prompt))
+        })
         .unwrap_or_default();
 
     format!(

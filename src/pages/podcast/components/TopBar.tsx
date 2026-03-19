@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, FileText, Loader2, Info, X, Calendar, Clock, HardDrive } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, Info, X, Calendar, Clock, HardDrive, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EpisodeInfo {
@@ -19,6 +19,9 @@ interface TopBarProps {
   onTranscribe?: () => void;
   isTranscribing?: boolean;
   canTranscribe?: boolean;
+  isDownloading?: boolean;
+  downloadProgress?: { percent: number } | null;
+  onOpenWhisperSettings?: () => void;
   episodeInfo?: EpisodeInfo;
   sidebarAction?: React.ReactNode;
 }
@@ -58,6 +61,9 @@ export function TopBar({
   onTranscribe,
   isTranscribing,
   canTranscribe,
+  isDownloading,
+  downloadProgress,
+  onOpenWhisperSettings,
   episodeInfo,
   sidebarAction,
 }: TopBarProps) {
@@ -121,14 +127,32 @@ export function TopBar({
 
         {sidebarAction}
 
+        {onOpenWhisperSettings && (
+          <button
+            type="button"
+            onClick={onOpenWhisperSettings}
+            title="Whisper Settings"
+            className="flex items-center justify-center w-8 h-8 rounded-lg border bg-muted text-muted-foreground border-border hover:bg-muted/80 hover:text-foreground transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        )}
+
         {canTranscribe && onTranscribe && (
           <Button
             onClick={onTranscribe}
-            disabled={isTranscribing}
+            disabled={isTranscribing || isDownloading}
             size="sm"
             className="bg-primary hover:bg-primary/90 text-primary-foreground border-0"
           >
-            {isTranscribing ? (
+            {isDownloading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                {downloadProgress && downloadProgress.percent > 0
+                  ? `Downloading ${Math.round(downloadProgress.percent)}%`
+                  : 'Downloading...'}
+              </>
+            ) : isTranscribing ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-1" />
                 Transcribing...

@@ -161,7 +161,7 @@ export function ControlBar({
       {/* Progress bar + time */}
       <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
         <div
-          className="flex-1 h-1.5 bg-muted rounded-sm cursor-pointer relative min-w-0"
+          className="flex-1 h-1.5 bg-border rounded-sm cursor-pointer relative min-w-0"
           onClick={handleProgressClick}
         >
           <div

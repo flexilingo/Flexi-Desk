@@ -51,6 +51,15 @@ export function WhisperSetup() {
     deleteModel,
     setDownloadProgress,
     setView,
+    whisperInstallStatus,
+    isInstallingWhisper,
+    isInstallingHomebrew,
+    checkWhisperInstallStatus,
+    autoDetectWhisper,
+    installWhisper,
+    installHomebrew,
+    error: storeError,
+    clearError,
   } = useCaptionStore();
 
   const [tab, setTab] = useState<SetupTab>('download');
@@ -59,11 +68,31 @@ export function WhisperSetup() {
   const [modelName, setModelName] = useState(whisperInfo?.modelName ?? 'base');
   const [modelSearch, setModelSearch] = useState('');
   const [infoExpanded, setInfoExpanded] = useState(false);
+  const [showManualSetup, setShowManualSetup] = useState(false);
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
 
-  // Fetch models on mount
+  // Fetch models and check install status on mount
   useEffect(() => {
     fetchAvailableModels();
-  }, [fetchAvailableModels]);
+    checkWhisperInstallStatus();
+  }, [fetchAvailableModels, checkWhisperInstallStatus]);
+
+  // Auto-detect whisper binary on mount (if not already configured)
+  useEffect(() => {
+    if (!whisperInfo?.isAvailable && whisperInstallStatus && !whisperInstallStatus.binaryDetected) {
+      // No binary found via install status, that's fine
+    } else if (!whisperInfo?.isAvailable && whisperInstallStatus?.binaryDetected && whisperInstallStatus.binaryPath) {
+      // Binary detected at a common path, auto-set it
+      setBinaryPath(whisperInstallStatus.binaryPath);
+      setIsAutoDetecting(true);
+      autoDetectWhisper().then((found) => {
+        setIsAutoDetecting(false);
+        if (found && whisperInstallStatus.binaryPath) {
+          setBinaryPath(whisperInstallStatus.binaryPath);
+        }
+      });
+    }
+  }, [whisperInfo?.isAvailable, whisperInstallStatus, autoDetectWhisper]);
 
   // Listen for download progress events
   useEffect(() => {
@@ -74,6 +103,16 @@ export function WhisperSetup() {
       unlisten.then((fn) => fn());
     };
   }, [setDownloadProgress]);
+
+  // Listen for whisper install progress events
+  useEffect(() => {
+    const unlisten = listen<{ status: string; message: string; percent: number }>('whisper-install-progress', (event) => {
+      useCaptionStore.getState().setWhisperInstallMessage(event.payload.message);
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
 
   const handleBrowseBinary = async () => {
     try {
@@ -217,7 +256,7 @@ export function WhisperSetup() {
           )}
         </div>
 
-        {/* Step 1: Binary Path */}
+        {/* Step 1: Binary Path — Auto-detect + Install */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs font-mono">
@@ -225,29 +264,120 @@ export function WhisperSetup() {
             </Badge>
             <label className="text-sm font-medium text-foreground">Whisper Binary</label>
           </div>
-          <p className="text-xs text-muted-foreground">
-            You need the <code className="bg-muted px-1 rounded">whisper-cli</code> binary from{' '}
-            <a
-              href="https://github.com/ggerganov/whisper.cpp"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary underline"
+
+          {/* Auto-detecting */}
+          {isAutoDetecting && (
+            <div className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Detecting whisper-cli...
+            </div>
+          )}
+
+          {/* Binary already configured */}
+          {binaryPath && !isAutoDetecting && (
+            <div className="flex items-center gap-2 rounded-md bg-[#8BB7A3]/10 px-3 py-2 text-sm text-[#8BB7A3]">
+              <CheckCircle2 className="h-4 w-4" />
+              <span className="truncate font-mono text-xs">{binaryPath}</span>
+            </div>
+          )}
+
+          {/* Not found — Install options */}
+          {!binaryPath && !isAutoDetecting && whisperInstallStatus && (
+            <div className="space-y-2">
+              {/* Error display */}
+              {storeError && (
+                <div className="flex items-center justify-between rounded-md bg-error/10 px-3 py-2 text-sm text-error">
+                  <span className="truncate text-xs">{storeError}</span>
+                  <button onClick={clearError} className="ml-2 shrink-0 text-xs underline">
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
+              {/* Can auto-install (Homebrew available on macOS) */}
+              {whisperInstallStatus.canAutoInstall && !isInstallingWhisper && !isInstallingHomebrew && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    whisper-cli was not found on your system. Click below to install it automatically.
+                  </p>
+                  <Button onClick={installWhisper} className="w-full" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Install Whisper
+                  </Button>
+                </div>
+              )}
+
+              {/* No Homebrew on macOS — install Homebrew first */}
+              {!whisperInstallStatus.canAutoInstall && whisperInstallStatus.platform === 'macos' && !isInstallingHomebrew && !isInstallingWhisper && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Homebrew (macOS package manager) is needed to install Whisper.
+                    {whisperInstallStatus.arch === 'x86_64' && (
+                      <span className="block mt-1 text-warning">
+                        Note: On Intel Macs, Homebrew installation may require your password.
+                      </span>
+                    )}
+                  </p>
+                  <Button onClick={installHomebrew} className="w-full" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Install Homebrew
+                  </Button>
+                </div>
+              )}
+
+              {/* Installing Homebrew */}
+              {isInstallingHomebrew && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm font-medium">Installing Homebrew...</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">This may take a few minutes.</p>
+                </div>
+              )}
+
+              {/* Installing Whisper */}
+              {isInstallingWhisper && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm font-medium">Installing Whisper...</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">This may take a few minutes.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manual setup toggle */}
+          {!binaryPath && !isAutoDetecting && (
+            <button
+              onClick={() => setShowManualSetup(!showManualSetup)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
             >
-              whisper.cpp
-            </a>
-            . On macOS: <code className="bg-muted px-1 rounded">brew install whisper-cpp</code>
-          </p>
-          <div className="flex gap-2">
-            <Input
-              value={binaryPath}
-              onChange={(e) => setBinaryPath(e.target.value)}
-              placeholder="/usr/local/bin/whisper-cli"
-              className="flex-1 font-mono text-sm"
-            />
-            <Button variant="outline" size="icon" onClick={handleBrowseBinary}>
-              <FolderOpen className="h-4 w-4" />
-            </Button>
-          </div>
+              {showManualSetup ? 'Hide manual setup' : 'Manual setup (advanced)'}
+            </button>
+          )}
+
+          {/* Manual setup (collapsed by default) */}
+          {showManualSetup && !binaryPath && (
+            <div className="space-y-2 rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">
+                Browse for an existing whisper-cli binary on your system.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={binaryPath}
+                  onChange={(e) => setBinaryPath(e.target.value)}
+                  placeholder="/usr/local/bin/whisper-cli"
+                  className="flex-1 font-mono text-sm"
+                />
+                <Button variant="outline" size="icon" onClick={handleBrowseBinary}>
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Step 2: Model — Tabs */}

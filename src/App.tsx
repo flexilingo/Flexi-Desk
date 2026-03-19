@@ -13,7 +13,10 @@ import { WritingPage } from '@/pages/writing';
 import { ExamPage } from '@/pages/exam';
 import { PodcastPage } from '@/pages/podcast';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
+import { VocabularyPage } from '@/pages/vocabulary';
+import { PluginManagerPage } from '@/pages/plugins/PluginManagerPage';
 import { useAuthStore } from '@/stores/authStore';
+import { ENABLED_MODULES } from '@/config/features';
 
 function App() {
   // Initialize theme system (applies dark class to <html>)
@@ -31,15 +34,17 @@ function App() {
     <Routes>
       <Route element={<Shell />}>
         <Route index element={<DashboardPage />} />
-        <Route path="review" element={<ReviewPage />} />
-        <Route path="reading" element={<ReadingPage />} />
-        <Route path="tutor" element={<TutorPage />} />
-        <Route path="caption" element={<CaptionPage />} />
-        <Route path="pronunciation" element={<PronunciationPage />} />
-        <Route path="writing" element={<WritingPage />} />
-        <Route path="exam" element={<ExamPage />} />
-        <Route path="podcast" element={<PodcastPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+        {ENABLED_MODULES.review && <Route path="review" element={<ReviewPage />} />}
+        {ENABLED_MODULES.reading && <Route path="reading" element={<ReadingPage />} />}
+        {ENABLED_MODULES.tutor && <Route path="tutor" element={<TutorPage />} />}
+        {ENABLED_MODULES.caption && <Route path="caption" element={<CaptionPage />} />}
+        {ENABLED_MODULES.pronunciation && <Route path="pronunciation" element={<PronunciationPage />} />}
+        {ENABLED_MODULES.writing && <Route path="writing" element={<WritingPage />} />}
+        {ENABLED_MODULES.exam && <Route path="exam" element={<ExamPage />} />}
+        {ENABLED_MODULES.podcast && <Route path="podcast" element={<PodcastPage />} />}
+        {ENABLED_MODULES.vocabulary && <Route path="vocabulary" element={<VocabularyPage />} />}
+        {ENABLED_MODULES.plugins && <Route path="plugins" element={<PluginManagerPage />} />}
+        {ENABLED_MODULES.settings && <Route path="settings" element={<SettingsPage />} />}
       </Route>
     </Routes>
   );

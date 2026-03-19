@@ -11,6 +11,18 @@ export interface StreakInfo {
   currentStreak: number;
   longestStreak: number;
   lastActivityDate?: string;
+  freezeDaysRemaining: number;
+  freezeDaysPerWeek: number;
+  freezeLastReset?: string;
+  dailyXpTarget: number;
+}
+
+export interface XPProgress {
+  xpToday: number;
+  xpTarget: number;
+  percentage: number;
+  streakCount: number;
+  freezeDaysRemaining: number;
 }
 
 export interface Goal {
@@ -87,6 +99,18 @@ export interface RawStreakInfo {
   current_streak: number;
   longest_streak: number;
   last_activity_date: string | null;
+  freeze_days_remaining: number;
+  freeze_days_per_week: number;
+  freeze_last_reset: string | null;
+  daily_xp_target: number;
+}
+
+export interface RawXPProgress {
+  xp_today: number;
+  xp_target: number;
+  percentage: number;
+  streak_count: number;
+  freeze_days_remaining: number;
 }
 
 export interface RawGoal {
@@ -149,6 +173,20 @@ export function mapStreak(raw: RawStreakInfo): StreakInfo {
     currentStreak: raw.current_streak,
     longestStreak: raw.longest_streak,
     lastActivityDate: raw.last_activity_date ?? undefined,
+    freezeDaysRemaining: raw.freeze_days_remaining ?? 1,
+    freezeDaysPerWeek: raw.freeze_days_per_week ?? 1,
+    freezeLastReset: raw.freeze_last_reset ?? undefined,
+    dailyXpTarget: raw.daily_xp_target ?? 50,
+  };
+}
+
+export function mapXPProgress(raw: RawXPProgress): XPProgress {
+  return {
+    xpToday: raw.xp_today,
+    xpTarget: raw.xp_target,
+    percentage: raw.percentage,
+    streakCount: raw.streak_count,
+    freezeDaysRemaining: raw.freeze_days_remaining,
   };
 }
 
@@ -201,6 +239,119 @@ export function mapSummary(raw: RawDashboardSummary): DashboardSummary {
     totalReviews: raw.total_reviews,
     activeGoals: raw.active_goals.map(mapGoal),
     recentAchievements: raw.recent_achievements.map(mapAchievement),
+  };
+}
+
+// ── Analytics Types ─────────────────────────────────────
+
+export interface DailyXP {
+  date: string;
+  totalXp: number;
+  breakdown: ModuleXP[];
+}
+
+export interface ModuleXP {
+  module: string;
+  xp: number;
+}
+
+export interface CEFRSkillScore {
+  skill: string;
+  score: number;
+  cefrLevel: string;
+}
+
+export interface StudyHeatmapEntry {
+  dayOfWeek: number;
+  hour: number;
+  minutes: number;
+}
+
+export interface VocabGrowthPoint {
+  date: string;
+  cumulativeCount: number;
+}
+
+export interface StreakDay {
+  date: string;
+  activityCount: number;
+  xpEarned: number;
+}
+
+export interface AnalyticsSummary {
+  xpToday: number;
+  streakCount: number;
+  wordsLearnedToday: number;
+  studyMinutesToday: number;
+  reviewsToday: number;
+}
+
+// Raw IPC analytics types
+export interface RawDailyXP {
+  date: string;
+  total_xp: number;
+  breakdown: { module: string; xp: number }[];
+}
+
+export interface RawCEFRSkillScore {
+  skill: string;
+  score: number;
+  cefr_level: string;
+}
+
+export interface RawStudyHeatmapEntry {
+  day_of_week: number;
+  hour: number;
+  minutes: number;
+}
+
+export interface RawVocabGrowthPoint {
+  date: string;
+  cumulative_count: number;
+}
+
+export interface RawStreakDay {
+  date: string;
+  activity_count: number;
+  xp_earned: number;
+}
+
+export interface RawAnalyticsSummary {
+  xp_today: number;
+  streak_count: number;
+  words_learned_today: number;
+  study_minutes_today: number;
+  reviews_today: number;
+}
+
+// Analytics mappers
+export function mapDailyXP(raw: RawDailyXP): DailyXP {
+  return { date: raw.date, totalXp: raw.total_xp, breakdown: raw.breakdown };
+}
+
+export function mapCEFRScore(raw: RawCEFRSkillScore): CEFRSkillScore {
+  return { skill: raw.skill, score: raw.score, cefrLevel: raw.cefr_level };
+}
+
+export function mapStudyHeatmap(raw: RawStudyHeatmapEntry): StudyHeatmapEntry {
+  return { dayOfWeek: raw.day_of_week, hour: raw.hour, minutes: raw.minutes };
+}
+
+export function mapVocabGrowth(raw: RawVocabGrowthPoint): VocabGrowthPoint {
+  return { date: raw.date, cumulativeCount: raw.cumulative_count };
+}
+
+export function mapStreakDay(raw: RawStreakDay): StreakDay {
+  return { date: raw.date, activityCount: raw.activity_count, xpEarned: raw.xp_earned };
+}
+
+export function mapAnalyticsSummary(raw: RawAnalyticsSummary): AnalyticsSummary {
+  return {
+    xpToday: raw.xp_today,
+    streakCount: raw.streak_count,
+    wordsLearnedToday: raw.words_learned_today,
+    studyMinutesToday: raw.study_minutes_today,
+    reviewsToday: raw.reviews_today,
   };
 }
 

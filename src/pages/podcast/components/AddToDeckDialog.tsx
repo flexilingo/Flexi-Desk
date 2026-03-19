@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabaseCall } from '../../../lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
+import { useLanguageSettings } from '@/hooks/useLanguageSettings';
 
 type AddMode = 'basic' | 'smart';
 
@@ -49,7 +50,7 @@ export function AddToDeckDialog({
   const [mode, setMode] = useState<AddMode>('basic');
   const [processing, setProcessing] = useState(false);
   const [cardsQueued, setCardsQueued] = useState(0);
-  const [targetLang] = useState('fa');
+  const { nativeLang: targetLang } = useLanguageSettings();
 
   // Fetch decks when dialog opens
   useEffect(() => {

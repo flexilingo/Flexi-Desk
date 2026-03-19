@@ -24,6 +24,9 @@ interface ReadingState {
   // Selected word for popover
   selectedTokenIndex: number | null;
 
+  // CEFR highlighting
+  cefrHighlight: boolean;
+
   // Error
   error: string | null;
 
@@ -43,6 +46,8 @@ interface ReadingState {
   fetchHighlights: (documentId: string) => Promise<void>;
   deleteHighlight: (id: string) => Promise<void>;
   selectToken: (index: number | null) => void;
+  setCefrHighlight: (enabled: boolean) => void;
+  setActiveDocument: (doc: ReadingDocument) => void;
   clearError: () => void;
 }
 
@@ -54,6 +59,7 @@ export const useReadingStore = create<ReadingState>()(
     isLoadingDocument: false,
     highlights: [],
     selectedTokenIndex: null,
+    cefrHighlight: false,
     error: null,
 
     fetchDocuments: async (language) => {
@@ -223,6 +229,18 @@ export const useReadingStore = create<ReadingState>()(
     selectToken: (index) => {
       set((s) => {
         s.selectedTokenIndex = index;
+      });
+    },
+
+    setCefrHighlight: (enabled) => {
+      set((s) => {
+        s.cefrHighlight = enabled;
+      });
+    },
+
+    setActiveDocument: (doc) => {
+      set((s) => {
+        s.activeDocument = doc;
       });
     },
 

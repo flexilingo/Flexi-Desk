@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { PodcastTranscriptSegment, PodcastWordTimestamp } from '../types';
 import type { EnhancedWord, EnhancedSubtitle } from '../studio-types';
 import { WordDialog } from './WordDialog';
+import { useLanguageSettings } from '@/hooks/useLanguageSettings';
 import { usePlayerStore } from '../stores/playerStore';
 import {
   useWordRangeSelection,
@@ -580,6 +581,7 @@ interface SubtitleBarProps {
   subtitleAlignment?: 'left' | 'center' | 'right';
   showEstimatedOnSubtitles?: boolean;
   onAddToDeck?: (words: string[]) => void;
+  onDialogOpenChange?: (open: boolean) => void;
 }
 
 const justifyMap = {
@@ -597,15 +599,18 @@ export function SubtitleBar({
   episodeId,
   subtitlesEnabled = true,
   sourceLang = 'en',
-  targetLang = 'fa',
+  targetLang: targetLangProp,
   syncOffset = 0,
   autoPauseOnBoundary = false,
   pauseOnHover = false,
   subtitleAlignment = 'center',
   showEstimatedOnSubtitles = true,
   onAddToDeck,
+  onDialogOpenChange,
 }: SubtitleBarProps) {
   const { t } = useTranslation();
+  const { nativeLang } = useLanguageSettings();
+  const targetLang = targetLangProp || nativeLang;
   const containerRef = useRef<HTMLDivElement>(null);
   const effectiveTime = currentTime - syncOffset;
   const currentTimeMs = effectiveTime * 1000;
@@ -782,14 +787,22 @@ export function SubtitleBar({
     }
   }, [resume]);
 
+  const handleDialogOpenChange = useCallback(
+    (open: boolean) => {
+      setDialogOpen(open);
+      onDialogOpenChange?.(open);
+    },
+    [onDialogOpenChange],
+  );
+
   const handleWordClick = useCallback(
     (word: EnhancedWord) => {
       if (selection.isDragging || selection.isSelectionActive) return;
       setSelectedWord(word.text);
       setSelectedPositionMs(rawWords[word.index]?.startMs);
-      setDialogOpen(true);
+      handleDialogOpenChange(true);
     },
-    [selection.isDragging, selection.isSelectionActive, rawWords],
+    [selection.isDragging, selection.isSelectionActive, rawWords, handleDialogOpenChange],
   );
 
   const handleAddToDeckWord = useCallback(
@@ -799,14 +812,38 @@ export function SubtitleBar({
     [onAddToDeck],
   );
 
-  if (!subtitlesEnabled) return null;
+  // Store sentence context for dialog (persists even when segment changes)
+  const [dialogSentenceContext, setDialogSentenceContext] = useState<string | undefined>();
+
+  // Update sentence context when opening dialog
+  const handleWordClickWrapped = useCallback(
+    (word: EnhancedWord) => {
+      setDialogSentenceContext(activeSegment?.text);
+      handleWordClick(word);
+    },
+    [handleWordClick, activeSegment?.text],
+  );
+
+  if (!subtitlesEnabled) {
+    return (
+      <WordDialog
+        word={selectedWord}
+        open={dialogOpen}
+        onOpenChange={handleDialogOpenChange}
+        episodeId={episodeId}
+        positionMs={selectedPositionMs}
+        sourceLang={sourceLang}
+        targetLang={targetLang}
+        sentenceContext={dialogSentenceContext}
+      />
+    );
+  }
 
   // Waiting state
   if (!activeSegment) {
-    if (segments.length > 0) {
-      const firstStart = segments[0].startMs / 1000;
-      if (currentTime < firstStart) {
-        return (
+    return (
+      <>
+        {segments.length > 0 && currentTime < segments[0].startMs / 1000 && (
           <div
             className="text-center text-base md:text-lg py-4 md:py-6 px-4 md:px-8"
             style={{
@@ -815,10 +852,19 @@ export function SubtitleBar({
           >
             <span className="text-muted-foreground">{t('podcast.waitingForSubtitle')}</span>
           </div>
-        );
-      }
-    }
-    return null;
+        )}
+        <WordDialog
+          word={selectedWord}
+          open={dialogOpen}
+          onOpenChange={handleDialogOpenChange}
+          episodeId={episodeId}
+          positionMs={selectedPositionMs}
+          sourceLang={sourceLang}
+          targetLang={targetLang}
+          sentenceContext={dialogSentenceContext}
+        />
+      </>
+    );
   }
 
   const justify = justifyMap[subtitleAlignment];
@@ -860,7 +906,7 @@ export function SubtitleBar({
                 key={group.groupId}
                 word={group.words[0]}
                 wordIndex={group.wordIndices[0]}
-                onClick={handleWordClick}
+                onClick={handleWordClickWrapped}
                 onAddToDeck={handleAddToDeckWord}
                 showAddOnWords={true}
                 showEstimatedOnSubtitles={showEstimatedOnSubtitles}
@@ -876,7 +922,7 @@ export function SubtitleBar({
               <PhraseGroup
                 key={group.groupId}
                 group={group}
-                onClick={handleWordClick}
+                onClick={handleWordClickWrapped}
                 onAddToDeck={handleAddToDeckWord}
                 showAddOnWords={true}
                 fontSize={fontSize}
@@ -895,12 +941,12 @@ export function SubtitleBar({
       <WordDialog
         word={selectedWord}
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogOpenChange}
         episodeId={episodeId}
         positionMs={selectedPositionMs}
         sourceLang={sourceLang}
         targetLang={targetLang}
-        sentenceContext={activeSegment?.text}
+        sentenceContext={dialogSentenceContext}
       />
     </>
   );

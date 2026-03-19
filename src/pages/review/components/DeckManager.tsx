@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Brain, Trash2 } from 'lucide-react';
+import { Plus, Brain, Trash2, Merge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -7,6 +7,7 @@ import { InlineError } from '@/components/common/InlineError';
 import { useReviewStore } from '../stores/reviewStore';
 import { AlgorithmBadge } from './AlgorithmBadge';
 import { CreateDeckDialog } from './CreateDeckDialog';
+import { MergeDeckDialog } from './MergeDeckDialog';
 
 interface Props {
   onSelectDeck: (deckId: string) => void;
@@ -16,6 +17,7 @@ interface Props {
 export function DeckManager({ onSelectDeck, onStartReview }: Props) {
   const { decks, isLoadingDecks, error, fetchDecks, deleteDeck, clearError } = useReviewStore();
   const [showCreate, setShowCreate] = useState(false);
+  const [showMerge, setShowMerge] = useState(false);
 
   useEffect(() => {
     fetchDecks();
@@ -32,10 +34,18 @@ export function DeckManager({ onSelectDeck, onStartReview }: Props) {
             {totalDue > 0 ? `${totalDue} cards due today` : 'All caught up!'}
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Deck
-        </Button>
+        <div className="flex items-center gap-2">
+          {decks.length >= 2 && (
+            <Button variant="outline" onClick={() => setShowMerge(true)}>
+              <Merge className="mr-2 h-4 w-4" />
+              Merge Decks
+            </Button>
+          )}
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Deck
+          </Button>
+        </div>
       </div>
 
       {error && <InlineError message={error} onDismiss={clearError} />}
@@ -129,6 +139,12 @@ export function DeckManager({ onSelectDeck, onStartReview }: Props) {
       )}
 
       <CreateDeckDialog open={showCreate} onOpenChange={setShowCreate} />
+      <MergeDeckDialog
+        open={showMerge}
+        onOpenChange={setShowMerge}
+        decks={decks}
+        onMerged={() => fetchDecks()}
+      />
     </div>
   );
 }

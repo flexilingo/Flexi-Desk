@@ -33,6 +33,10 @@ export interface Token {
   is_word: boolean;
   index: number;
   sentence_index: number;
+  pos?: string;
+  cefr_level?: string;
+  lemma?: string;
+  is_stop?: boolean;
 }
 
 export interface ReadingHighlight {

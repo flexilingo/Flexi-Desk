@@ -15,8 +15,8 @@ interface AuthState {
   error: string | null;
 
   initialize: () => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  loginWithApple: () => Promise<void>;
+  sendOtp: (email: string) => Promise<void>;
+  verifyOtp: (email: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -50,21 +50,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  loginWithGoogle: async () => {
-    set({ isLoading: true, error: null });
+  sendOtp: async (email: string) => {
     try {
-      const session = await invoke<AuthSession>('auth_start_google_oauth');
-      set({ session, isLoading: false });
+      await invoke('auth_send_otp', { email });
     } catch (e) {
-      set({ error: String(e), isLoading: false });
+      set({ error: String(e) });
       throw e;
     }
   },
 
-  loginWithApple: async () => {
+  verifyOtp: async (email: string, otp: string) => {
     set({ isLoading: true, error: null });
     try {
-      const session = await invoke<AuthSession>('auth_start_apple_oauth');
+      const session = await invoke<AuthSession>('auth_verify_otp', { email, otp });
       set({ session, isLoading: false });
     } catch (e) {
       set({ error: String(e), isLoading: false });

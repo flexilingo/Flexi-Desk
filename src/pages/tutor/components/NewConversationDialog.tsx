@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InlineError } from '@/components/common/InlineError';
 import { useTutorStore } from '../stores/tutorStore';
+import { useOllamaStore } from '@/stores/ollamaStore';
 import type { AIProvider, CEFRLevel } from '../types';
 
 const LANGUAGES = [
@@ -51,13 +52,32 @@ interface Props {
 
 export function NewConversationDialog({ open, onOpenChange }: Props) {
   const startConversation = useTutorStore((s) => s.startConversation);
+  const { installedModels, selectedModel, fetchInstalledModels } = useOllamaStore();
   const [title, setTitle] = useState('');
   const [language, setLanguage] = useState('de');
   const [cefrLevel, setCefrLevel] = useState<CEFRLevel>('A2');
   const [provider, setProvider] = useState<AIProvider>('ollama');
-  const [model, setModel] = useState('llama3.2');
+  const [model, setModel] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch Ollama models when dialog opens
+  useEffect(() => {
+    if (open && provider === 'ollama') {
+      fetchInstalledModels();
+    }
+  }, [open, provider, fetchInstalledModels]);
+
+  // Set default model from installed models or selectedModel
+  useEffect(() => {
+    if (provider === 'ollama') {
+      if (selectedModel) {
+        setModel(selectedModel);
+      } else if (installedModels.length > 0) {
+        setModel(installedModels[0].name);
+      }
+    }
+  }, [provider, selectedModel, installedModels]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,8 +171,11 @@ export function NewConversationDialog({ open, onOpenChange }: Props) {
                     checked={provider === p.value}
                     onChange={() => {
                       setProvider(p.value);
-                      if (p.value === 'ollama') setModel('llama3.2');
-                      else setModel('gpt-4o-mini');
+                      if (p.value === 'ollama') {
+                        setModel(selectedModel || (installedModels[0]?.name ?? ''));
+                      } else {
+                        setModel('gpt-4o-mini');
+                      }
                     }}
                     className="mt-0.5"
                   />
@@ -167,18 +190,44 @@ export function NewConversationDialog({ open, onOpenChange }: Props) {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Model</label>
-            <Input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder={provider === 'ollama' ? 'llama3.2' : 'gpt-4o-mini'}
-            />
+            {provider === 'ollama' ? (
+              installedModels.length > 0 ? (
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  {installedModels.map((m) => (
+                    <option key={m.name} value={m.name}>
+                      {m.name} ({formatSize(m.size)})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="rounded-md border border-border bg-muted/50 px-3 py-2">
+                  <p className="text-sm text-muted-foreground">
+                    No Ollama models found. Install models in{' '}
+                    <span className="font-medium text-foreground">Settings &rarr; AI Provider</span>.
+                  </p>
+                </div>
+              )
+            ) : (
+              <Input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="gpt-4o-mini"
+              />
+            )}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isCreating}>
+            <Button
+              type="submit"
+              disabled={isCreating || (provider === 'ollama' && installedModels.length === 0)}
+            >
               {isCreating ? 'Starting...' : 'Start Conversation'}
             </Button>
           </DialogFooter>
@@ -186,4 +235,12 @@ export function NewConversationDialog({ open, onOpenChange }: Props) {
       </DialogContent>
     </Dialog>
   );
+}
+
+function formatSize(bytes: number): string {
+  if (bytes === 0) return '';
+  const gb = bytes / (1024 * 1024 * 1024);
+  if (gb >= 1) return `${gb.toFixed(1)} GB`;
+  const mb = bytes / (1024 * 1024);
+  return `${Math.round(mb)} MB`;
 }

@@ -6,6 +6,7 @@ import type { PodcastTranscriptSegment, PodcastWordTimestamp } from '../types';
 import { formatTimeMs } from '../types';
 import { WordDialog } from './WordDialog';
 import { usePlayerStore } from '../stores/playerStore';
+import { useLanguageSettings } from '@/hooks/useLanguageSettings';
 
 interface TranscriptPanelProps {
   segments: PodcastTranscriptSegment[];
@@ -38,9 +39,11 @@ export function TranscriptPanel({
   isLoading,
   episodeId,
   sourceLang = 'en',
-  targetLang = 'fa',
+  targetLang: targetLangProp,
   syncOffset = 0,
 }: TranscriptPanelProps) {
+  const { nativeLang } = useLanguageSettings();
+  const targetLang = targetLangProp || nativeLang;
   const effectiveTime = currentTime - syncOffset;
   const currentTimeMs = effectiveTime * 1000;
 

@@ -2,6 +2,16 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+
+interface WhisperInstallStatusType {
+  binaryDetected: boolean;
+  binaryPath: string | null;
+  homebrewAvailable: boolean;
+  homebrewPath: string | null;
+  canAutoInstall: boolean;
+  platform: string;
+  arch: string;
+}
 import type {
   AudioDevice,
   CaptionSession,
@@ -52,6 +62,12 @@ interface CaptionState {
   isCheckingWhisper: boolean;
   isConfiguringWhisper: boolean;
 
+  // Whisper install
+  whisperInstallStatus: WhisperInstallStatusType | null;
+  isInstallingWhisper: boolean;
+  whisperInstallMessage: string | null;
+  isInstallingHomebrew: boolean;
+
   // Models
   availableModels: AvailableModel[];
   isLoadingModels: boolean;
@@ -97,6 +113,11 @@ interface CaptionState {
   // Whisper
   checkWhisper: () => Promise<void>;
   configureWhisper: (binaryPath: string, modelPath: string, modelName?: string) => Promise<void>;
+  checkWhisperInstallStatus: () => Promise<void>;
+  autoDetectWhisper: () => Promise<boolean>;
+  installWhisper: () => Promise<void>;
+  installHomebrew: () => Promise<void>;
+  setWhisperInstallMessage: (message: string | null) => void;
 
   // Models
   fetchAvailableModels: () => Promise<void>;
@@ -144,6 +165,10 @@ export const useCaptionStore = create<CaptionState>()(
     whisperInfo: null,
     isCheckingWhisper: false,
     isConfiguringWhisper: false,
+    whisperInstallStatus: null,
+    isInstallingWhisper: false,
+    whisperInstallMessage: null,
+    isInstallingHomebrew: false,
     availableModels: [],
     isLoadingModels: false,
     downloadProgress: null,
@@ -268,6 +293,103 @@ export const useCaptionStore = create<CaptionState>()(
           s.isConfiguringWhisper = false;
         });
       }
+    },
+
+    // ── Whisper Install ──────────────────────────────────
+
+    checkWhisperInstallStatus: async () => {
+      try {
+        const raw = await invoke<{
+          binary_detected: boolean;
+          binary_path: string | null;
+          homebrew_available: boolean;
+          homebrew_path: string | null;
+          can_auto_install: boolean;
+          platform: string;
+          arch: string;
+        }>('caption_whisper_install_status');
+        set((s) => {
+          s.whisperInstallStatus = {
+            binaryDetected: raw.binary_detected,
+            binaryPath: raw.binary_path,
+            homebrewAvailable: raw.homebrew_available,
+            homebrewPath: raw.homebrew_path,
+            canAutoInstall: raw.can_auto_install,
+            platform: raw.platform,
+            arch: raw.arch,
+          };
+        });
+      } catch (err) {
+        set((s) => {
+          s.error = String(err);
+        });
+      }
+    },
+
+    autoDetectWhisper: async () => {
+      try {
+        const path = await invoke<string | null>('caption_auto_detect_whisper');
+        if (path) {
+          // Re-check whisper to update whisperInfo
+          await get().checkWhisper();
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    },
+
+    installWhisper: async () => {
+      set((s) => {
+        s.isInstallingWhisper = true;
+        s.whisperInstallMessage = null;
+        s.error = null;
+      });
+      try {
+        const binaryPath = await invoke<string>('caption_install_whisper');
+        // Auto-configure with the installed binary
+        set((s) => {
+          s.isInstallingWhisper = false;
+          s.whisperInstallMessage = null;
+        });
+        // Re-check whisper status
+        await get().checkWhisperInstallStatus();
+        await get().checkWhisper();
+      } catch (err) {
+        set((s) => {
+          s.isInstallingWhisper = false;
+          s.error = String(err);
+        });
+      }
+    },
+
+    installHomebrew: async () => {
+      set((s) => {
+        s.isInstallingHomebrew = true;
+        s.whisperInstallMessage = null;
+        s.error = null;
+      });
+      try {
+        await invoke<string>('caption_install_homebrew');
+        set((s) => {
+          s.isInstallingHomebrew = false;
+          s.whisperInstallMessage = null;
+        });
+        // Re-check install status (homebrew should now be available)
+        await get().checkWhisperInstallStatus();
+      } catch (err) {
+        set((s) => {
+          s.isInstallingHomebrew = false;
+          s.error = String(err);
+        });
+      }
+    },
+
+    setWhisperInstallMessage: (message) => {
+      set((s) => {
+        s.whisperInstallMessage = message;
+      });
     },
 
     // ── Models ────────────────────────────────────────────

@@ -1,9 +1,11 @@
 use std::process::Stdio;
 
-use tauri::{Emitter, State};
+use tauri::{Emitter, Manager, State};
 use futures_util::StreamExt;
 use tokio::io::{AsyncBufReadExt, BufReader, AsyncReadExt};
+use tokio_util::sync::CancellationToken;
 
+use crate::jobs::{JobType, JobStatus, JobEvent, JobEntry};
 use crate::podcast::rss;
 use crate::podcast::nlp;
 use crate::podcast::types::*;
@@ -1260,4 +1262,715 @@ fn map_nlp_row(row: &rusqlite::Row) -> rusqlite::Result<NlpAnalysis> {
         top_words: row.get(8)?,
         created_at: row.get(9)?,
     })
+}
+
+/// Run NLP analysis using a raw connection (for use in spawned tasks).
+fn run_nlp_analysis_with_conn(
+    conn: &rusqlite::Connection,
+    episode_id: &str,
+    text: &str,
+) -> Result<(), String> {
+    let result = nlp::analyze_text(text);
+
+    let cefr_dist_json = serde_json::to_string(&result.cefr_distribution)
+        .unwrap_or_else(|_| "{}".into());
+    let top_words_json = serde_json::to_string(&result.top_words)
+        .unwrap_or_else(|_| "[]".into());
+
+    conn.execute(
+        "INSERT INTO podcast_nlp_analysis
+            (id, episode_id, total_words, unique_words, cefr_level,
+             cefr_distribution, avg_sentence_length, vocabulary_richness, top_words)
+         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+         ON CONFLICT(episode_id) DO UPDATE SET
+            total_words = ?2, unique_words = ?3, cefr_level = ?4,
+            cefr_distribution = ?5, avg_sentence_length = ?6,
+            vocabulary_richness = ?7, top_words = ?8",
+        rusqlite::params![
+            episode_id,
+            result.total_words,
+            result.unique_words,
+            result.cefr_level,
+            cefr_dist_json,
+            result.avg_sentence_length,
+            result.vocabulary_richness,
+            top_words_json,
+        ],
+    )
+    .map_err(|e| format!("NLP insert error: {e}"))?;
+
+    conn.execute(
+        "UPDATE podcast_episodes SET cefr_level = ?1 WHERE id = ?2",
+        rusqlite::params![result.cefr_level, episode_id],
+    ).ok();
+
+    Ok(())
+}
+
+// ── Background Job Commands ─────────────────────────────
+
+#[tauri::command]
+pub async fn podcast_start_transcribe_job(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    episode_id: String,
+) -> Result<String, String> {
+    // 1. Validate episode exists, has local_path, get whisper config + episode title + duration
+    let (local_path, language, binary_path, model_path, episode_title, duration_seconds) = {
+        let conn = lock_db(&state)?;
+
+        let (local_path, feed_id, title, duration): (Option<String>, String, String, i64) = conn
+            .query_row(
+                "SELECT local_path, feed_id, title, duration_seconds FROM podcast_episodes WHERE id = ?1",
+                rusqlite::params![episode_id],
+                |row: &rusqlite::Row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .map_err(|e| format!("Episode not found: {e}"))?;
+
+        let audio_path = local_path.ok_or("Episode must be downloaded before transcription")?;
+
+        let feed_lang: String = conn
+            .query_row(
+                "SELECT language FROM podcast_feeds WHERE id = ?1",
+                rusqlite::params![feed_id],
+                |row: &rusqlite::Row| row.get(0),
+            )
+            .unwrap_or_else(|_| "auto".into());
+
+        let bin = conn
+            .query_row(
+                "SELECT value FROM settings WHERE key = 'whisper_binary_path'",
+                [],
+                |row: &rusqlite::Row| row.get::<_, String>(0),
+            )
+            .map_err(|_| "Whisper binary not configured".to_string())?;
+
+        let model = conn
+            .query_row(
+                "SELECT value FROM settings WHERE key = 'whisper_model_path'",
+                [],
+                |row: &rusqlite::Row| row.get::<_, String>(0),
+            )
+            .map_err(|_| "Whisper model not configured".to_string())?;
+
+        let lang = if feed_lang == "auto" {
+            feed_lang
+        } else {
+            feed_lang.split(|c| c == '-' || c == '_').next().unwrap_or("auto").to_string()
+        };
+
+        (audio_path, lang, bin, model, title, duration)
+    };
+
+    // 2. Check for duplicate active job
+    {
+        let registry = state.jobs.lock().await;
+        if registry.has_active_job_for_episode(&episode_id, &JobType::Transcribe) {
+            return Err("A transcription job is already running for this episode".into());
+        }
+    }
+
+    // 3. Mark DB as processing
+    {
+        let conn = lock_db(&state)?;
+        conn.execute(
+            "UPDATE podcast_episodes SET transcript_status = 'processing' WHERE id = ?1",
+            rusqlite::params![episode_id],
+        ).ok();
+    }
+
+    // 4. Validate paths
+    whisper::validate_paths(&binary_path, &model_path, &local_path)?;
+
+    // 5. Generate job ID, create cancellation token
+    let job_id = whisper::uuid_hex();
+    let cancel_token = CancellationToken::new();
+    let child_token = cancel_token.child_token();
+
+    // 6. Emit job:started
+    let started_event = JobEvent {
+        id: job_id.clone(),
+        job_type: JobType::Transcribe,
+        status: JobStatus::Running,
+        episode_id: episode_id.clone(),
+        episode_title: episode_title.clone(),
+        progress: 0.0,
+        error: None,
+    };
+    let _ = app.emit("job-started", &started_event);
+
+    // 7. Spawn the transcription task
+    let app_handle = app.clone();
+    let job_id_clone = job_id.clone();
+    let episode_id_clone = episode_id.clone();
+    let episode_title_clone = episode_title.clone();
+
+    let handle = tokio::spawn(async move {
+        let result = run_transcribe_task(
+            &app_handle,
+            &job_id_clone,
+            &episode_id_clone,
+            &episode_title_clone,
+            &local_path,
+            &language,
+            &binary_path,
+            &model_path,
+            duration_seconds,
+            child_token,
+        ).await;
+
+        // Remove job from registry
+        {
+            let state = app_handle.state::<AppState>();
+            let mut registry = state.jobs.lock().await;
+            registry.remove(&job_id_clone);
+        }
+
+        // Emit final event
+        match result {
+            Ok(()) => {
+                let _ = app_handle.emit("job-completed", JobEvent {
+                    id: job_id_clone,
+                    job_type: JobType::Transcribe,
+                    status: JobStatus::Completed,
+                    episode_id: episode_id_clone,
+                    episode_title: episode_title_clone,
+                    progress: 100.0,
+                    error: None,
+                });
+            }
+            Err(err) => {
+                let _ = app_handle.emit("job-failed", JobEvent {
+                    id: job_id_clone,
+                    job_type: JobType::Transcribe,
+                    status: JobStatus::Failed,
+                    episode_id: episode_id_clone,
+                    episode_title: episode_title_clone,
+                    progress: 0.0,
+                    error: Some(err),
+                });
+            }
+        }
+    });
+
+    // 8. Insert into registry
+    {
+        let mut registry = state.jobs.lock().await;
+        registry.insert(JobEntry {
+            id: job_id.clone(),
+            job_type: JobType::Transcribe,
+            episode_id,
+            episode_title,
+            cancel_token,
+            handle,
+        });
+    }
+
+    Ok(job_id)
+}
+
+async fn run_transcribe_task(
+    app: &tauri::AppHandle,
+    job_id: &str,
+    episode_id: &str,
+    episode_title: &str,
+    local_path: &str,
+    language: &str,
+    binary_path: &str,
+    model_path: &str,
+    duration_seconds: i64,
+    cancel_token: CancellationToken,
+) -> Result<(), String> {
+    // Build whisper command
+    let output_prefix = std::env::temp_dir()
+        .join(format!("flexi_whisper_{}", whisper::uuid_hex()));
+    let output_prefix_str = output_prefix.to_string_lossy().to_string();
+
+    let mut args: Vec<String> = vec![
+        "-m".into(), model_path.to_string(),
+        "-f".into(), local_path.to_string(),
+        "-oj".into(),
+        "-of".into(), output_prefix_str.clone(),
+    ];
+    if language != "auto" {
+        args.push("-l".into());
+        args.push(language.to_string());
+    }
+
+    let mut child = tokio::process::Command::new(binary_path)
+        .args(&args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to spawn whisper: {e}"))?;
+
+    let stdout = child.stdout.take()
+        .ok_or("Failed to capture whisper stdout")?;
+    let stderr = child.stderr.take()
+        .ok_or("Failed to capture whisper stderr")?;
+
+    // Drain stderr in background
+    let stderr_handle = tokio::spawn(async move {
+        let mut buf = String::new();
+        let mut reader = BufReader::new(stderr);
+        let _ = reader.read_to_string(&mut buf).await;
+        buf
+    });
+
+    // Read stdout line-by-line with cancellation support
+    let re = regex::Regex::new(
+        r"\[(\d{2}:\d{2}:\d{2}[.,]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[.,]\d{3})\]\s*(.*)"
+    ).unwrap();
+
+    let duration_ms = duration_seconds * 1000;
+    let mut streaming_index: i64 = 0;
+    let mut reader = BufReader::new(stdout).lines();
+
+    loop {
+        tokio::select! {
+            _ = cancel_token.cancelled() => {
+                let _ = child.kill().await;
+
+                // Mark as pending in DB
+                {
+                    let state = app.state::<AppState>();
+                    let conn = state.db.lock();
+                    if let Ok(conn) = conn {
+                        conn.execute(
+                            "UPDATE podcast_episodes SET transcript_status = 'pending' WHERE id = ?1",
+                            rusqlite::params![episode_id],
+                        ).ok();
+                    }
+                }
+
+                let _ = app.emit("job-cancelled", JobEvent {
+                    id: job_id.to_string(),
+                    job_type: JobType::Transcribe,
+                    status: JobStatus::Cancelled,
+                    episode_id: episode_id.to_string(),
+                    episode_title: episode_title.to_string(),
+                    progress: 0.0,
+                    error: None,
+                });
+
+                let _ = tokio::fs::remove_file(format!("{output_prefix_str}.json")).await;
+                return Err("Job cancelled".into());
+            }
+            line = reader.next_line() => {
+                match line {
+                    Ok(Some(text)) => {
+                        if let Some(caps) = re.captures(&text) {
+                            let seg_text = caps[3].trim().to_string();
+                            if seg_text.is_empty() || seg_text == "[BLANK_AUDIO]" {
+                                continue;
+                            }
+
+                            let start_ms = whisper::parse_timestamp(&caps[1]);
+                            let end_ms = whisper::parse_timestamp(&caps[2]);
+
+                            // Estimate progress
+                            let progress = if duration_ms > 0 {
+                                ((end_ms as f64) / (duration_ms as f64) * 100.0).min(99.0)
+                            } else {
+                                0.0
+                            };
+
+                            // Emit progress event
+                            let _ = app.emit("job-progress", JobEvent {
+                                id: job_id.to_string(),
+                                job_type: JobType::Transcribe,
+                                status: JobStatus::Running,
+                                episode_id: episode_id.to_string(),
+                                episode_title: episode_title.to_string(),
+                                progress,
+                                error: None,
+                            });
+
+                            // Backward compat: emit segment event
+                            let segment = PodcastTranscriptSegment {
+                                id: format!("s_{streaming_index}"),
+                                episode_id: episode_id.to_string(),
+                                text: seg_text,
+                                start_ms,
+                                end_ms,
+                                confidence: 0.0,
+                                language: language.to_string(),
+                                words: Vec::new(),
+                            };
+                            let _ = app.emit("podcast-transcript-segment", &segment);
+                            streaming_index += 1;
+                        }
+                    }
+                    Ok(None) => break, // EOF
+                    Err(_) => break,
+                }
+            }
+        }
+    }
+
+    // Wait for process completion
+    let status = child.wait().await
+        .map_err(|e| format!("Whisper process error: {e}"))?;
+
+    let stderr_text = stderr_handle.await.unwrap_or_default();
+
+    if !status.success() {
+        {
+            let state = app.state::<AppState>();
+            let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+            conn.execute(
+                "UPDATE podcast_episodes SET transcript_status = 'failed' WHERE id = ?1",
+                rusqlite::params![episode_id],
+            ).ok();
+        }
+        let _ = tokio::fs::remove_file(format!("{output_prefix_str}.json")).await;
+        return Err(format!(
+            "Whisper process failed (exit {}): {}",
+            status.code().unwrap_or(-1),
+            &stderr_text[..stderr_text.len().min(500)]
+        ));
+    }
+
+    // Read JSON for full data with word-level timestamps
+    let json_path = format!("{output_prefix_str}.json");
+    let json_content = tokio::fs::read_to_string(&json_path)
+        .await
+        .map_err(|e| {
+            let mut msg = format!("Failed to read whisper output at {json_path}: {e}");
+            if !stderr_text.is_empty() {
+                msg.push_str(&format!("\nWhisper stderr: {}", &stderr_text[..stderr_text.len().min(500)]));
+            }
+            msg
+        })?;
+
+    let _ = tokio::fs::remove_file(&json_path).await;
+
+    let parsed_segments = whisper::parse_whisper_json(&json_content, language)?;
+
+    // Store segments in DB
+    {
+        let state = app.state::<AppState>();
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+
+        // Delete old segments if re-transcribing
+        conn.execute(
+            "DELETE FROM podcast_transcript_segments WHERE episode_id = ?1",
+            rusqlite::params![episode_id],
+        ).ok();
+
+        let mut full_text = String::new();
+        let mut total_word_count: i64 = 0;
+
+        for seg in &parsed_segments {
+            let seg_id = format!("{:032x}", std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos());
+
+            conn.execute(
+                "INSERT INTO podcast_transcript_segments
+                    (id, episode_id, text, start_ms, end_ms, confidence, language)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                rusqlite::params![
+                    seg_id, episode_id, seg.text, seg.start_ms, seg.end_ms,
+                    seg.confidence, seg.language,
+                ],
+            ).map_err(|e| format!("Segment insert error: {e}"))?;
+
+            // Insert word timestamps
+            for w in &seg.words {
+                conn.execute(
+                    "INSERT INTO podcast_word_timestamps
+                        (segment_id, word, start_ms, end_ms, confidence)
+                     VALUES (?1, ?2, ?3, ?4, ?5)",
+                    rusqlite::params![seg_id, w.word, w.start_ms, w.end_ms, w.confidence],
+                ).ok();
+            }
+
+            if !full_text.is_empty() { full_text.push(' '); }
+            full_text.push_str(&seg.text);
+            total_word_count += seg.text.split_whitespace().count() as i64;
+        }
+
+        // Update episode
+        conn.execute(
+            "UPDATE podcast_episodes SET
+                transcript = ?1,
+                transcript_status = 'completed',
+                word_count = ?2
+             WHERE id = ?3",
+            rusqlite::params![full_text, total_word_count, episode_id],
+        ).map_err(|e| format!("Episode update error: {e}"))?;
+
+        // Auto-run NLP analysis
+        let _ = run_nlp_analysis_with_conn(&conn, episode_id, &full_text);
+    }
+
+    // Emit completion event (backward compat)
+    let _ = app.emit("podcast-transcription-complete", episode_id);
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn podcast_start_download_job(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    episode_id: String,
+) -> Result<String, String> {
+    // 1. Get episode audio URL and title
+    let (audio_url, episode_title) = {
+        let conn = lock_db(&state)?;
+        conn.query_row(
+            "SELECT audio_url, title FROM podcast_episodes WHERE id = ?1",
+            rusqlite::params![episode_id],
+            |row: &rusqlite::Row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+        )
+        .map_err(|e| format!("Episode not found: {e}"))?
+    };
+
+    // 2. Check for duplicate active job
+    {
+        let registry = state.jobs.lock().await;
+        if registry.has_active_job_for_episode(&episode_id, &JobType::Download) {
+            return Err("A download job is already running for this episode".into());
+        }
+    }
+
+    // 3. Generate job ID, create cancellation token
+    let job_id = whisper::uuid_hex();
+    let cancel_token = CancellationToken::new();
+    let child_token = cancel_token.child_token();
+
+    // 4. Emit job:started
+    let started_event = JobEvent {
+        id: job_id.clone(),
+        job_type: JobType::Download,
+        status: JobStatus::Running,
+        episode_id: episode_id.clone(),
+        episode_title: episode_title.clone(),
+        progress: 0.0,
+        error: None,
+    };
+    let _ = app.emit("job-started", &started_event);
+
+    // 5. Spawn the download task
+    let app_handle = app.clone();
+    let job_id_clone = job_id.clone();
+    let episode_id_clone = episode_id.clone();
+    let episode_title_clone = episode_title.clone();
+
+    let handle = tokio::spawn(async move {
+        let result = run_download_task(
+            &app_handle,
+            &job_id_clone,
+            &episode_id_clone,
+            &episode_title_clone,
+            &audio_url,
+            child_token,
+        ).await;
+
+        // Remove job from registry
+        {
+            let state = app_handle.state::<AppState>();
+            let mut registry = state.jobs.lock().await;
+            registry.remove(&job_id_clone);
+        }
+
+        // Emit final event
+        match result {
+            Ok(()) => {
+                let _ = app_handle.emit("job-completed", JobEvent {
+                    id: job_id_clone,
+                    job_type: JobType::Download,
+                    status: JobStatus::Completed,
+                    episode_id: episode_id_clone,
+                    episode_title: episode_title_clone,
+                    progress: 100.0,
+                    error: None,
+                });
+            }
+            Err(err) => {
+                let _ = app_handle.emit("job-failed", JobEvent {
+                    id: job_id_clone,
+                    job_type: JobType::Download,
+                    status: JobStatus::Failed,
+                    episode_id: episode_id_clone,
+                    episode_title: episode_title_clone,
+                    progress: 0.0,
+                    error: Some(err),
+                });
+            }
+        }
+    });
+
+    // 6. Insert into registry
+    {
+        let mut registry = state.jobs.lock().await;
+        registry.insert(JobEntry {
+            id: job_id.clone(),
+            job_type: JobType::Download,
+            episode_id,
+            episode_title,
+            cancel_token,
+            handle,
+        });
+    }
+
+    Ok(job_id)
+}
+
+async fn run_download_task(
+    app: &tauri::AppHandle,
+    job_id: &str,
+    episode_id: &str,
+    episode_title: &str,
+    audio_url: &str,
+    cancel_token: CancellationToken,
+) -> Result<(), String> {
+    let dir = episodes_dir()?;
+
+    // Determine file extension from URL or default to .mp3
+    let ext = audio_url
+        .rsplit('.')
+        .next()
+        .and_then(|e| {
+            let e = e.split('?').next().unwrap_or(e);
+            if ["mp3", "m4a", "ogg", "wav", "opus"].contains(&e) {
+                Some(e.to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| "mp3".into());
+    let dest_path = dir.join(format!("{episode_id}.{ext}"));
+
+    // Already downloaded?
+    if dest_path.exists() {
+        let path_str = dest_path.to_string_lossy().to_string();
+        let state = app.state::<AppState>();
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+        conn.execute(
+            "UPDATE podcast_episodes SET is_downloaded = 1, local_path = ?1 WHERE id = ?2",
+            rusqlite::params![path_str, episode_id],
+        ).ok();
+        return Ok(());
+    }
+
+    let response = reqwest::get(audio_url)
+        .await
+        .map_err(|e| format!("Download request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Download failed with status: {}", response.status()));
+    }
+
+    let total_bytes = response.content_length().unwrap_or(0);
+    let tmp_path = dest_path.with_extension(format!("{ext}.tmp"));
+    let mut file = tokio::fs::File::create(&tmp_path)
+        .await
+        .map_err(|e| format!("Failed to create file: {e}"))?;
+
+    let mut downloaded: u64 = 0;
+    let mut stream = response.bytes_stream();
+    let mut last_emit_percent: f64 = -1.0;
+
+    use tokio::io::AsyncWriteExt;
+
+    loop {
+        tokio::select! {
+            _ = cancel_token.cancelled() => {
+                drop(file);
+                let _ = tokio::fs::remove_file(&tmp_path).await;
+
+                let _ = app.emit("job-cancelled", JobEvent {
+                    id: job_id.to_string(),
+                    job_type: JobType::Download,
+                    status: JobStatus::Cancelled,
+                    episode_id: episode_id.to_string(),
+                    episode_title: episode_title.to_string(),
+                    progress: 0.0,
+                    error: None,
+                });
+
+                return Err("Job cancelled".into());
+            }
+            chunk_result = stream.next() => {
+                match chunk_result {
+                    Some(Ok(chunk)) => {
+                        file.write_all(&chunk)
+                            .await
+                            .map_err(|e| format!("Write error: {e}"))?;
+
+                        downloaded += chunk.len() as u64;
+                        let percent = if total_bytes > 0 {
+                            (downloaded as f64 / total_bytes as f64) * 100.0
+                        } else {
+                            0.0
+                        };
+
+                        let rounded = (percent * 10.0).floor() / 10.0;
+                        if (rounded - last_emit_percent).abs() >= 1.0 {
+                            last_emit_percent = rounded;
+
+                            // Emit job:progress
+                            let _ = app.emit("job-progress", JobEvent {
+                                id: job_id.to_string(),
+                                job_type: JobType::Download,
+                                status: JobStatus::Running,
+                                episode_id: episode_id.to_string(),
+                                episode_title: episode_title.to_string(),
+                                progress: rounded,
+                                error: None,
+                            });
+
+                            // Backward compat: emit download progress
+                            let _ = app.emit("podcast-download-progress", EpisodeDownloadProgress {
+                                episode_id: episode_id.to_string(),
+                                downloaded_bytes: downloaded,
+                                total_bytes,
+                                percent: rounded,
+                            });
+                        }
+                    }
+                    Some(Err(e)) => {
+                        drop(file);
+                        let _ = tokio::fs::remove_file(&tmp_path).await;
+                        return Err(format!("Download error: {e}"));
+                    }
+                    None => break, // Stream finished
+                }
+            }
+        }
+    }
+
+    file.flush().await.map_err(|e| format!("Flush error: {e}"))?;
+    drop(file);
+
+    tokio::fs::rename(&tmp_path, &dest_path)
+        .await
+        .map_err(|e| format!("Rename error: {e}"))?;
+
+    let path_str = dest_path.to_string_lossy().to_string();
+
+    // Update DB
+    {
+        let state = app.state::<AppState>();
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+        conn.execute(
+            "UPDATE podcast_episodes SET is_downloaded = 1, local_path = ?1 WHERE id = ?2",
+            rusqlite::params![path_str, episode_id],
+        )
+        .map_err(|e| format!("DB update error: {e}"))?;
+    }
+
+    // Emit backward compat 100%
+    let _ = app.emit("podcast-download-progress", EpisodeDownloadProgress {
+        episode_id: episode_id.to_string(),
+        downloaded_bytes: total_bytes,
+        total_bytes,
+        percent: 100.0,
+    });
+
+    Ok(())
 }

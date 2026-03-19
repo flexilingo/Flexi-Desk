@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Send, Sparkles, Languages, BookOpen, Lightbulb, Loader2 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useLanguageSettings } from '@/hooks/useLanguageSettings';
+import { SimpleMarkdown } from '@/components/common/SimpleMarkdown';
 
 interface ChatMessage {
   id: string;
@@ -33,10 +35,20 @@ export function SentenceChatSheet({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const { nativeLang } = useLanguageSettings();
   const [targetLang, setTargetLang] = useState('fa');
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoActionDone = useRef(false);
+  const langInitialized = useRef(false);
+
+  // Initialize targetLang from saved settings (user can still override via dropdown)
+  useEffect(() => {
+    if (!langInitialized.current && nativeLang && nativeLang !== 'en') {
+      langInitialized.current = true;
+      setTargetLang(nativeLang);
+    }
+  }, [nativeLang]);
 
   // Load history on open
   useEffect(() => {
@@ -159,13 +171,17 @@ export function SentenceChatSheet({
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
+                className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
                   msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-primary text-primary-foreground whitespace-pre-wrap'
                     : 'bg-muted text-foreground'
                 }`}
               >
-                {msg.content}
+                {msg.role === 'assistant' ? (
+                  <SimpleMarkdown content={msg.content} />
+                ) : (
+                  msg.content
+                )}
               </div>
             </div>
           ))}

@@ -74,7 +74,19 @@ export function WordPopover({ token, sentence, documentLanguage, position, onClo
 
       <div style={style} className="w-64 rounded-lg border border-border bg-card p-3 shadow-lg">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-lg font-bold text-foreground">{token.text}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-foreground">{token.text}</span>
+            {token.pos && (
+              <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5">
+                {token.pos}
+              </span>
+            )}
+            {token.cefr_level && (
+              <span className="text-xs font-medium text-primary bg-primary/10 rounded px-1.5 py-0.5">
+                {token.cefr_level}
+              </span>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
@@ -82,6 +94,11 @@ export function WordPopover({ token, sentence, documentLanguage, position, onClo
             <X className="h-4 w-4" />
           </button>
         </div>
+        {token.lemma && token.lemma !== token.lower && (
+          <p className="text-xs text-muted-foreground mb-1">
+            Lemma: <span className="font-medium text-foreground">{token.lemma}</span>
+          </p>
+        )}
 
         {sentence && (
           <p className="text-xs text-muted-foreground mb-3 line-clamp-3 italic">

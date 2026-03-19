@@ -15,16 +15,25 @@ import {
   Moon,
   Monitor,
   Check,
+  Cloud,
+  Download,
+  Mail,
+  ArrowLeft,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import { WhisperSetup } from '@/pages/caption/components/WhisperSetup';
+import { ShortcutSettingsPage } from '@/pages/settings/ShortcutSettingsPage';
+import { SyncSettings } from '@/pages/settings/SyncSettings';
+import { OllamaModelManager } from '@/pages/settings/components/OllamaModelManager';
+import { ExportDialog } from '@/pages/settings/ExportDialog';
+import { ImportDialog } from '@/pages/settings/ImportDialog';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import { useTranslation } from 'react-i18next';
 
-type SettingsTab = 'account' | 'ai' | 'languages' | 'appearance' | 'shortcuts' | 'whisper';
+type SettingsTab = 'account' | 'ai' | 'languages' | 'appearance' | 'shortcuts' | 'whisper' | 'sync' | 'data';
 
 const TABS: { id: SettingsTab; icon: typeof User; label: string }[] = [
   { id: 'account', icon: User, label: 'Account' },
@@ -33,75 +42,73 @@ const TABS: { id: SettingsTab; icon: typeof User; label: string }[] = [
   { id: 'appearance', icon: Palette, label: 'Appearance' },
   { id: 'shortcuts', icon: Keyboard, label: 'Shortcuts' },
   { id: 'whisper', icon: Mic, label: 'Whisper' },
+  // TODO: Enable when fully tested
+  // { id: 'sync', icon: Cloud, label: 'Sync' },
+  // { id: 'data', icon: Download, label: 'Export / Import' },
 ];
 
 const ALL_TAB_IDS = TABS.map((t) => t.id);
 
 // --- Auth Section ---
 
-function GoogleLogo() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24">
-      <path
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-        fill="#4285F4"
-      />
-      <path
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-        fill="#34A853"
-      />
-      <path
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-        fill="#EA4335"
-      />
-    </svg>
-  );
-}
-
-function AppleLogo() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-    </svg>
-  );
-}
-
 function AuthSection() {
   const session = useAuthStore((s) => s.session);
   const isLoading = useAuthStore((s) => s.isLoading);
   const error = useAuthStore((s) => s.error);
-  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
-  const loginWithApple = useAuthStore((s) => s.loginWithApple);
+  const sendOtp = useAuthStore((s) => s.sendOtp);
+  const verifyOtp = useAuthStore((s) => s.verifyOtp);
   const logout = useAuthStore((s) => s.logout);
   const clearError = useAuthStore((s) => s.clearError);
 
-  const [signingIn, setSigningIn] = useState(false);
+  const [step, setStep] = useState<'email' | 'otp'>('email');
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
-  const handleGoogle = async () => {
-    setSigningIn(true);
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
     clearError();
+    setSending(true);
     try {
-      await loginWithGoogle();
+      await sendOtp(email);
+      setStep('otp');
     } catch {
       // Error is set in the store
     } finally {
-      setSigningIn(false);
+      setSending(false);
     }
   };
 
-  const handleApple = async () => {
-    setSigningIn(true);
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) return;
     clearError();
+    setVerifying(true);
     try {
-      await loginWithApple();
+      await verifyOtp(email, otp);
     } catch {
       // Error is set in the store
     } finally {
-      setSigningIn(false);
+      setVerifying(false);
+    }
+  };
+
+  const handleBack = () => {
+    setStep('email');
+    setOtp('');
+    clearError();
+  };
+
+  const handleResend = async () => {
+    clearError();
+    setSending(true);
+    try {
+      await sendOtp(email);
+    } catch {
+      // Error is set in the store
+    } finally {
+      setSending(false);
     }
   };
 
@@ -149,7 +156,7 @@ function AuthSection() {
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-            <User className="h-5 w-5 text-primary" />
+            <Mail className="h-5 w-5 text-primary" />
           </div>
           <div>
             <CardTitle className="text-base">FlexiLingo Account</CardTitle>
@@ -168,32 +175,72 @@ function AuthSection() {
             </div>
           )}
 
-          <button
-            onClick={handleGoogle}
-            disabled={signingIn}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-border bg-card hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {signingIn ? (
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            ) : (
-              <GoogleLogo />
-            )}
-            <span className="font-medium text-sm">Continue with Google</span>
-          </button>
-
-          <button
-            onClick={handleApple}
-            disabled={signingIn}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-black text-white hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {signingIn ? <Loader2 className="h-5 w-5 animate-spin" /> : <AppleLogo />}
-            <span className="font-medium text-sm">Continue with Apple</span>
-          </button>
-
-          {signingIn && (
-            <p className="text-xs text-center text-muted-foreground">
-              A browser window has been opened. Complete sign-in there.
-            </p>
+          {step === 'email' ? (
+            <form onSubmit={handleSendOtp} className="space-y-3">
+              <div>
+                <label htmlFor="auth-email" className="block text-sm font-medium text-foreground mb-1.5">
+                  Email
+                </label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={sending || !email}>
+                {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                {sending ? 'Sending code...' : 'Send code'}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Code sent to <span className="font-medium text-foreground">{email}</span>
+              </p>
+              <div>
+                <label htmlFor="auth-otp" className="block text-sm font-medium text-foreground mb-1.5">
+                  Verification code
+                </label>
+                <input
+                  id="auth-otp"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  required
+                  autoFocus
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground text-center tracking-[0.3em] font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={verifying || otp.length !== 6}>
+                {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                {verifying ? 'Verifying...' : 'Verify'}
+              </Button>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft className="h-3 w-3" />
+                  Use another email
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={sending}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                >
+                  {sending ? 'Sending...' : 'Resend code'}
+                </button>
+              </div>
+            </form>
           )}
         </div>
       </CardContent>
@@ -217,9 +264,9 @@ function AIProviderSection() {
     (async () => {
       const p = await getSetting('ai_provider');
       if (p) setProvider(p as AIProvider);
-      const key = await getSetting('ai_api_key');
+      const key = await getSetting(`${p || 'openai'}_api_key`);
       if (key) setApiKey(key);
-      const url = await getSetting('ai_base_url');
+      const url = await getSetting(`${p || 'ollama'}_base_url`);
       if (url) setBaseUrl(url);
       const m = await getSetting('ai_model');
       if (m) setModel(m);
@@ -230,8 +277,8 @@ function AIProviderSection() {
     setSaving(true);
     try {
       await setSetting('ai_provider', provider);
-      if (apiKey) await setSetting('ai_api_key', apiKey);
-      await setSetting('ai_base_url', baseUrl);
+      if (apiKey) await setSetting(`${provider}_api_key`, apiKey);
+      await setSetting(`${provider}_base_url`, baseUrl);
       if (model) await setSetting('ai_model', model);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -320,23 +367,29 @@ function AIProviderSection() {
           </div>
         )}
 
-        {/* Model */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Model</label>
-          <input
-            type="text"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            placeholder={
-              provider === 'ollama'
-                ? 'llama3.1'
-                : provider === 'openai'
-                  ? 'gpt-4o'
-                  : 'claude-sonnet-4-20250514'
-            }
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
-        </div>
+        {/* Ollama: Model Manager */}
+        {provider === 'ollama' && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Models</label>
+            <OllamaModelManager />
+          </div>
+        )}
+
+        {/* Cloud providers: Model text input */}
+        {provider !== 'ollama' && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Model</label>
+            <input
+              type="text"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder={
+                provider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-20250514'
+              }
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+        )}
 
         <Button onClick={handleSave} disabled={saving} className="w-full">
           {saving ? (
@@ -541,50 +594,39 @@ function AppearanceSection() {
   );
 }
 
-// --- Shortcuts Section ---
+// --- Data Section (Export/Import) ---
 
-const DEFAULT_SHORTCUTS = [
-  { id: 'toggle_sidebar', label: 'Toggle Sidebar', keys: 'Ctrl+B' },
-  { id: 'quick_review', label: 'Start Quick Review', keys: 'Ctrl+R' },
-  { id: 'search', label: 'Search', keys: 'Ctrl+K' },
-  { id: 'toggle_theme', label: 'Toggle Theme', keys: 'Ctrl+Shift+T' },
-  { id: 'toggle_caption', label: 'Start/Stop Caption', keys: 'Ctrl+Shift+C' },
-  { id: 'new_conversation', label: 'New AI Conversation', keys: 'Ctrl+N' },
-];
+function DataSection() {
+  const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
-function ShortcutsSection() {
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-            <Keyboard className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <CardTitle className="text-base">Keyboard Shortcuts</CardTitle>
-            <CardDescription>View and customize keyboard shortcuts</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-1">
-          {DEFAULT_SHORTCUTS.map((shortcut) => (
-            <div
-              key={shortcut.id}
-              className="flex items-center justify-between py-2.5 px-1 border-b border-border last:border-0"
-            >
-              <span className="text-sm">{shortcut.label}</span>
-              <kbd className="px-2 py-1 rounded bg-muted border border-border text-xs font-mono text-muted-foreground">
-                {shortcut.keys}
-              </kbd>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Download className="h-5 w-5 text-primary" />
             </div>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground mt-3">
-          Custom key binding will be available in a future update.
-        </p>
-      </CardContent>
-    </Card>
+            <div>
+              <CardTitle className="text-base">Export & Import</CardTitle>
+              <CardDescription>Move your vocabulary data in and out</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button onClick={() => setShowExport(true)} variant="outline" className="w-full">
+            Export Vocabulary
+          </Button>
+          <Button onClick={() => setShowImport(true)} variant="outline" className="w-full">
+            Import Vocabulary
+          </Button>
+        </CardContent>
+      </Card>
+
+      <ExportDialog open={showExport} onOpenChange={setShowExport} />
+      <ImportDialog open={showImport} onOpenChange={setShowImport} />
+    </>
   );
 }
 
@@ -647,8 +689,10 @@ export function SettingsPage() {
       {activeTab === 'ai' && <AIProviderSection />}
       {activeTab === 'languages' && <LanguagesSection />}
       {activeTab === 'appearance' && <AppearanceSection />}
-      {activeTab === 'shortcuts' && <ShortcutsSection />}
+      {activeTab === 'shortcuts' && <ShortcutSettingsPage />}
       {activeTab === 'whisper' && <WhisperSetup />}
+      {activeTab === 'sync' && <SyncSettings />}
+      {activeTab === 'data' && <DataSection />}
     </div>
   );
 }

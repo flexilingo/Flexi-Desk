@@ -1,10 +1,11 @@
-use tauri::{Emitter, State};
+use tauri::{AppHandle, Emitter, State};
 use futures_util::StreamExt;
 
 use crate::caption::audio;
 use crate::caption::sidecar::WhisperSidecar;
 use crate::caption::types::*;
 use crate::caption::whisper;
+use crate::caption::whisper_installer;
 use crate::AppState;
 
 // ── Model Registry ────────────────────────────────────────
@@ -1162,4 +1163,46 @@ fn get_segments_by_session(
         segments.push(row.map_err(|e| format!("Row error: {e}"))?);
     }
     Ok(segments)
+}
+
+// ── Whisper Auto-Install ──────────────────────────────────
+
+#[tauri::command]
+pub fn caption_whisper_install_status() -> Result<whisper_installer::WhisperInstallStatus, String> {
+    Ok(whisper_installer::whisper_install_status())
+}
+
+#[tauri::command]
+pub fn caption_auto_detect_whisper(
+    state: State<'_, AppState>,
+) -> Result<Option<String>, String> {
+    if let Some(path) = whisper_installer::detect_whisper_binary() {
+        // Auto-save the detected path to settings
+        let conn = lock_db(&state)?;
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('whisper_binary_path', ?1)",
+            [&path],
+        )
+        .map_err(|e| format!("Failed to save setting: {e}"))?;
+        Ok(Some(path))
+    } else {
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+pub async fn caption_install_whisper(
+    app: AppHandle,
+) -> Result<String, String> {
+    let brew_path = whisper_installer::detect_homebrew()
+        .ok_or_else(|| "Homebrew not found. Please install Homebrew first.".to_string())?;
+
+    whisper_installer::install_whisper_via_brew(&app, &brew_path).await
+}
+
+#[tauri::command]
+pub async fn caption_install_homebrew(
+    app: AppHandle,
+) -> Result<String, String> {
+    whisper_installer::install_homebrew(&app).await
 }

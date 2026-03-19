@@ -39,17 +39,23 @@ pub fn dashboard_get_summary(
             reviews_completed: 0,
         });
 
-    // Streak info
+    // Streak info (with freeze fields)
     let streak = conn
         .query_row(
-            "SELECT current_streak, longest_streak, last_activity_date
-             FROM streaks ORDER BY id DESC LIMIT 1",
+            "SELECT current_streak, longest_streak, last_activity_date,
+                    COALESCE(freeze_days_remaining, 1), COALESCE(freeze_days_per_week, 1),
+                    freeze_last_reset, COALESCE(daily_xp_target, 50)
+             FROM streaks ORDER BY rowid LIMIT 1",
             [],
             |row: &rusqlite::Row| {
                 Ok(StreakInfo {
                     current_streak: row.get(0)?,
                     longest_streak: row.get(1)?,
                     last_activity_date: row.get(2)?,
+                    freeze_days_remaining: row.get(3)?,
+                    freeze_days_per_week: row.get(4)?,
+                    freeze_last_reset: row.get(5)?,
+                    daily_xp_target: row.get(6)?,
                 })
             },
         )
@@ -57,6 +63,10 @@ pub fn dashboard_get_summary(
             current_streak: 0,
             longest_streak: 0,
             last_activity_date: None,
+            freeze_days_remaining: 1,
+            freeze_days_per_week: 1,
+            freeze_last_reset: None,
+            daily_xp_target: 50,
         });
 
     // Total vocabulary
@@ -457,6 +467,138 @@ fn map_activity_row(row: &rusqlite::Row) -> rusqlite::Result<ActivityEntry> {
         metadata_json: row.get(4)?,
         created_at: row.get(5)?,
     })
+}
+
+// ── Analytics Commands ───────────────────────────────────
+
+#[tauri::command]
+pub fn dashboard_get_xp_history(
+    state: State<'_, AppState>,
+    days: Option<i64>,
+) -> Result<Vec<crate::dashboard::types::DailyXP>, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::analytics::get_xp_history(&conn, days.unwrap_or(30))
+}
+
+#[tauri::command]
+pub fn dashboard_get_cefr_radar(
+    state: State<'_, AppState>,
+) -> Result<Vec<crate::dashboard::types::CEFRSkillScore>, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::analytics::get_cefr_radar(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_get_study_heatmap(
+    state: State<'_, AppState>,
+    days: Option<i64>,
+) -> Result<Vec<crate::dashboard::types::StudyHeatmapEntry>, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::analytics::get_study_heatmap(&conn, days.unwrap_or(90))
+}
+
+#[tauri::command]
+pub fn dashboard_get_vocab_growth(
+    state: State<'_, AppState>,
+    days: Option<i64>,
+) -> Result<Vec<crate::dashboard::types::VocabGrowthPoint>, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::analytics::get_vocab_growth(&conn, days.unwrap_or(90))
+}
+
+#[tauri::command]
+pub fn dashboard_get_streak_calendar(
+    state: State<'_, AppState>,
+    days: Option<i64>,
+) -> Result<Vec<crate::dashboard::types::StreakDay>, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::analytics::get_streak_calendar(&conn, days.unwrap_or(365))
+}
+
+#[tauri::command]
+pub fn dashboard_get_analytics_summary(
+    state: State<'_, AppState>,
+) -> Result<crate::dashboard::types::AnalyticsSummary, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::analytics::get_analytics_summary(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_log_xp(
+    state: State<'_, AppState>,
+    module: String,
+    action: String,
+    xp_amount: i64,
+    metadata: Option<String>,
+) -> Result<(), String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::analytics::log_xp(
+        &conn,
+        &module,
+        &action,
+        xp_amount,
+        &metadata.unwrap_or_else(|| "{}".to_string()),
+    )
+}
+
+// ── Streak & Goal Enhancement Commands ──────────────────
+
+#[tauri::command]
+pub fn dashboard_check_streak(
+    state: State<'_, AppState>,
+) -> Result<StreakInfo, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::streaks::check_streak(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_use_freeze(
+    state: State<'_, AppState>,
+) -> Result<StreakInfo, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::streaks::use_freeze(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_set_freeze_config(
+    state: State<'_, AppState>,
+    freezes_per_week: i64,
+) -> Result<(), String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::streaks::set_freeze_config(&conn, freezes_per_week)
+}
+
+#[tauri::command]
+pub fn dashboard_set_xp_target(
+    state: State<'_, AppState>,
+    target: i64,
+) -> Result<(), String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::streaks::set_xp_target(&conn, target)
+}
+
+#[tauri::command]
+pub fn dashboard_get_xp_progress(
+    state: State<'_, AppState>,
+) -> Result<crate::dashboard::types::XPProgress, String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::streaks::get_xp_progress(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_set_goal_notification(
+    state: State<'_, AppState>,
+    goal_id: String,
+    notify_at: Option<String>,
+    enabled: bool,
+) -> Result<(), String> {
+    let conn = lock_db(&state)?;
+    crate::dashboard::streaks::set_goal_notification(
+        &conn,
+        &goal_id,
+        notify_at.as_deref(),
+        enabled,
+    )
 }
 
 // ── Internal Helpers ────────────────────────────────────

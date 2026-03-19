@@ -3,16 +3,27 @@ import { ArrowLeft, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useReadingStore } from '../stores/readingStore';
 import { WordPopover } from './WordPopover';
+import { ReadingToolbar } from './ReadingToolbar';
 import type { Token } from '../types';
+
+const cefrColors: Record<string, string> = {
+  A1: 'bg-emerald-100 dark:bg-emerald-900/30',
+  A2: 'bg-green-100 dark:bg-green-900/30',
+  B1: 'bg-yellow-100 dark:bg-yellow-900/30',
+  B2: 'bg-orange-100 dark:bg-orange-900/30',
+  C1: 'bg-red-100 dark:bg-red-900/30',
+  C2: 'bg-purple-100 dark:bg-purple-900/30',
+};
 
 interface Props {
   onBack: () => void;
 }
 
 export function InteractiveReader({ onBack }: Props) {
-  const { activeDocument, highlights, updateProgress, selectedTokenIndex, selectToken } =
+  const { activeDocument, highlights, updateProgress, selectedTokenIndex, selectToken, cefrHighlight } =
     useReadingStore();
   const readerRef = useRef<HTMLDivElement>(null);
   const [popoverState, setPopoverState] = useState<{
@@ -94,19 +105,25 @@ export function InteractiveReader({ onBack }: Props) {
     const needsSpace =
       i > 0 && isWord && prevToken && prevToken.text !== '(' && prevToken.text !== '"';
 
+    const cefrClass = cefrHighlight && token.cefr_level && !token.is_stop
+      ? cefrColors[token.cefr_level] ?? ''
+      : '';
+
     return (
       <span key={token.index}>
         {needsSpace && ' '}
         {isWord ? (
           <span
             onClick={(e) => handleWordClick(token, e)}
-            className={`cursor-pointer rounded-sm px-0.5 py-0.5 transition-colors ${
+            className={cn(
+              'cursor-pointer rounded-sm px-0.5 py-0.5 transition-colors',
               isSelected
                 ? 'bg-primary/20 text-primary'
                 : isHighlighted
                   ? 'bg-accent/15 text-accent underline decoration-accent/30 decoration-dotted underline-offset-4'
-                  : 'hover:bg-muted hover:text-foreground'
-            }`}
+                  : cefrClass || 'hover:bg-muted hover:text-foreground',
+            )}
+            title={cefrHighlight && token.cefr_level ? `${token.pos ?? ''} · ${token.cefr_level}` : undefined}
           >
             {token.text}
           </span>
@@ -146,6 +163,7 @@ export function InteractiveReader({ onBack }: Props) {
             </div>
           </div>
         </div>
+        <ReadingToolbar />
       </div>
 
       {/* Progress bar */}

@@ -19,7 +19,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { usePlayerStore } from '../stores/playerStore';
 import type { TranslationResult, RawTranslationResult } from '../types';
@@ -29,6 +28,7 @@ import { GoogleTab } from './WordDialog/GoogleTab';
 import { AITab } from './WordDialog/AITab';
 import { DictionaryTab } from './WordDialog/DictionaryTab';
 import { MerriamWebsterTab } from './WordDialog/MerriamWebsterTab';
+import { useLanguageSettings } from '@/hooks/useLanguageSettings';
 
 // ── CEFR badge colors ────────────────────────────────────
 
@@ -85,9 +85,11 @@ export function WordDialog({
   episodeId,
   positionMs,
   sourceLang = 'en',
-  targetLang = 'fa',
+  targetLang: targetLangProp,
   sentenceContext,
 }: WordDialogProps) {
+  const { nativeLang } = useLanguageSettings();
+  const targetLang = targetLangProp || nativeLang;
   const [activeTab, setActiveTab] = useState<WordDialogTab>('google');
   const [translation, setTranslation] = useState<TranslationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -279,7 +281,7 @@ export function WordDialog({
         </div>
 
         {/* ── Tab Content ──────────────────────────────── */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-4">
             {activeTab === 'google' && (
               <GoogleTab translation={translation} isLoading={isLoading} error={error} />
@@ -303,7 +305,7 @@ export function WordDialog({
               <MerriamWebsterTab word={word} isActive={activeTab === 'merriam-webster'} />
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <Separator />
 

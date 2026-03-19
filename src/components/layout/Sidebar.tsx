@@ -9,6 +9,8 @@ import {
   PenLine,
   GraduationCap,
   Podcast,
+  Puzzle,
+  Library,
   Settings,
   PanelLeftClose,
   PanelLeft,
@@ -18,19 +20,24 @@ import { useAppStore } from '@/stores/appStore';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { ENABLED_MODULES, type ModuleKey } from '@/config/features';
 
-const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/review', label: 'SRS Review', icon: Brain },
-  { to: '/reading', label: 'Reading', icon: BookOpen },
-  { to: '/tutor', label: 'AI Tutor', icon: MessageSquare },
-  { to: '/caption', label: 'Live Caption', icon: Captions },
-  { to: '/pronunciation', label: 'Pronunciation', icon: Mic },
-  { to: '/writing', label: 'Writing', icon: PenLine },
-  { to: '/exam', label: 'Exam', icon: GraduationCap },
-  { to: '/podcast', label: 'Podcast', icon: Podcast },
-  { to: '/settings', label: 'Settings', icon: Settings },
+const allNavItems = [
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' as ModuleKey },
+  { to: '/vocabulary', label: 'Vocabulary', icon: Library, module: 'vocabulary' as ModuleKey },
+  { to: '/review', label: 'SRS Review', icon: Brain, module: 'review' as ModuleKey },
+  { to: '/reading', label: 'Reading', icon: BookOpen, module: 'reading' as ModuleKey },
+  { to: '/tutor', label: 'AI Tutor', icon: MessageSquare, module: 'tutor' as ModuleKey },
+  { to: '/caption', label: 'Live Caption', icon: Captions, module: 'caption' as ModuleKey },
+  { to: '/pronunciation', label: 'Pronunciation', icon: Mic, module: 'pronunciation' as ModuleKey },
+  { to: '/writing', label: 'Writing', icon: PenLine, module: 'writing' as ModuleKey },
+  { to: '/exam', label: 'Exam', icon: GraduationCap, module: 'exam' as ModuleKey },
+  { to: '/podcast', label: 'Podcast', icon: Podcast, module: 'podcast' as ModuleKey },
+  { to: '/plugins', label: 'Plugins', icon: Puzzle, module: 'plugins' as ModuleKey },
+  { to: '/settings', label: 'Settings', icon: Settings, module: 'settings' as ModuleKey },
 ];
+
+const navItems = allNavItems.filter((item) => ENABLED_MODULES[item.module]);
 
 export function Sidebar() {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);

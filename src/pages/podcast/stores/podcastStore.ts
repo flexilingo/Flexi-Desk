@@ -361,30 +361,13 @@ export const usePodcastStore = create<PodcastState>()(
 
     downloadEpisode: async (episodeId) => {
       set((s) => {
-        s.isDownloading = true;
-        s.downloadProgress = null;
         s.error = null;
       });
       try {
-        const path = await invoke<string>('podcast_download_episode', { episodeId });
-        set((s) => {
-          s.isDownloading = false;
-          s.downloadProgress = null;
-          const ep = s.episodes.find((e) => e.id === episodeId);
-          if (ep) {
-            ep.isDownloaded = true;
-            ep.localPath = path;
-          }
-          if (s.activeEpisode?.id === episodeId) {
-            s.activeEpisode.isDownloaded = true;
-            s.activeEpisode.localPath = path;
-          }
-        });
-        return path;
+        const jobId = await invoke<string>('podcast_start_download_job', { episodeId });
+        return jobId;
       } catch (err) {
         set((s) => {
-          s.isDownloading = false;
-          s.downloadProgress = null;
           s.error = String(err);
         });
         return null;
@@ -418,44 +401,15 @@ export const usePodcastStore = create<PodcastState>()(
 
     transcribeEpisode: async (episodeId) => {
       set((s) => {
-        s.isTranscribing = true;
         s.transcriptSegments = [];
         s.error = null;
       });
-
-      // Listen for streaming segments — they arrive one-by-one during transcription
-      const unlisten = await listen<RawPodcastTranscriptSegment>(
-        'podcast-transcript-segment',
-        (event) => {
-          const segment = mapTranscriptSegment(event.payload);
-          set((s) => {
-            s.transcriptSegments.push(segment);
-          });
-        },
-      );
-
       try {
-        // invoke runs whisper — segments stream in via events during this await
-        const raw = await invoke<RawPodcastTranscriptSegment[]>('podcast_transcribe_episode', {
-          episodeId,
-        });
-        set((s) => {
-          // Replace streaming segments with full data (includes word timestamps from JSON)
-          s.transcriptSegments = raw.map(mapTranscriptSegment);
-          s.isTranscribing = false;
-          const ep = s.episodes.find((e) => e.id === episodeId);
-          if (ep) ep.transcriptStatus = 'completed';
-          if (s.activeEpisode?.id === episodeId) {
-            s.activeEpisode.transcriptStatus = 'completed';
-          }
-        });
+        await invoke<string>('podcast_start_transcribe_job', { episodeId });
       } catch (err) {
         set((s) => {
-          s.isTranscribing = false;
           s.error = String(err);
         });
-      } finally {
-        unlisten();
       }
     },
 
@@ -501,14 +455,14 @@ export const usePodcastStore = create<PodcastState>()(
         if (feed) s.activeFeed = feed;
         s.view = 'player';
         s.transcriptSegments = [];
+        s.isLoadingTranscript = false;
         s.nlpAnalysis = null;
         s.error = null;
       });
-      // Load transcript if available
-      if (episode.transcriptStatus === 'completed') {
-        get().fetchTranscriptSegments(episode.id);
-        get().fetchAnalysis(episode.id);
-      }
+      // Always try to load transcript and analysis — segments may exist in DB
+      // regardless of transcript_status value
+      get().fetchTranscriptSegments(episode.id);
+      get().fetchAnalysis(episode.id);
     },
 
     clearError: () =>

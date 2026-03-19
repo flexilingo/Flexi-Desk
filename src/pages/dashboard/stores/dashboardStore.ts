@@ -9,13 +9,40 @@ import type {
   ActivityEntry,
   GoalType,
   GoalPeriod,
+  XPProgress,
   RawDashboardSummary,
   RawDailyStats,
   RawGoal,
   RawAchievement,
   RawActivityEntry,
+  RawXPProgress,
+  DailyXP,
+  CEFRSkillScore,
+  StudyHeatmapEntry,
+  VocabGrowthPoint,
+  StreakDay,
+  AnalyticsSummary,
+  RawDailyXP,
+  RawCEFRSkillScore,
+  RawStudyHeatmapEntry,
+  RawVocabGrowthPoint,
+  RawStreakDay,
+  RawAnalyticsSummary,
 } from '../types';
-import { mapSummary, mapDailyStats, mapGoal, mapAchievement, mapActivity } from '../types';
+import {
+  mapSummary,
+  mapDailyStats,
+  mapGoal,
+  mapAchievement,
+  mapActivity,
+  mapDailyXP,
+  mapCEFRScore,
+  mapStudyHeatmap,
+  mapVocabGrowth,
+  mapStreakDay,
+  mapAnalyticsSummary,
+  mapXPProgress,
+} from '../types';
 
 interface DashboardState {
   // Summary
@@ -36,10 +63,28 @@ interface DashboardState {
   // Activity
   activities: ActivityEntry[];
 
+  // Analytics
+  xpHistory: DailyXP[];
+  cefrRadar: CEFRSkillScore[];
+  studyHeatmap: StudyHeatmapEntry[];
+  vocabGrowth: VocabGrowthPoint[];
+  streakCalendar: StreakDay[];
+  analyticsSummary: AnalyticsSummary | null;
+  isLoadingAnalytics: boolean;
+
+  // XP Progress
+  xpProgress: XPProgress | null;
+
   // Error
   error: string | null;
 
   // Actions
+  fetchAnalytics: () => Promise<void>;
+  fetchXPProgress: () => Promise<void>;
+  useFreeze: () => Promise<void>;
+  setFreezeConfig: (freezesPerWeek: number) => Promise<void>;
+  setXPTarget: (target: number) => Promise<void>;
+  setGoalNotification: (goalId: string, notifyAt: string | null, enabled: boolean) => Promise<void>;
   fetchSummary: () => Promise<void>;
   fetchDailyStats: (fromDate: string, toDate: string) => Promise<void>;
   logActivity: (minutes?: number, words?: number, reviews?: number) => Promise<void>;
@@ -67,7 +112,44 @@ export const useDashboardStore = create<DashboardState>()(
     achievements: [],
     isLoadingAchievements: false,
     activities: [],
+    xpHistory: [],
+    cefrRadar: [],
+    studyHeatmap: [],
+    vocabGrowth: [],
+    streakCalendar: [],
+    analyticsSummary: null,
+    isLoadingAnalytics: false,
+    xpProgress: null,
     error: null,
+
+    fetchAnalytics: async () => {
+      set((s) => { s.isLoadingAnalytics = true; });
+      try {
+        const [xpRaw, cefrRaw, heatmapRaw, vocabRaw, calendarRaw, summaryRaw] =
+          await Promise.all([
+            invoke<RawDailyXP[]>('dashboard_get_xp_history', { days: 30 }),
+            invoke<RawCEFRSkillScore[]>('dashboard_get_cefr_radar'),
+            invoke<RawStudyHeatmapEntry[]>('dashboard_get_study_heatmap', { days: 90 }),
+            invoke<RawVocabGrowthPoint[]>('dashboard_get_vocab_growth', { days: 90 }),
+            invoke<RawStreakDay[]>('dashboard_get_streak_calendar', { days: 365 }),
+            invoke<RawAnalyticsSummary>('dashboard_get_analytics_summary'),
+          ]);
+        set((s) => {
+          s.xpHistory = xpRaw.map(mapDailyXP);
+          s.cefrRadar = cefrRaw.map(mapCEFRScore);
+          s.studyHeatmap = heatmapRaw.map(mapStudyHeatmap);
+          s.vocabGrowth = vocabRaw.map(mapVocabGrowth);
+          s.streakCalendar = calendarRaw.map(mapStreakDay);
+          s.analyticsSummary = mapAnalyticsSummary(summaryRaw);
+          s.isLoadingAnalytics = false;
+        });
+      } catch (err) {
+        set((s) => {
+          s.error = String(err);
+          s.isLoadingAnalytics = false;
+        });
+      }
+    },
 
     fetchSummary: async () => {
       set((s) => {
@@ -237,6 +319,61 @@ export const useDashboardStore = create<DashboardState>()(
         set((s) => {
           s.error = String(err);
         });
+      }
+    },
+
+    fetchXPProgress: async () => {
+      try {
+        const raw = await invoke<RawXPProgress>('dashboard_get_xp_progress');
+        set((s) => {
+          s.xpProgress = mapXPProgress(raw);
+        });
+      } catch {
+        /* best-effort */
+      }
+    },
+
+    useFreeze: async () => {
+      try {
+        await invoke('dashboard_use_freeze');
+        const raw = await invoke<RawXPProgress>('dashboard_get_xp_progress');
+        set((s) => {
+          s.xpProgress = mapXPProgress(raw);
+        });
+      } catch (err) {
+        set((s) => { s.error = String(err); });
+      }
+    },
+
+    setFreezeConfig: async (freezesPerWeek) => {
+      try {
+        await invoke('dashboard_set_freeze_config', { freezesPerWeek });
+      } catch (err) {
+        set((s) => { s.error = String(err); });
+      }
+    },
+
+    setXPTarget: async (target) => {
+      try {
+        await invoke('dashboard_set_xp_target', { target });
+        const raw = await invoke<RawXPProgress>('dashboard_get_xp_progress');
+        set((s) => {
+          s.xpProgress = mapXPProgress(raw);
+        });
+      } catch (err) {
+        set((s) => { s.error = String(err); });
+      }
+    },
+
+    setGoalNotification: async (goalId, notifyAt, enabled) => {
+      try {
+        await invoke('dashboard_set_goal_notification', {
+          goalId,
+          notifyAt,
+          enabled,
+        });
+      } catch (err) {
+        set((s) => { s.error = String(err); });
       }
     },
 

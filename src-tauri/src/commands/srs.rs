@@ -602,6 +602,7 @@ pub fn srs_rate_card(
     session_id: String,
     card_id: String,
     rating: String,
+    time_spent_ms: Option<i64>,
 ) -> Result<ScheduleResult, String> {
     let conn = lock_db(&state)?;
 
@@ -696,6 +697,30 @@ pub fn srs_rate_card(
     )
     .map_err(|e| format!("Progress update error: {e}"))?;
 
+    // Log to review_logs
+    let rating_str = match rating {
+        Rating::Again => "again",
+        Rating::Hard => "hard",
+        Rating::Good => "good",
+        Rating::Easy => "easy",
+    };
+
+    conn.execute(
+        "INSERT INTO review_logs (id, session_id, card_id, rating, interval_before, interval_after, state_before, state_after, time_spent_ms)
+         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        rusqlite::params![
+            session_id,
+            card_id,
+            rating_str,
+            interval,
+            result.interval_days,
+            state_str,
+            result.state,
+            time_spent_ms.unwrap_or(0),
+        ],
+    )
+    .map_err(|e| format!("Review log error: {e}"))?;
+
     // Update session counters
     let is_correct = matches!(rating, Rating::Good | Rating::Easy);
     if is_correct {
@@ -749,7 +774,20 @@ pub fn srs_complete_session(
         )
         .map_err(|e| format!("Session lookup error: {e}"))?;
 
-    let hard_count = reviewed - correct; // simplified: non-correct = hard+again
+    // Query review_logs for per-rating counts
+    let (again_count, hard_count, good_count, easy_count): (i64, i64, i64, i64) = conn
+        .query_row(
+            "SELECT
+                COALESCE(SUM(CASE WHEN rating = 'again' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN rating = 'hard' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN rating = 'good' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN rating = 'easy' THEN 1 ELSE 0 END), 0)
+             FROM review_logs WHERE session_id = ?1",
+            rusqlite::params![session_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .unwrap_or((0, 0, 0, 0));
+
     let accuracy = if reviewed > 0 {
         correct as f64 / reviewed as f64
     } else {
@@ -760,10 +798,10 @@ pub fn srs_complete_session(
         total_cards: total,
         reviewed_cards: reviewed,
         correct_count: correct,
-        again_count: 0, // detailed tracking would need per-card rating storage
+        again_count,
         hard_count,
-        good_count: correct,
-        easy_count: 0,
+        good_count,
+        easy_count,
         accuracy,
         duration_seconds: duration,
     })
@@ -807,6 +845,112 @@ pub fn srs_get_incomplete_session(
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
         Err(e) => Err(format!("Query error: {e}")),
     }
+}
+
+// ── Merge Command ─────────────────────────────────────────
+
+#[tauri::command]
+pub fn srs_merge_decks(
+    state: State<'_, AppState>,
+    source_deck_id: String,
+    target_deck_id: String,
+    delete_source: bool,
+) -> Result<DeckWithStats, String> {
+    let conn = lock_db(&state)?;
+
+    // Get target deck algorithm
+    let algorithm: String = conn
+        .query_row(
+            "SELECT algorithm FROM decks WHERE id = ?1",
+            rusqlite::params![target_deck_id],
+            |row| row.get(0),
+        )
+        .map_err(|e| format!("Target deck not found: {e}"))?;
+
+    // Move cards from source to target (skip duplicates by vocabulary_id)
+    conn.execute(
+        "UPDATE deck_cards SET deck_id = ?1
+         WHERE deck_id = ?2
+         AND vocabulary_id NOT IN (
+             SELECT vocabulary_id FROM deck_cards WHERE deck_id = ?1
+         )",
+        rusqlite::params![target_deck_id, source_deck_id],
+    )
+    .map_err(|e| format!("Merge error: {e}"))?;
+
+    // Update srs_progress algorithm for moved cards
+    conn.execute(
+        "UPDATE srs_progress SET algorithm = ?1
+         WHERE card_id IN (SELECT id FROM deck_cards WHERE deck_id = ?2)",
+        rusqlite::params![algorithm, target_deck_id],
+    )
+    .map_err(|e| format!("Algorithm update error: {e}"))?;
+
+    if delete_source {
+        // Delete remaining cards in source (duplicates that weren't moved)
+        conn.execute(
+            "DELETE FROM deck_cards WHERE deck_id = ?1",
+            rusqlite::params![source_deck_id],
+        )
+        .map_err(|e| format!("Source cards delete error: {e}"))?;
+
+        conn.execute(
+            "DELETE FROM decks WHERE id = ?1",
+            rusqlite::params![source_deck_id],
+        )
+        .map_err(|e| format!("Source delete error: {e}"))?;
+    }
+
+    // Recount target deck
+    conn.execute(
+        "UPDATE decks SET card_count = (SELECT COUNT(*) FROM deck_cards WHERE deck_id = ?1),
+                updated_at = datetime('now')
+         WHERE id = ?1",
+        rusqlite::params![target_deck_id],
+    )
+    .map_err(|e| format!("Count error: {e}"))?;
+
+    // If source not deleted, recount it too
+    if !delete_source {
+        conn.execute(
+            "UPDATE decks SET card_count = (SELECT COUNT(*) FROM deck_cards WHERE deck_id = ?1),
+                    updated_at = datetime('now')
+             WHERE id = ?1",
+            rusqlite::params![source_deck_id],
+        )
+        .map_err(|e| format!("Source count error: {e}"))?;
+    }
+
+    // Return updated target deck
+    let mut stmt = conn
+        .prepare(
+            "SELECT d.id, d.name, d.description, d.language, d.algorithm,
+                    d.card_count, d.created_at, d.updated_at,
+                    (SELECT COUNT(*) FROM deck_cards dc
+                     JOIN srs_progress sp ON sp.card_id = dc.id
+                     WHERE dc.deck_id = d.id AND sp.due_date <= datetime('now')) AS due_today,
+                    (SELECT COUNT(*) FROM deck_cards dc
+                     JOIN srs_progress sp ON sp.card_id = dc.id
+                     WHERE dc.deck_id = d.id AND sp.state = 'new') AS new_cards
+             FROM decks d WHERE d.id = ?1",
+        )
+        .map_err(|e| format!("Query error: {e}"))?;
+
+    stmt.query_row(rusqlite::params![target_deck_id], |row: &rusqlite::Row| {
+        Ok(DeckWithStats {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            description: row.get(2)?,
+            language: row.get(3)?,
+            algorithm: row.get(4)?,
+            card_count: row.get(5)?,
+            created_at: row.get(6)?,
+            updated_at: row.get(7)?,
+            due_today: row.get(8)?,
+            new_cards: row.get(9)?,
+        })
+    })
+    .map_err(|e| format!("Fetch error: {e}"))
 }
 
 // ── Vocabulary Commands ────────────────────────────────────

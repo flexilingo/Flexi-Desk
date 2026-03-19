@@ -21,30 +21,57 @@ import { SavedWordsIndicator } from './SavedWordsIndicator';
 import { DifficultyBadge } from './DifficultyBadge';
 import { KeyboardShortcuts } from './KeyboardShortcuts';
 import { LearningSession } from './quiz/LearningSession';
-import type { RawEpisodeDownloadProgress, SyncPoint, RawSyncPoint } from '../types';
-import { mapEpisodeDownloadProgress, mapSyncPoint, getEffectiveOffset } from '../types';
+import type { SyncPoint, RawSyncPoint, RawPodcastTranscriptSegment } from '../types';
+import { mapSyncPoint, getEffectiveOffset, mapTranscriptSegment } from '../types';
 import type { RawModelCompatibility } from '@/pages/caption/types';
 import { ModelSuggestionDialog } from './ModelSuggestionDialog';
+import { WhisperSettingsDialog } from './WhisperSettingsDialog';
+import { ENABLED_MODULES } from '@/config/features';
+import { useJobStore } from '@/stores/jobStore';
 
 export function PlayerView() {
   const {
     activeEpisode,
     activeFeed,
     transcriptSegments,
-    isTranscribing,
     isLoadingTranscript,
     nlpAnalysis,
     bookmarks,
     goBack,
     downloadEpisode,
     transcribeEpisode,
-    setDownloadProgress,
     fetchBookmarks,
     addBookmark,
     deleteBookmark,
     error: podcastError,
     clearError,
   } = usePodcastStore();
+
+  // Derive transcription/download state from global job store
+  const isTranscribing = useJobStore((s) =>
+    Object.values(s.jobs).some(
+      (j) => j.episodeId === activeEpisode?.id && j.type === 'transcribe' && j.status === 'running',
+    ),
+  );
+  const isDownloading = useJobStore((s) =>
+    Object.values(s.jobs).some(
+      (j) => j.episodeId === activeEpisode?.id && j.type === 'download' && j.status === 'running',
+    ),
+  );
+  // Return primitive (number) to avoid infinite re-render from new object refs
+  const downloadPercent = useJobStore((s) => {
+    const job = Object.values(s.jobs).find(
+      (j) => j.episodeId === activeEpisode?.id && j.type === 'download' && j.status === 'running',
+    );
+    return job?.progress ?? -1;
+  });
+  const downloadProgress = downloadPercent >= 0 ? { percent: downloadPercent } : null;
+  const transcribePercent = useJobStore((s) => {
+    const job = Object.values(s.jobs).find(
+      (j) => j.episodeId === activeEpisode?.id && j.type === 'transcribe' && j.status === 'running',
+    );
+    return job?.progress ?? 0;
+  });
 
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
@@ -94,7 +121,9 @@ export function PlayerView() {
   const [xpVisible, setXpVisible] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
   const [addToDeckWords, setAddToDeckWords] = useState<string[]>([]);
+  const [whisperSettingsOpen, setWhisperSettingsOpen] = useState(false);
   const [addToDeckOpen, setAddToDeckOpen] = useState(false);
+  const [wordDialogOpen, setWordDialogOpen] = useState(false);
 
   // Load sync points on episode change
   useEffect(() => {
@@ -106,15 +135,21 @@ export function PlayerView() {
 
   const syncOffset = getEffectiveOffset(currentTime, syncPoints);
 
-  // Listen for download progress events
+  // Listen for streaming transcript segments (real-time subtitles while on player page)
   useEffect(() => {
-    const unlisten = listen<RawEpisodeDownloadProgress>('podcast-download-progress', (event) => {
-      setDownloadProgress(mapEpisodeDownloadProgress(event.payload));
+    if (!activeEpisode) return;
+    const unlisten = listen<RawPodcastTranscriptSegment>('podcast-transcript-segment', (event) => {
+      if (event.payload.episode_id === activeEpisode.id) {
+        const segment = mapTranscriptSegment(event.payload);
+        usePodcastStore.setState((s) => {
+          s.transcriptSegments.push(segment);
+        });
+      }
     });
     return () => {
       unlisten.then((fn) => fn());
     };
-  }, [setDownloadProgress]);
+  }, [activeEpisode?.id]);
 
   // Track active listening time
   useEffect(() => {
@@ -203,16 +238,28 @@ export function PlayerView() {
       // If check fails, proceed anyway
     }
 
+    // If not downloaded, download first then auto-transcribe when done
+    if (!activeEpisode.isDownloaded) {
+      useJobStore.getState().queueTranscribeAfterDownload(activeEpisode.id);
+      downloadEpisode(activeEpisode.id);
+      return;
+    }
+
     transcribeEpisode(activeEpisode.id);
   };
 
-  const handleDownload = () => {
-    downloadEpisode(activeEpisode.id);
+  const handlePlayPause = () => {
+    if (isCurrentlyPlaying) {
+      togglePlayPause();
+    } else {
+      handlePlay();
+    }
   };
 
-  const canTranscribe =
-    activeEpisode.isDownloaded && activeEpisode.transcriptStatus !== 'completed';
-  const hasTranscript = transcriptSegments.length > 0 || isLoadingTranscript || isTranscribing;
+  const canTranscribe = activeEpisode.transcriptStatus !== 'completed';
+  // Also treat DB 'processing' status as transcribing (job may have started before this page loaded)
+  const isTranscribingOrProcessing = isTranscribing || activeEpisode.transcriptStatus === 'processing';
+  const hasTranscript = transcriptSegments.length > 0 || isLoadingTranscript || isTranscribingOrProcessing;
 
   // Current segment for context
   const currentSegment = transcriptSegments.find((seg) => {
@@ -262,10 +309,10 @@ export function PlayerView() {
             setSidebarOpen(true);
           }}
           onDismiss={dismissCompleteOverlay}
-          onStartQuiz={() => {
+          onStartQuiz={ENABLED_MODULES.podcastQuiz ? () => {
             dismissCompleteOverlay();
             setShowQuiz(true);
-          }}
+          } : undefined}
         />
       )}
 
@@ -274,8 +321,11 @@ export function PlayerView() {
         <TopBar
           onBack={goBack}
           onTranscribe={handleTranscribe}
-          isTranscribing={isTranscribing}
+          isTranscribing={isTranscribingOrProcessing}
           canTranscribe={canTranscribe}
+          isDownloading={isDownloading}
+          downloadProgress={downloadProgress}
+          onOpenWhisperSettings={canTranscribe && !isTranscribingOrProcessing ? () => setWhisperSettingsOpen(true) : undefined}
           episodeInfo={{
             title: activeEpisode.title,
             image: activeFeed?.artworkUrl ?? undefined,
@@ -360,19 +410,19 @@ export function PlayerView() {
                 </div>
 
                 {/* Transcription progress indicator */}
-                {isTranscribing && (
+                {isTranscribingOrProcessing && (
                   <div className="shrink-0 flex items-center justify-center gap-2 py-2 px-4 bg-primary/10 border-t border-primary/20">
                     <div className="h-3 w-3 rounded-full bg-primary animate-pulse" />
                     <span className="text-xs font-medium text-primary">
-                      {transcriptSegments.length === 0
-                        ? 'Starting transcription...'
-                        : `Transcribing... ${transcriptSegments.length} segments`}
+                      {transcribePercent > 0
+                        ? `Transcribing... ${transcribePercent}%`
+                        : 'Starting transcription...'}
                     </span>
                   </div>
                 )}
 
                 {/* SubtitleBar — positioned at bottom of artwork area */}
-                {hasTranscript && (isCurrentlyPlaying || isTranscribing) && (
+                {hasTranscript && (
                   <>
                     <SubtitleBar
                       segments={transcriptSegments}
@@ -392,6 +442,7 @@ export function PlayerView() {
                         setAddToDeckWords(words);
                         setAddToDeckOpen(true);
                       }}
+                      onDialogOpenChange={setWordDialogOpen}
                     />
                     <div className="flex justify-center py-1">
                       <DifficultyBadge cefrLevel={nlpAnalysis?.cefrLevel} />
@@ -399,18 +450,6 @@ export function PlayerView() {
                   </>
                 )}
 
-                {/* Download prompt if not downloaded */}
-                {!activeEpisode.isDownloaded && !isCurrentlyPlaying && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                    <button
-                      type="button"
-                      onClick={handleDownload}
-                      className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors shadow-lg"
-                    >
-                      Download Episode
-                    </button>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -444,7 +483,7 @@ export function PlayerView() {
           onTogglePauseOnHover={togglePauseOnHover}
           subtitleAlignment={subtitleAlignment}
           onSubtitleAlignmentChange={setSubtitleAlignment}
-          onStartQuiz={() => setShowQuiz(true)}
+          onStartQuiz={ENABLED_MODULES.podcastQuiz ? () => setShowQuiz(true) : undefined}
           onAddToDeck={(words) => {
             setAddToDeckWords(words);
             setAddToDeckOpen(true);
@@ -453,63 +492,48 @@ export function PlayerView() {
       </div>
       {/* end middle row */}
 
-      {/* ControlBar — full width bottom */}
-      {isCurrentlyPlaying && (
-        <ControlBar
-          isPlaying={isPlaying}
-          currentTime={currentTime}
-          duration={duration}
-          volume={volume}
-          isMuted={volume === 0}
-          playbackRate={playbackRate}
-          onPlayPause={togglePlayPause}
-          onSeek={handleSeek}
-          onSeekTo={handleSeekTo}
-          onToggleMute={handleToggleMute}
-          onSpeedChange={setPlaybackRate}
-          onVolumeChange={setVolume}
-          focusMode={focusMode}
-          subtitlesEnabled={subtitlesEnabled}
-          onToggleFocusMode={toggleFocusMode}
-          onToggleSubtitles={toggleSubtitles}
-          onNote={handleOpenNote}
-          hasCurrentSegment={hasCurrentSegment}
-          onAnalyzeSentence={() => handleOpenChat(null)}
-          onTranslateSentence={() => handleOpenChat('translate')}
-          onGrammarSentence={() => handleOpenChat('grammar')}
-          onHelp={() => setFeedbackOpen(true)}
-          onExit={goBack}
-          fontSize={fontSize}
-          onFontSizeChange={setFontSize}
-          subtitleBgOpacity={subtitleBgOpacity}
-          onSubtitleBgOpacityChange={setSubtitleBgOpacity}
-          onSyncClick={hasTranscript ? () => setSyncDialogOpen(true) : undefined}
-          autoPauseOnSubtitle={autoPauseOnBoundary}
-          onToggleAutoPause={toggleAutoPauseOnBoundary}
-          pauseOnWordHover={pauseOnHover}
-          onTogglePauseOnHover={togglePauseOnHover}
-          translationAlignment={subtitleAlignment}
-          onTranslationAlignmentChange={setSubtitleAlignment}
-          showEstimatedOnSubtitles={showEstimatedOnSubtitles}
-          onToggleShowEstimated={toggleShowEstimated}
-        />
-      )}
-
-      {/* Play button if not currently playing */}
-      {!isCurrentlyPlaying && (
-        <div className="flex items-center justify-center py-4 border-t border-border bg-card">
-          <button
-            type="button"
-            onClick={handlePlay}
-            className="px-8 py-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors shadow-lg"
-          >
-            {activeEpisode.playPosition > 0 ? 'Resume Playback' : 'Play Episode'}
-          </button>
-        </div>
-      )}
+      {/* ControlBar — always visible */}
+      <ControlBar
+        isPlaying={isCurrentlyPlaying && isPlaying}
+        currentTime={isCurrentlyPlaying ? currentTime : 0}
+        duration={isCurrentlyPlaying ? duration : activeEpisode.durationSeconds}
+        volume={volume}
+        isMuted={volume === 0}
+        playbackRate={playbackRate}
+        onPlayPause={handlePlayPause}
+        onSeek={handleSeek}
+        onSeekTo={handleSeekTo}
+        onToggleMute={handleToggleMute}
+        onSpeedChange={setPlaybackRate}
+        onVolumeChange={setVolume}
+        focusMode={focusMode}
+        subtitlesEnabled={subtitlesEnabled}
+        onToggleFocusMode={toggleFocusMode}
+        onToggleSubtitles={toggleSubtitles}
+        onNote={handleOpenNote}
+        hasCurrentSegment={hasCurrentSegment}
+        onAnalyzeSentence={() => handleOpenChat(null)}
+        onTranslateSentence={() => handleOpenChat('translate')}
+        onGrammarSentence={() => handleOpenChat('grammar')}
+        onHelp={() => setFeedbackOpen(true)}
+        onExit={goBack}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
+        subtitleBgOpacity={subtitleBgOpacity}
+        onSubtitleBgOpacityChange={setSubtitleBgOpacity}
+        onSyncClick={hasTranscript ? () => setSyncDialogOpen(true) : undefined}
+        autoPauseOnSubtitle={autoPauseOnBoundary}
+        onToggleAutoPause={toggleAutoPauseOnBoundary}
+        pauseOnWordHover={pauseOnHover}
+        onTogglePauseOnHover={togglePauseOnHover}
+        translationAlignment={subtitleAlignment}
+        onTranslationAlignmentChange={setSubtitleAlignment}
+        showEstimatedOnSubtitles={showEstimatedOnSubtitles}
+        onToggleShowEstimated={toggleShowEstimated}
+      />
 
       {/* Quiz Overlay */}
-      {showQuiz && (
+      {ENABLED_MODULES.podcastQuiz && showQuiz && (
         <div className="fixed inset-0 z-[9999] flex flex-col bg-background">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
             <h2 className="text-lg font-semibold">Learning Session</h2>
@@ -590,6 +614,17 @@ export function PlayerView() {
         }}
       />
 
+      {/* Whisper Settings */}
+      <WhisperSettingsDialog
+        open={whisperSettingsOpen}
+        onClose={() => {
+          setWhisperSettingsOpen(false);
+          invoke<{ is_available: boolean }>('caption_check_whisper')
+            .then((info) => setWhisperAvailable(info.is_available))
+            .catch(() => setWhisperAvailable(false));
+        }}
+      />
+
       {/* XP Toast */}
       <XPToast
         visible={xpVisible}
@@ -603,7 +638,7 @@ export function PlayerView() {
 
       {/* Keyboard Shortcuts */}
       <KeyboardShortcuts
-        enabled={!chatOpen && !noteDialogOpen && !feedbackOpen && !syncDialogOpen && !showQuiz}
+        enabled={!chatOpen && !noteDialogOpen && !feedbackOpen && !syncDialogOpen && !showQuiz && !wordDialogOpen}
         onToggleSubtitles={toggleSubtitles}
         onNote={handleOpenNote}
         onAnalyze={() => handleOpenChat(null)}
