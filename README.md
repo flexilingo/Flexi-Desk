@@ -31,30 +31,26 @@ Built with [Tauri 2](https://v2.tauri.app/) (Rust) and React 19. Fast, lightweig
 
 ## Features
 
-| Module | Description | Status |
-|--------|-------------|--------|
-| **Podcast** | Subscribe to RSS feeds, download episodes, transcribe with local Whisper, click any word for AI translation | Stable |
-| **AI Tutor** | Conversation practice with local AI. Grammar correction, vocabulary suggestions, 10 scenarios, CEFR-adaptive | Stable |
-| **Ask Lena** | AI sentence assistant — translates, explains grammar, gives tips in your native language | Stable |
-| **SRS Review** | Spaced repetition flashcards with Leitner, SM-2, and FSRS algorithms. Multi-deck management | Stable |
-| **Live Caption** | Real-time speech-to-text using local Whisper models. Microphone capture via CPAL | Stable |
-| **Reading** | Import text from files, URLs, or paste. Highlight words, vocabulary extraction | Stable |
-| **Vocabulary** | Central word manager. Filter by CEFR, language, source. CSV/Anki export | Stable |
-| **Dashboard** | XP tracking, streak calendar, CEFR radar chart, study heatmap, goals | Stable |
-| **Writing Coach** | Essay writing with AI-powered grading and feedback (IELTS, TOEFL, Cambridge, etc.) | Beta |
-| **Pronunciation** | Record and compare pronunciation with Whisper transcription | Beta |
-| **Exam** | Practice exams with timed sections and scoring | In Development |
-
-### Highlights
-
-- **100% Offline AI** — Tutor, word analysis, sentence chat, writing coach all run locally via Ollama
-- **One-Click Ollama Install** — Install and manage Ollama and AI models directly from the app
-- **One-Click Whisper Install** — Auto-detect or install whisper.cpp for speech-to-text
+- **Podcast Player** — Subscribe to RSS feeds, download episodes, transcribe with local [whisper.cpp](https://github.com/ggerganov/whisper.cpp), click any word for instant AI translation and grammar analysis
+- **Ask Lena** — AI sentence assistant built into the podcast player. Translates sentences, explains grammar, and gives learning tips — all in your native language
+- **SRS Review** — Spaced repetition flashcards with three algorithms (Leitner, SM-2, FSRS). Create decks, merge, bulk import
+- **Dashboard** — Track your learning with XP chart, streak calendar, CEFR radar, study heatmap, vocabulary timeline, and daily goals
+- **100% Offline AI** — All AI features run locally via [Ollama](https://ollama.com). No cloud, no account, no data sent anywhere
+- **One-Click Setup** — Install Ollama and Whisper directly from the app. No terminal needed
 - **10+ Languages** — English, Persian, Arabic, Turkish, Spanish, French, German, Chinese, Hindi, Russian
-- **i18n** — UI in 6 languages (English, Persian, Arabic, French, Hindi, Chinese)
-- **RTL Support** — Full right-to-left layout for Arabic and Persian
-- **Dark/Light/System** theme
-- **Keyboard Shortcuts** — 23 customizable shortcuts
+- **Dark/Light/System** theme with RTL support for Arabic and Persian
+
+## Roadmap
+
+These modules are built and under testing. They'll be enabled in upcoming releases:
+
+- **AI Tutor** — Conversation practice with local AI, grammar correction, 10 role-play scenarios
+- **Vocabulary Manager** — Central word manager with CEFR filtering, CSV/Anki export
+- **Live Caption** — Real-time speech-to-text from microphone using local Whisper
+- **Writing Coach** — AI-graded essay writing (IELTS, TOEFL, Cambridge, etc.)
+- **Reading Mode** — Import texts, highlight words, build vocabulary
+- **Pronunciation** — Record and compare with Whisper transcription
+- **Exam Practice** — Timed mock exams with scoring
 
 ## Installation
 
