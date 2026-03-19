@@ -25,7 +25,7 @@ Built with [Tauri 2](https://v2.tauri.app/) (Rust) and React 19. Fast, lightweig
 
 <!-- TODO: Add screenshot
 <p align="center">
-  <img src="docs/screenshot.png" width="800" alt="FlexiDesk screenshot" />
+  <img src=".github/screenshot.png" width="800" alt="FlexiDesk screenshot" />
 </p>
 -->
 
