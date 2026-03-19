@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Lightbulb } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { supabaseCall } from '@/lib/supabase';
-import type { AITranslationResponse, AIWordAnalysis } from './types';
+import { invoke } from '@tauri-apps/api/core';
+import type { AIWordAnalysis } from './types';
 
 interface AITabProps {
   word: string;
@@ -26,8 +25,6 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
   const [data, setData] = useState<AIWordAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cached, setCached] = useState(false);
-  const [requiresAuth, setRequiresAuth] = useState(false);
 
   useEffect(() => {
     if (!isActive || !sentenceContext) return;
@@ -37,31 +34,22 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
     const fetchAI = async () => {
       setLoading(true);
       setError(null);
-      setRequiresAuth(false);
-
       try {
-        const response = await supabaseCall<AITranslationResponse>('POST', '/get-ai-translation', {
+        const result = await invoke<AIWordAnalysis>('ai_word_analysis', {
           word,
           sentence: sentenceContext,
           targetLanguage: targetLang,
           sourceLanguage: sourceLang,
         });
-
-        if (cancelled) return;
-
-        if (response.found && response.data) {
-          setData(response.data);
-          setCached(response.cached ?? false);
-        } else {
-          if (response.requiresAuth || response.code === 'AUTH_REQUIRED') {
-            setRequiresAuth(true);
-          } else {
-            setError(response.error || 'Failed to get AI analysis');
-          }
-        }
+        if (!cancelled) setData(result);
       } catch (err) {
         if (!cancelled) {
-          setError(String(err));
+          const errStr = String(err);
+          if (errStr === 'OLLAMA_NOT_RUNNING') {
+            setError('Ollama is not running. Start it from Settings → AI Provider.');
+          } else {
+            setError(errStr);
+          }
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -79,20 +67,6 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
       <div className="flex flex-col items-center justify-center py-12 gap-3">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-[#C58C6E]" />
         <span className="text-sm text-muted-foreground">Analyzing with AI...</span>
-      </div>
-    );
-  }
-
-  if (requiresAuth) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-          <Lightbulb className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium">Sign in to use AI analysis</p>
-        <p className="text-xs text-muted-foreground max-w-[240px]">
-          Get AI-powered contextual translations, grammar tips, and synonyms.
-        </p>
       </div>
     );
   }
@@ -125,11 +99,6 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
           <span className="text-lg">🤖</span>
           <span className="text-sm font-semibold text-[#C58C6E]">AI Analysis</span>
         </div>
-        {cached && (
-          <span className="text-[10px] text-[#8BB7A3] bg-[#8BB7A3]/10 px-2 py-0.5 rounded">
-            Cached
-          </span>
-        )}
       </div>
 
       {/* Word + IPA */}

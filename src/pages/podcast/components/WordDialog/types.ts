@@ -52,14 +52,3 @@ export interface AIWordAnalysis {
   tip?: string;
 }
 
-export interface AITranslationResponse {
-  found: boolean;
-  cached?: boolean;
-  data?: AIWordAnalysis;
-  error?: string;
-  code?: string;
-  requiresAuth?: boolean;
-  requiresCredits?: boolean;
-  monthlyLimit?: number | null;
-  dailyLimit?: number | null;
-}
