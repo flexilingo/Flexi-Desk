@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{Emitter, State};
 
 use crate::tutor::parser::{parse_ai_response, GrammarCorrection, VocabSuggestion};
 use crate::tutor::prompts::build_system_prompt;
-use crate::tutor::provider::{chat_completion, ChatMessage};
+use crate::ai::provider::{chat_completion, ChatMessage};
+use crate::tutor::scenarios::{Scenario, get_scenarios};
 use crate::AppState;
 
 // ── IPC Types ──────────────────────────────────────────────
@@ -92,7 +93,7 @@ pub fn tutor_start_conversation(
         &conv.language,
         &conv.cefr_level,
         &native_lang,
-        None, // TODO: scenario support
+        conv.scenario_id.as_deref(),
     );
 
     conn.execute(
@@ -270,6 +271,9 @@ pub async fn tutor_send_message(
         messages_for_ai,
         api_key.as_deref(),
         base_url_setting.as_deref(),
+        None,
+        None,
+        false,
     )
     .await?;
 
@@ -358,6 +362,162 @@ pub fn tutor_archive_conversation(
         rusqlite::params![id],
     )
     .map_err(|e| format!("Archive error: {e}"))?;
+    Ok(())
+}
+
+// ── Scenario Commands ─────────────────────────────────────
+
+#[tauri::command]
+pub fn tutor_list_scenarios() -> Vec<Scenario> {
+    get_scenarios()
+}
+
+#[tauri::command]
+pub fn tutor_get_scenario(id: String) -> Result<Scenario, String> {
+    get_scenarios()
+        .into_iter()
+        .find(|s| s.id == id)
+        .ok_or_else(|| format!("Scenario not found: {id}"))
+}
+
+// ── Streaming Message Command ─────────────────────────────
+
+#[tauri::command]
+pub async fn tutor_send_message_stream(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    conversation_id: String,
+    content: String,
+) -> Result<(), String> {
+    // 1. Get conversation details
+    let (language, cefr_level, provider, model, scenario_id) = {
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+        conn.query_row(
+            "SELECT language, cefr_level, provider, model, scenario_id FROM conversations WHERE id = ?1",
+            rusqlite::params![conversation_id],
+            |row| Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+            )),
+        )
+        .map_err(|e| format!("Conversation not found: {e}"))?
+    };
+
+    // 2. Store user message
+    {
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+        conn.execute(
+            "INSERT INTO messages (id, conversation_id, role, content)
+             VALUES (lower(hex(randomblob(16))), ?1, 'user', ?2)",
+            rusqlite::params![conversation_id, content],
+        )
+        .map_err(|e| format!("Insert user message error: {e}"))?;
+
+        conn.execute(
+            "UPDATE conversations SET message_count = message_count + 1, updated_at = datetime('now') WHERE id = ?1",
+            rusqlite::params![conversation_id],
+        )
+        .map_err(|e| format!("Update conversation error: {e}"))?;
+    }
+
+    // 3. Build messages for AI
+    let messages_for_ai = {
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+        let native_lang = get_native_language(&conn);
+        let system_prompt = build_system_prompt(&language, &cefr_level, &native_lang, scenario_id.as_deref());
+
+        let mut msgs = vec![ChatMessage {
+            role: "system".to_string(),
+            content: system_prompt,
+        }];
+
+        let mut stmt = conn.prepare(
+            "SELECT role, content FROM messages WHERE conversation_id = ?1 ORDER BY created_at ASC"
+        ).map_err(|e| format!("Query: {e}"))?;
+
+        let rows = stmt.query_map(rusqlite::params![conversation_id], |row| {
+            Ok(ChatMessage {
+                role: row.get(0)?,
+                content: row.get(1)?,
+            })
+        }).map_err(|e| format!("Query: {e}"))?;
+
+        for row in rows {
+            if let Ok(msg) = row {
+                msgs.push(msg);
+            }
+        }
+        msgs
+    };
+
+    // 4. Get settings
+    let (api_key, base_url) = {
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+        let key = conn.query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            rusqlite::params![format!("{}_api_key", provider)],
+            |row| row.get::<_, String>(0),
+        ).ok();
+        let url = conn.query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            rusqlite::params![format!("{}_base_url", provider)],
+            |row| row.get::<_, String>(0),
+        ).ok();
+        (key, url)
+    };
+
+    // 5. Call AI provider (non-streaming for now, emit full response as single token)
+    let ai_response = chat_completion(
+        &provider,
+        &model,
+        messages_for_ai,
+        api_key.as_deref(),
+        base_url.as_deref(),
+        None,
+        None,
+        false,
+    )
+    .await?;
+
+    // Emit response
+    let _ = app.emit("tutor:token", serde_json::json!({
+        "conversationId": conversation_id,
+        "token": ai_response,
+    }));
+
+    // 6. Parse corrections and vocab
+    let (clean_content, corrections, vocab) = parse_ai_response(&ai_response);
+
+    // 7. Store assistant message
+    let corrections_json = serde_json::to_string(&corrections).unwrap_or_else(|_| "[]".to_string());
+    let vocab_json = serde_json::to_string(&vocab).unwrap_or_else(|_| "[]".to_string());
+
+    {
+        let conn = state.db.lock().map_err(|e| format!("DB lock: {e}"))?;
+        conn.execute(
+            "INSERT INTO messages (id, conversation_id, role, content, corrections, vocab_suggestions)
+             VALUES (lower(hex(randomblob(16))), ?1, 'assistant', ?2, ?3, ?4)",
+            rusqlite::params![conversation_id, clean_content, corrections_json, vocab_json],
+        )
+        .map_err(|e| format!("Insert assistant message: {e}"))?;
+
+        conn.execute(
+            "UPDATE conversations SET message_count = message_count + 1, updated_at = datetime('now') WHERE id = ?1",
+            rusqlite::params![conversation_id],
+        )
+        .map_err(|e| format!("Update conversation: {e}"))?;
+    }
+
+    // 8. Emit completion
+    let _ = app.emit("tutor:complete", serde_json::json!({
+        "conversationId": conversation_id,
+        "corrections": corrections,
+        "vocabSuggestions": vocab,
+    }));
+
     Ok(())
 }
 

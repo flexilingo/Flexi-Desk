@@ -28,6 +28,14 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         ("V012", V012_PODCAST_SYNC_POINTS),
         ("V013", V013_AUTH_TOKENS),
         ("V014", V014_CAPTION_LIVE_STATUS),
+        ("V015", V015_REVIEW_LOGS),
+        ("V016", V016_VOCABULARY_SOURCES),
+        ("V017", V017_XP_LOG),
+        ("V018", V018_SYNC_TABLES),
+        ("V019", V019_PLUGINS),
+        ("V020", V020_STREAK_ENHANCEMENTS),
+        ("V021", V021_KEYBOARD_SHORTCUTS),
+        ("V022", V022_SENTENCE_CHAT),
     ];
 
     for (version, sql) in migrations {
@@ -687,4 +695,164 @@ const V014_CAPTION_LIVE_STATUS: &str = "
 
     CREATE INDEX IF NOT EXISTS idx_caption_sessions_status  ON caption_sessions(status);
     CREATE INDEX IF NOT EXISTS idx_caption_sessions_created ON caption_sessions(created_at);
+";
+
+const V015_REVIEW_LOGS: &str = "
+    CREATE TABLE IF NOT EXISTS review_logs (
+        id              TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        session_id      TEXT NOT NULL REFERENCES review_sessions(id) ON DELETE CASCADE,
+        card_id         TEXT NOT NULL REFERENCES deck_cards(id) ON DELETE CASCADE,
+        rating          TEXT NOT NULL CHECK(rating IN ('again', 'hard', 'good', 'easy')),
+        interval_before REAL NOT NULL DEFAULT 0,
+        interval_after  REAL NOT NULL DEFAULT 0,
+        state_before    TEXT NOT NULL,
+        state_after     TEXT NOT NULL,
+        time_spent_ms   INTEGER NOT NULL DEFAULT 0,
+        created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_review_logs_session ON review_logs(session_id);
+    CREATE INDEX IF NOT EXISTS idx_review_logs_card ON review_logs(card_id);
+    CREATE INDEX IF NOT EXISTS idx_review_logs_created ON review_logs(created_at);
+";
+
+const V016_VOCABULARY_SOURCES: &str = "
+    CREATE TABLE IF NOT EXISTS vocabulary_sources (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        vocabulary_id   INTEGER NOT NULL REFERENCES vocabulary(id) ON DELETE CASCADE,
+        source_module   TEXT NOT NULL,
+        source_id       TEXT,
+        context_sentence TEXT,
+        encountered_at  TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(vocabulary_id, source_module, source_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_vocab_sources_vocab ON vocabulary_sources(vocabulary_id);
+    CREATE INDEX IF NOT EXISTS idx_vocab_sources_module ON vocabulary_sources(source_module);
+";
+
+const V017_XP_LOG: &str = "
+    CREATE TABLE IF NOT EXISTS xp_log (
+        id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        module      TEXT NOT NULL
+                    CHECK(module IN ('srs', 'reading', 'tutor', 'caption', 'pronunciation', 'writing', 'exam', 'podcast')),
+        action      TEXT NOT NULL,
+        xp_amount   INTEGER NOT NULL DEFAULT 0,
+        metadata    TEXT DEFAULT '{}',
+        created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_xp_log_module ON xp_log(module);
+    CREATE INDEX IF NOT EXISTS idx_xp_log_date ON xp_log(created_at);
+";
+
+const V018_SYNC_TABLES: &str = "
+    CREATE TABLE IF NOT EXISTS sync_queue (
+        id              TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        table_name      TEXT NOT NULL,
+        row_id          TEXT NOT NULL,
+        operation       TEXT NOT NULL CHECK(operation IN ('INSERT', 'UPDATE', 'DELETE')),
+        payload         TEXT NOT NULL DEFAULT '{}',
+        status          TEXT NOT NULL DEFAULT 'pending'
+                        CHECK(status IN ('pending', 'syncing', 'synced', 'failed', 'conflict')),
+        retry_count     INTEGER NOT NULL DEFAULT 0,
+        error_message   TEXT,
+        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        synced_at       TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(status);
+    CREATE INDEX IF NOT EXISTS idx_sync_queue_table ON sync_queue(table_name, status);
+
+    CREATE TABLE IF NOT EXISTS sync_metadata (
+        table_name      TEXT PRIMARY KEY,
+        last_synced_at  TEXT,
+        last_cursor     TEXT,
+        is_enabled      INTEGER NOT NULL DEFAULT 0,
+        record_count    INTEGER NOT NULL DEFAULT 0,
+        sync_direction  TEXT NOT NULL DEFAULT 'both'
+                        CHECK(sync_direction IN ('push', 'pull', 'both')),
+        updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS sync_conflicts (
+        id              TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        table_name      TEXT NOT NULL,
+        row_id          TEXT NOT NULL,
+        local_data      TEXT NOT NULL,
+        remote_data     TEXT NOT NULL,
+        local_updated   TEXT NOT NULL,
+        remote_updated  TEXT NOT NULL,
+        status          TEXT NOT NULL DEFAULT 'unresolved'
+                        CHECK(status IN ('unresolved', 'keep_local', 'keep_remote', 'merged')),
+        created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+        resolved_at     TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sync_conflicts_status ON sync_conflicts(status);
+";
+
+const V019_PLUGINS: &str = "
+    CREATE TABLE IF NOT EXISTS plugins (
+        id              TEXT PRIMARY KEY,
+        name            TEXT NOT NULL,
+        version         TEXT NOT NULL,
+        description     TEXT,
+        author          TEXT,
+        homepage_url    TEXT,
+        icon_path       TEXT,
+        wasm_path       TEXT NOT NULL,
+        permissions     TEXT NOT NULL DEFAULT '[]',
+        config          TEXT NOT NULL DEFAULT '{}',
+        status          TEXT NOT NULL DEFAULT 'disabled'
+                        CHECK(status IN ('disabled', 'enabled', 'error', 'updating')),
+        error_message   TEXT,
+        install_source  TEXT NOT NULL DEFAULT 'local'
+                        CHECK(install_source IN ('local', 'marketplace', 'url')),
+        installed_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_plugins_status ON plugins(status);
+";
+
+const V020_STREAK_ENHANCEMENTS: &str = "
+    ALTER TABLE streaks ADD COLUMN freeze_days_remaining INTEGER NOT NULL DEFAULT 1;
+    ALTER TABLE streaks ADD COLUMN freeze_days_per_week INTEGER NOT NULL DEFAULT 1;
+    ALTER TABLE streaks ADD COLUMN freeze_last_reset TEXT;
+    ALTER TABLE streaks ADD COLUMN daily_xp_target INTEGER NOT NULL DEFAULT 50;
+
+    ALTER TABLE goals ADD COLUMN notify_at TEXT;
+    ALTER TABLE goals ADD COLUMN notify_enabled INTEGER NOT NULL DEFAULT 0;
+";
+
+const V021_KEYBOARD_SHORTCUTS: &str = "
+    CREATE TABLE IF NOT EXISTS keyboard_shortcuts (
+        id              TEXT PRIMARY KEY,
+        action_id       TEXT NOT NULL UNIQUE,
+        label           TEXT NOT NULL,
+        description     TEXT,
+        category        TEXT NOT NULL DEFAULT 'general'
+                        CHECK(category IN ('global', 'navigation', 'review', 'reading', 'caption', 'podcast', 'general')),
+        key_binding     TEXT NOT NULL,
+        default_binding TEXT NOT NULL,
+        is_global       INTEGER NOT NULL DEFAULT 0,
+        is_enabled      INTEGER NOT NULL DEFAULT 1,
+        updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_shortcuts_action ON keyboard_shortcuts(action_id);
+    CREATE INDEX IF NOT EXISTS idx_shortcuts_category ON keyboard_shortcuts(category);
+";
+
+const V022_SENTENCE_CHAT: &str = "
+CREATE TABLE IF NOT EXISTS sentence_chat_messages (
+    id TEXT PRIMARY KEY,
+    episode_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    sentence_context TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sentence_chat_episode ON sentence_chat_messages(episode_id);
 ";
