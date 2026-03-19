@@ -21,7 +21,7 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 thiserror = "1"
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5"
-tokio = { version = "1", features = ["fs", "process", "sync", "time", "rt", "io-util"] }
+tokio = { version = "1", features = ["fs", "process", "sync", "time", "rt", "io-util", "macros"] }
 reqwest = { version = "0.12", features = ["json", "stream"] }
 futures-util = "0.3"
 regex = "1"
@@ -30,4 +30,8 @@ hound = "3.5"
 tauri-plugin-dialog = "2.6.0"
 tauri-plugin-fs = "2"
 urlencoding = "2"
-open = "5"
+csv = "1.3"
+zip = { version = "2", features = ["deflate"] }
+tempfile = "3"
+tokio-util = { version = "0.7", features = ["rt"] }
+uuid = { version = "1", features = ["v4"] }

@@ -302,6 +302,12 @@ pub fn run() {
             commands::jobs::job_list,
             commands::podcast::podcast_start_transcribe_job,
             commands::podcast::podcast_start_download_job,
+            // AI
+            commands::ai::ai_word_analysis,
+            commands::ai::ai_sentence_chat,
+            commands::ai::ai_sentence_chat_history,
+            commands::ai::ai_sentence_chat_clear,
+            commands::ai::ai_evaluate_writing,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
