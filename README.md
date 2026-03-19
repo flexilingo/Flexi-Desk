@@ -19,7 +19,9 @@
 
 ---
 
-FlexiDesk is a desktop application for language learners. It combines learning modules — from podcast listening to AI-powered tutoring — into a single offline-capable app. All AI runs locally on your machine via [Ollama](https://ollama.com) — no account, no subscription, no data leaves your computer.
+[**FlexiLingo**](https://flexilingo.com) is an AI-powered language learning platform with apps across browser extension, mobile, desktop, and web. **FlexiDesk** is the desktop app in this ecosystem — designed to work **fully offline** with local AI.
+
+FlexiDesk combines learning modules — from podcast listening to AI-powered tutoring — into a single app. All AI runs locally on your machine via [Ollama](https://ollama.com) — no account, no subscription, no data leaves your computer.
 
 Built with [Tauri 2](https://v2.tauri.app/) (Rust) and React 19. Fast, lightweight (~15 MB), works on macOS, Windows, and Linux.
 
