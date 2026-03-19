@@ -117,7 +117,7 @@ export function Sidebar() {
         <Separator />
         <div className="flex h-12 items-center justify-center px-3">
           {sidebarOpen ? (
-            <span className="text-xs text-muted-foreground">Powered by FlexiLingo</span>
+            <a href="https://flexilingo.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">Powered by FlexiLingo</a>
           ) : (
             <span className="text-xs font-bold text-primary">FL</span>
           )}

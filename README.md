@@ -23,11 +23,13 @@ FlexiDesk is a desktop application for language learners. It combines learning m
 
 Built with [Tauri 2](https://v2.tauri.app/) (Rust) and React 19. Fast, lightweight (~15 MB), works on macOS, Windows, and Linux.
 
-<!-- TODO: Add screenshot
 <p align="center">
-  <img src=".github/screenshot.png" width="800" alt="FlexiDesk screenshot" />
+  <img src="docs/screenshot.png" width="800" alt="FlexiDesk — Podcast Player with AI Word Analysis" />
 </p>
--->
+
+<p align="center">
+  <img src="docs/screenshot2.png" width="800" alt="FlexiDesk — Dashboard" />
+</p>
 
 ## Features
 
