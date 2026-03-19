@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Send, Sparkles, Languages, BookOpen, Lightbulb, Loader2 } from 'lucide-react';
-import { supabaseCall } from '../../../lib/supabase';
-import { useAuthStore } from '@/stores/authStore';
+import { invoke } from '@tauri-apps/api/core';
 
 interface ChatMessage {
   id: string;
@@ -31,7 +30,6 @@ export function SentenceChatSheet({
   sourceLang = 'en',
   autoAction,
 }: SentenceChatSheetProps) {
-  const session = useAuthStore((s) => s.session);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -42,19 +40,19 @@ export function SentenceChatSheet({
 
   // Load history on open
   useEffect(() => {
-    if (!open || !session) return;
-    supabaseCall<{ messages: ChatMessage[] }>('GET', `/sentence-chat?video_id=${episodeId}`)
-      .then((data) => setMessages(data.messages || []))
+    if (!open) return;
+    invoke<{ id: string; role: string; content: string }[]>('ai_sentence_chat_history', { episodeId })
+      .then((msgs) => setMessages(msgs.map(m => ({ id: m.id, role: m.role as 'user' | 'assistant', content: m.content }))))
       .catch(() => {});
-  }, [open, episodeId, session]);
+  }, [open, episodeId]);
 
   // Auto-trigger action
   useEffect(() => {
-    if (!open || !autoAction || autoActionDone.current || !session) return;
+    if (!open || !autoAction || autoActionDone.current) return;
     autoActionDone.current = true;
     sendMessage('', autoAction);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, autoAction, session]);
+  }, [open, autoAction]);
 
   useEffect(() => {
     if (!open) autoActionDone.current = false;
@@ -91,33 +89,27 @@ export function SentenceChatSheet({
       ]);
 
       try {
-        const resp = await supabaseCall<{ reply: string; message_id: string }>(
-          'POST',
-          '/sentence-chat',
-          {
-            video_id: episodeId,
-            message: text || sentence,
-            analysis_context: JSON.stringify({ sentence, prev: prevSentence, next: nextSentence }),
-            target_language: targetLang,
-            action: action || undefined,
-            context_window: 1,
-          },
-        );
+        const resp = await invoke<string>('ai_sentence_chat', {
+          episodeId,
+          message: text || sentence,
+          sentenceContext: sentence,
+          targetLanguage: targetLang,
+          action: action || undefined,
+        });
 
         setMessages((prev) => [
           ...prev,
           {
-            id: resp.message_id || `resp-${Date.now()}`,
+            id: `resp-${Date.now()}`,
             role: 'assistant',
-            content: resp.reply,
+            content: resp,
           },
         ]);
       } catch (e) {
         const errStr = String(e);
-        try {
-          const parsed = JSON.parse(errStr);
-          setError(parsed.error || 'Failed to send message');
-        } catch {
+        if (errStr === 'OLLAMA_NOT_RUNNING') {
+          setError('Ollama is not running. Start it from Settings → AI Provider.');
+        } else {
           setError(errStr);
         }
       } finally {
@@ -159,111 +151,99 @@ export function SentenceChatSheet({
           <p className="text-sm text-foreground font-medium truncate">{sentence}</p>
         </div>
 
-        {/* Auth check */}
-        {!session ? (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-4">Please log in to use Ask Lena</p>
-              <p className="text-xs text-muted-foreground">Go to Settings to sign in</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {sending && (
-                <div className="flex justify-start">
-                  <div className="px-3 py-2 rounded-xl bg-muted">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="mx-4 mb-2 p-2 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
-                {error}
+        {/* Messages */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
+                  msg.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-foreground'
+                }`}
+              >
+                {msg.content}
               </div>
-            )}
-
-            {/* Quick actions */}
-            <div className="flex gap-1.5 px-4 py-2 border-t border-border">
-              <button
-                onClick={() => sendMessage('', 'translate')}
-                disabled={sending}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
-              >
-                <Languages className="w-3.5 h-3.5" /> Translate
-              </button>
-              <button
-                onClick={() => sendMessage('', 'grammar')}
-                disabled={sending}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
-              >
-                <BookOpen className="w-3.5 h-3.5" /> Grammar
-              </button>
-              <button
-                onClick={() => sendMessage('', 'tip')}
-                disabled={sending}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
-              >
-                <Lightbulb className="w-3.5 h-3.5" /> Tip
-              </button>
-              <select
-                value={targetLang}
-                onChange={(e) => setTargetLang(e.target.value)}
-                className="ml-auto px-2 py-1 rounded-lg bg-muted border border-border text-xs text-foreground"
-              >
-                <option value="fa">Persian</option>
-                <option value="ar">Arabic</option>
-                <option value="tr">Turkish</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="zh">Chinese</option>
-                <option value="hi">Hindi</option>
-                <option value="ru">Russian</option>
-                <option value="en">English</option>
-              </select>
             </div>
+          ))}
+          {sending && (
+            <div className="flex justify-start">
+              <div className="px-3 py-2 rounded-xl bg-muted">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            </div>
+          )}
+        </div>
 
-            {/* Input */}
-            <form onSubmit={handleSubmit} className="flex gap-2 p-4 border-t border-border">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about this sentence..."
-                className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                disabled={sending}
-              />
-              <button
-                type="submit"
-                disabled={sending || !input.trim()}
-                className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </>
+        {/* Error */}
+        {error && (
+          <div className="mx-4 mb-2 p-2 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+            {error}
+          </div>
         )}
+
+        {/* Quick actions */}
+        <div className="flex gap-1.5 px-4 py-2 border-t border-border">
+          <button
+            onClick={() => sendMessage('', 'translate')}
+            disabled={sending}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
+          >
+            <Languages className="w-3.5 h-3.5" /> Translate
+          </button>
+          <button
+            onClick={() => sendMessage('', 'grammar')}
+            disabled={sending}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
+          >
+            <BookOpen className="w-3.5 h-3.5" /> Grammar
+          </button>
+          <button
+            onClick={() => sendMessage('', 'tip')}
+            disabled={sending}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
+          >
+            <Lightbulb className="w-3.5 h-3.5" /> Tip
+          </button>
+          <select
+            value={targetLang}
+            onChange={(e) => setTargetLang(e.target.value)}
+            className="ml-auto px-2 py-1 rounded-lg bg-muted border border-border text-xs text-foreground"
+          >
+            <option value="fa">Persian</option>
+            <option value="ar">Arabic</option>
+            <option value="tr">Turkish</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="zh">Chinese</option>
+            <option value="hi">Hindi</option>
+            <option value="ru">Russian</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="flex gap-2 p-4 border-t border-border">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about this sentence..."
+            className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            disabled={sending}
+          />
+          <button
+            type="submit"
+            disabled={sending || !input.trim()}
+            className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
       </div>
     </div>,
     document.body,
