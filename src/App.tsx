@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { invoke } from '@tauri-apps/api/core';
 import { useTheme } from '@/hooks/useTheme';
 import { useDirection } from '@/hooks/useDirection';
 import { Shell } from '@/components/layout/Shell';
@@ -17,6 +18,8 @@ import { VocabularyPage } from '@/pages/vocabulary';
 import { PluginManagerPage } from '@/pages/plugins/PluginManagerPage';
 import { useAuthStore } from '@/stores/authStore';
 import { ENABLED_MODULES } from '@/config/features';
+import { SetupWizard } from '@/components/onboarding/SetupWizard';
+import { getSetting } from '@/lib/tauri-bridge';
 
 function App() {
   // Initialize theme system (applies dark class to <html>)
@@ -25,10 +28,34 @@ function App() {
   // Set document direction (RTL for Arabic/Persian)
   useDirection();
 
-  // Initialize auth (restore session from local DB)
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null); // null = loading
+
+  // Initialize auth + check onboarding state
   useEffect(() => {
     useAuthStore.getState().initialize();
+    getSetting('onboarding_complete').then((val) => {
+      setShowOnboarding(val !== 'true');
+    });
   }, []);
+
+  // Auto-start Ollama on app launch (if configured)
+  useEffect(() => {
+    if (showOnboarding === false) {
+      getSetting('ai_provider').then((provider) => {
+        if (!provider || provider === 'ollama') {
+          invoke('ollama_start_serve').catch(() => {}); // silent — may already be running
+        }
+      });
+    }
+  }, [showOnboarding]);
+
+  // Show nothing while checking onboarding state
+  if (showOnboarding === null) return null;
+
+  // Show setup wizard on first launch
+  if (showOnboarding) {
+    return <SetupWizard onComplete={() => setShowOnboarding(false)} />;
+  }
 
   return (
     <Routes>
