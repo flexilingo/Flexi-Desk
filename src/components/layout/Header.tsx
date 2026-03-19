@@ -1,7 +1,6 @@
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppStore } from '@/stores/appStore';
-import { SyncStatusIndicator } from '@/components/layout/SyncStatusIndicator';
 import { cn } from '@/lib/utils';
 
 const themeOptions = [
@@ -19,7 +18,6 @@ export function Header() {
       <h1 className="text-lg font-semibold text-foreground">{currentPage}</h1>
 
       <div className="flex items-center gap-3">
-        <SyncStatusIndicator />
         {/* Theme toggle */}
         <div className="flex items-center rounded-lg border border-border bg-muted p-0.5">
           {themeOptions.map((opt) => {

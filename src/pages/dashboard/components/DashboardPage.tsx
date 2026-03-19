@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, Podcast, BookOpen, Brain } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { useDashboardStore } from '../stores/dashboardStore';
 import { ErrorBanner } from './ErrorBanner';
 import { SummaryCards } from './SummaryCards';
@@ -59,6 +62,11 @@ export function DashboardPage() {
 
       <ErrorBanner />
 
+      {/* Welcome card for new users */}
+      {summary && summary.totalWords === 0 && summary.totalReviews === 0 && (
+        <WelcomeCard />
+      )}
+
       {/* Today's summary strip */}
       <TodaySummary data={analyticsSummary} />
 
@@ -92,5 +100,34 @@ export function DashboardPage() {
         <ActivityFeed />
       </div>
     </div>
+  );
+}
+
+function WelcomeCard() {
+  const navigate = useNavigate();
+
+  return (
+    <Card className="border-primary/30 bg-primary/5">
+      <CardContent className="p-6">
+        <h2 className="text-lg font-semibold text-foreground mb-2">Welcome to FlexiDesk!</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Start learning by adding a podcast. Listen to real content, click any word to get instant AI translation, and review your vocabulary with flashcards.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => navigate('/podcast')} className="gap-2">
+            <Podcast className="h-4 w-4" />
+            Add a Podcast
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/review')} className="gap-2">
+            <Brain className="h-4 w-4" />
+            Create Flashcards
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/settings')} className="gap-2">
+            <BookOpen className="h-4 w-4" />
+            Settings
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

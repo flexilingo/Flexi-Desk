@@ -31,6 +31,13 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Technology: Cpu,
 };
 
+const STARTER_PODCASTS = [
+  { name: '6 Minute English', description: 'BBC — Short lessons on everyday topics', url: 'https://podcasts.files.bbci.co.uk/p02pc9tn.rss' },
+  { name: 'All Ears English', description: 'Natural English conversation tips', url: 'https://feeds.megaphone.fm/ESP9498912992' },
+  { name: 'The English We Speak', description: 'BBC — Everyday phrases explained', url: 'https://podcasts.files.bbci.co.uk/p02pc9zn.rss' },
+  { name: 'English Learning for Curious Minds', description: 'Interesting topics for intermediate learners', url: 'https://feeds.transistor.fm/leonardo-english-podcast' },
+];
+
 export function DiscoverView() {
   const session = useAuthStore((s) => s.session);
 
@@ -109,6 +116,31 @@ export function DiscoverView() {
           iTunes Search
         </Button>
       </div>
+
+      {/* Starter podcasts for new users */}
+      {localFeeds.length === 0 && !isLoadingFeeds && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Get Started — Popular English Podcasts</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {STARTER_PODCASTS.map((p) => (
+              <button
+                key={p.url}
+                onClick={() => addFeed(p.url)}
+                disabled={isAddingFeed}
+                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 text-left hover:border-primary/40 transition-colors"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <Headphones className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{p.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Section: My Subscriptions (local feeds) */}
       <HorizontalSection
