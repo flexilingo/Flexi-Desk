@@ -19,33 +19,42 @@
 
 ---
 
-FlexiDesk is a comprehensive desktop application for language learners. It combines **10 learning modules** — from podcast listening to AI-powered tutoring — into a single offline-capable app. Built with [Tauri 2](https://v2.tauri.app/) (Rust) and React 19, it's fast, lightweight (~15 MB), and works on macOS, Windows, and Linux.
+FlexiDesk is a desktop application for language learners. It combines learning modules — from podcast listening to AI-powered tutoring — into a single offline-capable app. All AI runs locally on your machine via [Ollama](https://ollama.com) — no account, no subscription, no data leaves your computer.
+
+Built with [Tauri 2](https://v2.tauri.app/) (Rust) and React 19. Fast, lightweight (~15 MB), works on macOS, Windows, and Linux.
+
+<!-- TODO: Add screenshot
+<p align="center">
+  <img src="docs/screenshot.png" width="800" alt="FlexiDesk screenshot" />
+</p>
+-->
 
 ## Features
 
-| Module | Description |
-|--------|-------------|
-| **Dashboard** | XP tracking, streak calendar, CEFR radar chart, study heatmap, vocabulary growth timeline, goals with freeze days |
-| **Podcast** | Subscribe to RSS feeds, download episodes, transcribe with local Whisper, translate words, interactive learning |
-| **SRS Review** | Spaced repetition flashcards with Leitner, SM-2, and FSRS algorithms. Multi-deck management, merge, bulk operations |
-| **Reading** | Import text from files, URLs, or paste. Highlight words, track progress, vocabulary extraction |
-| **AI Tutor** | Chat with a local AI tutor — supports Ollama (offline), OpenAI, and Anthropic. Scenario-based conversations, grammar correction, vocabulary suggestions |
-| **Live Caption** | Real-time speech-to-text from any audio source using local Whisper models. System audio capture via CPAL |
-| **Pronunciation** | Record yourself, transcribe with Whisper, compare against target text. Track improvement over sessions |
-| **Writing** | Timed writing sessions with community prompts. AI-powered correction and feedback |
-| **Exam** | Practice TOEFL/IELTS-style exams with timed sections, question scoring, and history tracking |
-| **Vocabulary** | Central vocabulary manager. Filter by CEFR, language, source. Bulk operations, CSV/Anki export |
+| Module | Description | Status |
+|--------|-------------|--------|
+| **Podcast** | Subscribe to RSS feeds, download episodes, transcribe with local Whisper, click any word for AI translation | Stable |
+| **AI Tutor** | Conversation practice with local AI. Grammar correction, vocabulary suggestions, 10 scenarios, CEFR-adaptive | Stable |
+| **Ask Lena** | AI sentence assistant — translates, explains grammar, gives tips in your native language | Stable |
+| **SRS Review** | Spaced repetition flashcards with Leitner, SM-2, and FSRS algorithms. Multi-deck management | Stable |
+| **Live Caption** | Real-time speech-to-text using local Whisper models. Microphone capture via CPAL | Stable |
+| **Reading** | Import text from files, URLs, or paste. Highlight words, vocabulary extraction | Stable |
+| **Vocabulary** | Central word manager. Filter by CEFR, language, source. CSV/Anki export | Stable |
+| **Dashboard** | XP tracking, streak calendar, CEFR radar chart, study heatmap, goals | Stable |
+| **Writing Coach** | Essay writing with AI-powered grading and feedback (IELTS, TOEFL, Cambridge, etc.) | Beta |
+| **Pronunciation** | Record and compare pronunciation with Whisper transcription | Beta |
+| **Exam** | Practice exams with timed sections and scoring | In Development |
 
-### Additional Capabilities
+### Highlights
 
-- **100% Offline AI** — All AI features (tutor, word analysis, sentence chat, writing coach) run locally via Ollama. No cloud required.
-- **One-Click Ollama Install** — Install and manage Ollama directly from the app. No terminal needed.
-- **Keyboard Shortcuts** — 23 customizable shortcuts across all modules
-- **Export/Import** — CSV and Anki (.apkg) format support
-- **Gamification** — XP system, streak freezes, daily goals, milestone celebrations
-- **i18n** — UI in 6 languages: English, Persian, Arabic, French, Hindi, Chinese
+- **100% Offline AI** — Tutor, word analysis, sentence chat, writing coach all run locally via Ollama
+- **One-Click Ollama Install** — Install and manage Ollama and AI models directly from the app
+- **One-Click Whisper Install** — Auto-detect or install whisper.cpp for speech-to-text
+- **10+ Languages** — English, Persian, Arabic, Turkish, Spanish, French, German, Chinese, Hindi, Russian
+- **i18n** — UI in 6 languages (English, Persian, Arabic, French, Hindi, Chinese)
 - **RTL Support** — Full right-to-left layout for Arabic and Persian
-- **Dark/Light/System** theme with the FlexiLingo color palette
+- **Dark/Light/System** theme
+- **Keyboard Shortcuts** — 23 customizable shortcuts
 
 ## Installation
 
@@ -132,23 +141,20 @@ flexi-lingo-desk/
 │   │   ├── writing/              # Sessions, prompts, corrections
 │   │   ├── exam/                 # Templates, timed sessions
 │   │   ├── vocabulary/           # Word management, bulk ops
-│   │   ├── plugins/              # Plugin manager
-│   │   └── settings/             # Account, AI, languages, shortcuts, sync, export
+│   │   └── settings/             # Account, AI, languages, shortcuts, appearance
 │   └── lib/                      # Utilities, supabase wrapper
 ├── src-tauri/                    # Rust backend
 │   ├── src/
-│   │   ├── auth/                 # Google + Apple OAuth via localhost callback
+│   │   ├── ai/                   # Shared AI provider (Ollama/OpenAI/Anthropic), prompts, JSON extractor
+│   │   ├── auth/                 # Optional auth (OTP via Supabase)
 │   │   ├── caption/              # CPAL audio capture, Whisper sidecar
 │   │   ├── commands/             # Tauri IPC command handlers (18 modules)
 │   │   ├── dashboard/            # Analytics, streaks, XP, achievements
 │   │   ├── db/                   # SQLite schema + versioned migrations (V001-V022)
-│   │   ├── export/               # CSV + Anki .apkg export/import
-│   │   ├── plugins/              # Plugin manifest parsing, registration
+│   │   ├── ollama/               # Ollama installer, process manager, model client
 │   │   ├── podcast/              # RSS parsing, download, transcription
-│   │   ├── shortcuts/            # Keyboard shortcut system
 │   │   ├── srs/                  # Leitner, SM-2, FSRS algorithms
-│   │   ├── sync/                 # Offline queue, conflict resolution
-│   │   └── ...                   # reading, tutor, writing, exam, pronunciation, ollama
+│   │   └── ...                   # reading, tutor, writing, exam, pronunciation, export
 │   └── Cargo.toml
 └── .github/workflows/            # CI (lint + build) + Release (auto-publish)
 ```
@@ -170,8 +176,7 @@ flexi-lingo-desk/
 | Audio | CPAL (system audio capture) |
 | Speech-to-Text | Whisper (local, via sidecar binary) |
 | Local AI | [Ollama](https://ollama.com) — auto-installed, supports llama3.2, mistral, gemma, qwen, etc. |
-| Auth | Google + Apple OAuth (optional, system browser flow) |
-| Cloud | Supabase (optional, for sync) |
+| Auth | OTP email login (optional, via Supabase) |
 
 ### Data Flow
 

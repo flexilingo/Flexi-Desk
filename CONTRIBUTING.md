@@ -12,8 +12,8 @@ Thank you for your interest in contributing! This guide covers everything you ne
 ### Setup
 
 ```bash
-git clone https://github.com/AminForou/flexi-lingo-desk.git
-cd flexi-lingo-desk
+git clone https://github.com/flexilingo/Flexi-Desk.git
+cd Flexi-Desk
 pnpm install
 pnpm tauri dev
 ```
