@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { setSetting } from '@/lib/tauri-bridge';
+import { useCaptionStore } from '@/pages/caption/stores/captionStore';
+import {
+  type RawDownloadProgress as RawWhisperDownloadProgress,
+  mapDownloadProgress as mapWhisperDownloadProgress,
+} from '@/pages/caption/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,6 +28,7 @@ import {
   mapOllamaInstallProgress,
   mapOllamaPullProgress,
   mapOllamaStatus,
+  RECOMMENDED_OLLAMA_MODELS,
 } from '@/stores/ollamaTypes';
 import {
   Languages,
@@ -38,6 +44,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Sparkles,
+  Mic,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────
@@ -107,11 +114,21 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
+const WIZARD_MODELS = RECOMMENDED_OLLAMA_MODELS.filter((m) =>
+  ['llama3.2', 'gemma3:4b', 'phi4-mini', 'llama3.1:8b'].includes(m.name),
+);
+
+function formatSizeMb(mb: number): string {
+  if (mb >= 1000) return `${(mb / 1000).toFixed(1)} GB`;
+  return `${mb} MB`;
+}
+
 // ── Step indicators ──────────────────────────────────────
 
 const STEPS = [
   { label: 'Languages', icon: Languages },
   { label: 'AI Setup', icon: Bot },
+  { label: 'Whisper', icon: Mic },
   { label: 'Podcast', icon: Podcast },
 ] as const;
 
@@ -228,6 +245,8 @@ function AISetupStep({
   onStartServe,
   onPullModel,
   onSkip,
+  selectedModel,
+  onSelectModel,
 }: {
   ollamaState: OllamaState;
   installStatus: OllamaInstallStatus | null;
@@ -244,6 +263,8 @@ function AISetupStep({
   onStartServe: () => void;
   onPullModel: () => void;
   onSkip: () => void;
+  selectedModel: string;
+  onSelectModel: (name: string) => void;
 }) {
   return (
     <div className="flex flex-col items-center">
@@ -350,21 +371,53 @@ function AISetupStep({
               </div>
             </div>
 
-            {/* No models — offer to download */}
+            {/* No models — offer to choose and download */}
             {models.length === 0 && !isPulling && (
               <div className="rounded-lg border border-border bg-card p-4 space-y-3">
                 <div className="flex items-start gap-3">
                   <Sparkles className="h-5 w-5 text-accent mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">Download a language model</p>
+                    <p className="text-sm font-medium text-foreground">Choose an AI model</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Llama 3.2 is recommended — fast, multilingual, and ~2 GB download.
+                      Smaller models are faster. Larger ones are more capable.
                     </p>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  {WIZARD_MODELS.map((model) => (
+                    <label
+                      key={model.name}
+                      className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
+                        selectedModel === model.name
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="ai-model"
+                        value={model.name}
+                        checked={selectedModel === model.name}
+                        onChange={() => onSelectModel(model.name)}
+                        className="sr-only"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">{model.displayName}</span>
+                          <span className="text-xs text-muted-foreground">{model.parameterCount}</span>
+                          <span className="text-xs text-muted-foreground">~{formatSizeMb(model.sizeMb)}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{model.description}</p>
+                      </div>
+                      {selectedModel === model.name && (
+                        <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                      )}
+                    </label>
+                  ))}
+                </div>
                 <Button onClick={onPullModel} className="w-full gap-2">
                   <Download className="h-4 w-4" />
-                  Download recommended model
+                  Download {WIZARD_MODELS.find((m) => m.name === selectedModel)?.displayName ?? 'model'}
                 </Button>
               </div>
             )}
@@ -375,7 +428,7 @@ function AISetupStep({
                 <div className="flex items-center gap-3">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   <span className="text-sm text-foreground">
-                    Downloading {pullProgress?.modelName ?? 'llama3.2'}...
+                    Downloading {pullProgress?.modelName ?? selectedModel}...
                   </span>
                 </div>
                 {pullProgress && (
@@ -548,6 +601,288 @@ function PodcastStep({
   );
 }
 
+// ── Step 3: Whisper Setup ────────────────────────────────
+
+const WIZARD_WHISPER_MODELS = ['tiny', 'base', 'small', 'large-v3-turbo-q5_0', 'large-v3-turbo'];
+
+function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void }) {
+  const {
+    whisperInfo,
+    whisperInstallStatus,
+    isInstallingWhisper,
+    whisperInstallMessage,
+    isInstallingHomebrew,
+    availableModels,
+    isLoadingModels,
+    isDownloading,
+    downloadProgress,
+    checkWhisper,
+    checkWhisperInstallStatus,
+    autoDetectWhisper,
+    installWhisper,
+    installHomebrew,
+    fetchAvailableModels,
+    downloadModel,
+    setActiveModel,
+    setDownloadProgress,
+    setWhisperInstallMessage,
+  } = useCaptionStore();
+
+  const [checking, setChecking] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check whisper status on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function init() {
+      try {
+        await checkWhisperInstallStatus();
+        const detected = await autoDetectWhisper();
+        if (!cancelled && detected) {
+          await fetchAvailableModels();
+          await checkWhisper();
+        }
+      } catch (err) {
+        if (!cancelled) setError(String(err));
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    }
+    init();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Listen for download progress
+  useEffect(() => {
+    if (!isDownloading) return;
+    let unlisten: UnlistenFn | undefined;
+    listen<RawWhisperDownloadProgress>('whisper-download-progress', (event) => {
+      setDownloadProgress(mapWhisperDownloadProgress(event.payload));
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, [isDownloading]);
+
+  // Listen for install progress
+  useEffect(() => {
+    if (!isInstallingWhisper && !isInstallingHomebrew) return;
+    let unlisten: UnlistenFn | undefined;
+    listen<{ status: string; message: string; percent: number }>('whisper-install-progress', (event) => {
+      setWhisperInstallMessage(event.payload.message);
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, [isInstallingWhisper, isInstallingHomebrew]);
+
+  const handleInstallWhisper = useCallback(async () => {
+    setError(null);
+    try {
+      if (whisperInstallStatus && !whisperInstallStatus.homebrewAvailable) {
+        await installHomebrew();
+      }
+      await installWhisper();
+      await fetchAvailableModels();
+      await checkWhisper();
+    } catch (err) {
+      setError(String(err));
+    }
+  }, [whisperInstallStatus, installHomebrew, installWhisper, fetchAvailableModels, checkWhisper]);
+
+  const handleDownloadModel = useCallback(async (modelId: string) => {
+    setError(null);
+    try {
+      const path = await downloadModel(modelId);
+      if (path) {
+        await setActiveModel(modelId);
+        await checkWhisper();
+      }
+    } catch (err) {
+      setError(String(err));
+    }
+  }, [downloadModel, setActiveModel, checkWhisper]);
+
+  const binaryDetected = whisperInstallStatus?.binaryDetected ?? false;
+  const isReady = whisperInfo?.isAvailable ?? false;
+  const wizardModels = availableModels.filter((m) => WIZARD_WHISPER_MODELS.includes(m.id));
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
+        <Mic className="h-7 w-7 text-primary" />
+      </div>
+      <h1 className="text-2xl font-bold text-foreground mb-2">Speech Recognition</h1>
+      <p className="text-muted-foreground mb-8 text-center max-w-md">
+        Whisper transcribes audio locally. Used by Live Caption and Podcast features.
+      </p>
+
+      <div className="w-full max-w-md space-y-4">
+        {/* Checking */}
+        {checking && (
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Detecting Whisper...</span>
+          </div>
+        )}
+
+        {/* Binary not found */}
+        {!checking && !binaryDetected && !isInstallingWhisper && !isInstallingHomebrew && (
+          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Whisper not found</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {whisperInstallStatus?.canAutoInstall
+                    ? 'Click below to install whisper-cli automatically via Homebrew.'
+                    : 'Whisper requires Homebrew. Click below to install both.'}
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleInstallWhisper} className="w-full gap-2">
+              <Download className="h-4 w-4" />
+              Install Whisper
+            </Button>
+          </div>
+        )}
+
+        {/* Installing */}
+        {(isInstallingWhisper || isInstallingHomebrew) && (
+          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-sm text-foreground">
+                {isInstallingHomebrew ? 'Installing Homebrew...' : 'Installing Whisper...'}
+              </span>
+            </div>
+            {whisperInstallMessage && (
+              <p className="text-xs text-muted-foreground truncate">{whisperInstallMessage}</p>
+            )}
+          </div>
+        )}
+
+        {/* Binary found, show models */}
+        {!checking && binaryDetected && !isReady && !isDownloading && (
+          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Choose a Whisper model</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Larger models are more accurate but slower and need more RAM.
+                </p>
+              </div>
+            </div>
+            {isLoadingModels ? (
+              <div className="flex items-center gap-2 py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Loading models...</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {wizardModels.map((model) => (
+                  <div
+                    key={model.id}
+                    className="flex items-center gap-3 rounded-lg border border-border p-3 hover:border-primary/30 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">{model.name}</span>
+                        <span className="text-xs text-muted-foreground">{model.sizeMb} MB</span>
+                        <span className="text-xs text-muted-foreground">{model.speed}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{model.description}</p>
+                    </div>
+                    {model.isDownloaded ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownloadModel(model.id)}
+                        className="shrink-0 gap-1.5"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Use
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownloadModel(model.id)}
+                        className="shrink-0 gap-1.5"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Downloading model */}
+        {isDownloading && downloadProgress && (
+          <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-sm text-foreground">Downloading model...</span>
+            </div>
+            <div className="space-y-1">
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.min(downloadProgress.percent, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-right">
+                {downloadProgress.percent.toFixed(0)}%
+                {downloadProgress.totalBytes > 0 &&
+                  ` — ${formatBytes(downloadProgress.downloadedBytes)} / ${formatBytes(downloadProgress.totalBytes)}`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Ready */}
+        {isReady && (
+          <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
+            <CheckCircle className="h-5 w-5 text-success shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Whisper is ready!</p>
+              {whisperInfo?.modelName && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Active model: {whisperInfo.modelName}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-start gap-3 rounded-lg border border-error/30 bg-error/5 p-4">
+            <AlertCircle className="h-5 w-5 text-error mt-0.5 shrink-0" />
+            <p className="text-xs text-muted-foreground">{error}</p>
+          </div>
+        )}
+
+        {/* Skip */}
+        {!skipped && !isReady && (
+          <button
+            onClick={onSkip}
+            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+          >
+            Skip for now
+          </button>
+        )}
+        {skipped && (
+          <p className="text-center text-xs text-muted-foreground">
+            You can set up Whisper later in Settings.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main SetupWizard ─────────────────────────────────────
 
 interface SetupWizardProps {
@@ -575,8 +910,12 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiSkipped, setAiSkipped] = useState(false);
   const [modelPulled, setModelPulled] = useState(false);
+  const [selectedModelName, setSelectedModelName] = useState('llama3.2');
 
-  // Step 3 state
+  // Step 3 state (Whisper)
+  const [whisperSkipped, setWhisperSkipped] = useState(false);
+
+  // Step 4 state
   const [subscribedUrls, setSubscribedUrls] = useState<Set<string>>(new Set());
   const [subscribingUrl, setSubscribingUrl] = useState<string | null>(null);
 
@@ -720,7 +1059,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     setPullProgress(null);
     setAiError(null);
     try {
-      await invoke('ollama_pull_model', { modelName: 'llama3.2' });
+      await invoke('ollama_pull_model', { modelName: selectedModelName });
       setIsPulling(false);
       setPullProgress(null);
       setModelPulled(true);
@@ -733,7 +1072,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
       setPullProgress(null);
       setAiError(String(err));
     }
-  }, []);
+  }, [selectedModelName]);
 
   // ── Podcast actions ────────────────────────────────────
   const handleSubscribe = useCallback(async (url: string) => {
@@ -754,28 +1093,31 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     await setSetting('target_language', targetLang);
 
     if (modelPulled) {
-      await setSetting('ai_model', 'llama3.2');
+      await setSetting('ai_model', selectedModelName);
       await setSetting('ai_provider', 'ollama');
     }
 
     await setSetting('onboarding_complete', 'true');
     onComplete();
-  }, [nativeLang, targetLang, modelPulled, onComplete]);
+  }, [nativeLang, targetLang, modelPulled, selectedModelName, onComplete]);
 
   // ── Can proceed to next step ──────────────────────────
+  const whisperReady = useCaptionStore((s) => s.whisperInfo?.isAvailable ?? false);
+
   const canGoNext = (): boolean => {
     if (step === 0) return true;
     if (step === 1) return ollamaState === 'ready' || aiSkipped;
+    if (step === 2) return whisperReady || whisperSkipped;
     return true;
   };
 
   // ── Render ─────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background text-foreground">
       <div className="w-full max-w-2xl px-6 py-8">
         <StepIndicator currentStep={step} />
 
-        <div className="min-h-[360px] flex flex-col justify-center">
+        <div className="min-h-[400px] flex flex-col justify-center">
           {step === 0 && (
             <LanguageStep
               nativeLang={nativeLang}
@@ -802,10 +1144,19 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
               onStartServe={handleStartServe}
               onPullModel={handlePullModel}
               onSkip={() => setAiSkipped(true)}
+              selectedModel={selectedModelName}
+              onSelectModel={setSelectedModelName}
             />
           )}
 
           {step === 2 && (
+            <WhisperStep
+              skipped={whisperSkipped}
+              onSkip={() => setWhisperSkipped(true)}
+            />
+          )}
+
+          {step === 3 && (
             <PodcastStep
               subscribedUrls={subscribedUrls}
               subscribingUrl={subscribingUrl}
@@ -827,13 +1178,13 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            {step === 2 && (
+            {step === 3 && (
               <Button variant="ghost" onClick={handleComplete}>
                 Skip
               </Button>
             )}
 
-            {step < 2 ? (
+            {step < 3 ? (
               <Button
                 onClick={() => setStep((s) => s + 1)}
                 disabled={!canGoNext()}
