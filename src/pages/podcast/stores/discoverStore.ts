@@ -30,6 +30,10 @@ interface DiscoverState {
   isFollowedLoading: boolean;
   followedFeedIds: Set<number>;
 
+  // Starter podcasts (top language learning, for new users)
+  starterPodcasts: PodcastIndexFeed[];
+  isStarterLoading: boolean;
+
   // Follow in-progress
   followingFeedId: number | null;
 
@@ -41,6 +45,7 @@ interface DiscoverState {
   fetchTrending: () => Promise<void>;
   fetchCategory: (cat: string) => Promise<void>;
   fetchFollowed: () => Promise<void>;
+  fetchStarterPodcasts: () => Promise<void>;
   followPodcast: (feedId: number) => Promise<void>;
   unfollowPodcast: (feedId: number) => Promise<void>;
   fetchAll: () => Promise<void>;
@@ -58,6 +63,8 @@ export const useDiscoverStore = create<DiscoverState>()(
     followedPodcasts: [],
     isFollowedLoading: false,
     followedFeedIds: new Set(),
+    starterPodcasts: [],
+    isStarterLoading: false,
     followingFeedId: null,
     error: null,
 
@@ -146,6 +153,26 @@ export const useDiscoverStore = create<DiscoverState>()(
       }
     },
 
+    fetchStarterPodcasts: async () => {
+      set((s) => {
+        s.isStarterLoading = true;
+      });
+      try {
+        const res = await supabaseCall<{ podcasts: PodcastIndexFeed[] }>(
+          'GET',
+          '/podcast?action=starter-podcasts',
+        );
+        set((s) => {
+          s.starterPodcasts = res.podcasts;
+          s.isStarterLoading = false;
+        });
+      } catch {
+        set((s) => {
+          s.isStarterLoading = false;
+        });
+      }
+    },
+
     followPodcast: async (feedId: number) => {
       set((s) => {
         s.followingFeedId = feedId;
@@ -186,12 +213,14 @@ export const useDiscoverStore = create<DiscoverState>()(
     },
 
     fetchAll: async () => {
-      const { fetchCurated, fetchTrending, fetchFollowed, fetchCategory } = get();
+      const { fetchCurated, fetchTrending, fetchFollowed, fetchCategory, fetchStarterPodcasts } =
+        get();
       // Fire all fetches in parallel
       await Promise.allSettled([
         fetchCurated(),
         fetchTrending(),
         fetchFollowed(),
+        fetchStarterPodcasts(),
         ...CATEGORIES.map((cat) => fetchCategory(cat)),
       ]);
     },

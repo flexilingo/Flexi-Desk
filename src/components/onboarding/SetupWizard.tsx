@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { setSetting } from '@/lib/tauri-bridge';
 import { useCaptionStore } from '@/pages/caption/stores/captionStore';
+import { useDiscoverStore } from '@/pages/podcast/stores/discoverStore';
 import {
   type RawDownloadProgress as RawWhisperDownloadProgress,
   mapDownloadProgress as mapWhisperDownloadProgress,
@@ -60,39 +61,6 @@ const LANGUAGES = [
   { code: 'zh', name: 'Chinese' },
   { code: 'hi', name: 'Hindi' },
   { code: 'ru', name: 'Russian' },
-] as const;
-
-const STARTER_PODCASTS = [
-  {
-    name: '6 Minute English',
-    author: 'BBC',
-    description: 'Learn and practise useful English language for everyday situations with the BBC.',
-    url: 'https://podcasts.files.bbci.co.uk/p02pc9tn.rss',
-  },
-  {
-    name: 'All Ears English',
-    author: 'Lindsay McMahon & Michelle Kaplan',
-    description: 'Real English conversations to help you sound natural and build connections.',
-    url: 'https://feeds.megaphone.fm/ESP9498912992',
-  },
-  {
-    name: 'English Learning for Curious Minds',
-    author: 'Leonardo English',
-    description: 'Interesting topics explained in clear, intermediate-level English.',
-    url: 'https://feeds.transistor.fm/leonardo-english-podcast',
-  },
-  {
-    name: 'The English We Speak',
-    author: 'BBC',
-    description: 'Learn the English phrases you need to know, explained in short episodes.',
-    url: 'https://podcasts.files.bbci.co.uk/p02pc9zn.rss',
-  },
-  {
-    name: 'Espresso English',
-    author: 'Shayna Oliveira',
-    description: 'Short, practical lessons covering grammar, vocabulary, slang, and pronunciation.',
-    url: 'https://feeds.buzzsprout.com/2252824.rss',
-  },
 ] as const;
 
 // ── Helpers ──────────────────────────────────────────────
@@ -497,6 +465,14 @@ function PodcastStep({
   const [customUrl, setCustomUrl] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
 
+  const { starterPodcasts, isStarterLoading, fetchStarterPodcasts } = useDiscoverStore();
+
+  useEffect(() => {
+    if (starterPodcasts.length === 0 && !isStarterLoading) {
+      fetchStarterPodcasts();
+    }
+  }, [starterPodcasts.length, isStarterLoading, fetchStarterPodcasts]);
+
   const handleAddCustom = () => {
     const trimmed = customUrl.trim();
     if (!trimmed) return;
@@ -522,51 +498,61 @@ function PodcastStep({
       </p>
 
       <div className="w-full max-w-lg space-y-3">
-        {STARTER_PODCASTS.map((podcast) => {
-          const isSubscribed = subscribedUrls.has(podcast.url);
-          const isSubscribing = subscribingUrl === podcast.url;
-          return (
-            <div
-              key={podcast.url}
-              className={`flex items-center gap-4 rounded-lg border p-3 transition-colors ${
-                isSubscribed
-                  ? 'border-success/30 bg-success/5'
-                  : 'border-border bg-card hover:border-primary/30'
-              }`}
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Rss className="h-5 w-5 text-muted-foreground" />
+        {isStarterLoading ? (
+          <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Loading podcasts…</span>
+          </div>
+        ) : (
+          starterPodcasts.map((podcast) => {
+            const url = podcast.rssUrl ?? '';
+            const isSubscribed = subscribedUrls.has(url);
+            const isSubscribing = subscribingUrl === url;
+            return (
+              <div
+                key={url}
+                className={`flex items-center gap-4 rounded-lg border p-3 transition-colors ${
+                  isSubscribed
+                    ? 'border-success/30 bg-success/5'
+                    : 'border-border bg-card hover:border-primary/30'
+                }`}
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <Rss className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {podcast.title}
+                    {podcast.author && (
+                      <span className="text-muted-foreground font-normal"> by {podcast.author}</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                    {podcast.description}
+                  </p>
+                </div>
+                {isSubscribed ? (
+                  <CheckCircle className="h-5 w-5 text-success shrink-0" />
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isSubscribing || !url}
+                    onClick={() => onSubscribe(url)}
+                    className="shrink-0 gap-1.5"
+                  >
+                    {isSubscribing ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
+                    {isSubscribing ? 'Adding...' : 'Subscribe'}
+                  </Button>
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {podcast.name}
-                  <span className="text-muted-foreground font-normal"> by {podcast.author}</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                  {podcast.description}
-                </p>
-              </div>
-              {isSubscribed ? (
-                <CheckCircle className="h-5 w-5 text-success shrink-0" />
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isSubscribing}
-                  onClick={() => onSubscribe(podcast.url)}
-                  className="shrink-0 gap-1.5"
-                >
-                  {isSubscribing ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" />
-                  )}
-                  {isSubscribing ? 'Adding...' : 'Subscribe'}
-                </Button>
-              )}
-            </div>
-          );
-        })}
+            );
+          })
+        )}
 
         {/* Custom RSS URL */}
         <div className="pt-3 border-t border-border space-y-2">
