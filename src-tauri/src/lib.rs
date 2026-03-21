@@ -80,8 +80,11 @@ pub fn run() {
                 .item(&quit)
                 .build()?;
 
+            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray-icon.png"))
+                .expect("Failed to load tray icon");
+
             TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(tray_icon)
                 .menu(&menu)
                 .on_menu_event(|app, event| {
                     match event.id().as_ref() {
