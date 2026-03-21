@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   Loader2,
   FileText,
   ExternalLink,
+  Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -45,15 +46,34 @@ export function EpisodeListView() {
     };
   }, [setDownloadProgress]);
 
+  const [descExpanded, setDescExpanded] = useState(false);
+
   if (!activeFeed) return null;
 
   const handleRefresh = () => {
     refreshFeed(activeFeed.id);
   };
 
+  const rawDescription = activeFeed.description ?? '';
+  const description = rawDescription
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  const showMoreBtn = description.length > 200;
+  const displayedDescription = descExpanded || !showMoreBtn
+    ? description
+    : description.slice(0, 200) + '…';
+
   return (
     <Card>
       <CardHeader>
+        {/* ── Main row ── */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={goBack}>
             <ArrowLeft className="h-4 w-4" />
@@ -70,14 +90,14 @@ export function EpisodeListView() {
           )}
 
           <div className="flex-1 min-w-0">
-            <CardTitle className="truncate">{activeFeed.title}</CardTitle>
+            <CardTitle className="line-clamp-2 leading-snug">{activeFeed.title}</CardTitle>
             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
               {activeFeed.author && <span>{activeFeed.author}</span>}
               <span>{activeFeed.episodeCount} episodes</span>
             </div>
           </div>
 
-          <div className="flex gap-1">
+          <div className="flex gap-1 shrink-0">
             <Button variant="ghost" size="icon" onClick={handleRefresh} title="Refresh feed">
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -93,6 +113,38 @@ export function EpisodeListView() {
             )}
           </div>
         </div>
+
+        {/* ── Meta: category + language ── */}
+        {(activeFeed.category || activeFeed.language) && (
+          <div className="flex flex-wrap items-center gap-2 mt-1 ml-10">
+            {activeFeed.category && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                {activeFeed.category}
+              </span>
+            )}
+            {activeFeed.language && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Globe className="h-3 w-3" />
+                {activeFeed.language.toUpperCase()}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ── Description ── */}
+        {description.length > 0 && (
+          <div className="mt-2 ml-10 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+            {displayedDescription}
+            {showMoreBtn && (
+              <button
+                onClick={() => setDescExpanded(!descExpanded)}
+                className="ml-1 text-primary font-medium hover:underline focus:outline-none whitespace-normal"
+              >
+                {descExpanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
+          </div>
+        )}
       </CardHeader>
 
       <CardContent>
