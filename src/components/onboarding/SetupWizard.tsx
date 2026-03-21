@@ -498,61 +498,63 @@ function PodcastStep({
       </p>
 
       <div className="w-full max-w-lg space-y-3">
-        {isStarterLoading ? (
-          <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">Loading podcasts…</span>
-          </div>
-        ) : (
-          starterPodcasts.map((podcast) => {
-            const url = podcast.rssUrl ?? '';
-            const isSubscribed = subscribedUrls.has(url);
-            const isSubscribing = subscribingUrl === url;
-            return (
-              <div
-                key={url}
-                className={`flex items-center gap-4 rounded-lg border p-3 transition-colors ${
-                  isSubscribed
-                    ? 'border-success/30 bg-success/5'
-                    : 'border-border bg-card hover:border-primary/30'
-                }`}
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                  <Rss className="h-5 w-5 text-muted-foreground" />
+        <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1">
+          {isStarterLoading ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Loading podcasts…</span>
+            </div>
+          ) : (
+            starterPodcasts.map((podcast) => {
+              const url = podcast.rssUrl ?? '';
+              const isSubscribed = subscribedUrls.has(url);
+              const isSubscribing = subscribingUrl === url;
+              return (
+                <div
+                  key={url}
+                  className={`flex items-center gap-4 rounded-lg border p-3 transition-colors ${
+                    isSubscribed
+                      ? 'border-success/30 bg-success/5'
+                      : 'border-border bg-card hover:border-primary/30'
+                  }`}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <Rss className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {podcast.title}
+                      {podcast.author && (
+                        <span className="text-muted-foreground font-normal"> by {podcast.author}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      {podcast.description}
+                    </p>
+                  </div>
+                  {isSubscribed ? (
+                    <CheckCircle className="h-5 w-5 text-success shrink-0" />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isSubscribing || !url}
+                      onClick={() => onSubscribe(url)}
+                      className="shrink-0 gap-1.5"
+                    >
+                      {isSubscribing ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Plus className="h-3.5 w-3.5" />
+                      )}
+                      {isSubscribing ? 'Adding...' : 'Subscribe'}
+                    </Button>
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {podcast.title}
-                    {podcast.author && (
-                      <span className="text-muted-foreground font-normal"> by {podcast.author}</span>
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                    {podcast.description}
-                  </p>
-                </div>
-                {isSubscribed ? (
-                  <CheckCircle className="h-5 w-5 text-success shrink-0" />
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isSubscribing || !url}
-                    onClick={() => onSubscribe(url)}
-                    className="shrink-0 gap-1.5"
-                  >
-                    {isSubscribing ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Plus className="h-3.5 w-3.5" />
-                    )}
-                    {isSubscribing ? 'Adding...' : 'Subscribe'}
-                  </Button>
-                )}
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
 
         {/* Custom RSS URL */}
         <div className="pt-3 border-t border-border space-y-2">
@@ -1099,11 +1101,11 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
   // ── Render ─────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background text-foreground">
-      <div className="w-full max-w-2xl px-6 py-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background text-foreground">
+      <div className="w-full max-w-2xl mx-auto px-6 py-8 min-h-full flex flex-col justify-center">
         <StepIndicator currentStep={step} />
 
-        <div className="min-h-[400px] flex flex-col justify-center">
+        <div className="flex flex-col justify-center">
           {step === 0 && (
             <LanguageStep
               nativeLang={nativeLang}
