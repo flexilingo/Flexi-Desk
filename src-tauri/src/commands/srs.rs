@@ -237,6 +237,10 @@ pub fn srs_update_deck(
 #[tauri::command]
 pub fn srs_delete_deck(state: State<'_, AppState>, id: String) -> Result<(), String> {
     let conn = lock_db(&state)?;
+    // Delete review sessions referencing this deck (no CASCADE on FK)
+    conn.execute("DELETE FROM review_sessions WHERE deck_id = ?1", rusqlite::params![id])
+        .map_err(|e| format!("Delete sessions error: {e}"))?;
+    // deck_cards and srs_progress cascade automatically
     conn.execute("DELETE FROM decks WHERE id = ?1", rusqlite::params![id])
         .map_err(|e| format!("Delete error: {e}"))?;
     Ok(())
