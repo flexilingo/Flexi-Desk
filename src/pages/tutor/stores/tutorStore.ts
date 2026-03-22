@@ -328,7 +328,7 @@ export const useTutorStore = create<TutorState>()(
 
       try {
         const raw = await invoke<RawConversationSummary>('tutor_end_conversation', {
-          conversationId: conv.id,
+          id: conv.id,
         });
         const updated = mapConversation(raw);
 
