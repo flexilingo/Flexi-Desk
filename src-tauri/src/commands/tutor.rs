@@ -883,56 +883,47 @@ pub async fn tutor_speak_text(
 
     if let Some(key) = api_key {
         if !key.is_empty() {
-            // Split text into sentences for faster first-sentence playback
-            let sentences = split_sentences(&text);
+            // Use OpenAI TTS API — send full text as one request for seamless playback
+            let client = reqwest::Client::new();
+            let response = client
+                .post("https://api.openai.com/v1/audio/speech")
+                .header("Authorization", format!("Bearer {key}"))
+                .header("Content-Type", "application/json")
+                .json(&serde_json::json!({
+                    "model": "tts-1",
+                    "input": text,
+                    "voice": "nova",
+                    "response_format": "mp3"
+                }))
+                .send()
+                .await
+                .map_err(|e| format!("TTS API request failed: {e}"))?;
 
-            for sentence in &sentences {
-                // Check if we were interrupted between sentences
-                if TTS_PID.load(Ordering::SeqCst) == u32::MAX {
-                    TTS_PID.store(0, Ordering::SeqCst);
-                    break;
-                }
+            if !response.status().is_success() {
+                let status = response.status();
+                let body = response.text().await.unwrap_or_default();
+                return Err(format!("TTS API error ({status}): {body}"));
+            }
 
-                // Use OpenAI TTS API
-                let client = reqwest::Client::new();
-                let response = client
-                    .post("https://api.openai.com/v1/audio/speech")
-                    .header("Authorization", format!("Bearer {key}"))
-                    .header("Content-Type", "application/json")
-                    .json(&serde_json::json!({
-                        "model": "tts-1",
-                        "input": sentence,
-                        "voice": "nova",
-                        "response_format": "mp3"
-                    }))
-                    .send()
-                    .await
-                    .map_err(|e| format!("TTS API request failed: {e}"))?;
+            let bytes = response
+                .bytes()
+                .await
+                .map_err(|e| format!("Failed to read TTS response: {e}"))?;
 
-                if !response.status().is_success() {
-                    let status = response.status();
-                    let body = response.text().await.unwrap_or_default();
-                    return Err(format!("TTS API error ({status}): {body}"));
-                }
+            let uuid = whisper::uuid_hex();
+            let tmp_dir = std::env::temp_dir();
+            let mp3_path = tmp_dir.join(format!("tutor_tts_{uuid}.mp3"));
 
-                let bytes = response
-                    .bytes()
-                    .await
-                    .map_err(|e| format!("Failed to read TTS response: {e}"))?;
+            std::fs::write(&mp3_path, &bytes)
+                .map_err(|e| format!("Failed to write TTS audio: {e}"))?;
 
-                let uuid = whisper::uuid_hex();
-                let tmp_dir = std::env::temp_dir();
-                let mp3_path = tmp_dir.join(format!("tutor_tts_{uuid}.mp3"));
+            let mp3_str = mp3_path
+                .to_str()
+                .ok_or_else(|| "Invalid MP3 path".to_string())?
+                .to_string();
 
-                std::fs::write(&mp3_path, &bytes)
-                    .map_err(|e| format!("Failed to write TTS audio: {e}"))?;
-
-                let mp3_str = mp3_path
-                    .to_str()
-                    .ok_or_else(|| "Invalid MP3 path".to_string())?
-                    .to_string();
-
-                // Play audio with afplay (macOS), tracking PID for killability
+            // Play audio with afplay (macOS), tracking PID for killability
+            {
                 let result = tokio::task::spawn_blocking(move || {
                     let mut child = match std::process::Command::new("afplay")
                         .arg(&mp3_str)

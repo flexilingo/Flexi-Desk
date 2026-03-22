@@ -181,6 +181,8 @@ export const useTutorStore = create<TutorState>()(
     },
 
     closeConversation: () => {
+      // Stop any playing TTS before leaving
+      get().stopSpeaking();
       set((s) => {
         s.activeConversation = null;
         s.messages = [];
@@ -338,6 +340,8 @@ export const useTutorStore = create<TutorState>()(
     },
 
     endConversation: async () => {
+      // Stop any playing TTS
+      await get().stopSpeaking();
       const conv = get().activeConversation;
       if (!conv) return;
 
