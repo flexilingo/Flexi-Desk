@@ -304,6 +304,7 @@ pub fn run() {
             commands::podcast::podcast_start_download_job,
             // AI
             commands::ai::ai_word_analysis,
+            commands::ai::ai_translate_words,
             commands::ai::ai_sentence_chat,
             commands::ai::ai_sentence_chat_history,
             commands::ai::ai_sentence_chat_clear,
