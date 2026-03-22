@@ -1,74 +1,203 @@
+use super::cefr::cefr_prompt;
+use super::modes::mode_prompt;
 use crate::tutor::scenarios::get_scenarios;
 
-/// Build the system prompt for the AI tutor.
+/// Core tutor persona and output format rules.
+const BASE_PERSONA: &str = r#"You are FlexiLingo Tutor — a friendly, patient, and encouraging language tutor.
+
+## Your Personality
+- Warm and supportive, like a favorite teacher.
+- Celebrate the student's progress. Praise correct usage of new or difficult structures.
+- Be conversational, not like a textbook. Make learning feel natural and fun.
+- Use humor when appropriate. Share brief anecdotes to keep things engaging.
+- Keep responses concise: 2-4 sentences for the conversational part, plus corrections/vocabulary blocks when applicable.
+
+## Output Format
+
+After your conversational response, include the following blocks when applicable.
+
+### Corrections
+If the student made errors, add a corrections block:
+
+:::corrections
+[
+  {
+    "original": "the student's incorrect text",
+    "corrected": "the correct version",
+    "explanation": "brief explanation",
+    "grammar_rule": "rule name",
+    "severity": "error|warning|style"
+  }
+]
+:::
+
+If no corrections are needed, output:
+
+:::corrections
+[]
+:::
+
+### Vocabulary
+If you introduce new vocabulary, add:
+
+:::vocabulary
+[
+  {
+    "word": "new word",
+    "translation": "translation",
+    "pos": "noun|verb|adj|adv|phrase",
+    "cefr_level": "A1|A2|B1|B2|C1|C2"
+  }
+]
+:::
+
+IMPORTANT: Always include both blocks (corrections and vocabulary) in every response. Use empty arrays [] if nothing to report."#;
+
+/// Build the full system prompt by composing BASE_PERSONA + context + CEFR block + mode block.
+///
+/// This is the new modular builder. For backward compatibility with existing callers that pass
+/// `(language, cefr_level, native_language, scenario_id)`, use [`build_system_prompt`] instead.
+pub fn build_system_prompt_full(
+    target_language: &str,
+    native_language: &str,
+    cefr_level: &str,
+    mode: &str,
+    topic: Option<&str>,
+    scenario_context: Option<&str>,
+    deck_words: Option<&[String]>,
+) -> String {
+    let lang_name = language_name(target_language);
+    let native_name = language_name(native_language);
+
+    let context_block = format!(
+        r#"## Context
+- Target language: {lang_name}
+- Student's native language: {native_name}
+- Speak primarily in {lang_name}.
+- Use {native_name} only when explicitly allowed by the CEFR level instructions below.
+- Ask follow-up questions to keep the conversation flowing."#
+    );
+
+    let cefr_block = cefr_prompt(cefr_level);
+    let mode_block = mode_prompt(mode, topic, scenario_context, deck_words);
+
+    format!(
+        "{BASE_PERSONA}\n\n{context_block}\n\n{cefr_block}\n\n{mode_block}"
+    )
+}
+
+/// Backward-compatible system prompt builder.
+///
+/// Maps the old 4-param signature to the new modular builder.
+/// Existing callers in `commands/tutor.rs` use this function.
 pub fn build_system_prompt(
     language: &str,
     cefr_level: &str,
     native_language: &str,
     scenario_id: Option<&str>,
 ) -> String {
-    let lang_name = language_name(language);
-    let native_name = language_name(native_language);
-    let level_instructions = get_level_instructions(cefr_level);
-    let scenario_block = scenario_id
-        .and_then(|id| {
-            get_scenarios()
-                .into_iter()
-                .find(|s| s.id == id)
-                .map(|s| format!("\n## Scenario\n{}\nStay in character throughout the conversation.\n", s.opening_prompt))
-        })
-        .unwrap_or_default();
+    let scenario_context = scenario_id.and_then(|id| {
+        get_scenarios()
+            .into_iter()
+            .find(|s| s.id == id)
+            .map(|s| s.opening_prompt)
+    });
 
-    format!(
-r#"You are a friendly, patient language tutor helping a student practice {lang_name}.
+    let mode = if scenario_context.is_some() {
+        "role_play"
+    } else {
+        "free"
+    };
 
-## Student Level
-The student is at CEFR level {cefr_level}.
-{level_instructions}
-
-## Your Behavior
-1. Speak primarily in {lang_name}. Use {native_name} only for explanations when the student is confused.
-2. Keep your vocabulary and grammar within the student's CEFR level.
-3. Be encouraging. Celebrate correct usage, especially of new or advanced structures.
-4. Naturally introduce 1-2 new vocabulary words per exchange that are slightly above their level.
-5. Ask follow-up questions to keep the conversation flowing.
-6. Keep responses concise (2-4 sentences for conversation, plus corrections/vocab blocks).
-
-## Corrections
-After your conversational response, if the student made any errors, provide corrections in this JSON format enclosed in ```corrections markers:
-
-```corrections
-[
-  {{
-    "original": "the student's incorrect text",
-    "corrected": "the correct version",
-    "explanation": "brief explanation in {native_name}",
-    "grammar_rule": "rule name",
-    "severity": "error"
-  }}
-]
-```
-
-If no corrections needed, output: ```corrections
-[]
-```
-
-## Vocabulary
-If you introduce new vocabulary, add:
-
-```vocabulary
-[
-  {{
-    "word": "new word in {lang_name}",
-    "translation": "translation in {native_name}",
-    "pos": "noun/verb/adj/adv",
-    "cefr_level": "B1"
-  }}
-]
-```
-{scenario_block}
-Remember: Be conversational, not like a textbook. Make learning feel natural."#
+    build_system_prompt_full(
+        language,
+        native_language,
+        cefr_level,
+        mode,
+        None,
+        scenario_context.as_deref(),
+        None,
     )
+}
+
+/// Generate a mode-specific opening message for the tutor to start with.
+pub fn opening_message(
+    mode: &str,
+    target_language: &str,
+    cefr_level: &str,
+    topic: Option<&str>,
+    scenario_title: Option<&str>,
+) -> String {
+    let lang_name = language_name(target_language);
+
+    match mode {
+        "free" => {
+            let topic_part = match topic {
+                Some(t) if !t.is_empty() => format!("about {t}"),
+                _ => "on any topic you like".to_string(),
+            };
+            format!(
+                "Start a natural, friendly conversation in {lang_name} {topic_part}. \
+                 Greet the student warmly and ask an engaging opening question appropriate for CEFR level {cefr_level}."
+            )
+        }
+        "role_play" => {
+            let scenario_part = match scenario_title {
+                Some(title) => format!("for the scenario: {title}"),
+                None => "based on the scenario described in the system prompt".to_string(),
+            };
+            format!(
+                "Begin the role play {scenario_part}. \
+                 Stay in character and deliver your opening line in {lang_name}, appropriate for CEFR level {cefr_level}."
+            )
+        }
+        "deck_practice" => {
+            format!(
+                "Start a conversation in {lang_name} that will naturally incorporate the target vocabulary words. \
+                 Greet the student and begin a topic where the first few deck words can come up naturally. \
+                 Appropriate for CEFR level {cefr_level}."
+            )
+        }
+        "vocab_challenge" => {
+            format!(
+                "Welcome the student to the Vocabulary Challenge in {lang_name}! \
+                 Briefly explain the rules: you will present one word at a time, they translate it, \
+                 and you will track their score. Then present the first word at CEFR level {cefr_level}."
+            )
+        }
+        "escape_room" => {
+            format!(
+                "Set the scene dramatically: the student has entered the Tower of Babel. \
+                 Describe the ancient tower, the mysterious atmosphere, and explain that they must \
+                 ascend through 5 rooms of language challenges to escape. \
+                 Then describe Room 1: The Lexicon Gate, and present the first challenge in {lang_name} \
+                 appropriate for CEFR level {cefr_level}."
+            )
+        }
+        _ => {
+            format!(
+                "Start a friendly conversation in {lang_name}. \
+                 Greet the student and begin at CEFR level {cefr_level}."
+            )
+        }
+    }
+}
+
+/// Convert a language code to a human-readable name.
+pub fn language_name(code: &str) -> &'static str {
+    match code {
+        "en" => "English",
+        "fa" => "Persian",
+        "ar" => "Arabic",
+        "tr" => "Turkish",
+        "es" => "Spanish",
+        "fr" => "French",
+        "de" => "German",
+        "zh" => "Chinese",
+        "hi" => "Hindi",
+        "ru" => "Russian",
+        _ => "the target language",
+    }
 }
 
 #[cfg(test)]
@@ -95,20 +224,6 @@ mod tests {
     }
 
     #[test]
-    fn test_get_level_instructions_all_cefr_levels() {
-        for level in &["A1", "A2", "B1", "B2", "C1", "C2"] {
-            let instructions = get_level_instructions(level);
-            assert!(!instructions.is_empty(), "Instructions empty for level {level}");
-        }
-    }
-
-    #[test]
-    fn test_get_level_instructions_unknown_level_returns_fallback() {
-        let instructions = get_level_instructions("X1");
-        assert!(!instructions.is_empty());
-    }
-
-    #[test]
     fn test_build_system_prompt_contains_language_name() {
         let prompt = build_system_prompt("en", "B1", "fa", None);
         assert!(prompt.contains("English"));
@@ -131,8 +246,9 @@ mod tests {
     fn test_build_system_prompt_unknown_scenario_id_has_no_scenario_block() {
         let prompt_without = build_system_prompt("en", "A1", "fa", None);
         let prompt_bad_id = build_system_prompt("en", "A1", "fa", Some("nonexistent_id"));
-        // Both should produce the same output (no scenario block injected)
-        assert_eq!(prompt_without, prompt_bad_id);
+        // Both should use free mode since bad id yields no scenario context
+        assert!(prompt_without.contains("Free Conversation"));
+        assert!(prompt_bad_id.contains("Free Conversation"));
     }
 
     #[test]
@@ -141,44 +257,74 @@ mod tests {
         assert!(!prompt.is_empty());
         assert!(prompt.len() > 100);
     }
-}
 
-fn get_level_instructions(cefr_level: &str) -> &'static str {
-    match cefr_level {
-        "A1" => "Use only the most basic vocabulary (greetings, numbers, colors, family). \
-                 Speak in very short, simple sentences. \
-                 Repeat key words often. Expect single-word or very short answers.",
-        "A2" => "Use simple everyday vocabulary. \
-                 Speak in simple sentences about familiar topics (shopping, daily routine). \
-                 The student can handle basic questions and simple descriptions.",
-        "B1" => "Use intermediate vocabulary. \
-                 The student can discuss familiar topics, express opinions, and describe experiences. \
-                 Use some compound sentences. Introduce common idioms.",
-        "B2" => "Use a wide range of vocabulary including some abstract concepts. \
-                 The student can engage in detailed discussions, argue a viewpoint. \
-                 Use complex sentence structures. Introduce nuanced vocabulary.",
-        "C1" => "Use advanced vocabulary including idiomatic and colloquial expressions. \
-                 The student can discuss complex topics fluently. \
-                 Use sophisticated grammar structures. Challenge the student with subtlety.",
-        "C2" => "Use native-level vocabulary freely. \
-                 The student is near-native. Focus on stylistic nuance, \
-                 rare expressions, cultural references, and register appropriateness.",
-        _ => "Adapt to the student's apparent level based on their responses.",
+    #[test]
+    fn test_build_system_prompt_full_contains_all_blocks() {
+        let prompt = build_system_prompt_full(
+            "de", "en", "B1", "free", Some("travel"), None, None,
+        );
+        assert!(prompt.contains("FlexiLingo Tutor")); // BASE_PERSONA
+        assert!(prompt.contains("German"));            // Context
+        assert!(prompt.contains("B1"));                // CEFR
+        assert!(prompt.contains("Free Conversation")); // Mode
+        assert!(prompt.contains("travel"));            // Topic
     }
-}
 
-fn language_name(code: &str) -> &'static str {
-    match code {
-        "en" => "English",
-        "fa" => "Persian",
-        "ar" => "Arabic",
-        "tr" => "Turkish",
-        "es" => "Spanish",
-        "fr" => "French",
-        "de" => "German",
-        "zh" => "Chinese",
-        "hi" => "Hindi",
-        "ru" => "Russian",
-        _ => "the target language",
+    #[test]
+    fn test_build_system_prompt_full_role_play() {
+        let prompt = build_system_prompt_full(
+            "fr", "en", "A2", "role_play", None,
+            Some("You are a shopkeeper in Paris"), None,
+        );
+        assert!(prompt.contains("Role Play"));
+        assert!(prompt.contains("shopkeeper"));
+    }
+
+    #[test]
+    fn test_build_system_prompt_full_deck_practice() {
+        let words = vec!["Haus".into(), "Schule".into()];
+        let prompt = build_system_prompt_full(
+            "de", "en", "A2", "deck_practice", None, None, Some(&words),
+        );
+        assert!(prompt.contains("Deck Practice"));
+        assert!(prompt.contains("Haus"));
+    }
+
+    #[test]
+    fn test_build_system_prompt_contains_correction_markers() {
+        let prompt = build_system_prompt("en", "B1", "fa", None);
+        assert!(prompt.contains(":::corrections"));
+        assert!(prompt.contains(":::vocabulary"));
+    }
+
+    #[test]
+    fn test_opening_message_free() {
+        let msg = opening_message("free", "en", "B1", Some("movies"), None);
+        assert!(msg.contains("English"));
+        assert!(msg.contains("movies"));
+    }
+
+    #[test]
+    fn test_opening_message_role_play() {
+        let msg = opening_message("role_play", "de", "A2", None, Some("Hotel Check-in"));
+        assert!(msg.contains("Hotel Check-in"));
+    }
+
+    #[test]
+    fn test_opening_message_escape_room() {
+        let msg = opening_message("escape_room", "fr", "B1", None, None);
+        assert!(msg.contains("Tower of Babel"));
+    }
+
+    #[test]
+    fn test_opening_message_vocab_challenge() {
+        let msg = opening_message("vocab_challenge", "es", "A1", None, None);
+        assert!(msg.contains("Vocabulary Challenge"));
+    }
+
+    #[test]
+    fn test_opening_message_deck_practice() {
+        let msg = opening_message("deck_practice", "ar", "B2", None, None);
+        assert!(msg.contains("Arabic"));
     }
 }
