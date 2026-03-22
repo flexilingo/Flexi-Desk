@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -25,6 +27,31 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-check-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-check-
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libasound2-dev
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -34,8 +61,12 @@ jobs:
       - name: Format check
         run: pnpm format:check
 
-      - name: Unit tests
+      - name: Frontend tests
         run: pnpm test
+
+      - name: Rust check
+        working-directory: src-tauri
+        run: cargo check
 
   build:
     needs: lint-and-test
