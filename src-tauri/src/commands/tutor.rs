@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, State};
 
-use crate::tutor::parser::{parse_ai_response, GrammarCorrection, VocabSuggestion};
+use crate::tutor::parser::{parse_ai_response, GrammarCorrection, ParsedResponse, VocabSuggestion};
 use crate::tutor::prompts::build_system_prompt;
 use crate::ai::provider::{chat_completion, ChatMessage};
 use crate::tutor::scenarios::{Scenario, get_scenarios};
@@ -278,7 +278,10 @@ pub async fn tutor_send_message(
     .await?;
 
     // 5. Parse corrections and vocabulary
-    let (clean_content, corrections, vocab) = parse_ai_response(&raw_response);
+    let parsed = parse_ai_response(&raw_response);
+    let clean_content = parsed.content;
+    let corrections = parsed.corrections;
+    let vocab = parsed.vocabulary;
 
     let corrections_json = serde_json::to_string(&corrections).unwrap_or_else(|_| "[]".into());
     let vocab_json = serde_json::to_string(&vocab).unwrap_or_else(|_| "[]".into());
@@ -489,7 +492,10 @@ pub async fn tutor_send_message_stream(
     }));
 
     // 6. Parse corrections and vocab
-    let (clean_content, corrections, vocab) = parse_ai_response(&ai_response);
+    let parsed = parse_ai_response(&ai_response);
+    let clean_content = parsed.content;
+    let corrections = parsed.corrections;
+    let vocab = parsed.vocabulary;
 
     // 7. Store assistant message
     let corrections_json = serde_json::to_string(&corrections).unwrap_or_else(|_| "[]".to_string());
