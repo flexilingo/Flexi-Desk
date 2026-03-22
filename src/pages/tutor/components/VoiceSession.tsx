@@ -35,12 +35,23 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 /** Strip correction/vocab blocks from AI content to get clean speech text */
-function extractSpeechText(content: string): string {
+function cleanSpeechText(content: string): string {
   return content
+    // :::blocks:::
+    .replace(/:::corrections[\s\S]*?:::/g, '')
+    .replace(/:::vocabulary[\s\S]*?:::/g, '')
+    // ```blocks```
     .replace(/```corrections[\s\S]*?```/g, '')
-    .replace(/```vocab[\s\S]*?```/g, '')
-    .replace(/\*\*Corrections?\*\*[\s\S]*?(?=\n\n|$)/g, '')
-    .replace(/\*\*New Words?\*\*[\s\S]*?(?=\n\n|$)/g, '')
+    .replace(/```vocabulary[\s\S]*?```/g, '')
+    // ### Headers with JSON arrays
+    .replace(/###\s*Corrections?\s*:?\s*\[[\s\S]*?\]/g, '')
+    .replace(/###\s*Vocabulary\s*:?\s*\[[\s\S]*?\]/g, '')
+    // **Bold** headers with JSON
+    .replace(/\*\*Corrections?\*\*\s*:?\s*\[[\s\S]*?\]/g, '')
+    .replace(/\*\*Vocabulary\*\*\s*:?\s*\[[\s\S]*?\]/g, '')
+    // Clean markdown artifacts
+    .replace(/\*\*/g, '')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
@@ -52,7 +63,6 @@ export function VoiceSession() {
     isTranscribing,
     isSending,
     isStreaming,
-    streamingContent,
     startRecording,
     stopAndTranscribe,
     sendMessage,
@@ -61,12 +71,14 @@ export function VoiceSession() {
     closeConversation,
   } = useTutorStore();
 
-  const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
+  const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [corrections, setCorrections] = useState<GrammarCorrection[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasSpokenInitialRef = useRef(false);
+  const prevMessageCountRef = useRef(messages.length);
 
   // Timer
   useEffect(() => {
@@ -91,54 +103,64 @@ export function VoiceSession() {
     if (assistantMessages.length > 0) {
       hasSpokenInitialRef.current = true;
       const firstMsg = assistantMessages[0];
-      const speechText = extractSpeechText(firstMsg.content);
-      setSubtitles([{ role: 'assistant', text: speechText }]);
-      speakText(speechText);
+      const speechText = cleanSpeechText(firstMsg.content);
 
-      // Collect corrections
+      // Start speaking immediately — subtitle appears with speech
+      setIsSpeaking(true);
+      setCurrentSubtitle({ role: 'assistant', text: speechText });
+      speakText(speechText).finally(() => setIsSpeaking(false));
+
       if (firstMsg.corrections.length > 0) {
         setCorrections((prev) => [...prev, ...firstMsg.corrections]);
       }
     }
   }, [messages, speakText]);
 
-  // Track new messages added after initial load
-  const prevMessageCountRef = useRef(messages.length);
+  // Handle new messages (after user sends and AI responds)
   useEffect(() => {
-    if (messages.length > prevMessageCountRef.current) {
-      const newMessages = messages.slice(prevMessageCountRef.current);
-      prevMessageCountRef.current = messages.length;
+    if (messages.length <= prevMessageCountRef.current) return;
 
-      for (const msg of newMessages) {
-        if (msg.role === 'user') {
-          setSubtitles((prev) => [...prev.slice(-3), { role: 'user', text: msg.content }]);
-        } else if (msg.role === 'assistant') {
-          const speechText = extractSpeechText(msg.content);
-          setSubtitles((prev) => [...prev.slice(-3), { role: 'assistant', text: speechText }]);
-          speakText(speechText);
+    const newMessages = messages.slice(prevMessageCountRef.current);
+    prevMessageCountRef.current = messages.length;
 
-          if (msg.corrections.length > 0) {
-            setCorrections((prev) => [...prev, ...msg.corrections]);
-          }
+    for (const msg of newMessages) {
+      if (msg.role === 'system') continue;
+
+      if (msg.role === 'user') {
+        // Show user's transcribed speech briefly
+        setCurrentSubtitle({ role: 'user', text: msg.content });
+      } else if (msg.role === 'assistant') {
+        const speechText = cleanSpeechText(msg.content);
+
+        // AI speaks — subtitle shows what AI is saying
+        setIsSpeaking(true);
+        setCurrentSubtitle({ role: 'assistant', text: speechText });
+        speakText(speechText).finally(() => setIsSpeaking(false));
+
+        if (msg.corrections.length > 0) {
+          setCorrections((prev) => [...prev, ...msg.corrections]);
         }
       }
     }
   }, [messages, speakText]);
 
+  // Determine visualizer state
   const voiceState = useMemo(() => {
     if (isRecording) return 'listening' as const;
-    if (isTranscribing || isSending) return 'thinking' as const;
-    if (isStreaming) return 'speaking' as const;
+    if (isSpeaking) return 'speaking' as const;
+    if (isTranscribing || isSending || isStreaming) return 'thinking' as const;
     return 'idle' as const;
-  }, [isRecording, isTranscribing, isSending, isStreaming]);
+  }, [isRecording, isTranscribing, isSending, isStreaming, isSpeaking]);
 
   const handleMicClick = useCallback(async () => {
     if (isRecording) {
       const text = await stopAndTranscribe();
       if (text && text.trim()) {
+        setCurrentSubtitle({ role: 'user', text: text.trim() });
         await sendMessage(text.trim());
       }
     } else {
+      setCurrentSubtitle(null); // Clear subtitle when user starts talking
       await startRecording();
     }
   }, [isRecording, stopAndTranscribe, sendMessage, startRecording]);
@@ -154,7 +176,7 @@ export function VoiceSession() {
     closeConversation();
   }, [closeConversation]);
 
-  // Show summary screen
+  // Session summary screen
   if (showSummary && activeConversation) {
     const allCorrections = messages.flatMap((m) => m.corrections);
     const allVocab = messages.flatMap((m) => m.vocabSuggestions);
@@ -188,77 +210,75 @@ export function VoiceSession() {
   const modeLabel = MODE_LABELS[activeConversation.mode] ?? activeConversation.mode;
   const languageName = LANGUAGE_NAMES[activeConversation.language] ?? activeConversation.language;
 
+  // Status text for the user
+  const statusText = isRecording
+    ? 'Listening...'
+    : isTranscribing
+      ? 'Transcribing...'
+      : isSending || isStreaming
+        ? 'Thinking...'
+        : isSpeaking
+          ? ''
+          : 'Tap to speak';
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] items-center">
-      {/* Header bar */}
+    <div className="flex flex-col h-[calc(100vh-4rem)] items-center bg-background">
+      {/* Minimal header */}
       <div className="w-full flex items-center justify-between px-6 py-3 border-b border-border">
-        <div className="flex items-center gap-3">
-          <Badge>{modeLabel}</Badge>
-          <Badge variant="outline">{activeConversation.cefrLevel}</Badge>
-          <span className="text-sm text-muted-foreground">{languageName}</span>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">{modeLabel}</Badge>
+          <Badge variant="outline" className="text-xs">{activeConversation.cefrLevel}</Badge>
+          <span className="text-xs text-muted-foreground">{languageName}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm tabular-nums text-foreground">{formattedTime}</span>
+          <span className="font-mono text-sm tabular-nums text-muted-foreground">{formattedTime}</span>
           <Button variant="destructive" size="sm" onClick={handleEnd}>
-            <Square className="h-3.5 w-3.5 mr-1.5" />
+            <Square className="h-3 w-3 mr-1" />
             End
           </Button>
         </div>
       </div>
 
-      {/* Center area — visualizer + subtitles */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 max-w-2xl w-full">
-        {/* Audio Visualizer */}
+      {/* Main area — visualizer centered, subtitle below */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 max-w-xl w-full">
+        {/* Audio visualizer */}
         <AudioVisualizer state={voiceState} />
 
-        {/* Subtitles area */}
-        <div className="w-full space-y-3 min-h-[120px]">
-          {subtitles.map((sub, i) => (
-            <div
-              key={i}
-              className={`text-center transition-opacity duration-300 ${
-                i === subtitles.length - 1 ? 'opacity-100' : 'opacity-40'
-              }`}
-            >
-              <span className="text-xs text-muted-foreground">
-                {sub.role === 'assistant' ? 'Tutor' : 'You'}
+        {/* Current subtitle — only shows what's being said RIGHT NOW */}
+        <div className="w-full min-h-[80px] flex flex-col items-center justify-center">
+          {currentSubtitle && (
+            <div className="text-center animate-in fade-in duration-300">
+              <span className={`text-xs font-medium ${
+                currentSubtitle.role === 'assistant' ? 'text-[#8BB7A3]' : 'text-primary'
+              }`}>
+                {currentSubtitle.role === 'assistant' ? 'Tutor' : 'You'}
               </span>
-              <p
-                className={`text-lg ${
-                  sub.role === 'assistant' ? 'text-foreground' : 'text-primary'
-                }`}
-              >
-                {sub.text}
+              <p className="text-base text-foreground mt-1 leading-relaxed">
+                {currentSubtitle.text}
               </p>
             </div>
-          ))}
+          )}
 
-          {/* Live streaming text */}
-          {streamingContent && (
-            <div className="text-center">
-              <span className="text-xs text-muted-foreground">Tutor</span>
-              <p className="text-lg text-foreground">{extractSpeechText(streamingContent)}</p>
-            </div>
+          {/* Status indicator (when no subtitle) */}
+          {!currentSubtitle && statusText && (
+            <p className="text-sm text-muted-foreground">{statusText}</p>
           )}
         </div>
       </div>
 
-      {/* Bottom controls */}
-      <div className="w-full border-t border-border px-6 py-6">
-        <div className="flex items-center justify-center gap-6">
-          {/* Mic button */}
+      {/* Bottom — mic button */}
+      <div className="w-full px-6 py-8">
+        <div className="flex flex-col items-center gap-3">
           <button
             type="button"
             onClick={handleMicClick}
-            disabled={isSending || isTranscribing}
+            disabled={isSending || isTranscribing || isStreaming || isSpeaking}
             className={`flex h-16 w-16 items-center justify-center rounded-full transition-all ${
               isRecording
                 ? 'bg-error text-white animate-pulse scale-110 ring-4 ring-error/30'
-                : isTranscribing
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : isSending
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-primary text-primary-foreground hover:scale-105'
+                : isSending || isTranscribing || isStreaming || isSpeaking
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                  : 'bg-primary text-primary-foreground hover:scale-105 active:scale-95'
             }`}
           >
             {isTranscribing ? (
@@ -269,21 +289,14 @@ export function VoiceSession() {
               <Mic className="h-7 w-7" />
             )}
           </button>
-        </div>
 
-        {/* Status text */}
-        <p className="text-center text-sm text-muted-foreground mt-3">
-          {isRecording
-            ? 'Listening... Click to stop'
-            : isTranscribing
-              ? 'Transcribing...'
-              : isSending
-                ? 'AI is thinking...'
-                : 'Click mic to speak'}
-        </p>
+          {statusText && (
+            <p className="text-xs text-muted-foreground">{statusText}</p>
+          )}
+        </div>
       </div>
 
-      {/* Corrections panel */}
+      {/* Corrections — small indicator at bottom */}
       {corrections.length > 0 && (
         <div className="w-full px-6 pb-4">
           <CorrectionPanel corrections={corrections} />

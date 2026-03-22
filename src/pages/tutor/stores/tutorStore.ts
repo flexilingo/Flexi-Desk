@@ -255,16 +255,7 @@ export const useTutorStore = create<TutorState>()(
           }
         });
 
-        // Always auto-speak assistant response in voice mode
-        const speechText = result.assistantMessage.content
-          .replace(/```corrections[\s\S]*?```/g, '')
-          .replace(/```vocab[\s\S]*?```/g, '')
-          .replace(/\*\*Corrections?\*\*[\s\S]*?(?=\n\n|$)/g, '')
-          .replace(/\*\*New Words?\*\*[\s\S]*?(?=\n\n|$)/g, '')
-          .trim();
-        if (speechText) {
-          get().speakText(speechText);
-        }
+        // VoiceSession handles auto-speak via useEffect on messages change
       } catch (e) {
         set((s) => {
           // Remove temp message on error
@@ -317,9 +308,11 @@ export const useTutorStore = create<TutorState>()(
 
     speakText: async (text) => {
       const language = get().activeConversation?.language ?? null;
-      invoke('tutor_speak_text', { text, language }).catch(() => {
-        // Fire and forget — ignore TTS errors silently
-      });
+      try {
+        await invoke('tutor_speak_text', { text, language });
+      } catch {
+        // Ignore TTS errors silently
+      }
     },
 
     endConversation: async () => {

@@ -888,13 +888,15 @@ pub async fn tutor_speak_text(
                 .ok_or_else(|| "Invalid MP3 path".to_string())?
                 .to_string();
 
-            // Play audio with afplay (macOS) in background, then clean up
+            // Play audio with afplay (macOS), wait for completion, then clean up
             tokio::task::spawn_blocking(move || {
                 let _ = std::process::Command::new("afplay")
                     .arg(&mp3_str)
                     .status();
                 let _ = std::fs::remove_file(&mp3_str);
-            });
+            })
+            .await
+            .map_err(|e| format!("Playback error: {e}"))?;
 
             return Ok(());
         }
@@ -922,7 +924,9 @@ pub async fn tutor_speak_text(
         let _ = std::process::Command::new("say")
             .args(["-v", &voice_str, &text_clone])
             .status();
-    });
+    })
+    .await
+    .map_err(|e| format!("TTS playback error: {e}"))?;
 
     Ok(())
 }
