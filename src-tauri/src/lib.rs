@@ -35,6 +35,7 @@ pub struct AppState {
     pub spacy: tokio::sync::Mutex<Option<sidecar::SpacySidecar>>,
     pub jobs: tokio::sync::Mutex<jobs::JobRegistry>,
     pub ollama_process: tokio::sync::Mutex<Option<std::process::Child>>,
+    pub tutor_recording: Mutex<Option<caption::audio::RecordingHandle>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -69,6 +70,7 @@ pub fn run() {
                 spacy: tokio::sync::Mutex::new(None),
                 jobs: tokio::sync::Mutex::new(jobs::JobRegistry::new()),
                 ollama_process: tokio::sync::Mutex::new(None),
+                tutor_recording: Mutex::new(None),
             });
 
             // System tray
@@ -148,6 +150,9 @@ pub fn run() {
             commands::tutor::tutor_end_conversation,
             commands::tutor::tutor_list_modes,
             commands::tutor::tutor_get_deck_cards,
+            commands::tutor::tutor_start_recording,
+            commands::tutor::tutor_stop_and_transcribe,
+            commands::tutor::tutor_speak_text,
             commands::caption::caption_list_devices,
             commands::caption::caption_start_capture,
             commands::caption::caption_stop_capture,

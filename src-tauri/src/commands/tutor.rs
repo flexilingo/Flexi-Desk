@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use tauri::{Emitter, State};
 
 use crate::ai::provider::{chat_completion, chat_completion_stream, read_ai_settings, ChatMessage};
+use crate::caption::audio;
+use crate::caption::whisper;
 use crate::tutor::modes::{list_modes, ModeInfo};
 use crate::tutor::parser::{parse_ai_response, GrammarCorrection, VocabSuggestion};
 use crate::tutor::prompts::{build_system_prompt_full, opening_message};
@@ -734,4 +736,193 @@ pub fn tutor_get_deck_cards(
         cards.push(row.map_err(|e| format!("Row error: {e}"))?);
     }
     Ok(cards)
+}
+
+// ── Voice Commands ────────────────────────────────────────
+
+#[tauri::command]
+pub fn tutor_start_recording(
+    state: State<'_, AppState>,
+    device_id: Option<String>,
+) -> Result<(), String> {
+    let data_dir = dirs::data_dir()
+        .ok_or_else(|| "Could not determine data directory".to_string())?
+        .join("com.flexilingo.desk")
+        .join("tutor-recordings");
+
+    std::fs::create_dir_all(&data_dir)
+        .map_err(|e| format!("Failed to create tutor-recordings dir: {e}"))?;
+
+    let uuid = whisper::uuid_hex();
+    let wav_path = data_dir.join(format!("{uuid}.wav"));
+
+    let handle = audio::start_recording(device_id.as_deref(), wav_path)?;
+
+    let mut guard = state
+        .tutor_recording
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
+
+    if guard.is_some() {
+        return Err("A tutor recording is already in progress".to_string());
+    }
+
+    *guard = Some(handle);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn tutor_stop_and_transcribe(
+    state: State<'_, AppState>,
+    language: Option<String>,
+) -> Result<String, String> {
+    // 1. Take the recording handle
+    let handle = {
+        let mut guard = state
+            .tutor_recording
+            .lock()
+            .map_err(|e| format!("Lock error: {e}"))?;
+        guard.take().ok_or_else(|| "No tutor recording in progress".to_string())?
+    };
+
+    // 2. Stop recording to get the WAV file
+    let result = handle.stop()?;
+    let wav_path = result.path.clone();
+
+    // 3. Read whisper settings from DB
+    let (binary_path, model_path) = {
+        let conn = lock_db(&state)?;
+        let bin: String = conn
+            .query_row(
+                "SELECT value FROM settings WHERE key = 'whisper_binary_path'",
+                [],
+                |row: &rusqlite::Row| row.get(0),
+            )
+            .map_err(|_| "Whisper binary path not configured. Please set up Whisper in Caption settings.".to_string())?;
+        let model: String = conn
+            .query_row(
+                "SELECT value FROM settings WHERE key = 'whisper_model_path'",
+                [],
+                |row: &rusqlite::Row| row.get(0),
+            )
+            .map_err(|_| "Whisper model path not configured. Please set up Whisper in Caption settings.".to_string())?;
+        (bin, model)
+    };
+
+    // 4. Transcribe
+    let lang = language.unwrap_or_else(|| "auto".to_string());
+    let wav_str = wav_path
+        .to_str()
+        .ok_or_else(|| "Invalid WAV path".to_string())?;
+
+    let segments = whisper::transcribe_file(&binary_path, &model_path, wav_str, &lang).await?;
+
+    // 5. Concatenate segment texts
+    let text: String = segments
+        .iter()
+        .map(|s| s.text.trim())
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    // 6. Clean up temp WAV file
+    let _ = std::fs::remove_file(&wav_path);
+
+    Ok(text)
+}
+
+#[tauri::command]
+pub async fn tutor_speak_text(
+    state: State<'_, AppState>,
+    text: String,
+    language: Option<String>,
+) -> Result<(), String> {
+    // Read OpenAI API key from settings
+    let api_key: Option<String> = {
+        let conn = lock_db(&state)?;
+        conn.query_row(
+            "SELECT value FROM settings WHERE key = 'openai_api_key'",
+            [],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .ok()
+    };
+
+    if let Some(key) = api_key {
+        if !key.is_empty() {
+            // Use OpenAI TTS API
+            let client = reqwest::Client::new();
+            let response = client
+                .post("https://api.openai.com/v1/audio/speech")
+                .header("Authorization", format!("Bearer {key}"))
+                .header("Content-Type", "application/json")
+                .json(&serde_json::json!({
+                    "model": "tts-1",
+                    "input": text,
+                    "voice": "nova",
+                    "response_format": "mp3"
+                }))
+                .send()
+                .await
+                .map_err(|e| format!("TTS API request failed: {e}"))?;
+
+            if !response.status().is_success() {
+                let status = response.status();
+                let body = response.text().await.unwrap_or_default();
+                return Err(format!("TTS API error ({status}): {body}"));
+            }
+
+            let bytes = response
+                .bytes()
+                .await
+                .map_err(|e| format!("Failed to read TTS response: {e}"))?;
+
+            let uuid = whisper::uuid_hex();
+            let tmp_dir = std::env::temp_dir();
+            let mp3_path = tmp_dir.join(format!("tutor_tts_{uuid}.mp3"));
+
+            std::fs::write(&mp3_path, &bytes)
+                .map_err(|e| format!("Failed to write TTS audio: {e}"))?;
+
+            let mp3_str = mp3_path
+                .to_str()
+                .ok_or_else(|| "Invalid MP3 path".to_string())?
+                .to_string();
+
+            // Play audio with afplay (macOS) in background, then clean up
+            tokio::task::spawn_blocking(move || {
+                let _ = std::process::Command::new("afplay")
+                    .arg(&mp3_str)
+                    .status();
+                let _ = std::fs::remove_file(&mp3_str);
+            });
+
+            return Ok(());
+        }
+    }
+
+    // Fallback: macOS `say` command
+    let lang = language.unwrap_or_else(|| "en".to_string());
+    let voice = match lang.as_str() {
+        "en" => "Samantha",
+        "fa" => "Samantha", // No native Persian voice on macOS, use default
+        "ar" => "Maged",
+        "fr" => "Thomas",
+        "de" => "Anna",
+        "es" => "Monica",
+        "zh" => "Ting-Ting",
+        "hi" => "Lekha",
+        "ru" => "Milena",
+        "tr" => "Yelda",
+        _ => "Samantha",
+    };
+
+    let text_clone = text.clone();
+    let voice_str = voice.to_string();
+    tokio::task::spawn_blocking(move || {
+        let _ = std::process::Command::new("say")
+            .args(["-v", &voice_str, &text_clone])
+            .status();
+    });
+
+    Ok(())
 }
