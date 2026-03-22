@@ -192,6 +192,7 @@ pub async fn tutor_start_conversation(
     mode: Option<String>,
     topic: Option<String>,
     deck_id: Option<String>,
+    custom_prompt: Option<String>,
 ) -> Result<ConversationSummary, String> {
     let mode = mode.unwrap_or_else(|| "free".to_string());
 
@@ -242,7 +243,7 @@ pub async fn tutor_start_conversation(
             None
         };
 
-        let sys_prompt = build_system_prompt_full(
+        let mut sys_prompt = build_system_prompt_full(
             &language,
             &native,
             &cefr_level,
@@ -251,6 +252,15 @@ pub async fn tutor_start_conversation(
             scenario_ctx.as_deref(),
             deck_words.as_deref(),
         );
+
+        // Append custom instructions if provided
+        if let Some(ref custom) = custom_prompt {
+            if !custom.is_empty() {
+                sys_prompt.push_str(&format!(
+                    "\n\nADDITIONAL USER INSTRUCTIONS:\n{custom}\n"
+                ));
+            }
+        }
 
         let open_msg = opening_message(
             &mode,
