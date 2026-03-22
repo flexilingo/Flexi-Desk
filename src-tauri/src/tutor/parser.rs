@@ -62,10 +62,12 @@ fn extract_markdown_section(text: &str, tag: &str) -> Option<(String, String, St
     let lower = text.to_lowercase();
     let tag_lower = tag.to_lowercase();
 
-    // Find header like "### Corrections:", "**Corrections:**", "Corrections:"
+    // Find header like "### Corrections:", "### Corrections", "**Corrections:**", "Corrections:"
     let patterns = [
         format!("### {}:", tag_lower),
+        format!("### {}", tag_lower),
         format!("**{}:**", tag_lower),
+        format!("**{}**", tag_lower),
         format!("{}:", tag_lower),
     ];
 
@@ -280,5 +282,20 @@ this is not valid json at all
         let result = parse_ai_response(raw);
         assert_eq!(result.vocabulary.len(), 1);
         assert_eq!(result.vocabulary[0].cefr, "");
+    }
+
+    #[test]
+    fn test_parse_markdown_headers_no_colon() {
+        let raw = r#"Hello there! Let's talk about travel. So, where would you go? ### Corrections [] ### Vocabulary [{ "word": "dream trip", "translation": "a vacation", "pos": "phrase", "cefr_level": "B1" }, { "word": "fantastical", "translation": "magical", "pos": "adj", "cefr_level": "B1" }] Let's hear your answer!"#;
+
+        let result = parse_ai_response(raw);
+        assert!(!result.content.contains("### Corrections"));
+        assert!(!result.content.contains("### Vocabulary"));
+        assert!(!result.content.contains("dream trip"));
+        assert!(result.content.contains("Let's talk about travel"));
+        assert!(result.content.contains("Let's hear your answer!"));
+        assert_eq!(result.vocabulary.len(), 2);
+        assert_eq!(result.vocabulary[0].word, "dream trip");
+        assert_eq!(result.vocabulary[0].cefr, "B1");
     }
 }
