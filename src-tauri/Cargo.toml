@@ -1,6 +1,6 @@
 [package]
 name = "flexi-desk"
-version = "0.5.0"
+version = "0.5.1"
 description = "FlexiDesk - Desktop companion for FlexiLingo"
 authors = ["you"]
 edition = "2021"
