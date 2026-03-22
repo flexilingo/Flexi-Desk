@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { invoke } from '@tauri-apps/api/core';
 import { useState } from 'react';
-import type { Message, VocabSuggestion } from '../types';
+import type { MessageData, VocabSuggestion } from '../types';
 
 interface Props {
-  message: Message;
+  message: MessageData;
   documentLanguage: string;
 }
 
@@ -69,9 +69,9 @@ function VocabItem({ vocab, language }: { vocab: VocabSuggestion; language: stri
         language,
         translation: vocab.translation,
         definition: null,
-        pos: vocab.pos ?? null,
-        cefrLevel: vocab.cefrLevel ?? null,
-        exampleSentence: null,
+        pos: null,
+        cefrLevel: vocab.cefr || null,
+        exampleSentence: vocab.example || null,
         sourceModule: 'tutor',
         contextSentence: null,
       });
@@ -86,9 +86,9 @@ function VocabItem({ vocab, language }: { vocab: VocabSuggestion; language: stri
       <div>
         <span className="font-medium">{vocab.word}</span>
         <span className="opacity-70"> — {vocab.translation}</span>
-        {vocab.pos && (
+        {vocab.cefr && (
           <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">
-            {vocab.pos}
+            {vocab.cefr}
           </Badge>
         )}
       </div>

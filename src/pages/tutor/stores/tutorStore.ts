@@ -1,56 +1,92 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import type {
-  AIProvider,
-  CEFRLevel,
+  ConversationMode,
   ConversationSummary,
-  Message,
+  MessageData,
+  ModeInfo,
   RawConversationSummary,
-  RawMessage,
+  RawMessageData,
+  RawModeInfo,
+  RawScenario,
   RawSendMessageResult,
+  Scenario,
 } from '../types';
-import { mapConversation, mapMessage } from '../types';
+import {
+  mapConversation,
+  mapMessage,
+  mapModeInfo,
+  mapScenario,
+  mapSendMessageResult,
+} from '../types';
+
+// ── Params ──────────────────────────────────────────────
+
+interface StartConversationParams {
+  title?: string;
+  language: string;
+  cefrLevel: string;
+  provider?: string;
+  model?: string;
+  mode?: ConversationMode;
+  topic?: string;
+  scenarioId?: string;
+  deckId?: string;
+}
+
+// ── State ───────────────────────────────────────────────
 
 interface TutorState {
-  // Conversation list
+  // Navigation
   conversations: ConversationSummary[];
-  isLoadingConversations: boolean;
-
-  // Active conversation
   activeConversation: ConversationSummary | null;
-  messages: Message[];
+  messages: MessageData[];
+
+  // Loading
+  isLoadingConversations: boolean;
   isLoadingMessages: boolean;
+
+  // Streaming
+  streamingContent: string;
+  isStreaming: boolean;
   isSending: boolean;
+
+  // Modes
+  modes: ModeInfo[];
+  scenarios: Scenario[];
 
   // Error
   error: string | null;
 
   // Actions
   fetchConversations: () => Promise<void>;
-  startConversation: (params: {
-    title: string;
-    language: string;
-    cefrLevel: CEFRLevel;
-    provider: AIProvider;
-    model: string;
-  }) => Promise<ConversationSummary>;
+  startConversation: (params: StartConversationParams) => Promise<void>;
   openConversation: (id: string) => Promise<void>;
   closeConversation: () => void;
   sendMessage: (content: string) => Promise<void>;
+  endConversation: () => Promise<void>;
   deleteConversation: (id: string) => Promise<void>;
-  archiveConversation: (id: string) => Promise<void>;
+  fetchModes: () => Promise<void>;
+  fetchScenarios: () => Promise<void>;
   clearError: () => void;
 }
+
+// ── Store ───────────────────────────────────────────────
 
 export const useTutorStore = create<TutorState>()(
   immer((set, get) => ({
     conversations: [],
-    isLoadingConversations: false,
     activeConversation: null,
     messages: [],
+    isLoadingConversations: false,
     isLoadingMessages: false,
+    streamingContent: '',
+    isStreaming: false,
     isSending: false,
+    modes: [],
+    scenarios: [],
     error: null,
 
     fetchConversations: async () => {
@@ -75,27 +111,30 @@ export const useTutorStore = create<TutorState>()(
     },
 
     startConversation: async (params) => {
+      set((s) => {
+        s.error = null;
+      });
       try {
         const raw = await invoke<RawConversationSummary>('tutor_start_conversation', {
-          title: params.title,
+          title: params.title ?? null,
           language: params.language,
           cefrLevel: params.cefrLevel,
-          provider: params.provider,
-          model: params.model,
-          scenarioId: null,
+          provider: params.provider ?? null,
+          model: params.model ?? null,
+          mode: params.mode ?? null,
+          topic: params.topic ?? null,
+          scenarioId: params.scenarioId ?? null,
+          deckId: params.deckId ?? null,
         });
         const conv = mapConversation(raw);
+
+        // Refresh list and auto-open the new conversation
         await get().fetchConversations();
-
-        // Auto-open the new conversation
         await get().openConversation(conv.id);
-
-        return conv;
       } catch (e) {
         set((s) => {
           s.error = String(e);
         });
-        throw e;
       }
     },
 
@@ -105,11 +144,10 @@ export const useTutorStore = create<TutorState>()(
         s.error = null;
       });
       try {
-        const rawMessages = await invoke<RawMessage[]>('tutor_get_messages', {
+        const rawMessages = await invoke<RawMessageData[]>('tutor_get_messages', {
           conversationId: id,
         });
 
-        // Find the conversation summary
         const conv = get().conversations.find((c) => c.id === id);
 
         set((s) => {
@@ -129,6 +167,8 @@ export const useTutorStore = create<TutorState>()(
       set((s) => {
         s.activeConversation = null;
         s.messages = [];
+        s.streamingContent = '';
+        s.isStreaming = false;
       });
     },
 
@@ -136,15 +176,19 @@ export const useTutorStore = create<TutorState>()(
       const conv = get().activeConversation;
       if (!conv) return;
 
+      const conversationId = conv.id;
+
       set((s) => {
         s.isSending = true;
+        s.streamingContent = '';
+        s.isStreaming = false;
         s.error = null;
       });
 
       // Optimistic: add user message immediately
-      const tempUserMsg: Message = {
+      const tempUserMsg: MessageData = {
         id: `temp-${Date.now()}`,
-        conversationId: conv.id,
+        conversationId,
         role: 'user',
         content,
         corrections: [],
@@ -157,36 +201,83 @@ export const useTutorStore = create<TutorState>()(
         s.messages.push(tempUserMsg);
       });
 
+      let unlistenToken: (() => void) | null = null;
+
       try {
-        const raw = await invoke<RawSendMessageResult>('tutor_send_message', {
-          conversationId: conv.id,
+        // Listen for streaming tokens BEFORE invoking the command
+        unlistenToken = await listen<{ conversation_id: string; token: string }>(
+          'tutor:token',
+          (event) => {
+            if (event.payload.conversation_id === conversationId) {
+              set((s) => {
+                s.streamingContent += event.payload.token;
+                s.isStreaming = true;
+              });
+            }
+          },
+        );
+
+        // Invoke streaming send (blocks until streaming completes)
+        const raw = await invoke<RawSendMessageResult>('tutor_send_message_stream', {
+          conversationId,
           content,
         });
 
-        const userMsg = mapMessage(raw.user_message);
-        const assistantMsg = mapMessage(raw.assistant_message);
+        const result = mapSendMessageResult(raw);
 
         set((s) => {
-          // Replace temp message with real one
+          // Replace temp user message with real one
           const tempIdx = s.messages.findIndex((m) => m.id === tempUserMsg.id);
           if (tempIdx >= 0) {
-            s.messages[tempIdx] = userMsg;
+            s.messages[tempIdx] = result.userMessage;
           }
-          s.messages.push(assistantMsg);
+          // Add assistant message
+          s.messages.push(result.assistantMessage);
+
+          // Clear streaming state
+          s.streamingContent = '';
+          s.isStreaming = false;
           s.isSending = false;
 
           // Update conversation stats
           if (s.activeConversation) {
             s.activeConversation.messageCount += 2;
-            s.activeConversation.correctionsCount += assistantMsg.corrections.length;
+            s.activeConversation.correctionsCount += result.assistantMessage.corrections.length;
           }
         });
       } catch (e) {
         set((s) => {
           // Remove temp message on error
           s.messages = s.messages.filter((m) => m.id !== tempUserMsg.id);
-          s.error = String(e);
+          s.streamingContent = '';
+          s.isStreaming = false;
           s.isSending = false;
+          s.error = String(e);
+        });
+      } finally {
+        // Always clean up listener
+        unlistenToken?.();
+      }
+    },
+
+    endConversation: async () => {
+      const conv = get().activeConversation;
+      if (!conv) return;
+
+      try {
+        const raw = await invoke<RawConversationSummary>('tutor_end_conversation', {
+          conversationId: conv.id,
+        });
+        const updated = mapConversation(raw);
+
+        set((s) => {
+          s.activeConversation = updated;
+        });
+
+        await get().fetchConversations();
+      } catch (e) {
+        set((s) => {
+          s.error = String(e);
         });
       }
     },
@@ -208,10 +299,25 @@ export const useTutorStore = create<TutorState>()(
       }
     },
 
-    archiveConversation: async (id) => {
+    fetchModes: async () => {
       try {
-        await invoke('tutor_archive_conversation', { id });
-        await get().fetchConversations();
+        const raw = await invoke<RawModeInfo[]>('tutor_list_modes');
+        set((s) => {
+          s.modes = raw.map(mapModeInfo);
+        });
+      } catch (e) {
+        set((s) => {
+          s.error = String(e);
+        });
+      }
+    },
+
+    fetchScenarios: async () => {
+      try {
+        const raw = await invoke<RawScenario[]>('tutor_list_scenarios');
+        set((s) => {
+          s.scenarios = raw.map(mapScenario);
+        });
       } catch (e) {
         set((s) => {
           s.error = String(e);

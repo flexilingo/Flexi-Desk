@@ -12,8 +12,6 @@ import { Input } from '@/components/ui/input';
 import { InlineError } from '@/components/common/InlineError';
 import { useTutorStore } from '../stores/tutorStore';
 import { useOllamaStore } from '@/stores/ollamaStore';
-import type { AIProvider, CEFRLevel } from '../types';
-
 const LANGUAGES = [
   { code: 'en', name: 'English' },
   { code: 'fa', name: 'Persian' },
@@ -27,7 +25,7 @@ const LANGUAGES = [
   { code: 'ru', name: 'Russian' },
 ];
 
-const CEFR_LEVELS: { value: CEFRLevel; desc: string }[] = [
+const CEFR_LEVELS: { value: string; desc: string }[] = [
   { value: 'A1', desc: 'Beginner' },
   { value: 'A2', desc: 'Elementary' },
   { value: 'B1', desc: 'Intermediate' },
@@ -36,7 +34,7 @@ const CEFR_LEVELS: { value: CEFRLevel; desc: string }[] = [
   { value: 'C2', desc: 'Proficient' },
 ];
 
-const PROVIDERS: { value: AIProvider; label: string; desc: string }[] = [
+const PROVIDERS: { value: string; label: string; desc: string }[] = [
   {
     value: 'ollama',
     label: 'Ollama (Local)',
@@ -55,8 +53,8 @@ export function NewConversationDialog({ open, onOpenChange }: Props) {
   const { installedModels, selectedModel, fetchInstalledModels } = useOllamaStore();
   const [title, setTitle] = useState('');
   const [language, setLanguage] = useState('de');
-  const [cefrLevel, setCefrLevel] = useState<CEFRLevel>('A2');
-  const [provider, setProvider] = useState<AIProvider>('ollama');
+  const [cefrLevel, setCefrLevel] = useState('A2');
+  const [provider, setProvider] = useState('ollama');
   const [model, setModel] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +139,7 @@ export function NewConversationDialog({ open, onOpenChange }: Props) {
             <label className="text-sm font-medium text-foreground">Your Level</label>
             <select
               value={cefrLevel}
-              onChange={(e) => setCefrLevel(e.target.value as CEFRLevel)}
+              onChange={(e) => setCefrLevel(e.target.value)}
               className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {CEFR_LEVELS.map((level) => (
