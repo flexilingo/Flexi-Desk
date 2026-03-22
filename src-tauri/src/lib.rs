@@ -153,6 +153,7 @@ pub fn run() {
             commands::tutor::tutor_start_recording,
             commands::tutor::tutor_stop_and_transcribe,
             commands::tutor::tutor_speak_text,
+            commands::tutor::tutor_stop_speaking,
             commands::caption::caption_list_devices,
             commands::caption::caption_start_capture,
             commands::caption::caption_stop_capture,

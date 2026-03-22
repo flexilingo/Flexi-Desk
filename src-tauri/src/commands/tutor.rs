@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicU32, Ordering};
 use tauri::{Emitter, State};
 
 use crate::ai::provider::{chat_completion, chat_completion_stream, read_ai_settings, ChatMessage};
@@ -9,6 +10,20 @@ use crate::tutor::parser::{parse_ai_response, GrammarCorrection, VocabSuggestion
 use crate::tutor::prompts::{build_system_prompt_full, opening_message};
 use crate::tutor::scenarios::{get_scenarios, Scenario};
 use crate::AppState;
+
+/// Global PID of the currently running TTS process (afplay or say).
+/// 0 means no process is running.
+static TTS_PID: AtomicU32 = AtomicU32::new(0);
+
+/// Kill any currently running TTS process.
+fn kill_tts() {
+    let pid = TTS_PID.swap(0, Ordering::SeqCst);
+    if pid != 0 {
+        let _ = std::process::Command::new("kill")
+            .arg(pid.to_string())
+            .status();
+    }
+}
 
 // ── IPC Types ──────────────────────────────────────────────
 
@@ -831,11 +846,20 @@ pub async fn tutor_stop_and_transcribe(
 }
 
 #[tauri::command]
+pub fn tutor_stop_speaking() -> Result<(), String> {
+    kill_tts();
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn tutor_speak_text(
     state: State<'_, AppState>,
     text: String,
     language: Option<String>,
 ) -> Result<(), String> {
+    // Kill any existing TTS process before starting a new one
+    kill_tts();
+
     // Read OpenAI API key from settings
     let api_key: Option<String> = {
         let conn = lock_db(&state)?;
@@ -849,60 +873,91 @@ pub async fn tutor_speak_text(
 
     if let Some(key) = api_key {
         if !key.is_empty() {
-            // Use OpenAI TTS API
-            let client = reqwest::Client::new();
-            let response = client
-                .post("https://api.openai.com/v1/audio/speech")
-                .header("Authorization", format!("Bearer {key}"))
-                .header("Content-Type", "application/json")
-                .json(&serde_json::json!({
-                    "model": "tts-1",
-                    "input": text,
-                    "voice": "nova",
-                    "response_format": "mp3"
-                }))
-                .send()
-                .await
-                .map_err(|e| format!("TTS API request failed: {e}"))?;
+            // Split text into sentences for faster first-sentence playback
+            let sentences = split_sentences(&text);
 
-            if !response.status().is_success() {
-                let status = response.status();
-                let body = response.text().await.unwrap_or_default();
-                return Err(format!("TTS API error ({status}): {body}"));
+            for sentence in &sentences {
+                // Check if we were interrupted between sentences
+                if TTS_PID.load(Ordering::SeqCst) == u32::MAX {
+                    TTS_PID.store(0, Ordering::SeqCst);
+                    break;
+                }
+
+                // Use OpenAI TTS API
+                let client = reqwest::Client::new();
+                let response = client
+                    .post("https://api.openai.com/v1/audio/speech")
+                    .header("Authorization", format!("Bearer {key}"))
+                    .header("Content-Type", "application/json")
+                    .json(&serde_json::json!({
+                        "model": "tts-1",
+                        "input": sentence,
+                        "voice": "nova",
+                        "response_format": "mp3"
+                    }))
+                    .send()
+                    .await
+                    .map_err(|e| format!("TTS API request failed: {e}"))?;
+
+                if !response.status().is_success() {
+                    let status = response.status();
+                    let body = response.text().await.unwrap_or_default();
+                    return Err(format!("TTS API error ({status}): {body}"));
+                }
+
+                let bytes = response
+                    .bytes()
+                    .await
+                    .map_err(|e| format!("Failed to read TTS response: {e}"))?;
+
+                let uuid = whisper::uuid_hex();
+                let tmp_dir = std::env::temp_dir();
+                let mp3_path = tmp_dir.join(format!("tutor_tts_{uuid}.mp3"));
+
+                std::fs::write(&mp3_path, &bytes)
+                    .map_err(|e| format!("Failed to write TTS audio: {e}"))?;
+
+                let mp3_str = mp3_path
+                    .to_str()
+                    .ok_or_else(|| "Invalid MP3 path".to_string())?
+                    .to_string();
+
+                // Play audio with afplay (macOS), tracking PID for killability
+                let result = tokio::task::spawn_blocking(move || {
+                    let mut child = match std::process::Command::new("afplay")
+                        .arg(&mp3_str)
+                        .spawn()
+                    {
+                        Ok(c) => c,
+                        Err(e) => {
+                            let _ = std::fs::remove_file(&mp3_str);
+                            return Err(format!("afplay failed to start: {e}"));
+                        }
+                    };
+
+                    // Store PID so tutor_stop_speaking can kill it
+                    TTS_PID.store(child.id(), Ordering::SeqCst);
+
+                    let _ = child.wait();
+
+                    // Clear PID on completion
+                    TTS_PID.store(0, Ordering::SeqCst);
+
+                    // Clean up temp file
+                    let _ = std::fs::remove_file(&mp3_str);
+                    Ok(())
+                })
+                .await
+                .map_err(|e| format!("Playback error: {e}"))?;
+
+                result?;
             }
-
-            let bytes = response
-                .bytes()
-                .await
-                .map_err(|e| format!("Failed to read TTS response: {e}"))?;
-
-            let uuid = whisper::uuid_hex();
-            let tmp_dir = std::env::temp_dir();
-            let mp3_path = tmp_dir.join(format!("tutor_tts_{uuid}.mp3"));
-
-            std::fs::write(&mp3_path, &bytes)
-                .map_err(|e| format!("Failed to write TTS audio: {e}"))?;
-
-            let mp3_str = mp3_path
-                .to_str()
-                .ok_or_else(|| "Invalid MP3 path".to_string())?
-                .to_string();
-
-            // Play audio with afplay (macOS), wait for completion, then clean up
-            tokio::task::spawn_blocking(move || {
-                let _ = std::process::Command::new("afplay")
-                    .arg(&mp3_str)
-                    .status();
-                let _ = std::fs::remove_file(&mp3_str);
-            })
-            .await
-            .map_err(|e| format!("Playback error: {e}"))?;
 
             return Ok(());
         }
     }
 
-    // Fallback: macOS `say` command
+    // Fallback: macOS `say` command with PID tracking
     let lang = language.unwrap_or_else(|| "en".to_string());
     let voice = match lang.as_str() {
         "en" => "Samantha",
@@ -921,12 +976,59 @@ pub async fn tutor_speak_text(
     let text_clone = text.clone();
     let voice_str = voice.to_string();
     tokio::task::spawn_blocking(move || {
-        let _ = std::process::Command::new("say")
+        let mut child = match std::process::Command::new("say")
             .args(["-v", &voice_str, &text_clone])
-            .status();
+            .spawn()
+        {
+            Ok(c) => c,
+            Err(e) => return Err(format!("say failed to start: {e}")),
+        };
+
+        TTS_PID.store(child.id(), Ordering::SeqCst);
+        let _ = child.wait();
+        TTS_PID.store(0, Ordering::SeqCst);
+        Ok(())
     })
     .await
-    .map_err(|e| format!("TTS playback error: {e}"))?;
+    .map_err(|e| format!("TTS playback error: {e}"))??;
 
     Ok(())
+}
+
+/// Split text into sentences for incremental TTS playback.
+/// Splits on sentence-ending punctuation followed by whitespace.
+fn split_sentences(text: &str) -> Vec<String> {
+    let mut sentences = Vec::new();
+    let mut current = String::new();
+
+    let chars: Vec<char> = text.chars().collect();
+    let len = chars.len();
+
+    for i in 0..len {
+        current.push(chars[i]);
+
+        let is_sentence_end = matches!(chars[i], '.' | '!' | '?' | '\u{06D4}' | '\u{3002}')
+            && (i + 1 >= len || chars[i + 1].is_whitespace());
+
+        if is_sentence_end {
+            let trimmed = current.trim().to_string();
+            if !trimmed.is_empty() {
+                sentences.push(trimmed);
+            }
+            current.clear();
+        }
+    }
+
+    // Push any remaining text
+    let trimmed = current.trim().to_string();
+    if !trimmed.is_empty() {
+        sentences.push(trimmed);
+    }
+
+    // If splitting produced nothing useful, return the original text
+    if sentences.is_empty() {
+        sentences.push(text.to_string());
+    }
+
+    sentences
 }
