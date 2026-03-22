@@ -37,6 +37,8 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         ("V021", V021_KEYBOARD_SHORTCUTS),
         ("V022", V022_SENTENCE_CHAT),
         ("V023", V023_SESSION_NAME),
+        ("V024", V024_FIX_CAPTION_SEGMENTS_FK),
+        ("V025", V025_TUTOR_MODES),
     ];
 
     for (version, sql) in migrations {
@@ -47,8 +49,13 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
             .map_err(|e| format!("Failed to check migration {version}: {e}"))?;
 
         if !already_applied {
-            conn.execute_batch(sql)
-                .map_err(|e| format!("Failed to run migration {version}: {e}"))?;
+            // V014 needs special handling for SQLite table recreation
+            if version == "V014" {
+                run_v014_caption_live_status(conn)?;
+            } else if !sql.is_empty() {
+                conn.execute_batch(sql)
+                    .map_err(|e| format!("Failed to run migration {version}: {e}"))?;
+            }
 
             conn.execute(
                 "INSERT INTO _migrations (version) VALUES (?1)",
@@ -57,6 +64,87 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
             .map_err(|e| format!("Failed to record migration {version}: {e}"))?;
         }
     }
+
+    Ok(())
+}
+
+/// V014: Recreate caption_sessions with updated CHECK constraint.
+/// Handles partial state from previous failed attempts.
+fn run_v014_caption_live_status(conn: &Connection) -> Result<(), String> {
+    let has_old_table: bool = conn
+        .prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='_caption_sessions_old'")
+        .and_then(|mut s| s.query_row([], |r| r.get(0)))
+        .map(|c: i64| c > 0)
+        .unwrap_or(false);
+
+    let has_new_table: bool = conn
+        .prepare("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='caption_sessions'")
+        .and_then(|mut s| s.query_row([], |r| r.get(0)))
+        .map(|c: i64| c > 0)
+        .unwrap_or(false);
+
+    if has_old_table && has_new_table {
+        // Partial state: both tables exist. Just clean up the old one.
+        conn.execute_batch("DROP TABLE IF EXISTS _caption_sessions_old;")
+            .map_err(|e| format!("V014 cleanup error: {e}"))?;
+    } else if has_old_table && !has_new_table {
+        // Partial state: renamed but never recreated.
+        conn.execute_batch(
+            "CREATE TABLE caption_sessions (
+                id               TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                language         TEXT NOT NULL DEFAULT 'auto',
+                source_type      TEXT NOT NULL DEFAULT 'mic'
+                                 CHECK(source_type IN ('mic', 'system', 'file')),
+                source_file      TEXT,
+                device_name      TEXT,
+                whisper_model    TEXT DEFAULT 'base',
+                duration_seconds INTEGER NOT NULL DEFAULT 0,
+                segment_count    INTEGER NOT NULL DEFAULT 0,
+                word_count       INTEGER NOT NULL DEFAULT 0,
+                status           TEXT NOT NULL DEFAULT 'idle'
+                                 CHECK(status IN ('idle', 'capturing', 'live-capturing', 'processing', 'completed', 'failed')),
+                error_message    TEXT,
+                created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+                completed_at     TEXT
+            );
+            INSERT INTO caption_sessions SELECT * FROM _caption_sessions_old;
+            DROP TABLE _caption_sessions_old;
+            CREATE INDEX IF NOT EXISTS idx_caption_sessions_status  ON caption_sessions(status);
+            CREATE INDEX IF NOT EXISTS idx_caption_sessions_created ON caption_sessions(created_at);"
+        )
+        .map_err(|e| format!("V014 recovery error: {e}"))?;
+    } else if has_new_table {
+        // Normal case: caption_sessions exists, needs recreation with new CHECK.
+        conn.execute_batch(
+            "ALTER TABLE caption_sessions RENAME TO _caption_sessions_old;
+
+            CREATE TABLE caption_sessions (
+                id               TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                language         TEXT NOT NULL DEFAULT 'auto',
+                source_type      TEXT NOT NULL DEFAULT 'mic'
+                                 CHECK(source_type IN ('mic', 'system', 'file')),
+                source_file      TEXT,
+                device_name      TEXT,
+                whisper_model    TEXT DEFAULT 'base',
+                duration_seconds INTEGER NOT NULL DEFAULT 0,
+                segment_count    INTEGER NOT NULL DEFAULT 0,
+                word_count       INTEGER NOT NULL DEFAULT 0,
+                status           TEXT NOT NULL DEFAULT 'idle'
+                                 CHECK(status IN ('idle', 'capturing', 'live-capturing', 'processing', 'completed', 'failed')),
+                error_message    TEXT,
+                created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+                completed_at     TEXT
+            );
+
+            INSERT INTO caption_sessions SELECT * FROM _caption_sessions_old;
+            DROP TABLE _caption_sessions_old;
+
+            CREATE INDEX IF NOT EXISTS idx_caption_sessions_status  ON caption_sessions(status);
+            CREATE INDEX IF NOT EXISTS idx_caption_sessions_created ON caption_sessions(created_at);"
+        )
+        .map_err(|e| format!("V014 migration error: {e}"))?;
+    }
+    // else: neither table exists — V005 hasn't run yet, V014 is a no-op
 
     Ok(())
 }
@@ -668,35 +756,9 @@ const V013_AUTH_TOKENS: &str = "
     );
 ";
 
-const V014_CAPTION_LIVE_STATUS: &str = "
-    -- Add 'live-capturing' to the caption_sessions status CHECK constraint.
-    -- SQLite requires table recreation to alter CHECK constraints.
-    ALTER TABLE caption_sessions RENAME TO _caption_sessions_old;
-
-    CREATE TABLE caption_sessions (
-        id               TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-        language         TEXT NOT NULL DEFAULT 'auto',
-        source_type      TEXT NOT NULL DEFAULT 'mic'
-                         CHECK(source_type IN ('mic', 'system', 'file')),
-        source_file      TEXT,
-        device_name      TEXT,
-        whisper_model    TEXT DEFAULT 'base',
-        duration_seconds INTEGER NOT NULL DEFAULT 0,
-        segment_count    INTEGER NOT NULL DEFAULT 0,
-        word_count       INTEGER NOT NULL DEFAULT 0,
-        status           TEXT NOT NULL DEFAULT 'idle'
-                         CHECK(status IN ('idle', 'capturing', 'live-capturing', 'processing', 'completed', 'failed')),
-        error_message    TEXT,
-        created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-        completed_at     TEXT
-    );
-
-    INSERT INTO caption_sessions SELECT * FROM _caption_sessions_old;
-    DROP TABLE _caption_sessions_old;
-
-    CREATE INDEX IF NOT EXISTS idx_caption_sessions_status  ON caption_sessions(status);
-    CREATE INDEX IF NOT EXISTS idx_caption_sessions_created ON caption_sessions(created_at);
-";
+// V014 is now handled programmatically in run_v014_caption_live_status()
+// to avoid partial-rename issues with SQLite table recreation.
+const V014_CAPTION_LIVE_STATUS: &str = "";
 
 const V015_REVIEW_LOGS: &str = "
     CREATE TABLE IF NOT EXISTS review_logs (
@@ -860,4 +922,47 @@ CREATE INDEX IF NOT EXISTS idx_sentence_chat_episode ON sentence_chat_messages(e
 
 const V023_SESSION_NAME: &str = "
 ALTER TABLE review_sessions ADD COLUMN session_name TEXT;
+";
+
+// Fix caption_segments FK that points to _caption_sessions_old (from V014 rename side-effect).
+const V024_FIX_CAPTION_SEGMENTS_FK: &str = "
+    ALTER TABLE caption_segments RENAME TO _caption_segments_old;
+
+    CREATE TABLE caption_segments (
+        id             TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        session_id     TEXT NOT NULL REFERENCES caption_sessions(id) ON DELETE CASCADE,
+        text           TEXT NOT NULL,
+        language       TEXT NOT NULL DEFAULT 'en',
+        confidence     REAL NOT NULL DEFAULT 0.0,
+        start_time_ms  INTEGER NOT NULL DEFAULT 0,
+        end_time_ms    INTEGER NOT NULL DEFAULT 0,
+        word_timestamps TEXT DEFAULT '[]',
+        created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    INSERT INTO caption_segments SELECT * FROM _caption_segments_old;
+    DROP TABLE _caption_segments_old;
+
+    CREATE INDEX IF NOT EXISTS idx_caption_segments_session ON caption_segments(session_id);
+    CREATE INDEX IF NOT EXISTS idx_caption_segments_time    ON caption_segments(session_id, start_time_ms);
+";
+
+const V025_TUTOR_MODES: &str = "
+    ALTER TABLE conversations ADD COLUMN mode TEXT NOT NULL DEFAULT 'free';
+    ALTER TABLE conversations ADD COLUMN topic TEXT;
+    ALTER TABLE conversations ADD COLUMN deck_id TEXT;
+    ALTER TABLE conversations ADD COLUMN room_state TEXT DEFAULT '{}';
+    ALTER TABLE conversations ADD COLUMN summary TEXT;
+
+    CREATE TABLE IF NOT EXISTS tutor_vocab_results (
+        id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+        word TEXT NOT NULL,
+        translation TEXT,
+        user_answer TEXT,
+        is_correct INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_tutor_vocab_conv ON tutor_vocab_results(conversation_id);
 ";
