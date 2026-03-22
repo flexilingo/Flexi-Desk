@@ -15,7 +15,9 @@ import {
   PanelLeft,
   Layers,
   History,
+  Bug,
 } from 'lucide-react';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -36,6 +38,9 @@ const allNavItems = [
   { to: '/exam', label: 'Exam', icon: GraduationCap, module: 'exam' as ModuleKey },
   { to: '/podcast', label: 'Podcast', icon: Podcast, module: 'podcast' as ModuleKey },
   { to: '/plugins', label: 'Plugins', icon: Puzzle, module: 'plugins' as ModuleKey },
+];
+
+const bottomNavItems = [
   { to: '/settings', label: 'Settings', icon: Settings, module: 'settings' as ModuleKey },
 ];
 
@@ -115,9 +120,67 @@ export function Sidebar() {
           </nav>
         </ScrollArea>
 
-        {/* Footer */}
+        {/* Bottom Nav */}
         <Separator />
-        <div className="flex h-12 items-center justify-center px-3">
+        <nav className="flex flex-col gap-1 px-2 py-2">
+          {bottomNavItems
+            .filter((item) => ENABLED_MODULES[item.module])
+            .map((item) => {
+              const Icon = item.icon;
+              const link = (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={false}
+                  onClick={() => setCurrentPage(item.label)}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-sidebar-accent/20 text-sidebar-accent'
+                        : 'text-sidebar-foreground hover:bg-muted',
+                    )
+                  }
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {sidebarOpen && <span>{item.label}</span>}
+                </NavLink>
+              );
+              if (!sidebarOpen) {
+                return (
+                  <Tooltip key={item.to}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side={isRtl ? 'left' : 'right'}>{item.label}</TooltipContent>
+                  </Tooltip>
+                );
+              }
+              return link;
+            })}
+
+          {(() => {
+            const bugLink = (
+              <button
+                onClick={() => openUrl('https://github.com/flexilingo/Flexi-Desk/issues/new')}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-muted transition-colors w-full"
+              >
+                <Bug className="h-5 w-5 shrink-0" />
+                {sidebarOpen && <span>Report a Bug</span>}
+              </button>
+            );
+            if (!sidebarOpen) {
+              return (
+                <Tooltip>
+                  <TooltipTrigger asChild>{bugLink}</TooltipTrigger>
+                  <TooltipContent side={isRtl ? 'left' : 'right'}>Report a Bug</TooltipContent>
+                </Tooltip>
+              );
+            }
+            return bugLink;
+          })()}
+        </nav>
+
+        {/* Footer */}
+        <div className="flex h-10 items-center justify-center px-3">
           {sidebarOpen ? (
             <a href="https://flexilingo.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">Powered by FlexiLingo</a>
           ) : (
