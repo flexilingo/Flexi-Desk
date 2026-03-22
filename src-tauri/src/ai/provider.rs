@@ -1,3 +1,4 @@
+use futures_util::StreamExt;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
@@ -263,6 +264,305 @@ pub async fn chat_completion(
         "anthropic" => {
             let key = api_key.ok_or("Anthropic API key not configured")?;
             anthropic_chat(model, messages, key, temperature, max_tokens, json_mode).await
+        }
+        _ => Err(format!("Unsupported provider: {provider}")),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Streaming variants
+// ---------------------------------------------------------------------------
+
+/// Stream a chat completion from Ollama (NDJSON format).
+pub async fn ollama_chat_stream(
+    base_url: &str,
+    model: &str,
+    messages: &[ChatMessage],
+    temperature: Option<f64>,
+    on_token: impl Fn(&str),
+) -> Result<String, String> {
+    let url = format!("{base_url}/api/chat");
+
+    let mut body = serde_json::json!({
+        "model": model,
+        "messages": messages,
+        "stream": true,
+    });
+
+    if let Some(temp) = temperature {
+        let mut opts = serde_json::Map::new();
+        opts.insert("temperature".to_string(), serde_json::json!(temp));
+        body["options"] = serde_json::Value::Object(opts);
+    }
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(&url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| {
+            if e.is_connect() {
+                "OLLAMA_NOT_RUNNING".to_string()
+            } else {
+                format!("Ollama stream request failed: {e}")
+            }
+        })?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        return Err(format!("Ollama error ({status}): {text}"));
+    }
+
+    let mut full_response = String::new();
+    let mut buffer = String::new();
+    let mut stream = response.bytes_stream();
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| format!("Ollama stream read error: {e}"))?;
+        buffer.push_str(&String::from_utf8_lossy(&chunk));
+
+        while let Some(newline_pos) = buffer.find('\n') {
+            let line: String = buffer.drain(..=newline_pos).collect();
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
+                if let Some(content) = json["message"]["content"].as_str() {
+                    if !content.is_empty() {
+                        on_token(content);
+                        full_response.push_str(content);
+                    }
+                }
+                if json["done"].as_bool() == Some(true) {
+                    return Ok(full_response);
+                }
+            }
+        }
+    }
+
+    Ok(full_response)
+}
+
+/// Stream a chat completion from an OpenAI-compatible API (SSE format).
+pub async fn openai_chat_stream(
+    base_url: &str,
+    api_key: &str,
+    model: &str,
+    messages: &[ChatMessage],
+    temperature: Option<f64>,
+    max_tokens: Option<u32>,
+    on_token: impl Fn(&str),
+) -> Result<String, String> {
+    let url = format!("{base_url}/chat/completions");
+
+    let mut body = serde_json::json!({
+        "model": model,
+        "messages": messages,
+        "stream": true,
+    });
+
+    if let Some(temp) = temperature {
+        body["temperature"] = serde_json::json!(temp);
+    }
+    if let Some(max) = max_tokens {
+        body["max_tokens"] = serde_json::json!(max);
+    }
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(&url)
+        .header("Authorization", format!("Bearer {api_key}"))
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("OpenAI stream request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        return Err(format!("OpenAI error ({status}): {text}"));
+    }
+
+    let mut full_response = String::new();
+    let mut buffer = String::new();
+    let mut stream = response.bytes_stream();
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| format!("OpenAI stream read error: {e}"))?;
+        buffer.push_str(&String::from_utf8_lossy(&chunk));
+
+        while let Some(newline_pos) = buffer.find('\n') {
+            let line: String = buffer.drain(..=newline_pos).collect();
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+
+            if let Some(data) = line.strip_prefix("data: ") {
+                let data = data.trim();
+                if data == "[DONE]" {
+                    return Ok(full_response);
+                }
+                if let Ok(json) = serde_json::from_str::<serde_json::Value>(data) {
+                    if let Some(content) = json["choices"][0]["delta"]["content"].as_str() {
+                        if !content.is_empty() {
+                            on_token(content);
+                            full_response.push_str(content);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(full_response)
+}
+
+/// Stream a chat completion from Anthropic's Messages API (SSE format).
+pub async fn anthropic_chat_stream(
+    base_url: &str,
+    api_key: &str,
+    model: &str,
+    messages: &[ChatMessage],
+    system_message: Option<&str>,
+    temperature: Option<f64>,
+    max_tokens: Option<u32>,
+    on_token: impl Fn(&str),
+) -> Result<String, String> {
+    let url = format!("{base_url}/messages");
+
+    let non_system: Vec<serde_json::Value> = messages
+        .iter()
+        .filter(|m| m.role != "system")
+        .map(|m| {
+            serde_json::json!({
+                "role": m.role,
+                "content": m.content,
+            })
+        })
+        .collect();
+
+    let effective_max_tokens = max_tokens.unwrap_or(1024);
+
+    let mut body = serde_json::json!({
+        "model": model,
+        "max_tokens": effective_max_tokens,
+        "messages": non_system,
+        "stream": true,
+    });
+
+    if let Some(sys) = system_message {
+        body["system"] = serde_json::json!(sys);
+    }
+    if let Some(temp) = temperature {
+        body["temperature"] = serde_json::json!(temp);
+    }
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(&url)
+        .header("x-api-key", api_key)
+        .header("anthropic-version", "2023-06-01")
+        .header("content-type", "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Anthropic stream request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        return Err(format!("Anthropic error ({status}): {text}"));
+    }
+
+    let mut full_response = String::new();
+    let mut buffer = String::new();
+    let mut stream = response.bytes_stream();
+    let mut current_event = String::new();
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| format!("Anthropic stream read error: {e}"))?;
+        buffer.push_str(&String::from_utf8_lossy(&chunk));
+
+        while let Some(newline_pos) = buffer.find('\n') {
+            let line: String = buffer.drain(..=newline_pos).collect();
+            let line = line.trim();
+
+            if line.is_empty() {
+                continue;
+            }
+
+            if let Some(event_type) = line.strip_prefix("event: ") {
+                current_event = event_type.trim().to_string();
+                continue;
+            }
+
+            if let Some(data) = line.strip_prefix("data: ") {
+                if current_event == "message_stop" {
+                    return Ok(full_response);
+                }
+
+                if current_event == "content_block_delta" {
+                    if let Ok(json) = serde_json::from_str::<serde_json::Value>(data.trim()) {
+                        if let Some(text) = json["delta"]["text"].as_str() {
+                            if !text.is_empty() {
+                                on_token(text);
+                                full_response.push_str(text);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(full_response)
+}
+
+/// Unified streaming dispatcher — routes to the correct provider.
+pub async fn chat_completion_stream(
+    provider: &str,
+    model: &str,
+    messages: Vec<ChatMessage>,
+    api_key: Option<&str>,
+    base_url: Option<&str>,
+    temperature: Option<f64>,
+    max_tokens: Option<u32>,
+    on_token: impl Fn(&str),
+) -> Result<String, String> {
+    match provider {
+        "ollama" => {
+            let url = base_url.unwrap_or("http://localhost:11434");
+            ollama_chat_stream(url, model, &messages, temperature, on_token).await
+        }
+        "openai" => {
+            let key = api_key.ok_or("OpenAI API key not configured")?;
+            let url = base_url.unwrap_or("https://api.openai.com/v1");
+            openai_chat_stream(url, key, model, &messages, temperature, max_tokens, on_token)
+                .await
+        }
+        "anthropic" => {
+            let key = api_key.ok_or("Anthropic API key not configured")?;
+            let url = base_url.unwrap_or("https://api.anthropic.com/v1");
+            let system_msg = messages
+                .iter()
+                .find(|m| m.role == "system")
+                .map(|m| m.content.as_str());
+            anthropic_chat_stream(
+                url,
+                key,
+                model,
+                &messages,
+                system_msg,
+                temperature,
+                max_tokens,
+                on_token,
+            )
+            .await
         }
         _ => Err(format!("Unsupported provider: {provider}")),
     }
