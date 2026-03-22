@@ -1,136 +1,110 @@
-<div align="center">
-  <a name="readme-top"></a>
+use serde::Serialize;
+use tauri::State;
 
-  <img height="100" src="https://www.flexilingo.com/logo.svg" alt="FlexiLingo Desk" />
+use crate::AppState;
 
-  <h1>FlexiLingo Desk</h1>
+#[derive(Debug, Serialize)]
+pub struct SpacyStatusResponse {
+    pub running: bool,
+    pub models: Vec<String>,
+}
 
-  Offline-first desktop learning companion — podcasts, SRS review, AI tutor, live caption, and more.
+#[tauri::command]
+pub async fn sidecar_start_spacy(
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let mut guard = state.spacy.lock().await;
+    if guard.is_some() {
+        return Ok("already_running".to_string());
+    }
 
-  [![Release][release-badge]][releases-url] [![Website][website-badge]][website-url]
+    // Try to find python3
+    let python = std::process::Command::new("which")
+        .arg("python3")
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .or_else(|| {
+            std::process::Command::new("which")
+                .arg("python")
+                .output()
+                .ok()
+                .filter(|o| o.status.success())
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        })
+        .ok_or("Python not found. Install Python 3.8+ to use spaCy.")?;
 
-  [Download][releases-url] · [Website][website-url] · [Report Bug][issues-url]
+    let data_dir = dirs::data_dir()
+        .ok_or("Could not determine data directory")?
+        .join("com.flexilingo.desk");
 
-</div>
+    let script = data_dir.join("spacy_server.py");
+    if !script.exists() {
+        return Err("spaCy server script not found. Please reinstall the app.".to_string());
+    }
 
----
+    let sidecar = crate::sidecar::SpacySidecar::spawn(
+        &python,
+        script.to_str().unwrap_or(""),
+    )?;
 
-<p align="center">
-  <a href="docs/screenshot.png"><img src="docs/screenshot.png" width="32%" alt="FlexiDesk — Podcast Player" /></a>
-  <a href="docs/screenshot2.png"><img src="docs/screenshot2.png" width="32%" alt="FlexiDesk — Dashboard" /></a>
-  <a href="docs/screenshot3.png"><img src="docs/screenshot3.png" width="32%" alt="FlexiDesk — Settings" /></a>
-</p>
+    *guard = Some(sidecar);
+    Ok("started".to_string())
+}
 
----
+#[tauri::command]
+pub async fn sidecar_stop_spacy(
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let mut guard = state.spacy.lock().await;
+    if let Some(ref mut sidecar) = *guard {
+        sidecar.kill().await?;
+    }
+    *guard = None;
+    Ok("stopped".to_string())
+}
 
-## ✨ Features
+#[tauri::command]
+pub async fn sidecar_spacy_status(
+    state: State<'_, AppState>,
+) -> Result<SpacyStatusResponse, String> {
+    let mut guard = state.spacy.lock().await;
+    let running = match &mut *guard {
+        Some(sidecar) => sidecar.is_running(),
+        None => false,
+    };
 
-Built with **Tauri 2 + Rust** on the backend and **React 19** on the frontend. All data lives in a local **SQLite** database and syncs to the cloud when online.
+    // If it was running but crashed, clean up
+    if !running && guard.is_some() {
+        *guard = None;
+    }
 
-| Module | Status | Description |
-| :--- | :---: | :--- |
-| 🎧 Podcast Player | ✅ Available | PodcastIndex + RSS, Whisper transcription, CEFR subtitles, word lookup |
-| 🧠 SRS Review | ✅ Available | Spaced repetition with Leitner, SM-2, and FSRS algorithms |
-| 📊 Dashboard | ✅ Available | XP, streaks, daily stats, learning overview |
-| ⚙️ Settings | ✅ Available | Theme, language, AI provider, Whisper model management |
-| 🎙 Caption | 🔄 In Development | Live audio capture + real-time Whisper transcription |
-| 🤖 Tutor | 🔄 In Development | AI conversation partner with scenarios |
-| 📖 Reading | 🔄 In Development | Import PDF, EPUB, URLs with highlights and vocabulary |
-| 🗣 Pronunciation | 🔄 In Development | Speech analysis and feedback |
-| 📝 Writing | 🔄 In Development | Writing exercises with AI feedback |
-| 📚 Vocabulary | 🔄 In Development | Personal word list across all modules |
-| 📋 Exam | 🔄 In Development | Quiz and exam creation |
+    Ok(SpacyStatusResponse {
+        running,
+        models: vec![],
+    })
+}
 
-## 🖥 Platform Support
+#[tauri::command]
+pub async fn sidecar_list_spacy_models() -> Result<Vec<String>, String> {
+    // List installed spaCy models by checking common model directories
+    let output = tokio::process::Command::new("python3")
+        .args(["-c", "import spacy; print('\\n'.join(spacy.util.get_installed_models()))"])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to list spaCy models: {e}"))?;
 
-| [<img src="https://cdn.simpleicons.org/apple/555555" alt="macOS" width="22px" height="22px" />][releases-url]<br>macOS | [<img src="https://cdn.simpleicons.org/windows/0078D4" alt="Windows" width="22px" height="22px" />][releases-url]<br>Windows | [<img src="https://cdn.simpleicons.org/linux/FCC624" alt="Linux" width="22px" height="22px" />][releases-url]<br>Linux |
-| :---: | :---: | :---: |
-| macOS 12+ | Windows 10+ | Ubuntu 20.04+ |
+    if !output.status.success() {
+        return Ok(vec![]);
+    }
 
-## 📥 Download
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let models: Vec<String> = stdout
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| l.trim().to_string())
+        .collect();
 
-Download the latest release for your OS from the [Releases page][releases-url].
-
-## 🏗 Architecture
-
-FlexiLingo Desk is **offline-first** — built with **Tauri 2 (Rust)** and **React 19**. All data lives in a local SQLite database and syncs to the cloud when online.
-
-## 🌍 Language Support
-
-| Language | Code | Transcription | CEFR + NLP |
-| :--- | :---: | :---: | :---: |
-| 🇬🇧 English | `en` | ✅ | ✅ |
-| 🇪🇸 Spanish | `es` | ✅ | ✅ |
-| 🇫🇷 French | `fr` | ✅ | ✅ |
-| 🇩🇪 German | `de` | ✅ | ✅ |
-| 🇨🇳 Chinese | `zh` | ✅ | ✅ |
-| 🇸🇦 Arabic | `ar` | ✅ | ✅ |
-| 🇮🇷 Persian | `fa` | ✅ | ✅ |
-| 🇹🇷 Turkish | `tr` | ✅ | ✅ |
-| 🇮🇳 Hindi | `hi` | ✅ | ✅ |
-| 🇷🇺 Russian | `ru` | ✅ | ✅ |
-
-## 🤖 AI Models
-
-| Layer | Model | Purpose |
-| :--- | :--- | :--- |
-| Transcription | Whisper `turbo` | ~98% accuracy, ~12 min/hr of audio |
-| Transcription fallback | Whisper `small` | Degraded mode |
-| NLP | spaCy | POS tagging, collocations, dependency parsing |
-| LLM | GPT-4o-mini | Tutor conversations, AI feedback |
-
-## 🌐 FlexiLingo Ecosystem
-
-FlexiLingo Desk is part of a larger platform available on **Web**, **Mobile**, **Browser Extension**, and **Desktop**. Learn more at [flexilingo.com][website-url].
-
-## 🧪 Development
-
-### Prerequisites
-
-- [Rust](https://rustup.rs/) 1.77+
-- [Node.js](https://nodejs.org/) 20+
-- [Tauri CLI](https://tauri.app/start/prerequisites/) v2
-
-### Build & Run
-
-```bash
-# Install frontend dependencies
-npm install
-
-# Run in development mode
-npm run tauri dev
-
-# Build for production
-npm run tauri build
-```
-
-### Tests
-
-The Rust backend has **214 unit tests** covering all pure-logic modules (SRS algorithms, sync queue, analytics, NLP, export/import, tutor, plugins, and more).
-
-```bash
-# Run all backend unit tests
-cd src-tauri && cargo test --lib
-
-# Run tests for a specific module
-cargo test --lib srs::leitner
-cargo test --lib srs::sm2
-cargo test --lib sync::queue
-cargo test --lib dashboard::analytics
-```
-
-All tests run offline with no external dependencies (in-memory SQLite, temp files).
-
-## 🔗 Links
-
-- [Download Releases][releases-url]
-- [FlexiLingo Website][website-url]
-- [Report a Bug][issues-url]
-
----
-
-[release-badge]: https://img.shields.io/github/v/release/flexilingo/Flexi-Desk?style=flat-square&label=release&color=6B705C
-[releases-url]: https://github.com/flexilingo/Flexi-Desk/releases
-[website-badge]: https://img.shields.io/badge/website-flexilingo.com-6B705C?style=flat-square
-[website-url]: https://www.flexilingo.com
-[issues-url]: https://github.com/flexilingo/Flexi-Desk/issues
+    Ok(models)
+}

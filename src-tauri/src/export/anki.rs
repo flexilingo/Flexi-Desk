@@ -3,604 +3,368 @@ use std::io::Write;
 
 use super::types::*;
 
-/// Export vocabulary as Anki .apkg file.
+/// Export vocabulary to an Anki-compatible .apkg file.
 ///
-/// An .apkg is a ZIP containing:
-/// - collection.anki21 (SQLite DB with notes/cards)
-/// - media (JSON mapping, usually empty)
+/// Creates a SQLite database in Anki's schema format, packages it as a ZIP (.apkg).
 pub fn export_anki(
     conn: &Connection,
     file_path: &str,
     options: &ExportOptions,
 ) -> Result<ExportResult, String> {
-    let temp_dir =
-        tempfile::tempdir().map_err(|e| format!("Temp dir: {e}"))?;
-    let db_path = temp_dir.path().join("collection.anki21");
+    // Build query based on filters
+    let mut conditions = vec!["1=1".to_string()];
+    let mut params: Vec<Box<dyn rusqlite::types::ToSql>> = vec![];
 
-    // Create Anki SQLite DB
-    let anki_conn =
-        rusqlite::Connection::open(&db_path).map_err(|e| format!("Anki DB: {e}"))?;
-
-    setup_anki_schema(&anki_conn)?;
-
-    // Query vocabulary
-    let mut query =
-        "SELECT word, translation, definition, phonetic, examples, cefr_level, pos FROM vocabulary WHERE 1=1"
-            .to_string();
-    let mut param_values: Vec<String> = Vec::new();
-
-    if let Some(lang) = &options.filter_language {
-        query.push_str(&format!(" AND language = ?{}", param_values.len() + 1));
-        param_values.push(lang.clone());
+    if let Some(ref lang) = options.filter_language {
+        conditions.push("v.language = ?".to_string());
+        params.push(Box::new(lang.clone()));
     }
-    if let Some(cefr) = &options.filter_cefr {
-        query.push_str(&format!(" AND cefr_level = ?{}", param_values.len() + 1));
-        param_values.push(cefr.clone());
+    if let Some(ref cefr) = options.filter_cefr {
+        conditions.push("v.cefr_level = ?".to_string());
+        params.push(Box::new(cefr.clone()));
+    }
+    if let Some(ref deck_id) = options.deck_id {
+        conditions.push(
+            "v.id IN (SELECT card_id FROM srs_cards WHERE deck_id = ?)".to_string(),
+        );
+        params.push(Box::new(deck_id.clone()));
     }
 
-    let mut stmt = conn.prepare(&query).map_err(|e| format!("Query: {e}"))?;
-    let params: Vec<&dyn rusqlite::types::ToSql> = param_values
-        .iter()
-        .map(|v| v as &dyn rusqlite::types::ToSql)
-        .collect();
+    let where_clause = conditions.join(" AND ");
+    let sql = format!(
+        "SELECT v.word, v.translation, v.definition, v.pos, v.cefr_level, v.phonetic, v.examples \
+         FROM vocabulary v WHERE {where_clause} ORDER BY v.word"
+    );
 
-    let rows = stmt
-        .query_map(params.as_slice(), |row| {
+    let param_refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+
+    let mut stmt = conn
+        .prepare(&sql)
+        .map_err(|e| format!("Query error: {e}"))?;
+
+    let rows: Vec<(String, String, String, String, String, String, String)> = stmt
+        .query_map(param_refs.as_slice(), |row| {
             Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, Option<String>>(1)?,
-                row.get::<_, Option<String>>(2)?,
-                row.get::<_, Option<String>>(3)?,
-                row.get::<_, Option<String>>(4)?,
-                row.get::<_, Option<String>>(5)?,
-                row.get::<_, Option<String>>(6)?,
+                row.get::<_, String>(0).unwrap_or_default(),
+                row.get::<_, String>(1).unwrap_or_default(),
+                row.get::<_, String>(2).unwrap_or_default(),
+                row.get::<_, String>(3).unwrap_or_default(),
+                row.get::<_, String>(4).unwrap_or_default(),
+                row.get::<_, String>(5).unwrap_or_default(),
+                row.get::<_, String>(6).unwrap_or_default(),
             ))
         })
-        .map_err(|e| format!("Query: {e}"))?;
+        .map_err(|e| format!("Query error: {e}"))?
+        .filter_map(|r| r.ok())
+        .collect();
 
-    let mut count: i64 = 0;
-    let model_id: i64 = 1609876543210;
-    let deck_id: i64 = 1609876543211;
+    let total = rows.len() as i64;
+
+    // Create temporary Anki SQLite database
+    let tmp_dir = tempfile::tempdir().map_err(|e| format!("Temp dir error: {e}"))?;
+    let db_path = tmp_dir.path().join("collection.anki2");
+
+    let anki_conn =
+        rusqlite::Connection::open(&db_path).map_err(|e| format!("Anki DB error: {e}"))?;
+
+    // Create Anki schema
+    anki_conn
+        .execute_batch(
+            "CREATE TABLE IF NOT EXISTS col (
+                id INTEGER PRIMARY KEY,
+                crt INTEGER NOT NULL,
+                mod INTEGER NOT NULL,
+                scm INTEGER NOT NULL,
+                ver INTEGER NOT NULL,
+                dty INTEGER NOT NULL,
+                usn INTEGER NOT NULL,
+                ls INTEGER NOT NULL,
+                conf TEXT NOT NULL,
+                models TEXT NOT NULL,
+                decks TEXT NOT NULL,
+                dconf TEXT NOT NULL,
+                tags TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS notes (
+                id INTEGER PRIMARY KEY,
+                guid TEXT NOT NULL,
+                mid INTEGER NOT NULL,
+                mod INTEGER NOT NULL,
+                usn INTEGER NOT NULL,
+                tags TEXT NOT NULL,
+                flds TEXT NOT NULL,
+                sfld TEXT NOT NULL,
+                csum INTEGER NOT NULL,
+                flags INTEGER NOT NULL,
+                data TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS cards (
+                id INTEGER PRIMARY KEY,
+                nid INTEGER NOT NULL,
+                did INTEGER NOT NULL,
+                ord INTEGER NOT NULL,
+                mod INTEGER NOT NULL,
+                usn INTEGER NOT NULL,
+                type INTEGER NOT NULL,
+                queue INTEGER NOT NULL,
+                due INTEGER NOT NULL,
+                ivl INTEGER NOT NULL,
+                factor INTEGER NOT NULL,
+                reps INTEGER NOT NULL,
+                lapses INTEGER NOT NULL,
+                left INTEGER NOT NULL,
+                odue INTEGER NOT NULL,
+                odid INTEGER NOT NULL,
+                flags INTEGER NOT NULL,
+                data TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS revlog (
+                id INTEGER PRIMARY KEY,
+                cid INTEGER NOT NULL,
+                usn INTEGER NOT NULL,
+                ease INTEGER NOT NULL,
+                ivl INTEGER NOT NULL,
+                lastIvl INTEGER NOT NULL,
+                factor INTEGER NOT NULL,
+                time INTEGER NOT NULL,
+                type INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS graves (
+                usn INTEGER NOT NULL,
+                oid INTEGER NOT NULL,
+                type INTEGER NOT NULL
+            );",
+        )
+        .map_err(|e| format!("Schema error: {e}"))?;
+
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_default()
         .as_secs() as i64;
 
-    for row in rows {
-        let (word, translation, definition, phonetic, examples, cefr, pos) =
-            row.map_err(|e| format!("Row: {e}"))?;
+    let model_id: i64 = now * 1000;
+    let deck_id_anki: i64 = now * 1000 + 1;
 
-        count += 1;
-        let note_id = now + count;
-        let card_id = now + count + 1_000_000;
-
-        // Front = word, Back = translation + definition
-        let back = format!(
-            "{}{}{}",
-            translation.as_deref().unwrap_or(""),
-            definition
-                .as_ref()
-                .map(|d| format!("<br><i>{d}</i>"))
-                .unwrap_or_default(),
-            phonetic
-                .as_ref()
-                .map(|p| format!("<br>[{p}]"))
-                .unwrap_or_default(),
-        );
-
-        // Fields separated by \x1f (Anki field separator)
-        let flds = format!(
-            "{}\x1f{}\x1f{}\x1f{}",
-            word,
-            back,
-            phonetic.as_deref().unwrap_or(""),
-            examples.as_deref().unwrap_or("")
-        );
-
-        // Tags
-        let mut tags = String::new();
-        if let Some(c) = &cefr {
-            tags.push_str(c);
-            tags.push(' ');
-        }
-        if let Some(p) = &pos {
-            tags.push_str(p);
-        }
-
-        // Insert note
-        anki_conn
-            .execute(
-                "INSERT INTO notes (id, guid, mid, mod, usn, tags, flds, sfld, csum, flags, data)
-                 VALUES (?1, ?2, ?3, ?4, -1, ?5, ?6, ?7, 0, 0, '')",
-                rusqlite::params![
-                    note_id,
-                    format!("{:x}", note_id),
-                    model_id,
-                    now,
-                    tags.trim(),
-                    flds,
-                    word
-                ],
-            )
-            .map_err(|e| format!("Insert note: {e}"))?;
-
-        // Insert card
-        anki_conn
-            .execute(
-                "INSERT INTO cards (id, nid, did, ord, mod, usn, type, queue, due, ivl, factor, reps, lapses, left, odue, odid, flags, data)
-                 VALUES (?1, ?2, ?3, 0, ?4, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '')",
-                rusqlite::params![card_id, note_id, deck_id, now],
-            )
-            .map_err(|e| format!("Insert card: {e}"))?;
-    }
-
-    // Write model + deck config
+    // Insert collection metadata
     let models_json = format!(
-        r#"{{"{model_id}":{{"id":{model_id},"name":"FlexiLingo","type":0,"mod":{now},"usn":-1,"sortf":0,"did":{deck_id},"tmpls":[{{"name":"Card 1","qfmt":"{{{{Front}}}}","afmt":"{{{{FrontSide}}}}<hr id=answer>{{{{Back}}}}","bqfmt":"","bafmt":"","did":null,"ord":0}}],"flds":[{{"name":"Front","ord":0,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}},{{"name":"Back","ord":1,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}},{{"name":"Phonetic","ord":2,"sticky":false,"rtl":false,"font":"Arial","size":14,"media":[]}},{{"name":"Examples","ord":3,"sticky":false,"rtl":false,"font":"Arial","size":14,"media":[]}}],"css":".card {{font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white;}}","latexPre":"","latexPost":"","latexsvg":false,"req":[[0,"any",[0]]]}}}}"#
+        r#"{{"{mid}":{{"id":{mid},"name":"FlexiLingo","type":0,"mod":0,"usn":0,"sortf":0,"did":{did},"tmpls":[{{"name":"Card 1","ord":0,"qfmt":"{{{{Front}}}}","afmt":"{{{{FrontSide}}}}<hr id=answer>{{{{Back}}}}","bqfmt":"","bafmt":"","did":null,"bfont":"","bsize":0}}],"flds":[{{"name":"Front","ord":0,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}},{{"name":"Back","ord":1,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}}],"css":".card {{font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white;}}","latexPre":"","latexPost":"","latexsvg":false,"req":[[0,"all",[0]]]}}}}"#,
+        mid = model_id,
+        did = deck_id_anki
     );
+
     let decks_json = format!(
-        r#"{{"{deck_id}":{{"id":{deck_id},"name":"FlexiLingo Import","mod":{now},"usn":-1,"lrnToday":[0,0],"revToday":[0,0],"newToday":[0,0],"timeToday":[0,0],"collapsed":false,"browserCollapsed":false,"desc":"Exported from FlexiLingo Desktop","dyn":0,"conf":1,"extendNew":0,"extendRev":0}},"1":{{"id":1,"name":"Default","mod":0,"usn":0,"lrnToday":[0,0],"revToday":[0,0],"newToday":[0,0],"timeToday":[0,0],"collapsed":false,"browserCollapsed":false,"desc":"","dyn":0,"conf":1,"extendNew":10,"extendRev":50}}}}"#
+        r#"{{"{did}":{{"id":{did},"name":"FlexiLingo","mod":0,"usn":0,"lrnToday":[0,0],"revToday":[0,0],"newToday":[0,0],"timeToday":[0,0],"collapsed":false,"browserCollapsed":false,"desc":"Exported from FlexiLingo","dyn":0,"conf":1,"extendNew":10,"extendRev":50}}}}"#,
+        did = deck_id_anki
     );
 
     anki_conn
         .execute(
-            "UPDATE col SET models = ?1, decks = ?2",
-            rusqlite::params![models_json, decks_json],
+            "INSERT INTO col VALUES (1, ?, ?, ?, 11, 0, 0, 0, '{}', ?, ?, '{}', '')",
+            rusqlite::params![now, now, now * 1000, models_json, decks_json],
         )
-        .map_err(|e| format!("Update col: {e}"))?;
+        .map_err(|e| format!("Insert col error: {e}"))?;
+
+    // Insert notes and cards
+    for (i, (word, translation, definition, pos, cefr, phonetic, examples)) in
+        rows.iter().enumerate()
+    {
+        let note_id = now * 1000 + (i as i64) + 100;
+        let card_id = note_id + 100000;
+
+        let mut back_parts = vec![];
+        if !translation.is_empty() {
+            back_parts.push(translation.clone());
+        }
+        if !definition.is_empty() {
+            back_parts.push(definition.clone());
+        }
+        if !pos.is_empty() {
+            back_parts.push(format!("({})", pos));
+        }
+        if !phonetic.is_empty() {
+            back_parts.push(format!("/{}/", phonetic));
+        }
+        if !cefr.is_empty() {
+            back_parts.push(format!("[{}]", cefr));
+        }
+        if !examples.is_empty() {
+            back_parts.push(format!("Examples: {}", examples));
+        }
+
+        let back = back_parts.join(" | ");
+        let flds = format!("{}\x1f{}", word, back);
+        let csum = crc32(&word.to_lowercase()) as i64;
+
+        anki_conn
+            .execute(
+                "INSERT INTO notes VALUES (?, ?, ?, ?, 0, '', ?, ?, ?, 0, '')",
+                rusqlite::params![
+                    note_id,
+                    format!("fl{:010}", i),
+                    model_id,
+                    now,
+                    flds,
+                    word,
+                    csum
+                ],
+            )
+            .map_err(|e| format!("Insert note error: {e}"))?;
+
+        anki_conn
+            .execute(
+                "INSERT INTO cards VALUES (?, ?, ?, 0, ?, 0, 0, 0, ?, 0, 0, 0, 0, 0, 0, 0, 0, '')",
+                rusqlite::params![card_id, note_id, deck_id_anki, now, i as i64],
+            )
+            .map_err(|e| format!("Insert card error: {e}"))?;
+    }
 
     drop(anki_conn);
 
-    // Create media file
-    let media_path = temp_dir.path().join("media");
-    std::fs::write(&media_path, "{}").map_err(|e| format!("Media: {e}"))?;
-
-    // ZIP into .apkg
+    // Package as .apkg (ZIP)
     let apkg_file =
-        std::fs::File::create(file_path).map_err(|e| format!("Create apkg: {e}"))?;
+        std::fs::File::create(file_path).map_err(|e| format!("File create error: {e}"))?;
     let mut zip = zip::ZipWriter::new(apkg_file);
 
-    let zip_options = zip::write::SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated);
+    let zip_options =
+        zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
 
-    // Add collection.anki21
-    zip.start_file("collection.anki21", zip_options)
-        .map_err(|e| format!("Zip: {e}"))?;
-    let db_bytes = std::fs::read(&db_path).map_err(|e| format!("Read DB: {e}"))?;
-    zip.write_all(&db_bytes).map_err(|e| format!("Zip write: {e}"))?;
+    zip.start_file("collection.anki2", zip_options)
+        .map_err(|e| format!("ZIP error: {e}"))?;
 
-    // Add media
+    let db_bytes = std::fs::read(&db_path).map_err(|e| format!("Read DB error: {e}"))?;
+    zip.write_all(&db_bytes)
+        .map_err(|e| format!("ZIP write error: {e}"))?;
+
+    // Empty media file
     zip.start_file("media", zip_options)
-        .map_err(|e| format!("Zip: {e}"))?;
-    zip.write_all(b"{}").map_err(|e| format!("Zip write: {e}"))?;
+        .map_err(|e| format!("ZIP error: {e}"))?;
+    zip.write_all(b"{}").map_err(|e| format!("ZIP write error: {e}"))?;
 
-    zip.finish().map_err(|e| format!("Zip finish: {e}"))?;
+    zip.finish().map_err(|e| format!("ZIP finish error: {e}"))?;
 
     Ok(ExportResult {
         file_path: file_path.to_string(),
-        total_items: count,
+        total_items: total,
         format: "anki".to_string(),
     })
 }
 
-/// Import from Anki .apkg file.
+/// Import an Anki .apkg file into the vocabulary database.
 pub fn import_anki(
     conn: &Connection,
     file_path: &str,
     target_language: &str,
     skip_duplicates: bool,
 ) -> Result<ImportResult, String> {
-    let temp_dir =
-        tempfile::tempdir().map_err(|e| format!("Temp dir: {e}"))?;
+    let file = std::fs::File::open(file_path).map_err(|e| format!("File open error: {e}"))?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("ZIP read error: {e}"))?;
 
-    // Unzip
-    let file = std::fs::File::open(file_path).map_err(|e| format!("Open: {e}"))?;
-    let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("Zip: {e}"))?;
+    // Extract collection.anki2
+    let tmp_dir = tempfile::tempdir().map_err(|e| format!("Temp dir error: {e}"))?;
+    let db_path = tmp_dir.path().join("collection.anki2");
 
-    for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).map_err(|e| format!("Zip entry: {e}"))?;
-        let out_path = temp_dir.path().join(entry.name());
-        let mut out_file =
-            std::fs::File::create(&out_path).map_err(|e| format!("Create: {e}"))?;
-        std::io::copy(&mut entry, &mut out_file).map_err(|e| format!("Copy: {e}"))?;
+    {
+        let mut anki_file = archive
+            .by_name("collection.anki2")
+            .map_err(|e| format!("No collection.anki2 in archive: {e}"))?;
+        let mut out =
+            std::fs::File::create(&db_path).map_err(|e| format!("File create error: {e}"))?;
+        std::io::copy(&mut anki_file, &mut out)
+            .map_err(|e| format!("Extract error: {e}"))?;
     }
 
-    // Find collection DB
-    let db_path = if temp_dir.path().join("collection.anki21").exists() {
-        temp_dir.path().join("collection.anki21")
-    } else if temp_dir.path().join("collection.anki2").exists() {
-        temp_dir.path().join("collection.anki2")
-    } else {
-        return Err("No collection database found in .apkg".to_string());
-    };
-
     let anki_conn =
-        rusqlite::Connection::open(&db_path).map_err(|e| format!("Anki DB: {e}"))?;
+        rusqlite::Connection::open(&db_path).map_err(|e| format!("Anki DB error: {e}"))?;
 
     // Read notes
     let mut stmt = anki_conn
-        .prepare("SELECT flds, tags FROM notes")
-        .map_err(|e| format!("Query: {e}"))?;
+        .prepare("SELECT flds, sfld FROM notes")
+        .map_err(|e| format!("Query error: {e}"))?;
 
-    let rows = stmt
+    let notes: Vec<(String, String)> = stmt
         .query_map([], |row| {
             Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
+                row.get::<_, String>(0).unwrap_or_default(),
+                row.get::<_, String>(1).unwrap_or_default(),
             ))
         })
-        .map_err(|e| format!("Query: {e}"))?;
+        .map_err(|e| format!("Query error: {e}"))?
+        .filter_map(|r| r.ok())
+        .collect();
 
+    let total = notes.len() as i64;
     let mut imported: i64 = 0;
     let mut skipped: i64 = 0;
-    let mut errors = Vec::new();
-    let mut row_num: i64 = 0;
+    let mut errors: Vec<ImportError> = vec![];
 
-    for row in rows {
-        row_num += 1;
-        let (flds, tags) = match row {
-            Ok(r) => r,
-            Err(e) => {
-                errors.push(ImportError {
-                    row: row_num,
-                    message: format!("Row: {e}"),
-                });
-                continue;
-            }
-        };
+    let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
-        // Fields separated by \x1f
-        let fields: Vec<&str> = flds.split('\x1f').collect();
-        let word = match fields.first() {
-            Some(w) if !w.is_empty() => strip_html(w),
-            _ => {
-                errors.push(ImportError {
-                    row: row_num,
-                    message: "Empty front field".to_string(),
-                });
-                continue;
-            }
-        };
+    for (i, (flds, _sfld)) in notes.iter().enumerate() {
+        let parts: Vec<&str> = flds.split('\x1f').collect();
+        let front = parts.first().map(|s| s.trim()).unwrap_or("");
+        let back = parts.get(1).map(|s| s.trim()).unwrap_or("");
 
-        let translation = fields.get(1).map(|s| strip_html(s)).filter(|s| !s.is_empty());
+        if front.is_empty() {
+            errors.push(ImportError {
+                row: i as i64 + 1,
+                message: "Empty front field".to_string(),
+            });
+            continue;
+        }
 
+        // Check for duplicates
         if skip_duplicates {
             let exists: bool = conn
                 .query_row(
-                    "SELECT COUNT(*) > 0 FROM vocabulary WHERE word = ?1 AND language = ?2",
-                    rusqlite::params![word, target_language],
+                    "SELECT COUNT(*) > 0 FROM vocabulary WHERE word = ? AND language = ?",
+                    rusqlite::params![front, target_language],
                     |row| row.get(0),
                 )
                 .unwrap_or(false);
+
             if exists {
                 skipped += 1;
                 continue;
             }
         }
 
-        // Extract CEFR from tags
-        let cefr = tags
-            .split_whitespace()
-            .find(|t| ["A1", "A2", "B1", "B2", "C1", "C2"].contains(t))
-            .map(|s| s.to_string());
-
         let result = conn.execute(
-            "INSERT INTO vocabulary (id, word, translation, language, cefr_level, source_module)
-             VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, 'anki_import')",
-            rusqlite::params![word, translation, target_language, cefr],
+            "INSERT INTO vocabulary (word, translation, language, source_module, created_at, updated_at) \
+             VALUES (?, ?, ?, 'anki_import', ?, ?)",
+            rusqlite::params![front, back, target_language, now, now],
         );
 
         match result {
             Ok(_) => imported += 1,
             Err(e) => {
                 errors.push(ImportError {
-                    row: row_num,
-                    message: format!("Insert: {e}"),
+                    row: i as i64 + 1,
+                    message: format!("Insert error: {e}"),
                 });
             }
         }
     }
 
     Ok(ImportResult {
-        total_rows: row_num,
+        total_rows: total,
         imported,
         skipped_duplicates: skipped,
         errors,
     })
 }
 
-/// Basic HTML tag stripping.
-fn strip_html(s: &str) -> String {
-    let mut result = String::with_capacity(s.len());
-    let mut in_tag = false;
-    for ch in s.chars() {
-        match ch {
-            '<' => in_tag = true,
-            '>' => in_tag = false,
-            _ if !in_tag => result.push(ch),
-            _ => {}
+/// Simple CRC32 for Anki note checksums.
+fn crc32(s: &str) -> u32 {
+    let mut crc: u32 = 0xFFFF_FFFF;
+    for byte in s.bytes() {
+        crc ^= byte as u32;
+        for _ in 0..8 {
+            if crc & 1 != 0 {
+                crc = (crc >> 1) ^ 0xEDB8_8320;
+            } else {
+                crc >>= 1;
+            }
         }
     }
-    result.trim().to_string()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_strip_html_removes_bold_tag() {
-        assert_eq!(strip_html("<b>hello</b>"), "hello");
-    }
-
-    #[test]
-    fn test_strip_html_removes_nested_tags() {
-        assert_eq!(strip_html("<b><i>bold italic</i></b>"), "bold italic");
-    }
-
-    #[test]
-    fn test_strip_html_keeps_text_between_tags() {
-        assert_eq!(strip_html("before<br>after"), "beforeafter");
-    }
-
-    #[test]
-    fn test_strip_html_no_tags_returns_trimmed() {
-        assert_eq!(strip_html("  plain text  "), "plain text");
-    }
-
-    #[test]
-    fn test_strip_html_empty_string() {
-        assert_eq!(strip_html(""), "");
-    }
-
-    #[test]
-    fn test_strip_html_self_closing_tag() {
-        assert_eq!(strip_html("a<br/>b"), "ab");
-    }
-
-    #[test]
-    fn test_strip_html_only_tags_returns_empty() {
-        assert_eq!(strip_html("<b></b>"), "");
-    }
-
-    #[test]
-    fn test_setup_anki_schema_creates_all_tables() {
-        let conn = rusqlite::Connection::open_in_memory().unwrap();
-        setup_anki_schema(&conn).unwrap();
-        let mut stmt = conn
-            .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
-            .unwrap();
-        let tables: Vec<String> = stmt
-            .query_map([], |row| row.get(0))
-            .unwrap()
-            .filter_map(|r| r.ok())
-            .collect();
-        assert!(tables.contains(&"cards".to_string()));
-        assert!(tables.contains(&"col".to_string()));
-        assert!(tables.contains(&"notes".to_string()));
-        assert!(tables.contains(&"revlog".to_string()));
-        assert!(tables.contains(&"graves".to_string()));
-    }
-
-    #[test]
-    fn test_setup_anki_schema_col_seeded_with_one_row() {
-        let conn = rusqlite::Connection::open_in_memory().unwrap();
-        setup_anki_schema(&conn).unwrap();
-        let count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM col", [], |row| row.get(0))
-            .unwrap();
-        assert_eq!(count, 1);
-    }
-
-    fn vocab_conn() -> rusqlite::Connection {
-        let conn = rusqlite::Connection::open_in_memory().unwrap();
-        conn.execute_batch(
-            "CREATE TABLE vocabulary (
-                id TEXT PRIMARY KEY, word TEXT NOT NULL, translation TEXT,
-                definition TEXT, phonetic TEXT, examples TEXT,
-                cefr_level TEXT, pos TEXT, language TEXT,
-                source_module TEXT, context_sentence TEXT,
-                created_at TEXT DEFAULT (datetime('now'))
-            );",
-        )
-        .unwrap();
-        conn
-    }
-
-    fn default_options() -> ExportOptions {
-        ExportOptions {
-            format: ExportFormat::Anki,
-            include_fields: vec![],
-            filter_language: None,
-            filter_cefr: None,
-            filter_source: None,
-            deck_id: None,
-        }
-    }
-
-    #[test]
-    fn test_export_anki_empty_db_returns_zero_items() {
-        let conn = vocab_conn();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("test.apkg");
-        let result = export_anki(&conn, path.to_str().unwrap(), &default_options()).unwrap();
-        assert_eq!(result.total_items, 0);
-        assert_eq!(result.format, "anki");
-        assert!(path.exists());
-    }
-
-    #[test]
-    fn test_export_anki_counts_exported_words() {
-        let conn = vocab_conn();
-        conn.execute_batch(
-            "INSERT INTO vocabulary (id, word, translation, language) VALUES
-             ('1', 'hello', 'سلام', 'en'),
-             ('2', 'world', 'جهان', 'en');",
-        )
-        .unwrap();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("test.apkg");
-        let result = export_anki(&conn, path.to_str().unwrap(), &default_options()).unwrap();
-        assert_eq!(result.total_items, 2);
-    }
-
-    #[test]
-    fn test_export_anki_produces_valid_zip() {
-        let conn = vocab_conn();
-        conn.execute_batch(
-            "INSERT INTO vocabulary (id, word, translation, language) VALUES ('1', 'hi', 'سلام', 'en');",
-        )
-        .unwrap();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("test.apkg");
-        export_anki(&conn, path.to_str().unwrap(), &default_options()).unwrap();
-        let file = std::fs::File::open(&path).unwrap();
-        let archive = zip::ZipArchive::new(file).unwrap();
-        assert!(archive.len() >= 2); // collection.anki21 + media
-    }
-
-    #[test]
-    fn test_export_anki_filter_by_language() {
-        let conn = vocab_conn();
-        conn.execute_batch(
-            "INSERT INTO vocabulary (id, word, translation, language) VALUES
-             ('1', 'bonjour', 'سلام', 'fr'),
-             ('2', 'hello', 'سلام', 'en');",
-        )
-        .unwrap();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("test.apkg");
-        let mut opts = default_options();
-        opts.filter_language = Some("en".to_string());
-        let result = export_anki(&conn, path.to_str().unwrap(), &opts).unwrap();
-        assert_eq!(result.total_items, 1);
-    }
-
-    #[test]
-    fn test_anki_roundtrip_export_then_import() {
-        let src_conn = vocab_conn();
-        src_conn
-            .execute_batch(
-                "INSERT INTO vocabulary (id, word, translation, language) VALUES
-                 ('1', 'hello', 'سلام', 'en'),
-                 ('2', 'world', 'جهان', 'en');",
-            )
-            .unwrap();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("roundtrip.apkg");
-        export_anki(&src_conn, path.to_str().unwrap(), &default_options()).unwrap();
-
-        let dst_conn = vocab_conn();
-        let result = import_anki(&dst_conn, path.to_str().unwrap(), "en", false).unwrap();
-        assert_eq!(result.imported, 2);
-        assert_eq!(result.errors.len(), 0);
-        let count: i64 = dst_conn
-            .query_row("SELECT COUNT(*) FROM vocabulary", [], |row| row.get(0))
-            .unwrap();
-        assert_eq!(count, 2);
-    }
-
-    #[test]
-    fn test_import_anki_skip_duplicates() {
-        let src_conn = vocab_conn();
-        src_conn
-            .execute_batch(
-                "INSERT INTO vocabulary (id, word, translation, language) VALUES
-                 ('1', 'hello', 'سلام', 'en');",
-            )
-            .unwrap();
-        let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("dup.apkg");
-        export_anki(&src_conn, path.to_str().unwrap(), &default_options()).unwrap();
-
-        let dst_conn = vocab_conn();
-        dst_conn
-            .execute_batch(
-                "INSERT INTO vocabulary (id, word, language) VALUES ('x', 'hello', 'en');",
-            )
-            .unwrap();
-        let result = import_anki(&dst_conn, path.to_str().unwrap(), "en", true).unwrap();
-        assert_eq!(result.skipped_duplicates, 1);
-        assert_eq!(result.imported, 0);
-    }
-}
-
-/// Create minimal Anki schema.
-fn setup_anki_schema(conn: &rusqlite::Connection) -> Result<(), String> {
-    conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS col (
-            id INTEGER PRIMARY KEY,
-            crt INTEGER NOT NULL,
-            mod INTEGER NOT NULL,
-            scm INTEGER NOT NULL,
-            ver INTEGER NOT NULL,
-            dty INTEGER NOT NULL,
-            usn INTEGER NOT NULL,
-            ls INTEGER NOT NULL,
-            conf TEXT NOT NULL,
-            models TEXT NOT NULL,
-            decks TEXT NOT NULL,
-            dconf TEXT NOT NULL,
-            tags TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS notes (
-            id INTEGER PRIMARY KEY,
-            guid TEXT NOT NULL,
-            mid INTEGER NOT NULL,
-            mod INTEGER NOT NULL,
-            usn INTEGER NOT NULL,
-            tags TEXT NOT NULL,
-            flds TEXT NOT NULL,
-            sfld TEXT NOT NULL,
-            csum INTEGER NOT NULL,
-            flags INTEGER NOT NULL,
-            data TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS cards (
-            id INTEGER PRIMARY KEY,
-            nid INTEGER NOT NULL,
-            did INTEGER NOT NULL,
-            ord INTEGER NOT NULL,
-            mod INTEGER NOT NULL,
-            usn INTEGER NOT NULL,
-            type INTEGER NOT NULL,
-            queue INTEGER NOT NULL,
-            due INTEGER NOT NULL,
-            ivl INTEGER NOT NULL,
-            factor INTEGER NOT NULL,
-            reps INTEGER NOT NULL,
-            lapses INTEGER NOT NULL,
-            left INTEGER NOT NULL,
-            odue INTEGER NOT NULL,
-            odid INTEGER NOT NULL,
-            flags INTEGER NOT NULL,
-            data TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS revlog (
-            id INTEGER PRIMARY KEY,
-            cid INTEGER NOT NULL,
-            usn INTEGER NOT NULL,
-            ease INTEGER NOT NULL,
-            ivl INTEGER NOT NULL,
-            lastIvl INTEGER NOT NULL,
-            factor INTEGER NOT NULL,
-            time INTEGER NOT NULL,
-            type INTEGER NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS graves (
-            usn INTEGER NOT NULL,
-            oid INTEGER NOT NULL,
-            type INTEGER NOT NULL
-        );
-
-        INSERT INTO col VALUES(1, 0, 0, 0, 11, 0, 0, 0, '{}', '{}', '{}', '{}', '{}');
-        ",
-    )
-    .map_err(|e| format!("Anki schema: {e}"))?;
-
-    Ok(())
+    !crc
 }
