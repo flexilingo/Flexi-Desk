@@ -48,6 +48,9 @@ interface PlayerState {
   subtitleAlignment: 'left' | 'center' | 'right';
   showEstimatedOnSubtitles: boolean;
 
+  // Buffering
+  isBuffering: boolean;
+
   // Error
   playError: string | null;
 
@@ -134,11 +137,19 @@ export const usePlayerStore = create<PlayerState>()(
     });
 
     audio.addEventListener('loadstart', () => {
-      console.log('[PlayerStore] Audio loadstart, src:', audio.src.substring(0, 100));
+      set((s) => { s.isBuffering = true; });
+    });
+
+    audio.addEventListener('waiting', () => {
+      set((s) => { s.isBuffering = true; });
+    });
+
+    audio.addEventListener('playing', () => {
+      set((s) => { s.isBuffering = false; });
     });
 
     audio.addEventListener('canplay', () => {
-      console.log('[PlayerStore] Audio canplay, duration:', audio.duration);
+      set((s) => { s.isBuffering = false; });
     });
 
     return {
@@ -160,6 +171,7 @@ export const usePlayerStore = create<PlayerState>()(
       pauseOnHover: false,
       subtitleAlignment: 'center' as const,
       showEstimatedOnSubtitles: true,
+      isBuffering: false,
       playError: null,
       wordsClicked: 0,
       wordsAddedToDeck: 0,

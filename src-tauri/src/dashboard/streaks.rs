@@ -170,6 +170,164 @@ fn days_between(from: &str, to: &str) -> i64 {
     (d2 - d1).num_days().abs()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn setup() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE streaks (
+                current_streak INTEGER NOT NULL DEFAULT 0,
+                longest_streak INTEGER NOT NULL DEFAULT 0,
+                last_activity_date TEXT,
+                freeze_days_remaining INTEGER NOT NULL DEFAULT 1,
+                freeze_days_per_week INTEGER NOT NULL DEFAULT 1,
+                freeze_last_reset TEXT,
+                daily_xp_target INTEGER NOT NULL DEFAULT 50
+            );
+            CREATE TABLE xp_log (
+                id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                module TEXT NOT NULL DEFAULT '',
+                action TEXT NOT NULL DEFAULT '',
+                xp_amount INTEGER NOT NULL DEFAULT 0,
+                metadata TEXT NOT NULL DEFAULT '{}',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            INSERT INTO streaks
+                (current_streak, longest_streak, freeze_days_remaining, freeze_days_per_week, daily_xp_target)
+            VALUES (0, 0, 2, 2, 50);",
+        )
+        .unwrap();
+        conn
+    }
+
+    #[test]
+    fn test_days_between_same_day() {
+        assert_eq!(days_between("2024-01-01", "2024-01-01"), 0);
+    }
+
+    #[test]
+    fn test_days_between_one_day() {
+        assert_eq!(days_between("2024-01-01", "2024-01-02"), 1);
+    }
+
+    #[test]
+    fn test_days_between_is_absolute_value() {
+        // Reversed order should still give positive result
+        assert_eq!(days_between("2024-01-10", "2024-01-01"), 9);
+    }
+
+    #[test]
+    fn test_days_between_across_month_boundary() {
+        assert_eq!(days_between("2024-01-31", "2024-02-01"), 1);
+    }
+
+    #[test]
+    fn test_set_freeze_config_clamps_above_max() {
+        let conn = setup();
+        set_freeze_config(&conn, 10).unwrap();
+        let stored: i64 = conn
+            .query_row("SELECT freeze_days_per_week FROM streaks", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(stored, 3);
+    }
+
+    #[test]
+    fn test_set_freeze_config_clamps_below_min() {
+        let conn = setup();
+        set_freeze_config(&conn, -5).unwrap();
+        let stored: i64 = conn
+            .query_row("SELECT freeze_days_per_week FROM streaks", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(stored, 0);
+    }
+
+    #[test]
+    fn test_set_freeze_config_stores_valid_value() {
+        let conn = setup();
+        set_freeze_config(&conn, 2).unwrap();
+        let stored: i64 = conn
+            .query_row("SELECT freeze_days_per_week FROM streaks", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(stored, 2);
+    }
+
+    #[test]
+    fn test_set_xp_target_clamps_above_max() {
+        let conn = setup();
+        set_xp_target(&conn, 1000).unwrap();
+        let stored: i64 = conn
+            .query_row("SELECT daily_xp_target FROM streaks", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(stored, 500);
+    }
+
+    #[test]
+    fn test_set_xp_target_clamps_below_min() {
+        let conn = setup();
+        set_xp_target(&conn, 0).unwrap();
+        let stored: i64 = conn
+            .query_row("SELECT daily_xp_target FROM streaks", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(stored, 10);
+    }
+
+    #[test]
+    fn test_set_xp_target_stores_valid_value() {
+        let conn = setup();
+        set_xp_target(&conn, 100).unwrap();
+        let stored: i64 = conn
+            .query_row("SELECT daily_xp_target FROM streaks", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(stored, 100);
+    }
+
+    #[test]
+    fn test_use_freeze_decrements_remaining() {
+        let conn = setup(); // starts with freeze_days_remaining = 2
+        use_freeze(&conn).unwrap();
+        let remaining: i64 = conn
+            .query_row("SELECT freeze_days_remaining FROM streaks", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(remaining, 1);
+    }
+
+    #[test]
+    fn test_use_freeze_fails_when_zero_remaining() {
+        let conn = setup();
+        conn.execute("UPDATE streaks SET freeze_days_remaining = 0", [])
+            .unwrap();
+        let result = use_freeze(&conn);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("No freeze days remaining"));
+    }
+
+    #[test]
+    fn test_get_xp_progress_zero_when_no_log() {
+        let conn = setup();
+        let progress = get_xp_progress(&conn).unwrap();
+        assert_eq!(progress.xp_today, 0);
+        assert_eq!(progress.xp_target, 50);
+        assert_eq!(progress.percentage, 0.0);
+    }
+
+    #[test]
+    fn test_get_xp_progress_sums_todays_xp() {
+        let conn = setup();
+        conn.execute(
+            "INSERT INTO xp_log (id, module, action, xp_amount, created_at)
+             VALUES ('1', 'review', 'session', 30, datetime('now'))",
+            [],
+        )
+        .unwrap();
+        let progress = get_xp_progress(&conn).unwrap();
+        assert_eq!(progress.xp_today, 30);
+        let expected_pct = (30.0_f64 / 50.0 * 100.0).min(100.0);
+        assert!((progress.percentage - expected_pct).abs() < 0.01);
+    }
+}
+
 /// Reset freeze days at the start of each week (Monday).
 fn maybe_reset_weekly_freezes(conn: &Connection) -> Result<(), String> {
     let today = chrono::Local::now();

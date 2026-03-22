@@ -61,7 +61,9 @@ function App() {
     <Routes>
       <Route element={<Shell />}>
         <Route index element={<DashboardPage />} />
-        {ENABLED_MODULES.review && <Route path="review" element={<ReviewPage />} />}
+        {ENABLED_MODULES.review && (
+          <Route path="review/*" element={<ReviewPage />} />
+        )}
         {ENABLED_MODULES.reading && <Route path="reading" element={<ReadingPage />} />}
         {ENABLED_MODULES.tutor && <Route path="tutor" element={<TutorPage />} />}
         {ENABLED_MODULES.caption && <Route path="caption" element={<CaptionPage />} />}

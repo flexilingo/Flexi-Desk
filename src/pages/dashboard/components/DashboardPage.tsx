@@ -7,37 +7,24 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useDashboardStore } from '../stores/dashboardStore';
 import { ErrorBanner } from './ErrorBanner';
 import { SummaryCards } from './SummaryCards';
-import { StatsChart } from './StatsChart';
-import { GoalsCard } from './GoalsCard';
-import { AchievementsCard } from './AchievementsCard';
-import { ActivityFeed } from './ActivityFeed';
 import { TodaySummary } from './TodaySummary';
 import { StreakCalendar } from './StreakCalendar';
-import { XPChart } from './XPChart';
-import { CEFRRadar } from './CEFRRadar';
-import { StudyHeatmap } from './StudyHeatmap';
-import { VocabTimeline } from './VocabTimeline';
+import { ActivityFeed } from './ActivityFeed';
 
 export function DashboardPage() {
   const {
     summary,
     isLoadingSummary,
     fetchSummary,
-    checkAchievements,
     fetchAnalytics,
     analyticsSummary,
-    xpHistory,
-    cefrRadar,
-    studyHeatmap,
-    vocabGrowth,
     streakCalendar,
   } = useDashboardStore();
 
   useEffect(() => {
     fetchSummary();
-    checkAchievements();
     fetchAnalytics();
-  }, [fetchSummary, checkAchievements, fetchAnalytics]);
+  }, [fetchSummary, fetchAnalytics]);
 
   if (isLoadingSummary && !summary) {
     return (
@@ -76,29 +63,8 @@ export function DashboardPage() {
       {/* Streak calendar (full width) */}
       <StreakCalendar data={streakCalendar} />
 
-      {/* Two-column: XP Chart + CEFR Radar */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <XPChart data={xpHistory} />
-        <CEFRRadar data={cefrRadar} />
-      </div>
-
-      {/* Two-column: Study Heatmap + Vocab Timeline */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <StudyHeatmap data={studyHeatmap} />
-        <VocabTimeline data={vocabGrowth} />
-      </div>
-
-      {/* Chart */}
-      <StatsChart />
-
-      {/* Two-column layout: Goals + Achievements / Activity */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="space-y-4">
-          <GoalsCard />
-          <AchievementsCard />
-        </div>
-        <ActivityFeed />
-      </div>
+      {/* Activity feed */}
+      <ActivityFeed />
     </div>
   );
 }

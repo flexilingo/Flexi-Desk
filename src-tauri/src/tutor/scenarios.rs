@@ -10,6 +10,66 @@ pub struct Scenario {
     pub opening_prompt: String,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_scenarios_returns_nonempty_list() {
+        assert!(!get_scenarios().is_empty());
+    }
+
+    #[test]
+    fn test_get_scenarios_all_have_nonempty_ids() {
+        for s in get_scenarios() {
+            assert!(!s.id.is_empty(), "Empty id in scenario: {:?}", s.title);
+        }
+    }
+
+    #[test]
+    fn test_get_scenarios_all_have_nonempty_opening_prompts() {
+        for s in get_scenarios() {
+            assert!(
+                !s.opening_prompt.is_empty(),
+                "Empty opening_prompt in scenario: {}",
+                s.id
+            );
+        }
+    }
+
+    #[test]
+    fn test_get_scenarios_restaurant_order_exists() {
+        let scenarios = get_scenarios();
+        let found = scenarios.iter().any(|s| s.id == "restaurant_order");
+        assert!(found);
+    }
+
+    #[test]
+    fn test_get_scenarios_all_cefr_min_are_valid() {
+        let valid_levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+        for s in get_scenarios() {
+            assert!(
+                valid_levels.contains(&s.cefr_min.as_str()),
+                "Invalid cefr_min '{}' in scenario '{}'",
+                s.cefr_min,
+                s.id
+            );
+        }
+    }
+
+    #[test]
+    fn test_get_scenarios_ids_are_unique() {
+        let scenarios = get_scenarios();
+        let mut ids: Vec<&str> = scenarios.iter().map(|s| s.id.as_str()).collect();
+        let original_len = ids.len();
+        ids.dedup();
+        ids.sort();
+        let mut sorted = ids.clone();
+        sorted.dedup();
+        assert_eq!(original_len, sorted.len(), "Duplicate scenario IDs found");
+    }
+}
+
 pub fn get_scenarios() -> Vec<Scenario> {
     vec![
         Scenario {

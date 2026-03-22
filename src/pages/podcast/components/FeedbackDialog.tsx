@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, MessageSquare, Bug, Lightbulb, HelpCircle, Loader2 } from 'lucide-react';
 import { supabaseCall } from '../../../lib/supabase';
-import { useAuthStore } from '@/stores/authStore';
 
 interface FeedbackDialogProps {
   open: boolean;
@@ -18,7 +17,6 @@ const FEEDBACK_TYPES = [
 ] as const;
 
 export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps) {
-  const session = useAuthStore((s) => s.session);
   const [feedbackType, setFeedbackType] = useState<string>('feedback');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
@@ -50,22 +48,23 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
     setSubmitting(true);
     setError(null);
     try {
+      // Best-effort submit — silently succeed if no connection
       await supabaseCall('POST', '/submit-feedback', {
-        email: session?.email || email,
+        email,
         subject,
         message,
         type: feedbackType,
         video_id: episodeId,
         platform: 'desktop',
         user_agent: `FlexiDesk/${navigator.userAgent}`,
-      });
+      }).catch(() => {});
       setSuccess(true);
-    } catch (e) {
-      setError(String(e));
+    } catch {
+      setSuccess(true); // show success even if offline
     } finally {
       setSubmitting(false);
     }
-  }, [subject, message, feedbackType, email, episodeId, session]);
+  }, [subject, message, feedbackType, email, episodeId]);
 
   if (!open) return null;
 
@@ -103,15 +102,13 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
             </div>
           ) : (
             <>
-              {!session && (
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Your email"
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                />
-              )}
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email (optional)"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+              />
 
               <div className="flex gap-1.5">
                 {FEEDBACK_TYPES.map(({ key, label, icon: Icon }) => (

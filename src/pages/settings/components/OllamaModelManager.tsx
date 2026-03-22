@@ -13,6 +13,8 @@ import {
   Search,
   Play,
   Square,
+  Zap,
+  Target,
 } from 'lucide-react';
 import { listen } from '@tauri-apps/api/event';
 import { Button } from '@/components/ui/button';
@@ -399,6 +401,21 @@ function InstalledModelRow({
             </Badge>
           )}
         </div>
+        {(() => {
+          const rec = RECOMMENDED_OLLAMA_MODELS.find((r) => r.name === model.name);
+          return rec ? (
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                <Zap className="h-3 w-3" />
+                {rec.speed}
+              </span>
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                <Target className="h-3 w-3" />
+                {rec.accuracy}
+              </span>
+            </div>
+          ) : null;
+        })()}
       </div>
       <div className="flex items-center gap-1">
         {!isActive && (
@@ -450,6 +467,16 @@ function RecommendedModelRow({
           <span className="text-xs text-muted-foreground">{formatSizeMb(model.sizeMb)}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+            <Zap className="h-3 w-3" />
+            {model.speed}
+          </span>
+          <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+            <Target className="h-3 w-3" />
+            {model.accuracy}
+          </span>
+        </div>
         {isPulling && pullProgress && (
           <ProgressBar percent={pullProgress.percent} status={pullProgress.status} />
         )}

@@ -375,6 +375,173 @@ pub fn get_analytics_summary(conn: &Connection) -> Result<AnalyticsSummary, Stri
     })
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn setup() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE xp_log (
+                id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                module TEXT NOT NULL DEFAULT '',
+                action TEXT NOT NULL DEFAULT '',
+                xp_amount INTEGER NOT NULL DEFAULT 0,
+                metadata TEXT NOT NULL DEFAULT '{}',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE reading_documents (id TEXT PRIMARY KEY, progress REAL DEFAULT 0);
+            CREATE TABLE writing_sessions (
+                id TEXT PRIMARY KEY, overall_score REAL, grammar_score REAL,
+                status TEXT DEFAULT 'draft'
+            );
+            CREATE TABLE caption_sessions (
+                id TEXT PRIMARY KEY, duration_seconds INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'pending'
+            );
+            CREATE TABLE podcast_episodes (id TEXT PRIMARY KEY, play_position INTEGER DEFAULT 0);
+            CREATE TABLE pronunciation_sessions (id TEXT PRIMARY KEY, overall_score REAL);
+            CREATE TABLE vocabulary (
+                id TEXT PRIMARY KEY, word TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+            CREATE TABLE activity_log (
+                id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE streaks (current_streak INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE daily_stats (
+                date TEXT PRIMARY KEY,
+                study_minutes INTEGER DEFAULT 0,
+                words_learned INTEGER DEFAULT 0,
+                reviews_completed INTEGER DEFAULT 0
+            );",
+        )
+        .unwrap();
+        conn
+    }
+
+    #[test]
+    fn test_score_to_cefr_boundaries() {
+        assert_eq!(score_to_cefr(0.0), "A1");
+        assert_eq!(score_to_cefr(16.0), "A1");
+        assert_eq!(score_to_cefr(17.0), "A2");
+        assert_eq!(score_to_cefr(33.0), "A2");
+        assert_eq!(score_to_cefr(34.0), "B1");
+        assert_eq!(score_to_cefr(50.0), "B1");
+        assert_eq!(score_to_cefr(51.0), "B2");
+        assert_eq!(score_to_cefr(67.0), "B2");
+        assert_eq!(score_to_cefr(68.0), "C1");
+        assert_eq!(score_to_cefr(84.0), "C1");
+        assert_eq!(score_to_cefr(85.0), "C2");
+        assert_eq!(score_to_cefr(100.0), "C2");
+    }
+
+    #[test]
+    fn test_log_xp_inserts_entry() {
+        let conn = setup();
+        log_xp(&conn, "review", "session", 50, "{}").unwrap();
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM xp_log", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn test_get_xp_history_empty_db_returns_empty() {
+        let conn = setup();
+        let history = get_xp_history(&conn, 7).unwrap();
+        assert!(history.is_empty());
+    }
+
+    #[test]
+    fn test_get_xp_history_groups_by_module() {
+        let conn = setup();
+        conn.execute_batch(
+            "INSERT INTO xp_log (module, action, xp_amount) VALUES ('review', 'card', 10);
+             INSERT INTO xp_log (module, action, xp_amount) VALUES ('reading', 'words', 5);",
+        )
+        .unwrap();
+        let history = get_xp_history(&conn, 7).unwrap();
+        assert_eq!(history.len(), 1); // both entries are today
+        let today = &history[0];
+        assert_eq!(today.total_xp, 15);
+        assert_eq!(today.breakdown.len(), 2);
+    }
+
+    #[test]
+    fn test_get_cefr_radar_returns_six_skills() {
+        let conn = setup();
+        let radar = get_cefr_radar(&conn).unwrap();
+        assert_eq!(radar.len(), 6);
+        let skills: Vec<&str> = radar.iter().map(|s| s.skill.as_str()).collect();
+        assert!(skills.contains(&"Reading"));
+        assert!(skills.contains(&"Writing"));
+        assert!(skills.contains(&"Listening"));
+        assert!(skills.contains(&"Speaking"));
+        assert!(skills.contains(&"Vocabulary"));
+        assert!(skills.contains(&"Grammar"));
+    }
+
+    #[test]
+    fn test_get_cefr_radar_scores_are_bounded() {
+        let conn = setup();
+        let radar = get_cefr_radar(&conn).unwrap();
+        for skill in &radar {
+            assert!(skill.score >= 0.0 && skill.score <= 100.0);
+        }
+    }
+
+    #[test]
+    fn test_get_vocab_growth_empty_returns_empty() {
+        let conn = setup();
+        let points = get_vocab_growth(&conn, 7).unwrap();
+        assert!(points.is_empty());
+    }
+
+    #[test]
+    fn test_get_vocab_growth_counts_today_entries() {
+        let conn = setup();
+        conn.execute_batch(
+            "INSERT INTO vocabulary (id, word) VALUES ('1', 'hello'), ('2', 'world');",
+        )
+        .unwrap();
+        let points = get_vocab_growth(&conn, 7).unwrap();
+        assert_eq!(points.len(), 1);
+        assert_eq!(points[0].cumulative_count, 2);
+    }
+
+    #[test]
+    fn test_get_analytics_summary_returns_zeros_when_empty() {
+        let conn = setup();
+        let summary = get_analytics_summary(&conn).unwrap();
+        assert_eq!(summary.xp_today, 0);
+        assert_eq!(summary.streak_count, 0);
+        assert_eq!(summary.words_learned_today, 0);
+        assert_eq!(summary.study_minutes_today, 0);
+        assert_eq!(summary.reviews_today, 0);
+    }
+
+    #[test]
+    fn test_get_streak_calendar_has_correct_day_count() {
+        let conn = setup();
+        let calendar = get_streak_calendar(&conn, 7).unwrap();
+        assert_eq!(calendar.len(), 7);
+    }
+
+    #[test]
+    fn test_get_streak_calendar_todays_entry_reflects_xp() {
+        let conn = setup();
+        conn.execute_batch(
+            "INSERT INTO xp_log (module, action, xp_amount) VALUES ('review', 'card', 30);",
+        )
+        .unwrap();
+        let calendar = get_streak_calendar(&conn, 7).unwrap();
+        let today = calendar.last().unwrap(); // last entry is today
+        assert_eq!(today.xp_earned, 30);
+    }
+}
+
 // ── Log XP ──────────────────────────────────────────────
 
 pub fn log_xp(

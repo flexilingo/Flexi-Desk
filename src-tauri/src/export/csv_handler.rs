@@ -225,6 +225,266 @@ pub fn import_csv(
     })
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_auto_detect_standard_headers() {
+        let headers = ["word", "translation", "phonetic", "cefr", "examples"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+        let mapping = auto_detect_mapping(&headers);
+        assert_eq!(mapping.word_column, 0);
+        assert_eq!(mapping.translation_column, Some(1));
+        assert_eq!(mapping.phonetic_column, Some(2));
+        assert_eq!(mapping.cefr_column, Some(3));
+        assert_eq!(mapping.examples_column, Some(4));
+    }
+
+    #[test]
+    fn test_auto_detect_anki_front_back_headers() {
+        let headers = ["Front", "Back"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+        let mapping = auto_detect_mapping(&headers);
+        assert_eq!(mapping.word_column, 0);
+        assert_eq!(mapping.translation_column, Some(1));
+    }
+
+    #[test]
+    fn test_auto_detect_unknown_headers_defaults_word_to_zero() {
+        let headers = ["col_a", "col_b"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+        let mapping = auto_detect_mapping(&headers);
+        assert_eq!(mapping.word_column, 0);
+        assert_eq!(mapping.translation_column, None);
+        assert_eq!(mapping.phonetic_column, None);
+    }
+
+    #[test]
+    fn test_auto_detect_case_insensitive() {
+        let headers = ["WORD", "TRANSLATION", "IPA"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+        let mapping = auto_detect_mapping(&headers);
+        assert_eq!(mapping.word_column, 0);
+        assert_eq!(mapping.translation_column, Some(1));
+        assert_eq!(mapping.phonetic_column, Some(2));
+    }
+
+    #[test]
+    fn test_auto_detect_term_and_sentence_aliases() {
+        let headers = ["term", "meaning", "sentence"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+        let mapping = auto_detect_mapping(&headers);
+        assert_eq!(mapping.word_column, 0);
+        assert_eq!(mapping.translation_column, Some(1));
+        assert_eq!(mapping.examples_column, Some(2));
+    }
+
+    fn vocab_conn() -> rusqlite::Connection {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE vocabulary (
+                id TEXT PRIMARY KEY, word TEXT NOT NULL,
+                translation TEXT, language TEXT, pos TEXT,
+                cefr_level TEXT, definition TEXT, phonetic TEXT,
+                examples TEXT, source_module TEXT, context_sentence TEXT,
+                created_at TEXT DEFAULT (datetime('now'))
+            );",
+        )
+        .unwrap();
+        conn
+    }
+
+    fn default_export_options() -> ExportOptions {
+        ExportOptions {
+            format: ExportFormat::Csv,
+            include_fields: vec![],
+            filter_language: None,
+            filter_cefr: None,
+            filter_source: None,
+            deck_id: None,
+        }
+    }
+
+    #[test]
+    fn test_export_csv_empty_db_writes_header() {
+        let conn = vocab_conn();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.csv");
+        let result = export_csv(&conn, path.to_str().unwrap(), &default_export_options()).unwrap();
+        assert_eq!(result.total_items, 0);
+        assert_eq!(result.format, "csv");
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(content.starts_with("word,translation,language"));
+    }
+
+    #[test]
+    fn test_export_csv_counts_exported_rows() {
+        let conn = vocab_conn();
+        conn.execute_batch(
+            "INSERT INTO vocabulary (id, word, translation, language) VALUES
+             ('1', 'hello', 'سلام', 'en'),
+             ('2', 'world', 'جهان', 'en');",
+        )
+        .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.csv");
+        let result = export_csv(&conn, path.to_str().unwrap(), &default_export_options()).unwrap();
+        assert_eq!(result.total_items, 2);
+    }
+
+    #[test]
+    fn test_export_csv_escapes_commas_in_field() {
+        let conn = vocab_conn();
+        conn.execute_batch(
+            "INSERT INTO vocabulary (id, word, translation, language)
+             VALUES ('1', 'fast, efficient', 'سریع', 'en');",
+        )
+        .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.csv");
+        export_csv(&conn, path.to_str().unwrap(), &default_export_options()).unwrap();
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(content.contains("\"fast, efficient\""));
+    }
+
+    #[test]
+    fn test_export_csv_escapes_double_quotes_in_field() {
+        let conn = vocab_conn();
+        conn.execute_batch(
+            r#"INSERT INTO vocabulary (id, word, translation, language)
+             VALUES ('1', 'say "hi"', 'بگو سلام', 'en');"#,
+        )
+        .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.csv");
+        export_csv(&conn, path.to_str().unwrap(), &default_export_options()).unwrap();
+        let content = std::fs::read_to_string(&path).unwrap();
+        // Inner quotes are doubled: "say ""hi"""
+        assert!(content.contains("\"say \"\"hi\"\"\""));
+    }
+
+    #[test]
+    fn test_preview_csv_returns_headers_and_rows() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.csv");
+        std::fs::write(&path, "word,translation,phonetic\nhello,سلام,/hɛloʊ/\n").unwrap();
+        let preview = preview_csv(path.to_str().unwrap(), None).unwrap();
+        assert_eq!(preview.headers, vec!["word", "translation", "phonetic"]);
+        assert_eq!(preview.total_rows, 1);
+        assert_eq!(preview.sample_rows[0][0], "hello");
+    }
+
+    #[test]
+    fn test_preview_csv_suggested_mapping_word_and_translation() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.csv");
+        std::fs::write(&path, "word,translation\nhello,سلام\n").unwrap();
+        let preview = preview_csv(path.to_str().unwrap(), None).unwrap();
+        assert_eq!(preview.suggested_mapping.word_column, 0);
+        assert_eq!(preview.suggested_mapping.translation_column, Some(1));
+    }
+
+    #[test]
+    fn test_import_csv_basic_inserts_rows() {
+        let conn = vocab_conn();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("import.csv");
+        std::fs::write(&path, "word,translation\nhello,سلام\nworld,جهان\n").unwrap();
+
+        let options = ImportOptions {
+            format: ImportFormat::Csv,
+            target_language: "en".to_string(),
+            skip_duplicates: false,
+            target_deck_id: None,
+            column_mapping: Some(ColumnMapping {
+                word_column: 0,
+                translation_column: Some(1),
+                definition_column: None,
+                pos_column: None,
+                cefr_column: None,
+                phonetic_column: None,
+                examples_column: None,
+                context_column: None,
+            }),
+        };
+        let result = import_csv(&conn, path.to_str().unwrap(), &options).unwrap();
+        assert_eq!(result.imported, 2);
+        assert_eq!(result.errors.len(), 0);
+    }
+
+    #[test]
+    fn test_import_csv_skip_duplicates() {
+        let conn = vocab_conn();
+        // Pre-insert "hello" in English
+        conn.execute_batch(
+            "INSERT INTO vocabulary (id, word, language) VALUES ('1', 'hello', 'en');",
+        )
+        .unwrap();
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("import.csv");
+        std::fs::write(&path, "word\nhello\nworld\n").unwrap();
+
+        let options = ImportOptions {
+            format: ImportFormat::Csv,
+            target_language: "en".to_string(),
+            skip_duplicates: true,
+            target_deck_id: None,
+            column_mapping: Some(ColumnMapping {
+                word_column: 0,
+                translation_column: None,
+                definition_column: None,
+                pos_column: None,
+                cefr_column: None,
+                phonetic_column: None,
+                examples_column: None,
+                context_column: None,
+            }),
+        };
+        let result = import_csv(&conn, path.to_str().unwrap(), &options).unwrap();
+        assert_eq!(result.imported, 1);
+        assert_eq!(result.skipped_duplicates, 1);
+    }
+
+    #[test]
+    fn test_import_csv_tsv_format() {
+        let conn = vocab_conn();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("import.tsv");
+        std::fs::write(&path, "word\ttranslation\nhello\tسلام\n").unwrap();
+
+        let options = ImportOptions {
+            format: ImportFormat::Tsv,
+            target_language: "en".to_string(),
+            skip_duplicates: false,
+            target_deck_id: None,
+            column_mapping: Some(ColumnMapping {
+                word_column: 0,
+                translation_column: Some(1),
+                definition_column: None,
+                pos_column: None,
+                cefr_column: None,
+                phonetic_column: None,
+                examples_column: None,
+                context_column: None,
+            }),
+        };
+        let result = import_csv(&conn, path.to_str().unwrap(), &options).unwrap();
+        assert_eq!(result.imported, 1);
+    }
+}
+
 /// Auto-detect column mapping from header names.
 fn auto_detect_mapping(headers: &[String]) -> ColumnMapping {
     let find = |names: &[&str]| -> Option<usize> {

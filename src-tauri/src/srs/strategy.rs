@@ -16,3 +16,26 @@ pub fn create_strategy(algorithm: Algorithm) -> Box<dyn SRSStrategy> {
         Algorithm::FSRS => Box::new(FSRSStrategy::new()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_creates_leitner() {
+        let s = create_strategy(Algorithm::Leitner);
+        assert_eq!(s.algorithm_name(), "leitner");
+    }
+
+    #[test]
+    fn test_creates_sm2() {
+        let s = create_strategy(Algorithm::SM2);
+        assert_eq!(s.algorithm_name(), "sm2");
+    }
+
+    #[test]
+    fn test_creates_fsrs() {
+        let s = create_strategy(Algorithm::FSRS);
+        assert_eq!(s.algorithm_name(), "fsrs");
+    }
+}

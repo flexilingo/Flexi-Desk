@@ -2,12 +2,51 @@ import { useState, useEffect } from 'react';
 import { Volume2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { supabaseCall } from '@/lib/supabase';
 import type { DictionaryResponse } from './types';
 
 interface DictionaryTabProps {
   word: string;
   isActive: boolean;
+}
+
+async function fetchFromFreeDict(word: string): Promise<DictionaryResponse> {
+  const res = await fetch(
+    `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`,
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    return { found: false, error: (err as { message?: string }).message || 'Word not found' };
+  }
+  const entries = await res.json();
+  const first = entries[0];
+  if (!first) return { found: false, error: 'Word not found in dictionary' };
+
+  return {
+    found: true,
+    entry: {
+      source: 'freedict',
+      word: first.word,
+      phonetics: (first.phonetics ?? []).map((p: { text?: string; audio?: string }) => ({
+        text: p.text ?? null,
+        audio: p.audio ?? null,
+      })),
+      meanings: (first.meanings ?? []).map(
+        (m: {
+          partOfSpeech: string;
+          definitions: { definition: string; example?: string; synonyms: string[]; antonyms: string[] }[];
+        }) => ({
+          partOfSpeech: m.partOfSpeech,
+          definitions: m.definitions.map((d) => ({
+            definition: d.definition,
+            example: d.example,
+            synonyms: d.synonyms ?? [],
+            antonyms: d.antonyms ?? [],
+          })),
+        }),
+      ),
+      origin: first.origin,
+    },
+  };
 }
 
 export function DictionaryTab({ word, isActive }: DictionaryTabProps) {
@@ -23,10 +62,7 @@ export function DictionaryTab({ word, isActive }: DictionaryTabProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await supabaseCall<DictionaryResponse>(
-          'GET',
-          `/dictionary?action=freedict&word=${encodeURIComponent(word)}`,
-        );
+        const response = await fetchFromFreeDict(word);
         if (!cancelled) setData(response);
       } catch {
         if (!cancelled) setData({ found: false, error: 'Failed to fetch dictionary data' });

@@ -304,4 +304,62 @@ mod tests {
         assert_eq!(segments[0].text, "Hello world");
         assert_eq!(segments[1].start_ms, 3500);
     }
+
+    #[test]
+    fn test_parse_whisper_json_with_word_tokens() {
+        let json = r#"{
+            "transcription": [
+                {
+                    "timestamps": { "from": "00:00:00,000", "to": "00:00:02,000" },
+                    "offsets": { "from": 0, "to": 2000 },
+                    "text": " Hello world",
+                    "tokens": [
+                        { "text": " Hello", "offsets": { "from": 0, "to": 1000 }, "p": 0.95 },
+                        { "text": " world", "offsets": { "from": 1000, "to": 2000 }, "p": 0.90 }
+                    ]
+                }
+            ]
+        }"#;
+        let segments = parse_whisper_json(json, "en").unwrap();
+        assert_eq!(segments.len(), 1);
+        assert_eq!(segments[0].words.len(), 2);
+        assert_eq!(segments[0].words[0].word, "Hello");
+        assert_eq!(segments[0].words[0].start_ms, 0);
+        assert_eq!(segments[0].words[1].word, "world");
+        assert_eq!(segments[0].words[1].end_ms, 2000);
+    }
+
+    #[test]
+    fn test_parse_whisper_json_strips_leading_space() {
+        let json = r#"{
+            "transcription": [
+                {
+                    "timestamps": { "from": "00:00:00,000", "to": "00:00:01,000" },
+                    "offsets": { "from": 0, "to": 1000 },
+                    "text": "   Leading spaces"
+                }
+            ]
+        }"#;
+        let segments = parse_whisper_json(json, "en").unwrap();
+        assert_eq!(segments[0].text, "Leading spaces");
+    }
+
+    #[test]
+    fn test_parse_whisper_text_ignores_lines_without_timestamps() {
+        let text = "[00:00:00.000 --> 00:00:02.000]  First segment\n\
+                    \n\
+                    This line has no timestamp and should be ignored\n\
+                    [00:00:02.000 --> 00:00:04.000]  Second segment";
+        let segments = parse_whisper_text(text, "en");
+        assert_eq!(segments.len(), 2);
+        assert_eq!(segments[0].text, "First segment");
+        assert_eq!(segments[1].text, "Second segment");
+    }
+
+    #[test]
+    fn test_validate_paths_fails_on_missing_binary() {
+        let result = validate_paths("/nonexistent/whisper", "/tmp", "/tmp");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("binary not found"));
+    }
 }

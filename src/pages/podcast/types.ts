@@ -42,6 +42,13 @@ export interface CuratedPodcast {
   episode_count_feed: number;
 }
 
+export interface FlexiLingoInfo {
+  cefr_level: string | null;
+  learning_score: number | null;
+  transcribed_episodes: number;
+  total_episodes: number;
+}
+
 export interface PodcastIndexFeed {
   id: number;
   title: string;
@@ -58,6 +65,7 @@ export interface PodcastIndexFeed {
   itunesId?: number | null;
   ownerName?: string;
   isExplicit?: boolean;
+  flexilingo?: FlexiLingoInfo | null;
 }
 
 export interface CuratedListResponse {
@@ -65,6 +73,12 @@ export interface CuratedListResponse {
   total: number;
   page: number;
   limit: number;
+  source?: 'db' | 'podcastindex';
+}
+
+export interface SearchResponse {
+  feeds: PodcastIndexFeed[];
+  count: number;
 }
 
 export interface TrendingResponse {

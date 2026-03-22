@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::ai::json_extractor::extract_json;
-use crate::ai::prompts::{sentence_chat, word_analysis, writing_eval};
+use crate::ai::prompts::{sentence_chat, word_analysis, word_batch, writing_eval};
 use crate::ai::provider::{chat_completion, read_ai_settings, ChatMessage};
 use crate::AppState;
 
@@ -176,6 +176,69 @@ pub fn ai_sentence_chat_clear(
     )
     .map_err(|e| format!("Delete error: {e}"))?;
     Ok(())
+}
+
+// ── Batch Word Translation ────────────────────────────────
+
+const CHUNK_SIZE: usize = 5;
+
+#[tauri::command]
+pub async fn ai_translate_words(
+    state: State<'_, AppState>,
+    words: Vec<String>,
+    mode: String,
+    native_lang: String,
+    target_lang: String,
+    sentence_context: String,
+) -> Result<Vec<serde_json::Value>, String> {
+    let settings = {
+        let conn = lock_db(&state)?;
+        read_ai_settings(&conn)
+    };
+
+    let (temperature, max_tokens) = if mode == "smart" {
+        (Some(0.3_f64), Some(4000_u32))
+    } else {
+        (Some(0.2_f64), Some(1000_u32))
+    };
+
+    let mut all_results: Vec<serde_json::Value> = Vec::new();
+
+    for chunk in words.chunks(CHUNK_SIZE) {
+        let chunk_vec: Vec<String> = chunk.to_vec();
+
+        let messages = if mode == "smart" {
+            word_batch::build_smart_messages(&chunk_vec, &native_lang, &target_lang, &sentence_context)
+        } else {
+            word_batch::build_basic_messages(&chunk_vec, &native_lang, &target_lang, &sentence_context)
+        };
+
+        let response = chat_completion(
+            &settings.provider,
+            &settings.model,
+            messages,
+            settings.api_key.as_deref(),
+            settings.base_url.as_deref(),
+            temperature,
+            max_tokens,
+            false, // Don't force JSON mode — extract_json handles parsing robustly
+        )
+        .await?;
+
+        let parsed = extract_json(&response)?;
+
+        // Try "translations" key first (matches backend batch-translator.ts format)
+        // then fall back to "results" for compatibility, then plain array
+        if let Some(results) = parsed.get("translations").and_then(|r| r.as_array()) {
+            all_results.extend(results.iter().cloned());
+        } else if let Some(results) = parsed.get("results").and_then(|r| r.as_array()) {
+            all_results.extend(results.iter().cloned());
+        } else if let serde_json::Value::Array(arr) = parsed {
+            all_results.extend(arr);
+        }
+    }
+
+    Ok(all_results)
 }
 
 // ── Writing Evaluation ────────────────────────────────────

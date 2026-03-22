@@ -103,3 +103,127 @@ fn map_queue_row(row: &rusqlite::Row) -> rusqlite::Result<SyncQueueEntry> {
         synced_at: row.get(9)?,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    fn setup() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE sync_queue (
+                id            TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                table_name    TEXT NOT NULL,
+                row_id        TEXT NOT NULL,
+                operation     TEXT NOT NULL CHECK(operation IN ('INSERT', 'UPDATE', 'DELETE')),
+                payload       TEXT NOT NULL DEFAULT '{}',
+                status        TEXT NOT NULL DEFAULT 'pending'
+                              CHECK(status IN ('pending', 'syncing', 'synced', 'failed', 'conflict')),
+                retry_count   INTEGER NOT NULL DEFAULT 0,
+                error_message TEXT,
+                created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+                synced_at     TEXT
+            );",
+        )
+        .unwrap();
+        conn
+    }
+
+    #[test]
+    fn test_enqueue_adds_entry() {
+        let conn = setup();
+        enqueue(&conn, "vocabulary", "row-1", "INSERT", "{}").unwrap();
+        let entries = get_pending(&conn, None).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].table_name, "vocabulary");
+        assert_eq!(entries[0].row_id, "row-1");
+        assert_eq!(entries[0].operation, "INSERT");
+        assert_eq!(entries[0].status, "pending");
+    }
+
+    #[test]
+    fn test_pending_count() {
+        let conn = setup();
+        enqueue(&conn, "decks", "r1", "INSERT", "{}").unwrap();
+        enqueue(&conn, "decks", "r2", "UPDATE", "{}").unwrap();
+        enqueue(&conn, "decks", "r3", "DELETE", "{}").unwrap();
+        assert_eq!(pending_count(&conn), 3);
+    }
+
+    #[test]
+    fn test_mark_synced_removes_from_pending() {
+        let conn = setup();
+        enqueue(&conn, "vocabulary", "r1", "INSERT", "{}").unwrap();
+        let entries = get_pending(&conn, None).unwrap();
+        let id = entries[0].id.clone();
+        mark_synced(&conn, &[id]).unwrap();
+        assert_eq!(pending_count(&conn), 0);
+        assert_eq!(get_pending(&conn, None).unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_mark_failed_sets_error_and_increments_retry() {
+        let conn = setup();
+        enqueue(&conn, "vocabulary", "r1", "INSERT", "{}").unwrap();
+        let entries = get_pending(&conn, None).unwrap();
+        let id = entries[0].id.clone();
+        mark_failed(&conn, &id, "network timeout").unwrap();
+        let failed = get_pending(&conn, Some("failed")).unwrap();
+        assert_eq!(failed.len(), 1);
+        assert_eq!(failed[0].error_message.as_deref(), Some("network timeout"));
+        assert_eq!(failed[0].retry_count, 1);
+    }
+
+    #[test]
+    fn test_get_pending_filters_by_status() {
+        let conn = setup();
+        enqueue(&conn, "decks", "r1", "INSERT", "{}").unwrap();
+        enqueue(&conn, "decks", "r2", "INSERT", "{}").unwrap();
+        let entries = get_pending(&conn, None).unwrap();
+        let id = entries[0].id.clone();
+        mark_synced(&conn, &[id]).unwrap();
+        assert_eq!(get_pending(&conn, Some("pending")).unwrap().len(), 1);
+        assert_eq!(get_pending(&conn, Some("synced")).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_cleanup_removes_old_synced() {
+        let conn = setup();
+        conn.execute(
+            "INSERT INTO sync_queue (id, table_name, row_id, operation, payload, status, synced_at)
+             VALUES ('old', 'decks', 'r1', 'INSERT', '{}', 'synced', datetime('now', '-30 days'))",
+            [],
+        )
+        .unwrap();
+        let removed = cleanup(&conn, 7).unwrap();
+        assert_eq!(removed, 1);
+    }
+
+    #[test]
+    fn test_cleanup_keeps_recent_synced() {
+        let conn = setup();
+        conn.execute(
+            "INSERT INTO sync_queue (id, table_name, row_id, operation, payload, status, synced_at)
+             VALUES ('new', 'decks', 'r1', 'INSERT', '{}', 'synced', datetime('now'))",
+            [],
+        )
+        .unwrap();
+        let removed = cleanup(&conn, 7).unwrap();
+        assert_eq!(removed, 0);
+    }
+
+    #[test]
+    fn test_all_operations_stored_correctly() {
+        let conn = setup();
+        enqueue(&conn, "vocabulary", "r1", "INSERT", r#"{"word":"test"}"#).unwrap();
+        enqueue(&conn, "vocabulary", "r1", "UPDATE", r#"{"word":"updated"}"#).unwrap();
+        enqueue(&conn, "vocabulary", "r1", "DELETE", "{}").unwrap();
+        let entries = get_pending(&conn, None).unwrap();
+        assert_eq!(entries.len(), 3);
+        let ops: Vec<&str> = entries.iter().map(|e| e.operation.as_str()).collect();
+        assert!(ops.contains(&"INSERT"));
+        assert!(ops.contains(&"UPDATE"));
+        assert!(ops.contains(&"DELETE"));
+    }
+}

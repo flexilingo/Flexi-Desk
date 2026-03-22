@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { invoke } from '@tauri-apps/api/core';
@@ -25,42 +25,40 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
   const [data, setData] = useState<AIWordAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchedRef = useRef('');
 
-  useEffect(() => {
-    if (!isActive || !sentenceContext) return;
+  const fetchAI = useCallback(async () => {
+    const key = `${word}::${sentenceContext}`;
+    if (lastFetchedRef.current === key) return;
+    lastFetchedRef.current = key;
 
-    let cancelled = false;
-
-    const fetchAI = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await invoke<AIWordAnalysis>('ai_word_analysis', {
-          word,
-          sentence: sentenceContext,
-          targetLanguage: targetLang,
-          sourceLanguage: sourceLang,
-        });
-        if (!cancelled) setData(result);
-      } catch (err) {
-        if (!cancelled) {
-          const errStr = String(err);
-          if (errStr === 'OLLAMA_NOT_RUNNING') {
-            setError('Ollama is not running. Start it from Settings → AI Provider.');
-          } else {
-            setError(errStr);
-          }
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+    setData(null);
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await invoke<AIWordAnalysis>('ai_word_analysis', {
+        word,
+        sentence: sentenceContext,
+        targetLanguage: targetLang,
+        sourceLanguage: sourceLang,
+      });
+      setData(result);
+    } catch (err) {
+      const errStr = String(err);
+      if (errStr === 'OLLAMA_NOT_RUNNING') {
+        setError('Ollama is not running. Start it from Settings → AI Provider.');
+      } else {
+        setError(errStr);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  }, [word, sentenceContext, targetLang, sourceLang]);
 
+  // Trigger fetch when tab becomes active
+  if (isActive && sentenceContext && lastFetchedRef.current !== `${word}::${sentenceContext}` && !loading) {
     fetchAI();
-    return () => {
-      cancelled = true;
-    };
-  }, [word, sentenceContext, targetLang, sourceLang, isActive]);
+  }
 
   if (loading) {
     return (

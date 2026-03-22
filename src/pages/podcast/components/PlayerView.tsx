@@ -76,6 +76,7 @@ export function PlayerView() {
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const isBuffering = usePlayerStore((s) => s.isBuffering);
   const volume = usePlayerStore((s) => s.volume);
   const playbackRate = usePlayerStore((s) => s.playbackRate);
   const subtitlesEnabled = usePlayerStore((s) => s.subtitlesEnabled);
@@ -388,8 +389,8 @@ export function PlayerView() {
               />
             ) : (
               <>
-                {/* AudioPlayerArea — fills available space */}
-                <div className="flex-1 min-h-0">
+                {/* AudioPlayerArea — fills available space, but yields to subtitle */}
+                <div className="flex-1 min-h-0 overflow-hidden">
                   <AudioPlayerArea
                     title={activeEpisode.title}
                     showName={activeFeed?.title}
@@ -421,9 +422,9 @@ export function PlayerView() {
                   </div>
                 )}
 
-                {/* SubtitleBar — positioned at bottom of artwork area */}
+                {/* SubtitleBar — positioned at bottom, never shrinks */}
                 {hasTranscript && (
-                  <>
+                  <div className="shrink-0 relative z-10">
                     <SubtitleBar
                       segments={transcriptSegments}
                       currentTime={currentTime}
@@ -447,7 +448,7 @@ export function PlayerView() {
                     <div className="flex justify-center py-1">
                       <DifficultyBadge cefrLevel={nlpAnalysis?.cefrLevel} />
                     </div>
-                  </>
+                  </div>
                 )}
 
               </>
@@ -495,6 +496,7 @@ export function PlayerView() {
       {/* ControlBar — always visible */}
       <ControlBar
         isPlaying={isCurrentlyPlaying && isPlaying}
+        isBuffering={isBuffering}
         currentTime={isCurrentlyPlaying ? currentTime : 0}
         duration={isCurrentlyPlaying ? duration : activeEpisode.durationSeconds}
         volume={volume}
@@ -584,6 +586,7 @@ export function PlayerView() {
         onClose={() => setAddToDeckOpen(false)}
         words={addToDeckWords}
         episodeId={activeEpisode.id}
+        sentenceContext={currentSentence}
       />
 
       {/* Quick Add Note */}

@@ -148,6 +148,97 @@ fn is_stopword(word: &str) -> bool {
     )
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_word_to_cefr_very_common_word_is_a1() {
+        assert_eq!(word_to_cefr("the"), "A1");
+        assert_eq!(word_to_cefr("and"), "A1");
+    }
+
+    #[test]
+    fn test_word_to_cefr_a2_word() {
+        assert_eq!(word_to_cefr("time"), "A2");
+    }
+
+    #[test]
+    fn test_word_to_cefr_b2_word() {
+        assert_eq!(word_to_cefr("research"), "B2");
+        assert_eq!(word_to_cefr("significant"), "B2");
+    }
+
+    #[test]
+    fn test_word_to_cefr_c1_word() {
+        assert_eq!(word_to_cefr("paradigm"), "C1");
+        assert_eq!(word_to_cefr("phenomenon"), "C1");
+    }
+
+    #[test]
+    fn test_word_to_cefr_unknown_word_defaults_to_b2() {
+        // Unknown words get zipf=3.5 which is B2 range (≥3.0)
+        assert_eq!(word_to_cefr("zzzyyyxxx"), "B2");
+    }
+
+    #[test]
+    fn test_analyze_text_empty_returns_zero_counts() {
+        let result = analyze_text("");
+        assert_eq!(result.total_words, 0);
+        assert_eq!(result.unique_words, 0);
+        assert_eq!(result.cefr_level, "A1");
+        assert_eq!(result.vocabulary_richness, 0.0);
+    }
+
+    #[test]
+    fn test_analyze_text_counts_total_and_unique() {
+        // "hello hello world" → 3 total, 2 unique
+        let result = analyze_text("hello hello world");
+        assert_eq!(result.total_words, 3);
+        assert_eq!(result.unique_words, 2);
+    }
+
+    #[test]
+    fn test_analyze_text_vocabulary_richness_all_unique() {
+        let result = analyze_text("alpha beta gamma delta");
+        // All unique → richness = 1.0
+        assert!((result.vocabulary_richness - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_analyze_text_cefr_distribution_has_all_levels() {
+        let result = analyze_text("hello world");
+        assert!(result.cefr_distribution.contains_key("A1"));
+        assert!(result.cefr_distribution.contains_key("A2"));
+        assert!(result.cefr_distribution.contains_key("B1"));
+        assert!(result.cefr_distribution.contains_key("B2"));
+        assert!(result.cefr_distribution.contains_key("C1"));
+        assert!(result.cefr_distribution.contains_key("C2"));
+    }
+
+    #[test]
+    fn test_analyze_text_top_words_excludes_stopwords() {
+        let result = analyze_text("the the the the interesting");
+        // "the" is a stopword → should not appear in top_words
+        assert!(!result.top_words.iter().any(|w| w.word == "the"));
+    }
+
+    #[test]
+    fn test_analyze_text_avg_sentence_length() {
+        // "Hello world. How are you." → 2 sentences, 5 total words
+        let result = analyze_text("Hello world. How are you.");
+        assert!(result.avg_sentence_length > 0.0);
+    }
+
+    #[test]
+    fn test_analyze_text_top_words_sorted_by_frequency() {
+        let result = analyze_text("apple apple apple banana banana cherry");
+        if result.top_words.len() >= 2 {
+            assert!(result.top_words[0].count >= result.top_words[1].count);
+        }
+    }
+}
+
 /// Simple Zipf frequency scoring based on a built-in word list.
 /// The top ~3000 English words with approximate Zipf scores.
 /// Words not in the list get a score of 1.5 (assumed rare → C2).

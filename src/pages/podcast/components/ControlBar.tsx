@@ -23,6 +23,7 @@ import {
   Languages,
   BookOpen,
   HelpCircle,
+  Loader2,
 } from 'lucide-react';
 
 function formatTime(seconds: number): string {
@@ -35,6 +36,7 @@ function formatTime(seconds: number): string {
 
 interface ControlBarProps {
   isPlaying: boolean;
+  isBuffering?: boolean;
   currentTime: number;
   duration: number;
   volume: number;
@@ -81,6 +83,7 @@ const SPEED_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export function ControlBar({
   isPlaying,
+  isBuffering = false,
   currentTime,
   duration,
   volume,
@@ -191,9 +194,13 @@ export function ControlBar({
           />
           <ControlButton
             icon={
-              isPlaying ? <Pause className="w-full h-full" /> : <Play className="w-full h-full" />
+              isBuffering
+                ? <Loader2 className="w-full h-full animate-spin" />
+                : isPlaying
+                  ? <Pause className="w-full h-full" />
+                  : <Play className="w-full h-full" />
             }
-            label={isPlaying ? t('podcast.pause') : t('podcast.play')}
+            label={isBuffering ? 'Loading…' : isPlaying ? t('podcast.pause') : t('podcast.play')}
             onClick={onPlayPause}
             primary
           />

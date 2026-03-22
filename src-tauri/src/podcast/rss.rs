@@ -190,7 +190,7 @@ fn parse_items(xml: &str) -> Vec<ParsedEpisode> {
 }
 
 /// Parse duration from "HH:MM:SS", "MM:SS", or raw seconds.
-fn parse_duration(s: &str) -> i64 {
+pub(crate) fn parse_duration(s: &str) -> i64 {
     let s = s.trim();
     if let Ok(secs) = s.parse::<i64>() {
         return secs;
@@ -210,5 +210,226 @@ fn parse_duration(s: &str) -> i64 {
             m * 60 + s
         }
         _ => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── parse_duration ───────────────────────────────────
+
+    #[test]
+    fn test_duration_hhmmss() {
+        assert_eq!(parse_duration("01:30:00"), 5400);
+    }
+
+    #[test]
+    fn test_duration_mmss() {
+        assert_eq!(parse_duration("45:30"), 2730);
+    }
+
+    #[test]
+    fn test_duration_raw_seconds() {
+        assert_eq!(parse_duration("3600"), 3600);
+    }
+
+    #[test]
+    fn test_duration_zero() {
+        assert_eq!(parse_duration("0"), 0);
+    }
+
+    #[test]
+    fn test_duration_invalid_returns_zero() {
+        assert_eq!(parse_duration("not-a-duration"), 0);
+    }
+
+    // ── parse_rss feed metadata ──────────────────────────
+
+    #[test]
+    fn test_parse_rss_title_and_author() {
+        let xml = r#"<?xml version="1.0"?>
+        <rss><channel>
+            <title>My Podcast</title>
+            <itunes:author>Jane Doe</itunes:author>
+            <language>en</language>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.title, "My Podcast");
+        assert_eq!(feed.author.as_deref(), Some("Jane Doe"));
+        assert_eq!(feed.language.as_deref(), Some("en"));
+    }
+
+    #[test]
+    fn test_parse_rss_description_cdata() {
+        let xml = r#"<rss><channel>
+            <title>Test</title>
+            <description><![CDATA[A great podcast about <b>learning</b>]]></description>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(
+            feed.description.as_deref(),
+            Some("A great podcast about <b>learning</b>")
+        );
+    }
+
+    #[test]
+    fn test_parse_rss_artwork_from_itunes_image() {
+        let xml = r#"<rss><channel>
+            <title>Test</title>
+            <itunes:image href="https://example.com/art.jpg"/>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(
+            feed.artwork_url.as_deref(),
+            Some("https://example.com/art.jpg")
+        );
+    }
+
+    #[test]
+    fn test_parse_rss_category_from_itunes() {
+        let xml = r#"<rss><channel>
+            <title>Test</title>
+            <itunes:category text="Education"/>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.category.as_deref(), Some("Education"));
+    }
+
+    #[test]
+    fn test_parse_rss_fallback_title_when_missing() {
+        let xml = "<rss><channel></channel></rss>";
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.title, "Untitled");
+    }
+
+    // ── parse_rss episodes ───────────────────────────────
+
+    #[test]
+    fn test_parse_rss_episode_basic() {
+        let xml = r#"<rss><channel>
+            <title>My Podcast</title>
+            <item>
+                <title>Episode 1</title>
+                <enclosure url="https://example.com/ep1.mp3" length="1234567" type="audio/mpeg"/>
+                <itunes:duration>00:45:30</itunes:duration>
+                <pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
+            </item>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.episodes.len(), 1);
+        let ep = &feed.episodes[0];
+        assert_eq!(ep.title, "Episode 1");
+        assert_eq!(ep.audio_url, "https://example.com/ep1.mp3");
+        assert_eq!(ep.duration_seconds, 2730);
+        assert_eq!(ep.file_size, Some(1234567));
+        assert!(ep.published_at.is_some());
+    }
+
+    #[test]
+    fn test_parse_rss_skips_episode_without_audio_url() {
+        let xml = r#"<rss><channel>
+            <title>Test</title>
+            <item>
+                <title>No Audio Episode</title>
+            </item>
+            <item>
+                <title>Has Audio</title>
+                <enclosure url="https://example.com/ep.mp3"/>
+            </item>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.episodes.len(), 1);
+        assert_eq!(feed.episodes[0].title, "Has Audio");
+    }
+
+    #[test]
+    fn test_parse_rss_multiple_episodes() {
+        let xml = r#"<rss><channel>
+            <title>Test</title>
+            <item>
+                <title>Ep 1</title>
+                <enclosure url="https://ex.com/1.mp3"/>
+            </item>
+            <item>
+                <title>Ep 2</title>
+                <enclosure url="https://ex.com/2.mp3"/>
+            </item>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.episodes.len(), 2);
+        assert_eq!(feed.episodes[0].title, "Ep 1");
+        assert_eq!(feed.episodes[1].title, "Ep 2");
+    }
+
+    #[test]
+    fn test_parse_rss_episode_guid() {
+        let xml = r#"<rss><channel>
+            <title>Test</title>
+            <item>
+                <title>Ep</title>
+                <guid>urn:uuid:abc-123</guid>
+                <enclosure url="https://ex.com/ep.mp3"/>
+            </item>
+        </channel></rss>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.episodes[0].guid.as_deref(), Some("urn:uuid:abc-123"));
+    }
+
+    #[test]
+    fn test_parse_rss_atom_entry_format() {
+        let xml = r#"<feed>
+            <title>Atom Feed</title>
+            <entry>
+                <title>Entry 1</title>
+                <link>https://ex.com/ep.mp3</link>
+            </entry>
+        </feed>"#;
+        let feed = parse_rss(xml).unwrap();
+        assert_eq!(feed.episodes.len(), 1);
+        assert_eq!(feed.episodes[0].title, "Entry 1");
+    }
+
+    // ── parse_itunes_results ─────────────────────────────
+
+    #[test]
+    fn test_parse_itunes_results_basic() {
+        let json = r#"{
+            "results": [
+                {
+                    "collectionName": "Tech Talk",
+                    "artistName": "John Smith",
+                    "feedUrl": "https://example.com/feed.xml",
+                    "artworkUrl600": "https://example.com/art.jpg",
+                    "primaryGenreName": "Technology"
+                }
+            ]
+        }"#;
+        let results = parse_itunes_results(json).unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].title, "Tech Talk");
+        assert_eq!(results[0].author, "John Smith");
+        assert_eq!(results[0].feed_url, "https://example.com/feed.xml");
+        assert_eq!(results[0].genre, "Technology");
+    }
+
+    #[test]
+    fn test_parse_itunes_results_skips_empty_feed_url() {
+        let json = r#"{
+            "results": [
+                { "collectionName": "No Feed", "feedUrl": "" },
+                { "collectionName": "Has Feed", "feedUrl": "https://ex.com/feed.xml",
+                  "artistName": "A", "artworkUrl600": "", "primaryGenreName": "Podcast" }
+            ]
+        }"#;
+        let results = parse_itunes_results(json).unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].title, "Has Feed");
+    }
+
+    #[test]
+    fn test_parse_itunes_results_invalid_json() {
+        let result = parse_itunes_results("not json");
+        assert!(result.is_err());
     }
 }

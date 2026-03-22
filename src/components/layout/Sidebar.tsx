@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Brain,
   BookOpen,
   MessageSquare,
   Captions,
@@ -14,6 +13,8 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeft,
+  Layers,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -25,7 +26,8 @@ import { ENABLED_MODULES, type ModuleKey } from '@/config/features';
 const allNavItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' as ModuleKey },
   { to: '/vocabulary', label: 'Vocabulary', icon: Library, module: 'vocabulary' as ModuleKey },
-  { to: '/review', label: 'SRS Review', icon: Brain, module: 'review' as ModuleKey },
+  { to: '/review', label: 'Decks', icon: Layers, module: 'review' as ModuleKey },
+  { to: '/review/history', label: 'Reviews', icon: History, module: 'review' as ModuleKey },
   { to: '/reading', label: 'Reading', icon: BookOpen, module: 'reading' as ModuleKey },
   { to: '/tutor', label: 'AI Tutor', icon: MessageSquare, module: 'tutor' as ModuleKey },
   { to: '/caption', label: 'Live Caption', icon: Captions, module: 'caption' as ModuleKey },
@@ -83,7 +85,7 @@ export function Sidebar() {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === '/'}
+                  end={item.to === '/' || item.to === '/review'}
                   onClick={() => setCurrentPage(item.label)}
                   className={({ isActive }) =>
                     cn(

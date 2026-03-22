@@ -1,5 +1,6 @@
 pub mod sentence_chat;
 pub mod word_analysis;
+pub mod word_batch;
 pub mod writing_eval;
 
 /// Map a language code to its full name for use in LLM prompts.

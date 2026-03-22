@@ -324,6 +324,207 @@ fn strip_html(s: &str) -> String {
     result.trim().to_string()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_strip_html_removes_bold_tag() {
+        assert_eq!(strip_html("<b>hello</b>"), "hello");
+    }
+
+    #[test]
+    fn test_strip_html_removes_nested_tags() {
+        assert_eq!(strip_html("<b><i>bold italic</i></b>"), "bold italic");
+    }
+
+    #[test]
+    fn test_strip_html_keeps_text_between_tags() {
+        assert_eq!(strip_html("before<br>after"), "beforeafter");
+    }
+
+    #[test]
+    fn test_strip_html_no_tags_returns_trimmed() {
+        assert_eq!(strip_html("  plain text  "), "plain text");
+    }
+
+    #[test]
+    fn test_strip_html_empty_string() {
+        assert_eq!(strip_html(""), "");
+    }
+
+    #[test]
+    fn test_strip_html_self_closing_tag() {
+        assert_eq!(strip_html("a<br/>b"), "ab");
+    }
+
+    #[test]
+    fn test_strip_html_only_tags_returns_empty() {
+        assert_eq!(strip_html("<b></b>"), "");
+    }
+
+    #[test]
+    fn test_setup_anki_schema_creates_all_tables() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        setup_anki_schema(&conn).unwrap();
+        let mut stmt = conn
+            .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+            .unwrap();
+        let tables: Vec<String> = stmt
+            .query_map([], |row| row.get(0))
+            .unwrap()
+            .filter_map(|r| r.ok())
+            .collect();
+        assert!(tables.contains(&"cards".to_string()));
+        assert!(tables.contains(&"col".to_string()));
+        assert!(tables.contains(&"notes".to_string()));
+        assert!(tables.contains(&"revlog".to_string()));
+        assert!(tables.contains(&"graves".to_string()));
+    }
+
+    #[test]
+    fn test_setup_anki_schema_col_seeded_with_one_row() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        setup_anki_schema(&conn).unwrap();
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM col", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(count, 1);
+    }
+
+    fn vocab_conn() -> rusqlite::Connection {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE vocabulary (
+                id TEXT PRIMARY KEY, word TEXT NOT NULL, translation TEXT,
+                definition TEXT, phonetic TEXT, examples TEXT,
+                cefr_level TEXT, pos TEXT, language TEXT,
+                source_module TEXT, context_sentence TEXT,
+                created_at TEXT DEFAULT (datetime('now'))
+            );",
+        )
+        .unwrap();
+        conn
+    }
+
+    fn default_options() -> ExportOptions {
+        ExportOptions {
+            format: ExportFormat::Anki,
+            include_fields: vec![],
+            filter_language: None,
+            filter_cefr: None,
+            filter_source: None,
+            deck_id: None,
+        }
+    }
+
+    #[test]
+    fn test_export_anki_empty_db_returns_zero_items() {
+        let conn = vocab_conn();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.apkg");
+        let result = export_anki(&conn, path.to_str().unwrap(), &default_options()).unwrap();
+        assert_eq!(result.total_items, 0);
+        assert_eq!(result.format, "anki");
+        assert!(path.exists());
+    }
+
+    #[test]
+    fn test_export_anki_counts_exported_words() {
+        let conn = vocab_conn();
+        conn.execute_batch(
+            "INSERT INTO vocabulary (id, word, translation, language) VALUES
+             ('1', 'hello', 'سلام', 'en'),
+             ('2', 'world', 'جهان', 'en');",
+        )
+        .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.apkg");
+        let result = export_anki(&conn, path.to_str().unwrap(), &default_options()).unwrap();
+        assert_eq!(result.total_items, 2);
+    }
+
+    #[test]
+    fn test_export_anki_produces_valid_zip() {
+        let conn = vocab_conn();
+        conn.execute_batch(
+            "INSERT INTO vocabulary (id, word, translation, language) VALUES ('1', 'hi', 'سلام', 'en');",
+        )
+        .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.apkg");
+        export_anki(&conn, path.to_str().unwrap(), &default_options()).unwrap();
+        let file = std::fs::File::open(&path).unwrap();
+        let archive = zip::ZipArchive::new(file).unwrap();
+        assert!(archive.len() >= 2); // collection.anki21 + media
+    }
+
+    #[test]
+    fn test_export_anki_filter_by_language() {
+        let conn = vocab_conn();
+        conn.execute_batch(
+            "INSERT INTO vocabulary (id, word, translation, language) VALUES
+             ('1', 'bonjour', 'سلام', 'fr'),
+             ('2', 'hello', 'سلام', 'en');",
+        )
+        .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.apkg");
+        let mut opts = default_options();
+        opts.filter_language = Some("en".to_string());
+        let result = export_anki(&conn, path.to_str().unwrap(), &opts).unwrap();
+        assert_eq!(result.total_items, 1);
+    }
+
+    #[test]
+    fn test_anki_roundtrip_export_then_import() {
+        let src_conn = vocab_conn();
+        src_conn
+            .execute_batch(
+                "INSERT INTO vocabulary (id, word, translation, language) VALUES
+                 ('1', 'hello', 'سلام', 'en'),
+                 ('2', 'world', 'جهان', 'en');",
+            )
+            .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("roundtrip.apkg");
+        export_anki(&src_conn, path.to_str().unwrap(), &default_options()).unwrap();
+
+        let dst_conn = vocab_conn();
+        let result = import_anki(&dst_conn, path.to_str().unwrap(), "en", false).unwrap();
+        assert_eq!(result.imported, 2);
+        assert_eq!(result.errors.len(), 0);
+        let count: i64 = dst_conn
+            .query_row("SELECT COUNT(*) FROM vocabulary", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(count, 2);
+    }
+
+    #[test]
+    fn test_import_anki_skip_duplicates() {
+        let src_conn = vocab_conn();
+        src_conn
+            .execute_batch(
+                "INSERT INTO vocabulary (id, word, translation, language) VALUES
+                 ('1', 'hello', 'سلام', 'en');",
+            )
+            .unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("dup.apkg");
+        export_anki(&src_conn, path.to_str().unwrap(), &default_options()).unwrap();
+
+        let dst_conn = vocab_conn();
+        dst_conn
+            .execute_batch(
+                "INSERT INTO vocabulary (id, word, language) VALUES ('x', 'hello', 'en');",
+            )
+            .unwrap();
+        let result = import_anki(&dst_conn, path.to_str().unwrap(), "en", true).unwrap();
+        assert_eq!(result.skipped_duplicates, 1);
+        assert_eq!(result.imported, 0);
+    }
+}
+
 /// Create minimal Anki schema.
 fn setup_anki_schema(conn: &rusqlite::Connection) -> Result<(), String> {
     conn.execute_batch(

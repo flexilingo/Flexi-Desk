@@ -14,7 +14,7 @@ export function useReviewKeyboard() {
         return;
       }
 
-      if (e.key === ' ' || e.code === 'Space') {
+      if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
         e.preventDefault();
         if (!isFlipped) flipCard();
         return;
@@ -27,12 +27,15 @@ export function useReviewKeyboard() {
           rateCard('again');
           break;
         case '2':
-          rateCard('hard');
+          rateCard('again');
           break;
         case '3':
-          rateCard('good');
+          rateCard('hard');
           break;
         case '4':
+          rateCard('good');
+          break;
+        case '5':
           rateCard('easy');
           break;
       }

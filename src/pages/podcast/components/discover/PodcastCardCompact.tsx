@@ -1,4 +1,4 @@
-import { Headphones, Plus, Heart, Loader2 } from 'lucide-react';
+import { Headphones, Heart, Loader2, Mic } from 'lucide-react';
 import { LearningScoreBar } from './LearningScoreBar';
 import type { CuratedPodcast, PodcastIndexFeed } from '../../types';
 
@@ -15,12 +15,12 @@ interface Props {
 }
 
 const CEFR_COLORS: Record<string, string> = {
-  A1: 'bg-green-500',
-  A2: 'bg-green-500',
-  B1: 'bg-yellow-500',
-  B2: 'bg-yellow-500',
-  C1: 'bg-red-500',
-  C2: 'bg-red-500',
+  A1: 'bg-cefr-a1',
+  A2: 'bg-cefr-a2',
+  B1: 'bg-cefr-b1',
+  B2: 'bg-cefr-b2',
+  C1: 'bg-cefr-c1',
+  C2: 'bg-cefr-c2',
 };
 
 export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, onClick }: Props) {
@@ -35,11 +35,24 @@ export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, on
   const imageUrl = isCurated
     ? (podcast as CuratedPodcast).image_url
     : (podcast as PodcastIndexFeed).image;
-  const cefrLevel = isCurated ? (podcast as CuratedPodcast).cefr_level : null;
-  const learningScore = isCurated ? (podcast as CuratedPodcast).learning_score : null;
   const rssUrl = isCurated
     ? (podcast as CuratedPodcast).rss_url
     : (podcast as PodcastIndexFeed).rssUrl;
+
+  // FlexiLingo enrichment (from PodcastIndex search results)
+  const flexilingo = !isCurated ? (podcast as PodcastIndexFeed).flexilingo : null;
+
+  const cefrLevel = isCurated
+    ? (podcast as CuratedPodcast).cefr_level
+    : flexilingo?.cefr_level ?? null;
+  const learningScore = isCurated
+    ? (podcast as CuratedPodcast).learning_score
+    : flexilingo?.learning_score ?? null;
+  const episodeCount = isCurated
+    ? `${(podcast as CuratedPodcast).transcribed_episodes}/${(podcast as CuratedPodcast).total_episodes}`
+    : flexilingo
+      ? `${flexilingo.transcribed_episodes}/${flexilingo.total_episodes}`
+      : String((podcast as PodcastIndexFeed).episodeCount);
 
   const handleClick = () => {
     onClick?.(feedId, rssUrl ?? undefined);
@@ -55,62 +68,75 @@ export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, on
   return (
     <button
       onClick={handleClick}
-      className="w-[140px] shrink-0 overflow-hidden rounded-lg border border-border bg-card text-left transition-all hover:shadow-md hover:border-primary/30 active:scale-[0.98]"
+      className="w-[200px] shrink-0 snap-start overflow-hidden rounded-lg border border-border bg-card text-left transition-all hover:shadow-md hover:border-primary/30 active:scale-[0.98]"
     >
       {/* Image */}
-      <div className="relative h-[140px] w-[140px] bg-muted">
+      <div className="relative h-36 bg-muted/30 flex items-center justify-center overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={title} className="h-full w-full object-cover" loading="lazy" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Headphones className="h-8 w-8 text-muted-foreground" />
-          </div>
+          <Headphones className="h-10 w-10 text-muted-foreground/40" />
         )}
 
-        {/* CEFR badge */}
+        {/* CEFR badge - top right */}
         {cefrLevel && (
           <span
-            className={`absolute top-1.5 right-1.5 rounded px-1 py-0.5 text-[10px] font-bold text-white ${CEFR_COLORS[cefrLevel] ?? 'bg-muted-foreground'}`}
+            className={`absolute top-1.5 right-1.5 rounded px-1.5 py-0.5 text-xs font-bold text-white ${CEFR_COLORS[cefrLevel] ?? 'bg-muted-foreground'}`}
           >
             {cefrLevel}
           </span>
         )}
 
-        {/* Followed heart */}
+        {/* Following badge - top left */}
         {isFollowed && (
-          <span className="absolute top-1.5 left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-success">
-            <Heart className="h-2.5 w-2.5 text-white fill-white" />
+          <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-success/90 text-white">
+            <Heart className="w-2.5 h-2.5 fill-current" />
+            Following
+          </span>
+        )}
+
+        {/* FlexiLingo badge - top left (when not followed) */}
+        {!isFollowed && flexilingo && (
+          <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/90 text-primary-foreground">
+            <Mic className="w-2.5 h-2.5" />
+            FlexiLingo
           </span>
         )}
       </div>
 
       {/* Content */}
-      <div className="space-y-1 p-2">
-        <p className="text-xs font-semibold leading-4 text-foreground line-clamp-2">{title}</p>
-        {author && <p className="text-[11px] leading-3 text-muted-foreground truncate">{author}</p>}
+      <div className="p-3">
+        <h3 className="font-semibold text-sm text-foreground line-clamp-1 mb-0.5">{title}</h3>
+        <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{author}</p>
 
         {/* Learning score */}
         {learningScore != null && (
-          <div className="pt-0.5">
+          <div className="mb-2">
             <LearningScoreBar score={learningScore} />
           </div>
         )}
 
-        {/* Follow button */}
-        {!isFollowed && onFollow && (
-          <button
-            onClick={handleFollow}
-            disabled={isFollowing}
-            className="mt-1 flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"
-          >
-            {isFollowing ? (
-              <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            ) : (
-              <Plus className="h-2.5 w-2.5" />
-            )}
-            Follow
-          </button>
-        )}
+        {/* Footer: episode count + follow */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Mic className="w-3 h-3" />
+            <span>{episodeCount} episodes</span>
+          </div>
+          {!isFollowed && onFollow && (
+            <button
+              onClick={handleFollow}
+              disabled={isFollowing}
+              className="text-[10px] font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5"
+            >
+              {isFollowing ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Heart className="w-3 h-3" />
+              )}
+              Follow
+            </button>
+          )}
+        </div>
       </div>
     </button>
   );

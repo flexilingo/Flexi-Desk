@@ -2,31 +2,31 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { supabaseCall } from '@/lib/supabase';
 import type {
   PodcastFeed,
   PodcastEpisode,
   PodcastBookmark,
-  ITunesSearchResult,
+  PodcastIndexFeed,
   PodcastTranscriptSegment,
   NlpAnalysis,
   EpisodeDownloadProgress,
   RawPodcastFeed,
   RawPodcastEpisode,
   RawPodcastBookmark,
-  RawITunesSearchResult,
   RawPodcastTranscriptSegment,
   RawNlpAnalysis,
+  SearchResponse,
 } from '../types';
 import {
   mapFeed,
   mapEpisode,
   mapBookmark,
-  mapITunesResult,
   mapTranscriptSegment,
   mapNlpAnalysis,
 } from '../types';
 
-export type PodcastView = 'feeds' | 'episodes' | 'search' | 'player';
+export type PodcastView = 'feeds' | 'episodes' | 'player';
 
 interface PodcastState {
   view: PodcastView;
@@ -45,9 +45,11 @@ interface PodcastState {
   bookmarks: PodcastBookmark[];
 
   // Search
-  searchResults: ITunesSearchResult[];
+  searchResults: PodcastIndexFeed[];
   isSearching: boolean;
   searchQuery: string;
+  searchHasMore: boolean;
+  searchMax: number;
 
   // Transcript
   transcriptSegments: PodcastTranscriptSegment[];
@@ -89,9 +91,10 @@ interface PodcastState {
   fetchBookmarks: (episodeId: string) => Promise<void>;
   deleteBookmark: (id: string) => Promise<void>;
 
-  searchItunes: (term: string, language?: string) => Promise<void>;
+  searchPodcasts: (term: string) => Promise<void>;
+  searchLoadMore: () => Promise<void>;
   setSearchQuery: (query: string) => void;
-  subscribeFromSearch: (result: ITunesSearchResult) => Promise<void>;
+  subscribeFromSearch: (result: PodcastIndexFeed) => Promise<void>;
 
   // Download
   downloadEpisode: (episodeId: string) => Promise<string | null>;
@@ -124,6 +127,8 @@ export const usePodcastStore = create<PodcastState>()(
     searchResults: [],
     isSearching: false,
     searchQuery: '',
+    searchHasMore: false,
+    searchMax: 20,
     transcriptSegments: [],
     isTranscribing: false,
     isLoadingTranscript: false,
@@ -144,8 +149,6 @@ export const usePodcastStore = create<PodcastState>()(
           s.view = 'feeds';
           s.activeFeed = null;
           s.episodes = [];
-        } else if (s.view === 'search') {
-          s.view = 'feeds';
         } else if (s.view === 'player') {
           s.view = 'episodes';
           s.transcriptSegments = [];
@@ -326,18 +329,50 @@ export const usePodcastStore = create<PodcastState>()(
       }
     },
 
-    searchItunes: async (term, language) => {
+    searchPodcasts: async (term) => {
+      const PAGE_SIZE = 20;
       set((s) => {
         s.isSearching = true;
+        s.searchResults = [];
+        s.searchHasMore = false;
+        s.searchMax = PAGE_SIZE;
         s.error = null;
       });
       try {
-        const raw = await invoke<RawITunesSearchResult[]>('podcast_search_itunes', {
-          term,
-          language: language ?? null,
-        });
+        const res = await supabaseCall<SearchResponse>(
+          'GET',
+          `/podcast?action=search&q=${encodeURIComponent(term)}&max=${PAGE_SIZE}`,
+        );
         set((s) => {
-          s.searchResults = raw.map(mapITunesResult);
+          s.searchResults = res.feeds ?? [];
+          s.searchHasMore = (res.feeds ?? []).length >= PAGE_SIZE;
+          s.isSearching = false;
+        });
+      } catch (err) {
+        set((s) => {
+          s.error = String(err);
+          s.isSearching = false;
+        });
+      }
+    },
+
+    searchLoadMore: async () => {
+      const PAGE_SIZE = 20;
+      const { searchQuery, searchMax, isSearching } = get();
+      if (!searchQuery.trim() || isSearching) return;
+      const newMax = searchMax + PAGE_SIZE;
+      set((s) => {
+        s.isSearching = true;
+      });
+      try {
+        const res = await supabaseCall<SearchResponse>(
+          'GET',
+          `/podcast?action=search&q=${encodeURIComponent(searchQuery.trim())}&max=${newMax}`,
+        );
+        set((s) => {
+          s.searchResults = res.feeds ?? [];
+          s.searchMax = newMax;
+          s.searchHasMore = (res.feeds ?? []).length >= newMax;
           s.isSearching = false;
         });
       } catch (err) {
@@ -354,7 +389,8 @@ export const usePodcastStore = create<PodcastState>()(
       }),
 
     subscribeFromSearch: async (result) => {
-      await get().addFeed(result.feedUrl);
+      if (!result.rssUrl) return;
+      await get().addFeed(result.rssUrl);
     },
 
     // ── Download ─────────────────────────────────────

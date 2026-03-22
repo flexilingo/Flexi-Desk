@@ -36,6 +36,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         ("V020", V020_STREAK_ENHANCEMENTS),
         ("V021", V021_KEYBOARD_SHORTCUTS),
         ("V022", V022_SENTENCE_CHAT),
+        ("V023", V023_SESSION_NAME),
     ];
 
     for (version, sql) in migrations {
@@ -855,4 +856,8 @@ CREATE TABLE IF NOT EXISTS sentence_chat_messages (
     created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_sentence_chat_episode ON sentence_chat_messages(episode_id);
+";
+
+const V023_SESSION_NAME: &str = "
+ALTER TABLE review_sessions ADD COLUMN session_name TEXT;
 ";

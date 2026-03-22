@@ -126,6 +126,146 @@ pub fn set_error(conn: &Connection, plugin_id: &str, error: &str) -> Result<(), 
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::types::PluginManifest;
+
+    fn setup() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE plugins (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                version TEXT NOT NULL DEFAULT '0.0.1',
+                description TEXT,
+                author TEXT,
+                homepage_url TEXT,
+                wasm_path TEXT,
+                permissions TEXT NOT NULL DEFAULT '[]',
+                config TEXT NOT NULL DEFAULT '{}',
+                status TEXT NOT NULL DEFAULT 'enabled',
+                error_message TEXT,
+                install_source TEXT NOT NULL DEFAULT 'local',
+                installed_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );",
+        )
+        .unwrap();
+        conn
+    }
+
+    fn test_manifest(id: &str) -> PluginManifest {
+        PluginManifest {
+            id: id.to_string(),
+            name: "Test Plugin".to_string(),
+            version: "1.0.0".to_string(),
+            description: Some("A test plugin".to_string()),
+            author: Some("Tester".to_string()),
+            homepage: None,
+            min_flexidesk_version: None,
+            entry_point: "plugin.wasm".to_string(),
+            permissions: vec!["read".to_string()],
+            config_schema: None,
+            entry_points: super::super::types::PluginEntryPoints {
+                init: "init".to_string(),
+                run: "run".to_string(),
+                cleanup: "cleanup".to_string(),
+                on_config_change: None,
+            },
+        }
+    }
+
+    #[test]
+    fn test_list_plugins_empty_returns_empty_vec() {
+        let conn = setup();
+        let plugins = list_plugins(&conn).unwrap();
+        assert!(plugins.is_empty());
+    }
+
+    #[test]
+    fn test_register_plugin_and_get_it_back() {
+        let conn = setup();
+        let manifest = test_manifest("my-plugin");
+        let info = register_plugin(&conn, &manifest, "/path/to/plugin.wasm", "local").unwrap();
+        assert_eq!(info.id, "my-plugin");
+        assert_eq!(info.name, "Test Plugin");
+        assert_eq!(info.version, "1.0.0");
+    }
+
+    #[test]
+    fn test_list_plugins_returns_registered_plugin() {
+        let conn = setup();
+        register_plugin(&conn, &test_manifest("p1"), "/p1.wasm", "local").unwrap();
+        let plugins = list_plugins(&conn).unwrap();
+        assert_eq!(plugins.len(), 1);
+        assert_eq!(plugins[0].id, "p1");
+    }
+
+    #[test]
+    fn test_enable_plugin_sets_status_enabled() {
+        let conn = setup();
+        register_plugin(&conn, &test_manifest("p1"), "/p1.wasm", "local").unwrap();
+        // Manually disable first
+        conn.execute("UPDATE plugins SET status = 'disabled' WHERE id = 'p1'", [])
+            .unwrap();
+        let info = enable_plugin(&conn, "p1").unwrap();
+        assert_eq!(info.status, "enabled");
+        assert!(info.error_message.is_none());
+    }
+
+    #[test]
+    fn test_disable_plugin_sets_status_disabled() {
+        let conn = setup();
+        register_plugin(&conn, &test_manifest("p1"), "/p1.wasm", "local").unwrap();
+        let info = disable_plugin(&conn, "p1").unwrap();
+        assert_eq!(info.status, "disabled");
+    }
+
+    #[test]
+    fn test_uninstall_plugin_removes_it() {
+        let conn = setup();
+        register_plugin(&conn, &test_manifest("p1"), "/p1.wasm", "local").unwrap();
+        uninstall_plugin(&conn, "p1").unwrap();
+        let plugins = list_plugins(&conn).unwrap();
+        assert!(plugins.is_empty());
+    }
+
+    #[test]
+    fn test_update_config_stores_json() {
+        let conn = setup();
+        register_plugin(&conn, &test_manifest("p1"), "/p1.wasm", "local").unwrap();
+        let config = serde_json::json!({"theme": "dark", "fontSize": 14});
+        let info = update_config(&conn, "p1", &config).unwrap();
+        assert_eq!(info.config["theme"], "dark");
+        assert_eq!(info.config["fontSize"], 14);
+    }
+
+    #[test]
+    fn test_set_error_updates_status_and_message() {
+        let conn = setup();
+        register_plugin(&conn, &test_manifest("p1"), "/p1.wasm", "local").unwrap();
+        set_error(&conn, "p1", "init failed").unwrap();
+        let info = get_plugin(&conn, "p1").unwrap();
+        assert_eq!(info.status, "error");
+        assert_eq!(info.error_message.as_deref(), Some("init failed"));
+    }
+
+    #[test]
+    fn test_register_plugin_upserts_on_conflict() {
+        let conn = setup();
+        let manifest_v1 = test_manifest("p1");
+        register_plugin(&conn, &manifest_v1, "/p1.wasm", "local").unwrap();
+        // Register again with different version
+        let mut manifest_v2 = test_manifest("p1");
+        manifest_v2.version = "2.0.0".to_string();
+        let info = register_plugin(&conn, &manifest_v2, "/p1.wasm", "local").unwrap();
+        assert_eq!(info.version, "2.0.0");
+        // Should still be only one plugin
+        assert_eq!(list_plugins(&conn).unwrap().len(), 1);
+    }
+}
+
 fn map_plugin_row(row: &rusqlite::Row) -> rusqlite::Result<PluginInfo> {
     let perms_str: String = row.get(6)?;
     let permissions: Vec<String> =

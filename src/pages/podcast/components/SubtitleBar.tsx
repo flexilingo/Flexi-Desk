@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { PodcastTranscriptSegment, PodcastWordTimestamp } from '../types';
 import type { EnhancedWord, EnhancedSubtitle } from '../studio-types';
 import { WordDialog } from './WordDialog';
+import { QuickAddNoteDialog } from './QuickAddNoteDialog';
 import { useLanguageSettings } from '@/hooks/useLanguageSettings';
 import { usePlayerStore } from '../stores/playerStore';
 import {
@@ -620,6 +621,10 @@ export function SubtitleBar({
   const [selectedWord, setSelectedWord] = useState('');
   const [selectedPositionMs, setSelectedPositionMs] = useState<number | undefined>();
 
+  // Note dialog state
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [noteText, setNoteText] = useState('');
+
   // CEFR map for current segment words
   const [cefrMap, setCefrMap] = useState<Record<string, string>>({});
 
@@ -812,6 +817,26 @@ export function SubtitleBar({
     [onAddToDeck],
   );
 
+  // Translate: open WordDialog with selected text
+  const handleTranslateSelection = useCallback(
+    (text: string) => {
+      setDialogSentenceContext(activeSegment?.text);
+      setSelectedWord(text);
+      setSelectedPositionMs(Math.round(currentTime * 1000));
+      handleDialogOpenChange(true);
+    },
+    [activeSegment?.text, currentTime, handleDialogOpenChange],
+  );
+
+  // Note: open QuickAddNoteDialog with selected text
+  const handleNoteSelection = useCallback(
+    (text: string, _time: number) => {
+      setNoteText(text);
+      setNoteDialogOpen(true);
+    },
+    [],
+  );
+
   // Store sentence context for dialog (persists even when segment changes)
   const [dialogSentenceContext, setDialogSentenceContext] = useState<string | undefined>();
 
@@ -847,7 +872,7 @@ export function SubtitleBar({
           <div
             className="text-center text-base md:text-lg py-4 md:py-6 px-4 md:px-8"
             style={{
-              background: `linear-gradient(to top, hsl(var(--color-card) / ${subtitleBgOpacity / 100}) 0%, transparent 100%)`,
+              backgroundColor: `hsl(var(--color-card) / ${subtitleBgOpacity / 100})`,
             }}
           >
             <span className="text-muted-foreground">{t('podcast.waitingForSubtitle')}</span>
@@ -874,7 +899,7 @@ export function SubtitleBar({
       <div
         className="flex flex-col items-center gap-2 md:gap-3 max-w-full relative px-4 py-3 pb-4 md:px-6 md:py-4 md:pb-5 select-none"
         style={{
-          background: `linear-gradient(to top, hsl(var(--color-card) / ${subtitleBgOpacity / 100}) 0%, hsl(var(--color-card) / ${(subtitleBgOpacity / 100) * 0.6}) 80%, transparent 100%)`,
+          backgroundColor: `hsl(var(--color-card) / ${subtitleBgOpacity / 100})`,
         }}
         ref={containerRef}
         onMouseLeave={() => {
@@ -889,6 +914,10 @@ export function SubtitleBar({
             onClear={selection.clearSelection}
             containerRef={containerRef}
             onAddToDeck={handleAddToDeckWord}
+            onTranslate={handleTranslateSelection}
+            onAddNote={handleNoteSelection}
+            onPauseForDialog={pause}
+            onResumeAfterDialog={resume}
             currentTime={currentTime}
           />
         )}
@@ -948,6 +977,19 @@ export function SubtitleBar({
         targetLang={targetLang}
         sentenceContext={dialogSentenceContext}
       />
+
+      {episodeId && (
+        <QuickAddNoteDialog
+          open={noteDialogOpen}
+          onClose={() => {
+            setNoteDialogOpen(false);
+            resume();
+          }}
+          episodeId={episodeId}
+          currentTime={Math.round(currentTime * 1000)}
+          subtitleText={noteText || activeSegment?.text}
+        />
+      )}
     </>
   );
 }

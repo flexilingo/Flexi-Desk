@@ -53,8 +53,15 @@ fn extract_from_code_fence(text: &str) -> Option<serde_json::Value> {
 }
 
 /// Extract the first balanced `{...}` or `[...]` from the text.
+/// Tries whichever structure appears first in the text.
 fn extract_braces(text: &str) -> Option<serde_json::Value> {
-    for open_char in ['{', '['] {
+    let obj_pos = text.find('{');
+    let arr_pos = text.find('[');
+    let order: &[char] = match (obj_pos, arr_pos) {
+        (Some(o), Some(a)) if a < o => &['[', '{'],
+        _ => &['{', '['],
+    };
+    for &open_char in order {
         let close_char = if open_char == '{' { '}' } else { ']' };
 
         if let Some(start) = text.find(open_char) {
@@ -138,5 +145,34 @@ mod tests {
         let result = extract_json(input).unwrap();
         assert!(result.is_array());
         assert_eq!(result[0]["a"], 1);
+    }
+
+    #[test]
+    fn test_nested_braces() {
+        let input = r#"result: {"outer": {"inner": 42}}"#;
+        let result = extract_json(input).unwrap();
+        assert_eq!(result["outer"]["inner"], 42);
+    }
+
+    #[test]
+    fn test_escaped_quote_in_string() {
+        let input = r#"{"key": "value with \" quote"}"#;
+        let result = extract_json(input).unwrap();
+        assert_eq!(result["key"], "value with \" quote");
+    }
+
+    #[test]
+    fn test_plain_code_fence_no_language() {
+        let input = "```\n{\"score\": 99}\n```";
+        let result = extract_json(input).unwrap();
+        assert_eq!(result["score"], 99);
+    }
+
+    #[test]
+    fn test_two_json_objects_returns_first() {
+        let input = r#"first: {"a": 1} second: {"b": 2}"#;
+        let result = extract_json(input).unwrap();
+        assert_eq!(result["a"], 1);
+        assert!(result.get("b").is_none());
     }
 }

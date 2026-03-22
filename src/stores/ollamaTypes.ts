@@ -136,6 +136,8 @@ export interface RecommendedOllamaModel {
   sizeMb: number;
   description: string;
   parameterCount: string;
+  speed: string;
+  accuracy: string;
 }
 
 export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
@@ -145,6 +147,8 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 2000,
     description: 'Fast, great multilingual support. Best balance for most users.',
     parameterCount: '3B',
+    speed: 'Fast',
+    accuracy: 'Good',
   },
   {
     name: 'llama3.1:8b',
@@ -152,6 +156,8 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 4700,
     description: 'Stronger reasoning and grammar correction. Excellent for tutoring.',
     parameterCount: '8B',
+    speed: 'Medium',
+    accuracy: 'Very Good',
   },
   {
     name: 'gemma3:4b',
@@ -159,6 +165,8 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 3000,
     description: 'Google model with strong multilingual ability. Good for vocabulary exercises.',
     parameterCount: '4B',
+    speed: 'Fast',
+    accuracy: 'Good',
   },
   {
     name: 'mistral',
@@ -166,6 +174,8 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 4100,
     description: 'Strong European language support (French, German, Spanish). Fast inference.',
     parameterCount: '7B',
+    speed: 'Medium',
+    accuracy: 'Very Good',
   },
   {
     name: 'phi4-mini',
@@ -173,6 +183,8 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 2400,
     description: 'Microsoft compact model. Quick responses, good for conversation practice.',
     parameterCount: '3.8B',
+    speed: 'Fast',
+    accuracy: 'Good',
   },
   {
     name: 'qwen3:8b',
@@ -180,6 +192,8 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 4900,
     description: 'Best for Chinese, Arabic, and Asian languages. Alibaba model.',
     parameterCount: '8B',
+    speed: 'Medium',
+    accuracy: 'Very Good',
   },
   {
     name: 'aya-expanse:8b',
@@ -187,6 +201,8 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 4800,
     description: 'Cohere model trained on 23+ languages. Built for multilingual tasks.',
     parameterCount: '8B',
+    speed: 'Medium',
+    accuracy: 'Good',
   },
   {
     name: 'llama3.1:70b',
@@ -194,5 +210,7 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     sizeMb: 40000,
     description: 'Most capable. Needs 48GB+ RAM. Best grammar and writing feedback.',
     parameterCount: '70B',
+    speed: 'Slow',
+    accuracy: 'Excellent',
   },
 ];

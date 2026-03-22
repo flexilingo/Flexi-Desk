@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { usePodcastStore } from '../stores/podcastStore';
+import { useDiscoverStore } from '../stores/discoverStore';
 import { DiscoverView } from './discover/DiscoverView';
+import { BrowseSectionView } from './discover/BrowseSectionView';
 import { EpisodeListView } from './EpisodeListView';
-import { SearchView } from './SearchView';
 import { PlayerView } from './PlayerView';
 import { ErrorBanner } from './ErrorBanner';
 
 export function PodcastPage() {
   const { view, fetchFeeds } = usePodcastStore();
+  const browseSectionSlug = useDiscoverStore((s) => s.browseSectionSlug);
 
   useEffect(() => {
     fetchFeeds();
@@ -23,11 +25,10 @@ export function PodcastPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 max-w-full">
       <ErrorBanner />
-      {view === 'feeds' && <DiscoverView />}
+      {view === 'feeds' && (browseSectionSlug ? <BrowseSectionView /> : <DiscoverView />)}
       {view === 'episodes' && <EpisodeListView />}
-      {view === 'search' && <SearchView />}
     </div>
   );
 }

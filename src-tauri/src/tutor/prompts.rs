@@ -71,6 +71,78 @@ Remember: Be conversational, not like a textbook. Make learning feel natural."#
     )
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_language_name_known_codes() {
+        assert_eq!(language_name("en"), "English");
+        assert_eq!(language_name("fa"), "Persian");
+        assert_eq!(language_name("ar"), "Arabic");
+        assert_eq!(language_name("tr"), "Turkish");
+        assert_eq!(language_name("es"), "Spanish");
+        assert_eq!(language_name("fr"), "French");
+        assert_eq!(language_name("de"), "German");
+        assert_eq!(language_name("zh"), "Chinese");
+        assert_eq!(language_name("hi"), "Hindi");
+        assert_eq!(language_name("ru"), "Russian");
+    }
+
+    #[test]
+    fn test_language_name_unknown_code() {
+        assert_eq!(language_name("xx"), "the target language");
+    }
+
+    #[test]
+    fn test_get_level_instructions_all_cefr_levels() {
+        for level in &["A1", "A2", "B1", "B2", "C1", "C2"] {
+            let instructions = get_level_instructions(level);
+            assert!(!instructions.is_empty(), "Instructions empty for level {level}");
+        }
+    }
+
+    #[test]
+    fn test_get_level_instructions_unknown_level_returns_fallback() {
+        let instructions = get_level_instructions("X1");
+        assert!(!instructions.is_empty());
+    }
+
+    #[test]
+    fn test_build_system_prompt_contains_language_name() {
+        let prompt = build_system_prompt("en", "B1", "fa", None);
+        assert!(prompt.contains("English"));
+        assert!(prompt.contains("Persian"));
+    }
+
+    #[test]
+    fn test_build_system_prompt_contains_cefr_level() {
+        let prompt = build_system_prompt("en", "B2", "fa", None);
+        assert!(prompt.contains("B2"));
+    }
+
+    #[test]
+    fn test_build_system_prompt_with_valid_scenario_injects_opening() {
+        let prompt = build_system_prompt("en", "A1", "fa", Some("restaurant_order"));
+        assert!(prompt.contains("waiter") || prompt.contains("restaurant") || prompt.contains("order"));
+    }
+
+    #[test]
+    fn test_build_system_prompt_unknown_scenario_id_has_no_scenario_block() {
+        let prompt_without = build_system_prompt("en", "A1", "fa", None);
+        let prompt_bad_id = build_system_prompt("en", "A1", "fa", Some("nonexistent_id"));
+        // Both should produce the same output (no scenario block injected)
+        assert_eq!(prompt_without, prompt_bad_id);
+    }
+
+    #[test]
+    fn test_build_system_prompt_is_nonempty() {
+        let prompt = build_system_prompt("en", "A1", "fa", None);
+        assert!(!prompt.is_empty());
+        assert!(prompt.len() > 100);
+    }
+}
+
 fn get_level_instructions(cefr_level: &str) -> &'static str {
     match cefr_level {
         "A1" => "Use only the most basic vocabulary (greetings, numbers, colors, family). \

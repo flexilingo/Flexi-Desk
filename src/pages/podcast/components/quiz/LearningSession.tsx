@@ -12,7 +12,6 @@ import {
   Award,
 } from 'lucide-react';
 import { supabaseCall } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/authStore';
 import { QuizContainer } from './QuizContainer';
 import { SessionSummary } from './SessionSummary';
 import type {
@@ -66,7 +65,6 @@ const MODE_OPTIONS: {
 ];
 
 export function LearningSession({ contentId, contentTitle, onClose }: LearningSessionProps) {
-  const session = useAuthStore((s) => s.session);
   const [phase, setPhase] = useState<SessionPhase>('setup');
   const [selectedMode, setSelectedMode] = useState<LearningModeType>('general');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -105,11 +103,6 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
 
   // Check for active session on mount
   useEffect(() => {
-    if (!session) {
-      setIsCheckingActive(false);
-      return;
-    }
-
     const checkActive = async () => {
       try {
         const data = await supabaseCall<ActiveSessionResponse>(
@@ -128,7 +121,7 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
     };
 
     checkActive();
-  }, [contentId, session]);
+  }, [contentId]);
 
   const handleResumeSession = useCallback(() => {
     if (!activeSessionData?.session) return;
@@ -187,6 +180,15 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
       const errMsg = error instanceof Error ? error.message : String(error);
       if (errMsg.includes('DAILY_LIMIT_REACHED') || errMsg.includes('QUIZ_LIMIT_REACHED')) {
         setLimitInfo({ limitType: 'daily', resetsAt: '' });
+      } else if (
+        errMsg.includes('401') ||
+        errMsg.includes('authorization') ||
+        errMsg.includes('Failed to fetch') ||
+        errMsg.includes('Network')
+      ) {
+        setSessionError(
+          'This feature requires an internet connection and a FlexiLingo account.',
+        );
       } else {
         setSessionError(errMsg || 'Failed to start session. The content may not be analyzed yet.');
       }
@@ -270,22 +272,6 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
     setSessionError(null);
     setLimitInfo(null);
   }, []);
-
-  // Not logged in
-  if (!session) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 text-center">
-        <Brain className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold mb-2">Login Required</h2>
-        <p className="text-muted-foreground mb-4">
-          Please log in to your FlexiLingo account to access the quiz feature.
-        </p>
-        <Button variant="outline" onClick={onClose}>
-          Close
-        </Button>
-      </div>
-    );
-  }
 
   // Loading active session check
   if (isCheckingActive) {

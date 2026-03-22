@@ -95,3 +95,17 @@ body {
 .animate-audio-visualize {
   animation: audio-visualize 0.8s ease-in-out infinite;
 }
+
+/* Hide scrollbar for scroll containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fix Radix ScrollArea viewport wrapper expanding beyond viewport */
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+}

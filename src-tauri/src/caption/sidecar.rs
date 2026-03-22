@@ -205,6 +205,70 @@ impl WhisperSidecar {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_strip_ansi_codes_passthrough_plain_text() {
+        assert_eq!(strip_ansi_codes("Hello, world!"), "Hello, world!");
+    }
+
+    #[test]
+    fn test_strip_ansi_codes_removes_clear_line_sequence() {
+        // \x1b[2K is the "erase entire line" ANSI code
+        assert_eq!(strip_ansi_codes("\x1b[2Khello"), "hello");
+    }
+
+    #[test]
+    fn test_strip_ansi_codes_removes_multiple_sequences() {
+        assert_eq!(strip_ansi_codes("\x1b[2K\x1b[Ahello\x1b[0m"), "hello");
+    }
+
+    #[test]
+    fn test_strip_ansi_codes_empty_string() {
+        assert_eq!(strip_ansi_codes(""), "");
+    }
+
+    #[test]
+    fn test_strip_ansi_codes_only_escape_sequence() {
+        assert_eq!(strip_ansi_codes("\x1b[2K"), "");
+    }
+
+    #[test]
+    fn test_is_meaningful_text_real_sentence() {
+        assert!(is_meaningful_text("Hello, how are you?"));
+    }
+
+    #[test]
+    fn test_is_meaningful_text_blank_audio_token() {
+        assert!(!is_meaningful_text("[blank_audio]"));
+        assert!(!is_meaningful_text("[BLANK_AUDIO]"));
+    }
+
+    #[test]
+    fn test_is_meaningful_text_silence_token() {
+        assert!(!is_meaningful_text("[silence]"));
+        assert!(!is_meaningful_text("(silence)"));
+    }
+
+    #[test]
+    fn test_is_meaningful_text_no_audio_token() {
+        assert!(!is_meaningful_text("[no audio]"));
+    }
+
+    #[test]
+    fn test_is_meaningful_text_only_brackets_and_whitespace() {
+        assert!(!is_meaningful_text("[ ]"));
+        assert!(!is_meaningful_text("()"));
+    }
+
+    #[test]
+    fn test_is_meaningful_text_start_speaking_token() {
+        assert!(!is_meaningful_text("[start speaking]"));
+    }
+}
+
 // ── Helpers ──────────────────────────────────────────────
 
 /// Strip ANSI escape codes (e.g. \033[2K) from a string.

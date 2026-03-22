@@ -87,6 +87,10 @@ export const useOllamaStore = create<OllamaState>()(
           s.installedModels = status.models;
           s.isCheckingConnection = false;
         });
+        // Auto-select the first model if Ollama is connected but no model is saved
+        if (status.connected && status.models.length > 0 && !get().selectedModel) {
+          await get().selectModel(status.models[0].name);
+        }
       } catch (err) {
         set((s) => {
           s.isConnected = false;
@@ -104,10 +108,15 @@ export const useOllamaStore = create<OllamaState>()(
       });
       try {
         const raw = await invoke<{ name: string; size: number; digest: string; modified_at: string }[]>('ollama_list_models');
+        const models = raw.map(mapOllamaModel);
         set((s) => {
-          s.installedModels = raw.map(mapOllamaModel);
+          s.installedModels = models;
           s.isLoadingModels = false;
         });
+        // Auto-select the first model if none is selected yet
+        if (models.length > 0 && !get().selectedModel) {
+          await get().selectModel(models[0].name);
+        }
       } catch (err) {
         set((s) => {
           s.isLoadingModels = false;

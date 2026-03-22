@@ -1,4 +1,4 @@
-import { Flame, Zap, BookOpen, Clock, RotateCcw } from 'lucide-react';
+import { Zap, BookOpen, Clock, RotateCcw } from 'lucide-react';
 import type { AnalyticsSummary } from '../types';
 import { formatStudyTime } from '../types';
 
@@ -10,15 +10,14 @@ export function TodaySummary({ data }: Props) {
   if (!data) return null;
 
   const metrics = [
-    { icon: Flame, label: 'XP Today', value: String(data.xpToday), color: 'text-accent' },
     { icon: Zap, label: 'Streak', value: `${data.streakCount} days`, color: 'text-primary' },
-    { icon: BookOpen, label: 'Words', value: String(data.wordsLearnedToday), color: 'text-success' },
     { icon: Clock, label: 'Study Time', value: formatStudyTime(data.studyMinutesToday), color: 'text-primary' },
+    { icon: BookOpen, label: 'Words', value: String(data.wordsLearnedToday), color: 'text-success' },
     { icon: RotateCcw, label: 'Reviews', value: String(data.reviewsToday), color: 'text-accent' },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {metrics.map((m) => (
         <div
           key={m.label}

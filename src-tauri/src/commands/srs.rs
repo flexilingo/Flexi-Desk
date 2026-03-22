@@ -438,6 +438,55 @@ pub fn srs_delete_card(state: State<'_, AppState>, card_id: String) -> Result<()
     Ok(())
 }
 
+#[tauri::command]
+pub fn srs_update_card(
+    state: State<'_, AppState>,
+    card_id: String,
+    front: Option<String>,
+    translation: Option<String>,
+    definition: Option<String>,
+    notes: Option<String>,
+) -> Result<(), String> {
+    let conn = lock_db(&state)?;
+
+    let mut updates = Vec::new();
+    let mut params: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
+
+    if let Some(ref v) = front {
+        updates.push("front = ?");
+        params.push(Box::new(v.clone()));
+    }
+    if let Some(ref v) = translation {
+        updates.push("translation = ?");
+        params.push(Box::new(v.clone()));
+    }
+    if let Some(ref v) = definition {
+        updates.push("definition = ?");
+        params.push(Box::new(v.clone()));
+    }
+    if let Some(ref v) = notes {
+        updates.push("notes = ?");
+        params.push(Box::new(v.clone()));
+    }
+
+    if updates.is_empty() {
+        return Ok(());
+    }
+
+    updates.push("updated_at = datetime('now')");
+    let sql = format!(
+        "UPDATE deck_cards SET {} WHERE id = ?",
+        updates.join(", ")
+    );
+    params.push(Box::new(card_id));
+
+    let param_refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+    conn.execute(&sql, param_refs.as_slice())
+        .map_err(|e| format!("Update error: {e}"))?;
+
+    Ok(())
+}
+
 // ── Session Commands ───────────────────────────────────────
 
 #[tauri::command]
@@ -461,23 +510,30 @@ pub fn srs_start_session(
 ) -> Result<ReviewSessionData, String> {
     let conn = lock_db(&state)?;
 
-    let algorithm: String = conn
+    let (algorithm, deck_name): (String, String) = conn
         .query_row(
-            "SELECT algorithm FROM decks WHERE id = ?1",
+            "SELECT algorithm, name FROM decks WHERE id = ?1",
             rusqlite::params![deck_id],
-            |row: &rusqlite::Row| row.get(0),
+            |row: &rusqlite::Row| Ok((row.get(0)?, row.get(1)?)),
         )
         .map_err(|e| format!("Deck lookup error: {e}"))?;
 
     let card_limit = limit.unwrap_or(200);
 
-    // Fetch due card IDs ordered by due_date
+    // Fetch ALL cards with priority: 1) due (overdue), 2) new (no progress), 3) not-yet-due
+    // Matches front-end's create-review-session-service.ts logic
     let mut stmt = conn
         .prepare(
             "SELECT dc.id FROM deck_cards dc
-             JOIN srs_progress sp ON sp.card_id = dc.id
-             WHERE dc.deck_id = ?1 AND sp.due_date <= datetime('now')
-             ORDER BY sp.due_date ASC
+             LEFT JOIN srs_progress sp ON sp.card_id = dc.id
+             WHERE dc.deck_id = ?1
+             ORDER BY
+               CASE
+                 WHEN sp.id IS NOT NULL AND sp.due_date <= datetime('now') THEN 0
+                 WHEN sp.id IS NULL THEN 1
+                 ELSE 2
+               END,
+               sp.due_date ASC
              LIMIT ?2",
         )
         .map_err(|e| format!("Query error: {e}"))?;
@@ -493,9 +549,9 @@ pub fn srs_start_session(
 
     // Create session
     conn.execute(
-        "INSERT INTO review_sessions (id, deck_id, algorithm, total_cards, card_ids)
-         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4)",
-        rusqlite::params![deck_id, algorithm, total, card_ids_json],
+        "INSERT INTO review_sessions (id, deck_id, algorithm, total_cards, card_ids, session_name)
+         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5)",
+        rusqlite::params![deck_id, algorithm, total, card_ids_json, deck_name],
     )
     .map_err(|e| format!("Session insert error: {e}"))?;
 
@@ -525,6 +581,112 @@ pub fn srs_start_session(
         reviewed_cards: 0,
         correct_count: 0,
         card_ids,
+        current_index: 0,
+        started_at,
+        completed_at: None,
+        duration_seconds: 0,
+    })
+}
+
+#[tauri::command]
+pub fn srs_start_multi_deck_session(
+    state: State<'_, AppState>,
+    deck_ids: Vec<String>,
+    limit: Option<i64>,
+) -> Result<ReviewSessionData, String> {
+    let conn = lock_db(&state)?;
+
+    if deck_ids.is_empty() {
+        return Err("No decks selected".to_string());
+    }
+
+    // Use the algorithm from the first deck
+    let algorithm: String = conn
+        .query_row(
+            "SELECT algorithm FROM decks WHERE id = ?1",
+            rusqlite::params![deck_ids[0]],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .map_err(|e| format!("Deck lookup error: {e}"))?;
+
+    // Build session name from deck names
+    let mut deck_names: Vec<String> = Vec::new();
+    for did in &deck_ids {
+        if let Ok(name) = conn.query_row(
+            "SELECT name FROM decks WHERE id = ?1",
+            rusqlite::params![did],
+            |row: &rusqlite::Row| row.get::<_, String>(0),
+        ) {
+            deck_names.push(name);
+        }
+    }
+    let session_name = if deck_names.len() == 1 {
+        deck_names[0].clone()
+    } else {
+        deck_names.join(" + ")
+    };
+
+    let card_limit = limit.unwrap_or(200);
+
+    // Fetch ALL cards with priority: 1) due, 2) new, 3) not-yet-due
+    let placeholders: Vec<String> = deck_ids.iter().enumerate().map(|(i, _)| format!("?{}", i + 1)).collect();
+    let in_clause = placeholders.join(", ");
+    let sql = format!(
+        "SELECT dc.id FROM deck_cards dc
+         LEFT JOIN srs_progress sp ON sp.card_id = dc.id
+         WHERE dc.deck_id IN ({in_clause})
+         ORDER BY
+           CASE
+             WHEN sp.id IS NOT NULL AND sp.due_date <= datetime('now') THEN 0
+             WHEN sp.id IS NULL THEN 1
+             ELSE 2
+           END,
+           sp.due_date ASC
+         LIMIT ?{}",
+        deck_ids.len() + 1
+    );
+
+    let mut stmt = conn.prepare(&sql).map_err(|e| format!("Query error: {e}"))?;
+
+    let mut params: Vec<Box<dyn rusqlite::types::ToSql>> = deck_ids.iter().map(|id| Box::new(id.clone()) as Box<dyn rusqlite::types::ToSql>).collect();
+    params.push(Box::new(card_limit));
+    let param_refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+
+    let all_card_ids: Vec<String> = stmt
+        .query_map(param_refs.as_slice(), |row: &rusqlite::Row| row.get(0))
+        .map_err(|e| format!("Query error: {e}"))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    let total = all_card_ids.len() as i64;
+    let card_ids_json = serde_json::to_string(&all_card_ids).unwrap_or_else(|_| "[]".to_string());
+
+    // Create session (deck_id = NULL for multi-deck)
+    let session_id = uuid::Uuid::new_v4().to_string().replace('-', "");
+    conn.execute(
+        "INSERT INTO review_sessions (id, deck_id, algorithm, total_cards, card_ids, session_name)
+         VALUES (?1, NULL, ?2, ?3, ?4, ?5)",
+        rusqlite::params![session_id, algorithm, total, card_ids_json, session_name],
+    )
+    .map_err(|e| format!("Session insert error: {e}"))?;
+
+    let started_at: String = conn
+        .query_row(
+            "SELECT started_at FROM review_sessions WHERE id = ?1",
+            rusqlite::params![session_id],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .map_err(|e| format!("Session lookup error: {e}"))?;
+
+    Ok(ReviewSessionData {
+        id: session_id,
+        deck_id: None,
+        algorithm,
+        status: "in_progress".to_string(),
+        total_cards: total,
+        reviewed_cards: 0,
+        correct_count: 0,
+        card_ids: all_card_ids,
         current_index: 0,
         started_at,
         completed_at: None,
@@ -607,6 +769,25 @@ pub fn srs_rate_card(
     let conn = lock_db(&state)?;
 
     let rating = Rating::from_str(&rating)?;
+
+    // Get deck algorithm for this card
+    let deck_algorithm: String = conn
+        .query_row(
+            "SELECT d.algorithm FROM deck_cards dc
+             JOIN decks d ON d.id = dc.deck_id
+             WHERE dc.id = ?1",
+            rusqlite::params![card_id],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .unwrap_or_else(|_| "fsrs".to_string());
+
+    // Create srs_progress entry if it doesn't exist (new card)
+    conn.execute(
+        "INSERT OR IGNORE INTO srs_progress (id, card_id, algorithm, state, interval_days, due_date)
+         VALUES (lower(hex(randomblob(16))), ?1, ?2, 'new', 0, datetime('now'))",
+        rusqlite::params![card_id, deck_algorithm],
+    )
+    .map_err(|e| format!("Progress init error: {e}"))?;
 
     // Read current progress
     let (algorithm_str, box_number, ef, reps, stability, difficulty, state_str, interval, due_str, last_rev, review_count, lapses): (
@@ -721,8 +902,8 @@ pub fn srs_rate_card(
     )
     .map_err(|e| format!("Review log error: {e}"))?;
 
-    // Update session counters
-    let is_correct = matches!(rating, Rating::Good | Rating::Easy);
+    // Update session counters (algorithm determines correctness)
+    let is_correct = result.was_correct;
     if is_correct {
         conn.execute(
             "UPDATE review_sessions SET
@@ -951,6 +1132,351 @@ pub fn srs_merge_decks(
         })
     })
     .map_err(|e| format!("Fetch error: {e}"))
+}
+
+// ── Session History & Stats Commands ──────────────────────
+
+#[tauri::command]
+pub fn srs_list_sessions(
+    state: State<'_, AppState>,
+    status: Option<String>,
+    limit: Option<i64>,
+) -> Result<Vec<serde_json::Value>, String> {
+    let conn = lock_db(&state)?;
+    let lim = limit.unwrap_or(50);
+
+    let (sql, params): (String, Vec<Box<dyn rusqlite::types::ToSql>>) = if let Some(ref s) = status {
+        (
+            format!(
+                "SELECT rs.id, rs.deck_id, rs.algorithm, rs.status, rs.total_cards,
+                        rs.reviewed_cards, rs.correct_count, rs.started_at, rs.completed_at,
+                        rs.duration_seconds, COALESCE(rs.session_name, d.name, 'Review Session') as deck_name
+                 FROM review_sessions rs
+                 LEFT JOIN decks d ON d.id = rs.deck_id
+                 WHERE rs.status = ?1
+                 ORDER BY rs.started_at DESC
+                 LIMIT ?2"
+            ),
+            vec![Box::new(s.clone()), Box::new(lim)],
+        )
+    } else {
+        (
+            format!(
+                "SELECT rs.id, rs.deck_id, rs.algorithm, rs.status, rs.total_cards,
+                        rs.reviewed_cards, rs.correct_count, rs.started_at, rs.completed_at,
+                        rs.duration_seconds, COALESCE(rs.session_name, d.name, 'Review Session') as deck_name
+                 FROM review_sessions rs
+                 LEFT JOIN decks d ON d.id = rs.deck_id
+                 ORDER BY rs.started_at DESC
+                 LIMIT ?1"
+            ),
+            vec![Box::new(lim)],
+        )
+    };
+
+    let param_refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+    let mut stmt = conn.prepare(&sql).map_err(|e| format!("Query error: {e}"))?;
+    let rows = stmt
+        .query_map(param_refs.as_slice(), |row: &rusqlite::Row| {
+            Ok(serde_json::json!({
+                "id": row.get::<_, String>(0)?,
+                "deck_id": row.get::<_, Option<String>>(1)?,
+                "algorithm": row.get::<_, String>(2)?,
+                "status": row.get::<_, String>(3)?,
+                "total_cards": row.get::<_, i64>(4)?,
+                "reviewed_cards": row.get::<_, i64>(5)?,
+                "correct_count": row.get::<_, i64>(6)?,
+                "started_at": row.get::<_, String>(7)?,
+                "completed_at": row.get::<_, Option<String>>(8)?,
+                "duration_seconds": row.get::<_, i64>(9)?,
+                "deck_name": row.get::<_, String>(10)?,
+            }))
+        })
+        .map_err(|e| format!("Query error: {e}"))?;
+
+    let mut sessions = Vec::new();
+    for row in rows {
+        sessions.push(row.map_err(|e| format!("Row error: {e}"))?);
+    }
+    Ok(sessions)
+}
+
+#[tauri::command]
+pub fn srs_get_session_detail(
+    state: State<'_, AppState>,
+    session_id: String,
+) -> Result<serde_json::Value, String> {
+    let conn = lock_db(&state)?;
+
+    // Get session info
+    let session = conn
+        .query_row(
+            "SELECT rs.id, rs.deck_id, rs.algorithm, rs.status, rs.total_cards,
+                    rs.reviewed_cards, rs.correct_count, rs.started_at, rs.completed_at,
+                    rs.duration_seconds, COALESCE(rs.session_name, d.name, 'Review Session') as session_name
+             FROM review_sessions rs
+             LEFT JOIN decks d ON d.id = rs.deck_id
+             WHERE rs.id = ?1",
+            rusqlite::params![session_id],
+            |row: &rusqlite::Row| {
+                Ok(serde_json::json!({
+                    "id": row.get::<_, String>(0)?,
+                    "deck_id": row.get::<_, Option<String>>(1)?,
+                    "algorithm": row.get::<_, String>(2)?,
+                    "status": row.get::<_, String>(3)?,
+                    "total_cards": row.get::<_, i64>(4)?,
+                    "reviewed_cards": row.get::<_, i64>(5)?,
+                    "correct_count": row.get::<_, i64>(6)?,
+                    "started_at": row.get::<_, String>(7)?,
+                    "completed_at": row.get::<_, Option<String>>(8)?,
+                    "duration_seconds": row.get::<_, i64>(9)?,
+                    "session_name": row.get::<_, String>(10)?,
+                }))
+            },
+        )
+        .map_err(|e| format!("Session not found: {e}"))?;
+
+    // Get card IDs from session
+    let card_ids_json: String = conn
+        .query_row(
+            "SELECT card_ids FROM review_sessions WHERE id = ?1",
+            rusqlite::params![session_id],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .unwrap_or_else(|_| "[]".to_string());
+
+    let card_ids: Vec<String> =
+        serde_json::from_str(&card_ids_json).unwrap_or_default();
+
+    // Get card details
+    let mut cards = Vec::new();
+    for card_id in &card_ids {
+        if let Ok(card) = conn.query_row(
+            "SELECT dc.id, dc.front, dc.back, v.translation, v.word
+             FROM deck_cards dc
+             JOIN vocabulary v ON v.id = dc.vocabulary_id
+             WHERE dc.id = ?1",
+            rusqlite::params![card_id],
+            |row: &rusqlite::Row| {
+                Ok(serde_json::json!({
+                    "id": row.get::<_, String>(0)?,
+                    "front": row.get::<_, String>(1)?,
+                    "back": row.get::<_, String>(2)?,
+                    "translation": row.get::<_, Option<String>>(3)?,
+                    "word": row.get::<_, String>(4)?,
+                }))
+            },
+        ) {
+            cards.push(card);
+        }
+    }
+
+    // Get review results (from review_logs)
+    let mut results_stmt = conn
+        .prepare(
+            "SELECT card_id, rating, state_after, time_spent_ms
+             FROM review_logs
+             WHERE session_id = ?1
+             ORDER BY rowid ASC",
+        )
+        .map_err(|e| format!("Query error: {e}"))?;
+
+    let results: Vec<serde_json::Value> = results_stmt
+        .query_map(rusqlite::params![session_id], |row: &rusqlite::Row| {
+            let rating_str: String = row.get(0 + 1)?;
+            let was_correct = rating_str == "good" || rating_str == "easy";
+            // Map rating string to confidence number
+            let confidence: i64 = match rating_str.as_str() {
+                "again" => 1,
+                "hard" => 3,
+                "good" => 4,
+                "easy" => 5,
+                _ => 3,
+            };
+            Ok(serde_json::json!({
+                "card_id": row.get::<_, String>(0)?,
+                "rating": rating_str,
+                "confidence": confidence,
+                "was_correct": was_correct,
+                "time_spent_ms": row.get::<_, i64>(3)?,
+            }))
+        })
+        .map_err(|e| format!("Query error: {e}"))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    Ok(serde_json::json!({
+        "session": session,
+        "cards": cards,
+        "results": results,
+    }))
+}
+
+#[tauri::command]
+pub fn srs_delete_session(
+    state: State<'_, AppState>,
+    session_id: String,
+) -> Result<(), String> {
+    let conn = lock_db(&state)?;
+
+    // Delete review logs for this session
+    conn.execute(
+        "DELETE FROM review_logs WHERE session_id = ?1",
+        rusqlite::params![session_id],
+    )
+    .map_err(|e| format!("Delete logs error: {e}"))?;
+
+    // Delete session
+    conn.execute(
+        "DELETE FROM review_sessions WHERE id = ?1",
+        rusqlite::params![session_id],
+    )
+    .map_err(|e| format!("Delete session error: {e}"))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn srs_get_deck_stats(
+    state: State<'_, AppState>,
+    deck_id: String,
+) -> Result<serde_json::Value, String> {
+    let conn = lock_db(&state)?;
+
+    let algorithm: String = conn
+        .query_row(
+            "SELECT algorithm FROM decks WHERE id = ?1",
+            rusqlite::params![deck_id],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .unwrap_or_else(|_| "fsrs".to_string());
+
+    let total: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM deck_cards WHERE deck_id = ?1",
+            rusqlite::params![deck_id],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .map_err(|e| format!("Count error: {e}"))?;
+
+    // Cards with no srs_progress entry = new
+    let no_progress: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM deck_cards dc
+             LEFT JOIN srs_progress sp ON sp.card_id = dc.id
+             WHERE dc.deck_id = ?1 AND sp.id IS NULL",
+            rusqlite::params![deck_id],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    // Classify cards with progress into mastered/familiar/learning
+    // Matching core backend: Mastered (box>=5), Familiar (box 3-4), Learning (box 1-2)
+    let (mastered_count, familiar_count, learning_count) = match algorithm.as_str() {
+        "leitner" => {
+            let mastered: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.box_number >= 5",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            let familiar: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.box_number >= 3 AND sp.box_number < 5",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            let learning: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.box_number < 3",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            (mastered, familiar, learning)
+        }
+        "sm2" => {
+            let mastered: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.interval_days >= 21",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            let familiar: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.interval_days >= 7 AND sp.interval_days < 21",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            let learning: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.interval_days < 7",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            (mastered, familiar, learning)
+        }
+        _ => { // FSRS
+            let mastered: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.stability >= 21",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            let familiar: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND sp.stability >= 7 AND sp.stability < 21",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            let learning: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM deck_cards dc JOIN srs_progress sp ON sp.card_id = dc.id
+                 WHERE dc.deck_id = ?1 AND (sp.stability < 7 OR sp.stability IS NULL)",
+                rusqlite::params![deck_id], |row: &rusqlite::Row| row.get(0),
+            ).unwrap_or(0);
+            (mastered, familiar, learning)
+        }
+    };
+
+    let new_count = no_progress;
+
+    // Due today: cards with progress where due_date <= now
+    let due_count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM deck_cards dc
+             JOIN srs_progress sp ON sp.card_id = dc.id
+             WHERE dc.deck_id = ?1 AND sp.due_date <= datetime('now')",
+            rusqlite::params![deck_id],
+            |row: &rusqlite::Row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    // Today's study: due + available new cards
+    let total_session_size = due_count + new_count;
+
+    // Active session check
+    let active_session = conn
+        .query_row(
+            "SELECT id, reviewed_cards, total_cards FROM review_sessions
+             WHERE deck_id = ?1 AND status = 'in_progress'
+             ORDER BY started_at DESC LIMIT 1",
+            rusqlite::params![deck_id],
+            |row: &rusqlite::Row| {
+                Ok(serde_json::json!({
+                    "id": row.get::<_, String>(0)?,
+                    "reviewed_cards": row.get::<_, i64>(1)?,
+                    "total_cards": row.get::<_, i64>(2)?,
+                }))
+            },
+        )
+        .ok();
+
+    Ok(serde_json::json!({
+        "deck_progress": {
+            "total_cards": total,
+            "mastered_count": mastered_count,
+            "familiar_count": familiar_count,
+            "learning_count": learning_count,
+            "new_count": new_count,
+        },
+        "today_study": {
+            "due_count": due_count,
+            "new_available": new_count,
+            "total_session_size": total_session_size,
+        },
+        "active_session": active_session,
+    }))
 }
 
 // ── Vocabulary Commands ────────────────────────────────────

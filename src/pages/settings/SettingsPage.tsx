@@ -10,7 +10,7 @@ import {
   Brain,
   Languages,
   Palette,
-  Keyboard,
+
   Sun,
   Moon,
   Monitor,
@@ -25,7 +25,8 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import { WhisperSetup } from '@/pages/caption/components/WhisperSetup';
-import { ShortcutSettingsPage } from '@/pages/settings/ShortcutSettingsPage';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+
 import { SyncSettings } from '@/pages/settings/SyncSettings';
 import { OllamaModelManager } from '@/pages/settings/components/OllamaModelManager';
 import { ExportDialog } from '@/pages/settings/ExportDialog';
@@ -33,14 +34,11 @@ import { ImportDialog } from '@/pages/settings/ImportDialog';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import { useTranslation } from 'react-i18next';
 
-type SettingsTab = 'account' | 'ai' | 'languages' | 'appearance' | 'shortcuts' | 'whisper' | 'sync' | 'data';
+type SettingsTab = 'general' | 'ai' | 'whisper' | 'sync' | 'data';
 
 const TABS: { id: SettingsTab; icon: typeof User; label: string }[] = [
-  { id: 'account', icon: User, label: 'Account' },
+  { id: 'general', icon: Settings, label: 'General' },
   { id: 'ai', icon: Brain, label: 'AI Provider' },
-  { id: 'languages', icon: Languages, label: 'Languages' },
-  { id: 'appearance', icon: Palette, label: 'Appearance' },
-  { id: 'shortcuts', icon: Keyboard, label: 'Shortcuts' },
   { id: 'whisper', icon: Mic, label: 'Whisper' },
   // TODO: Enable when fully tested
   // { id: 'sync', icon: Cloud, label: 'Sync' },
@@ -279,7 +277,7 @@ function AIProviderSection() {
       await setSetting('ai_provider', provider);
       if (apiKey) await setSetting(`${provider}_api_key`, apiKey);
       await setSetting(`${provider}_base_url`, baseUrl);
-      if (model) await setSetting('ai_model', model);
+      await setSetting('ai_model', model || (provider === 'openai' ? 'gpt-4o-mini' : provider === 'anthropic' ? 'claude-sonnet-4-20250514' : 'llama3.2'));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally {
@@ -316,7 +314,13 @@ function AIProviderSection() {
             {providerOptions.map((opt) => (
               <button
                 key={opt.id}
-                onClick={() => setProvider(opt.id)}
+                onClick={() => {
+                  setProvider(opt.id);
+                  // Set default model for the new provider
+                  if (opt.id === 'openai') setModel('gpt-4o-mini');
+                  else if (opt.id === 'anthropic') setModel('claude-sonnet-4-20250514');
+                  else setModel('');
+                }}
                 className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${
                   provider === opt.id
                     ? 'border-primary bg-primary/5'
@@ -477,35 +481,35 @@ function LanguagesSection() {
         {/* Native Language */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Native Language</label>
-          <select
-            value={nativeLang}
-            onChange={(e) => setNativeLang(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            <option value="">Select...</option>
-            {TARGET_LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.name}
-              </option>
-            ))}
-          </select>
+          <Select value={nativeLang} onValueChange={setNativeLang}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select..." />
+            </SelectTrigger>
+            <SelectContent>
+              {TARGET_LANGUAGES.map((lang) => (
+                <SelectItem key={lang.code} value={lang.code}>
+                  {lang.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Target Language */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Learning Language</label>
-          <select
-            value={targetLang}
-            onChange={(e) => setTargetLang(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            <option value="">Select...</option>
-            {TARGET_LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.name}
-              </option>
-            ))}
-          </select>
+          <Select value={targetLang} onValueChange={setTargetLang}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select..." />
+            </SelectTrigger>
+            <SelectContent>
+              {TARGET_LANGUAGES.map((lang) => (
+                <SelectItem key={lang.code} value={lang.code}>
+                  {lang.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <Button onClick={handleSave} disabled={saving} className="w-full">
@@ -630,12 +634,24 @@ function DataSection() {
   );
 }
 
+// --- General Section (Account + Languages + Appearance) ---
+
+function GeneralSection() {
+  return (
+    <div className="space-y-6">
+      <AuthSection />
+      <LanguagesSection />
+      <AppearanceSection />
+    </div>
+  );
+}
+
 // --- Main Settings Page ---
 
 export function SettingsPage() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<SettingsTab>(
-    (searchParams.get('tab') as SettingsTab) || 'account',
+    (searchParams.get('tab') as SettingsTab) || 'general',
   );
 
   useEffect(() => {
@@ -685,11 +701,8 @@ export function SettingsPage() {
       </Card>
 
       {/* Tab Content */}
-      {activeTab === 'account' && <AuthSection />}
+      {activeTab === 'general' && <GeneralSection />}
       {activeTab === 'ai' && <AIProviderSection />}
-      {activeTab === 'languages' && <LanguagesSection />}
-      {activeTab === 'appearance' && <AppearanceSection />}
-      {activeTab === 'shortcuts' && <ShortcutSettingsPage />}
       {activeTab === 'whisper' && <WhisperSetup />}
       {activeTab === 'sync' && <SyncSettings />}
       {activeTab === 'data' && <DataSection />}

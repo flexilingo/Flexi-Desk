@@ -104,6 +104,82 @@ pub struct ScheduleResult {
     pub due_date: String,
     pub state: String,
     pub algorithm_state: serde_json::Value,
+    #[serde(default)]
+    pub should_requeue: bool,
+    #[serde(default)]
+    pub was_correct: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_algorithm_as_str() {
+        assert_eq!(Algorithm::Leitner.as_str(), "leitner");
+        assert_eq!(Algorithm::SM2.as_str(), "sm2");
+        assert_eq!(Algorithm::FSRS.as_str(), "fsrs");
+    }
+
+    #[test]
+    fn test_algorithm_from_str_valid() {
+        assert_eq!(Algorithm::from_str("leitner").unwrap(), Algorithm::Leitner);
+        assert_eq!(Algorithm::from_str("sm2").unwrap(), Algorithm::SM2);
+        assert_eq!(Algorithm::from_str("fsrs").unwrap(), Algorithm::FSRS);
+    }
+
+    #[test]
+    fn test_algorithm_from_str_invalid() {
+        assert!(Algorithm::from_str("unknown").is_err());
+        assert!(Algorithm::from_str("").is_err());
+        assert!(Algorithm::from_str("SM2").is_err()); // case-sensitive
+    }
+
+    #[test]
+    fn test_rating_from_str_all_valid() {
+        assert_eq!(Rating::from_str("again").unwrap(), Rating::Again);
+        assert_eq!(Rating::from_str("hard").unwrap(), Rating::Hard);
+        assert_eq!(Rating::from_str("good").unwrap(), Rating::Good);
+        assert_eq!(Rating::from_str("easy").unwrap(), Rating::Easy);
+    }
+
+    #[test]
+    fn test_rating_from_str_invalid() {
+        assert!(Rating::from_str("perfect").is_err());
+        assert!(Rating::from_str("Good").is_err()); // case-sensitive
+        assert!(Rating::from_str("").is_err());
+    }
+
+    #[test]
+    fn test_rating_discriminant_values() {
+        assert_eq!(Rating::Again as i32, 1);
+        assert_eq!(Rating::Hard as i32, 2);
+        assert_eq!(Rating::Good as i32, 3);
+        assert_eq!(Rating::Easy as i32, 4);
+    }
+
+    #[test]
+    fn test_card_state_as_str() {
+        assert_eq!(CardState::New.as_str(), "new");
+        assert_eq!(CardState::Learning.as_str(), "learning");
+        assert_eq!(CardState::Review.as_str(), "review");
+        assert_eq!(CardState::Relearning.as_str(), "relearning");
+    }
+
+    #[test]
+    fn test_card_state_from_str_all_valid() {
+        assert_eq!(CardState::from_str("new").unwrap(), CardState::New);
+        assert_eq!(CardState::from_str("learning").unwrap(), CardState::Learning);
+        assert_eq!(CardState::from_str("review").unwrap(), CardState::Review);
+        assert_eq!(CardState::from_str("relearning").unwrap(), CardState::Relearning);
+    }
+
+    #[test]
+    fn test_card_state_from_str_invalid() {
+        assert!(CardState::from_str("graduated").is_err());
+        assert!(CardState::from_str("").is_err());
+        assert!(CardState::from_str("Review").is_err()); // case-sensitive
+    }
 }
 
 #[derive(Debug, Clone)]

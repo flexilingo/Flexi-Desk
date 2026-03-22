@@ -122,6 +122,10 @@ impl SRSStrategy for FSRSStrategy {
         let interval = self.next_interval(new_stability);
         let due = Utc::now() + chrono::Duration::seconds((interval * 86400.0) as i64);
 
+        // FSRS: only Again requeues; Hard+ is correct
+        let should_requeue = rating == Rating::Again;
+        let was_correct = rating != Rating::Again;
+
         ScheduleResult {
             interval_days: interval,
             due_date: due.to_rfc3339(),
@@ -130,6 +134,8 @@ impl SRSStrategy for FSRSStrategy {
                 "stability": new_stability,
                 "difficulty": new_difficulty,
             }),
+            should_requeue,
+            was_correct,
         }
     }
 
@@ -142,5 +148,109 @@ impl SRSStrategy for FSRSStrategy {
 
     fn algorithm_name(&self) -> &'static str {
         "fsrs"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+
+    fn new_card() -> CardProgress {
+        CardProgress {
+            card_id: "c1".into(),
+            algorithm: Algorithm::FSRS,
+            box_number: None,
+            easiness_factor: None,
+            repetitions: None,
+            stability: None,
+            difficulty: None,
+            state: CardState::New,
+            interval_days: 0.0,
+            due_date: Utc::now(),
+            last_review: None,
+            review_count: 0,
+            lapses: 0,
+        }
+    }
+
+    fn review_card(stability: f64, difficulty: f64, elapsed_days: f64) -> CardProgress {
+        let last_review = Utc::now() - chrono::Duration::seconds((elapsed_days * 86400.0) as i64);
+        CardProgress {
+            card_id: "c1".into(),
+            algorithm: Algorithm::FSRS,
+            box_number: None,
+            easiness_factor: None,
+            repetitions: None,
+            stability: Some(stability),
+            difficulty: Some(difficulty),
+            state: CardState::Review,
+            interval_days: elapsed_days,
+            due_date: Utc::now(),
+            last_review: Some(last_review),
+            review_count: 5,
+            lapses: 0,
+        }
+    }
+
+    #[test]
+    fn test_new_card_again_state_and_stability() {
+        let s = FSRSStrategy::new();
+        let result = s.schedule(&new_card(), Rating::Again);
+        assert_eq!(result.state, "learning");
+        let stability = result.algorithm_state["stability"].as_f64().unwrap();
+        assert!((stability - INITIAL_STABILITY[0]).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_new_card_good_state_and_stability() {
+        let s = FSRSStrategy::new();
+        let result = s.schedule(&new_card(), Rating::Good);
+        assert_eq!(result.state, "review");
+        let stability = result.algorithm_state["stability"].as_f64().unwrap();
+        assert!((stability - INITIAL_STABILITY[2]).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_new_card_initial_difficulty() {
+        let s = FSRSStrategy::new();
+        for rating in [Rating::Again, Rating::Hard, Rating::Good, Rating::Easy] {
+            let result = s.schedule(&new_card(), rating);
+            let difficulty = result.algorithm_state["difficulty"].as_f64().unwrap();
+            assert!((difficulty - INITIAL_DIFFICULTY).abs() < 1e-9,
+                "Unexpected initial difficulty for {rating:?}: {difficulty}");
+        }
+    }
+
+    #[test]
+    fn test_review_again_decreases_stability() {
+        let s = FSRSStrategy::new();
+        let card = review_card(10.0, 4.93, 5.0);
+        let again_result = s.schedule(&card, Rating::Again);
+        let good_result = s.schedule(&card, Rating::Good);
+        let s_again = again_result.algorithm_state["stability"].as_f64().unwrap();
+        let s_good = good_result.algorithm_state["stability"].as_f64().unwrap();
+        assert!(s_again < s_good, "Again stability ({s_again}) should be < Good stability ({s_good})");
+    }
+
+    #[test]
+    fn test_review_easy_more_stable_than_good() {
+        let s = FSRSStrategy::new();
+        let card = review_card(10.0, 4.93, 5.0);
+        let easy_result = s.schedule(&card, Rating::Easy);
+        let good_result = s.schedule(&card, Rating::Good);
+        let s_easy = easy_result.algorithm_state["stability"].as_f64().unwrap();
+        let s_good = good_result.algorithm_state["stability"].as_f64().unwrap();
+        assert!(s_easy > s_good, "Easy stability ({s_easy}) should be > Good stability ({s_good})");
+    }
+
+    #[test]
+    fn test_all_schedules_return_positive_interval() {
+        let s = FSRSStrategy::new();
+        for rating in [Rating::Again, Rating::Hard, Rating::Good, Rating::Easy] {
+            let result = s.schedule(&new_card(), rating);
+            assert!(result.interval_days >= 1.0,
+                "interval_days should be >= 1 for {rating:?}, got {}", result.interval_days);
+        }
     }
 }
