@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Mic, MicOff, Square, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Square, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTutorStore } from '../stores/tutorStore';
@@ -67,8 +67,11 @@ export function VoiceSession() {
     stopAndTranscribe,
     sendMessage,
     speakText,
+    stopSpeaking,
     endConversation,
     closeConversation,
+    showSubtitles,
+    toggleSubtitles,
   } = useTutorStore();
 
   const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
@@ -160,10 +163,15 @@ export function VoiceSession() {
         await sendMessage(text.trim());
       }
     } else {
-      setCurrentSubtitle(null); // Clear subtitle when user starts talking
+      // If AI is speaking, interrupt it
+      if (isSpeaking) {
+        await stopSpeaking();
+        setIsSpeaking(false);
+      }
+      setCurrentSubtitle(null);
       await startRecording();
     }
-  }, [isRecording, stopAndTranscribe, sendMessage, startRecording]);
+  }, [isRecording, isSpeaking, stopAndTranscribe, sendMessage, startRecording, stopSpeaking]);
 
   const handleEnd = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -218,7 +226,7 @@ export function VoiceSession() {
       : isSending || isStreaming
         ? 'Thinking...'
         : isSpeaking
-          ? ''
+          ? 'Tap to interrupt'
           : 'Tap to speak';
 
   return (
@@ -231,6 +239,13 @@ export function VoiceSession() {
           <span className="text-xs text-muted-foreground">{languageName}</span>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleSubtitles}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            title={showSubtitles ? 'Hide subtitles' : 'Show subtitles'}
+          >
+            {showSubtitles ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
           <span className="font-mono text-sm tabular-nums text-muted-foreground">{formattedTime}</span>
           <Button variant="destructive" size="sm" onClick={handleEnd}>
             <Square className="h-3 w-3 mr-1" />
@@ -246,7 +261,7 @@ export function VoiceSession() {
 
         {/* Current subtitle — only shows what's being said RIGHT NOW */}
         <div className="w-full min-h-[80px] flex flex-col items-center justify-center">
-          {currentSubtitle && (
+          {showSubtitles && currentSubtitle && (
             <div className="text-center animate-in fade-in duration-300">
               <span className={`text-xs font-medium ${
                 currentSubtitle.role === 'assistant' ? 'text-[#8BB7A3]' : 'text-primary'
@@ -259,8 +274,8 @@ export function VoiceSession() {
             </div>
           )}
 
-          {/* Status indicator (when no subtitle) */}
-          {!currentSubtitle && statusText && (
+          {/* Status indicator (when no subtitle or subtitles off) */}
+          {(!showSubtitles || !currentSubtitle) && statusText && (
             <p className="text-sm text-muted-foreground">{statusText}</p>
           )}
         </div>
@@ -272,13 +287,15 @@ export function VoiceSession() {
           <button
             type="button"
             onClick={handleMicClick}
-            disabled={isSending || isTranscribing || isStreaming || isSpeaking}
+            disabled={isTranscribing}
             className={`flex h-16 w-16 items-center justify-center rounded-full transition-all ${
               isRecording
                 ? 'bg-error text-white animate-pulse scale-110 ring-4 ring-error/30'
-                : isSending || isTranscribing || isStreaming || isSpeaking
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                  : 'bg-primary text-primary-foreground hover:scale-105 active:scale-95'
+                : isSpeaking
+                  ? 'bg-[#C58C6E] text-white hover:scale-105 active:scale-95'
+                  : isTranscribing || isSending || isStreaming
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                    : 'bg-primary text-primary-foreground hover:scale-105 active:scale-95'
             }`}
           >
             {isTranscribing ? (

@@ -34,6 +34,7 @@ interface StartConversationParams {
   topic?: string;
   scenarioId?: string;
   deckId?: string;
+  customPrompt?: string;
 }
 
 // ── State ───────────────────────────────────────────────
@@ -57,6 +58,9 @@ interface TutorState {
   isRecording: boolean;
   isTranscribing: boolean;
 
+  // Subtitles
+  showSubtitles: boolean;
+
   // Modes
   modes: ModeInfo[];
   scenarios: Scenario[];
@@ -75,6 +79,8 @@ interface TutorState {
   startRecording: () => Promise<void>;
   stopAndTranscribe: () => Promise<string | null>;
   speakText: (text: string) => Promise<void>;
+  stopSpeaking: () => Promise<void>;
+  toggleSubtitles: () => void;
   fetchModes: () => Promise<void>;
   fetchScenarios: () => Promise<void>;
   clearError: () => void;
@@ -94,6 +100,7 @@ export const useTutorStore = create<TutorState>()(
     isSending: false,
     isRecording: false,
     isTranscribing: false,
+    showSubtitles: false,
     modes: [],
     scenarios: [],
     error: null,
@@ -134,6 +141,7 @@ export const useTutorStore = create<TutorState>()(
           topic: params.topic ?? null,
           scenarioId: params.scenarioId ?? null,
           deckId: params.deckId ?? null,
+          customPrompt: params.customPrompt ?? null,
         });
         const conv = mapConversation(raw);
 
@@ -313,6 +321,20 @@ export const useTutorStore = create<TutorState>()(
       } catch {
         // Ignore TTS errors silently
       }
+    },
+
+    stopSpeaking: async () => {
+      try {
+        await invoke('tutor_stop_speaking');
+      } catch {
+        // ignore
+      }
+    },
+
+    toggleSubtitles: () => {
+      set((s) => {
+        s.showSubtitles = !s.showSubtitles;
+      });
     },
 
     endConversation: async () => {

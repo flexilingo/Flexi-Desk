@@ -46,6 +46,7 @@ export function ConversationSetup() {
   const [topic, setTopic] = useState('');
   const [scenarioId, setScenarioId] = useState('');
   const [deckId, setDeckId] = useState('');
+  const [customPrompt, setCustomPrompt] = useState('');
 
   // UI state
   const [isStarting, setIsStarting] = useState(false);
@@ -83,6 +84,7 @@ export function ConversationSetup() {
         topic: selectedMode === 'free' && topic.trim() ? topic.trim() : undefined,
         scenarioId: selectedMode === 'role_play' && scenarioId ? scenarioId : undefined,
         deckId: selectedMode === 'deck_practice' && deckId.trim() ? deckId.trim() : undefined,
+        customPrompt: customPrompt.trim() || undefined,
       });
     } catch (err) {
       setError(String(err));
@@ -232,6 +234,20 @@ export function ConversationSetup() {
             />
           </div>
         )}
+
+        {/* Custom instructions (all modes) */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            Custom Instructions <span className="text-muted-foreground font-normal">(optional)</span>
+          </label>
+          <textarea
+            value={customPrompt}
+            onChange={(e) => setCustomPrompt(e.target.value)}
+            placeholder="E.g., Focus on business vocabulary, correct my pronunciation of 'th' sounds, speak slowly..."
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+            rows={2}
+          />
+        </div>
 
         {/* Start button */}
         <Button className="w-full" disabled={isStarting} onClick={handleStart}>
