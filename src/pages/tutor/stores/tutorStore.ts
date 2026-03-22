@@ -53,6 +53,11 @@ interface TutorState {
   isStreaming: boolean;
   isSending: boolean;
 
+  // Voice
+  isRecording: boolean;
+  isTranscribing: boolean;
+  autoSpeak: boolean;
+
   // Modes
   modes: ModeInfo[];
   scenarios: Scenario[];
@@ -68,6 +73,10 @@ interface TutorState {
   sendMessage: (content: string) => Promise<void>;
   endConversation: () => Promise<void>;
   deleteConversation: (id: string) => Promise<void>;
+  startRecording: () => Promise<void>;
+  stopAndTranscribe: () => Promise<string | null>;
+  speakText: (text: string) => Promise<void>;
+  toggleAutoSpeak: () => void;
   fetchModes: () => Promise<void>;
   fetchScenarios: () => Promise<void>;
   clearError: () => void;
@@ -85,6 +94,9 @@ export const useTutorStore = create<TutorState>()(
     streamingContent: '',
     isStreaming: false,
     isSending: false,
+    isRecording: false,
+    isTranscribing: false,
+    autoSpeak: false,
     modes: [],
     scenarios: [],
     error: null,
@@ -245,6 +257,11 @@ export const useTutorStore = create<TutorState>()(
             s.activeConversation.correctionsCount += result.assistantMessage.corrections.length;
           }
         });
+
+        // Auto-speak assistant response if enabled
+        if (get().autoSpeak) {
+          get().speakText(result.assistantMessage.content);
+        }
       } catch (e) {
         set((s) => {
           // Remove temp message on error
@@ -258,6 +275,54 @@ export const useTutorStore = create<TutorState>()(
         // Always clean up listener
         unlistenToken?.();
       }
+    },
+
+    startRecording: async () => {
+      set((s) => {
+        s.isRecording = true;
+      });
+      try {
+        await invoke('tutor_start_recording', { deviceId: null });
+      } catch (e) {
+        set((s) => {
+          s.isRecording = false;
+          s.error = String(e);
+        });
+      }
+    },
+
+    stopAndTranscribe: async () => {
+      set((s) => {
+        s.isRecording = false;
+        s.isTranscribing = true;
+      });
+      try {
+        const language = get().activeConversation?.language ?? null;
+        const text = await invoke<string>('tutor_stop_and_transcribe', { language });
+        set((s) => {
+          s.isTranscribing = false;
+        });
+        return text;
+      } catch (e) {
+        set((s) => {
+          s.isTranscribing = false;
+          s.error = String(e);
+        });
+        return null;
+      }
+    },
+
+    speakText: async (text) => {
+      const language = get().activeConversation?.language ?? null;
+      invoke('tutor_speak_text', { text, language }).catch(() => {
+        // Fire and forget — ignore TTS errors silently
+      });
+    },
+
+    toggleAutoSpeak: () => {
+      set((s) => {
+        s.autoSpeak = !s.autoSpeak;
+      });
     },
 
     endConversation: async () => {

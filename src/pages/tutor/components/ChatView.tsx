@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Send, Loader2, Square } from 'lucide-react';
+import { Send, Loader2, Square, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTutorStore } from '../stores/tutorStore';
@@ -23,6 +23,12 @@ export function ChatView() {
     isSending,
     sendMessage,
     endConversation,
+    isRecording,
+    isTranscribing,
+    autoSpeak,
+    startRecording,
+    stopAndTranscribe,
+    toggleAutoSpeak,
   } = useTutorStore();
 
   const [input, setInput] = useState('');
@@ -67,6 +73,17 @@ export function ChatView() {
     },
     [handleSend],
   );
+
+  const handleStartRecording = useCallback(async () => {
+    await startRecording();
+  }, [startRecording]);
+
+  const handleStopRecording = useCallback(async () => {
+    const text = await stopAndTranscribe();
+    if (text && text.trim()) {
+      await sendMessage(text.trim());
+    }
+  }, [stopAndTranscribe, sendMessage]);
 
   if (!activeConversation) return null;
 
@@ -135,8 +152,30 @@ export function ChatView() {
 
       {/* Input area */}
       {!isArchived && (
-        <div className="px-4 py-3 border-t border-border bg-card">
-          <div className="flex gap-2 items-end">
+        <div className="border-t border-border p-4 bg-card">
+          <div className="flex items-center gap-3">
+            {/* Mic button — primary action */}
+            <button
+              onClick={isRecording ? handleStopRecording : handleStartRecording}
+              disabled={isSending || isTranscribing}
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all ${
+                isRecording
+                  ? 'bg-error text-white animate-pulse scale-110'
+                  : isTranscribing
+                    ? 'bg-muted text-muted-foreground'
+                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
+            >
+              {isTranscribing ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : isRecording ? (
+                <MicOff className="h-5 w-5" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </button>
+
+            {/* Text input (secondary — for typing fallback) */}
             <textarea
               ref={textareaRef}
               value={input}
@@ -146,6 +185,8 @@ export function ChatView() {
               rows={1}
               className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none min-h-[40px] max-h-[120px]"
             />
+
+            {/* Send button */}
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isSending}
@@ -157,9 +198,35 @@ export function ChatView() {
                 <Send className="h-4 w-4" />
               )}
             </Button>
+
+            {/* Auto-speak toggle */}
+            <button
+              onClick={toggleAutoSpeak}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                autoSpeak ? 'bg-[#8BB7A3]/15 text-[#8BB7A3]' : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title={autoSpeak ? 'Auto-speak ON' : 'Auto-speak OFF'}
+            >
+              {autoSpeak ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
           </div>
+
+          {/* Recording indicator */}
+          {isRecording && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-error">
+              <div className="h-2 w-2 rounded-full bg-error animate-pulse" />
+              Recording... Click mic to stop
+            </div>
+          )}
+          {isTranscribing && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Transcribing...
+            </div>
+          )}
+
           <p className="text-xs text-muted-foreground mt-1">
-            Enter to send, Shift+Enter for new line
+            Click mic to speak, or type below {autoSpeak ? '- AI will speak back' : '- Text only'}
           </p>
         </div>
       )}
