@@ -1,37 +1,61 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTutorStore } from '../stores/tutorStore';
 import { MessageBubble } from './MessageBubble';
+import { TypingIndicator } from './TypingIndicator';
 
-interface Props {
-  onBack: () => void;
-}
+const MODE_DISPLAY: Record<string, string> = {
+  free: 'Free Talk',
+  role_play: 'Role Play',
+  deck_practice: 'Deck Practice',
+  vocab_challenge: 'Vocab Challenge',
+  escape_room: 'Escape Room',
+};
 
-export function ChatView({ onBack }: Props) {
-  const { activeConversation, messages, isSending, sendMessage, closeConversation } =
-    useTutorStore();
+export function ChatView() {
+  const {
+    activeConversation,
+    messages,
+    streamingContent,
+    isStreaming,
+    isSending,
+    sendMessage,
+    endConversation,
+  } = useTutorStore();
+
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll on new messages or streaming content
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, [messages.length, streamingContent]);
 
   // Focus input on mount
   useEffect(() => {
-    inputRef.current?.focus();
+    textareaRef.current?.focus();
+  }, []);
+
+  // Auto-resize textarea
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, []);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || isSending) return;
     setInput('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
     await sendMessage(text);
-    inputRef.current?.focus();
+    textareaRef.current?.focus();
   }, [input, isSending, sendMessage]);
 
   const handleKeyDown = useCallback(
@@ -44,48 +68,43 @@ export function ChatView({ onBack }: Props) {
     [handleSend],
   );
 
-  const handleBack = useCallback(() => {
-    closeConversation();
-    onBack();
-  }, [closeConversation, onBack]);
-
   if (!activeConversation) return null;
 
-  // Filter out system messages for display
   const visibleMessages = messages.filter((m) => m.role !== 'system');
+  const isArchived = activeConversation.status === 'archived';
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 pb-4 border-b border-border">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Back
-        </Button>
-        <div className="flex-1">
-          <h2 className="text-lg font-bold text-foreground">{activeConversation.title}</h2>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="outline" className="text-xs">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-card">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-semibold text-foreground truncate">
+            {activeConversation.title}
+          </h2>
+          <div className="flex items-center gap-2 mt-0.5">
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+              {MODE_DISPLAY[activeConversation.mode] ?? activeConversation.mode}
+            </Badge>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
               {activeConversation.cefrLevel}
             </Badge>
-            <span className="capitalize">{activeConversation.provider}</span>
-            <span>·</span>
-            <span>{activeConversation.model}</span>
-            {activeConversation.correctionsCount > 0 && (
-              <>
-                <span>·</span>
-                <span className="text-accent">
-                  {activeConversation.correctionsCount} corrections
-                </span>
-              </>
-            )}
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+              {activeConversation.language.toUpperCase()}
+            </Badge>
+            <span className="text-xs text-muted-foreground">{activeConversation.model}</span>
           </div>
         </div>
+        {!isArchived && (
+          <Button variant="outline" size="sm" onClick={endConversation}>
+            <Square className="mr-1.5 h-3 w-3" />
+            End
+          </Button>
+        )}
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0">
-        {visibleMessages.length === 0 && (
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
+        {visibleMessages.length === 0 && !isStreaming && !isSending && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <p className="text-sm">Send a message to start the conversation.</p>
             <p className="text-xs mt-1">
@@ -96,48 +115,54 @@ export function ChatView({ onBack }: Props) {
         )}
 
         {visibleMessages.map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            message={msg}
-            documentLanguage={activeConversation.language}
-          />
+          <MessageBubble key={msg.id} message={msg} />
         ))}
 
-        {isSending && (
+        {/* Streaming bubble */}
+        {isStreaming && streamingContent && (
           <div className="flex justify-start">
-            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <div className="max-w-[80%] bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-3">
+              <p className="text-sm whitespace-pre-wrap">{streamingContent}</p>
             </div>
           </div>
         )}
 
+        {/* Typing indicator when sending but no stream yet */}
+        {isSending && !streamingContent && <TypingIndicator />}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="pt-4 border-t border-border">
-        <div className="flex gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            rows={1}
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none min-h-[40px] max-h-[120px]"
-          />
-          <Button onClick={handleSend} disabled={!input.trim() || isSending} className="self-end">
-            {isSending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
+      {/* Input area */}
+      {!isArchived && (
+        <div className="px-4 py-3 border-t border-border bg-card">
+          <div className="flex gap-2 items-end">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              rows={1}
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none min-h-[40px] max-h-[120px]"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || isSending}
+              className="shrink-0"
+            >
+              {isSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Enter to send, Shift+Enter for new line
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Press Enter to send, Shift+Enter for new line
-        </p>
-      </div>
+      )}
     </div>
   );
 }

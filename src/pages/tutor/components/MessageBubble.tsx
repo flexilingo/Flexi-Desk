@@ -1,111 +1,58 @@
-import { BookPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { invoke } from '@tauri-apps/api/core';
-import { useState } from 'react';
-import type { MessageData, VocabSuggestion } from '../types';
+import type { MessageData } from '../types';
+import { CorrectionPanel } from './CorrectionPanel';
+import { VocabChip } from './VocabChip';
 
 interface Props {
   message: MessageData;
-  documentLanguage: string;
 }
 
-export function MessageBubble({ message, documentLanguage }: Props) {
-  const isUser = message.role === 'user';
-  const isSystem = message.role === 'system';
+function formatTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '';
+  }
+}
 
-  if (isSystem) return null; // Don't render system messages
+export function MessageBubble({ message }: Props) {
+  const isUser = message.role === 'user';
+
+  if (message.role === 'system') return null;
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-          isUser
-            ? 'bg-primary text-primary-foreground rounded-br-md'
-            : 'bg-muted text-foreground rounded-bl-md'
-        }`}
-      >
-        {/* Message content */}
-        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-
-        {/* Corrections (shown on assistant messages, about user's errors) */}
-        {message.corrections.length > 0 && (
-          <div className="mt-3 border-t border-foreground/10 pt-2">
-            <p className="text-xs font-medium mb-1 opacity-70">Corrections:</p>
-            {message.corrections.map((c, i) => (
-              <div key={i} className="text-xs mb-1.5">
-                <span className="line-through opacity-60">{c.original}</span>
-                {' → '}
-                <span className="font-medium">{c.corrected}</span>
-                <p className="opacity-70 mt-0.5">{c.explanation}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Vocab suggestions (on assistant messages) */}
-        {message.vocabSuggestions.length > 0 && (
-          <div className="mt-3 border-t border-foreground/10 pt-2">
-            <p className="text-xs font-medium mb-1 opacity-70">New Vocabulary:</p>
-            {message.vocabSuggestions.map((v, i) => (
-              <VocabItem key={i} vocab={v} language={documentLanguage} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function VocabItem({ vocab, language }: { vocab: VocabSuggestion; language: string }) {
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await invoke('srs_add_vocabulary', {
-        word: vocab.word,
-        language,
-        translation: vocab.translation,
-        definition: null,
-        pos: null,
-        cefrLevel: vocab.cefr || null,
-        exampleSentence: vocab.example || null,
-        sourceModule: 'tutor',
-        contextSentence: null,
-      });
-      setSaved(true);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-between text-xs mb-1">
-      <div>
-        <span className="font-medium">{vocab.word}</span>
-        <span className="opacity-70"> — {vocab.translation}</span>
-        {vocab.cefr && (
-          <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0">
-            {vocab.cefr}
-          </Badge>
-        )}
-      </div>
-      {!saved ? (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-6 px-1.5 text-[10px]"
-          onClick={handleSave}
-          disabled={saving}
+      <div className={`max-w-[80%] ${isUser ? '' : 'space-y-2'}`}>
+        <div
+          className={`px-4 py-2 ${
+            isUser
+              ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
+              : 'bg-card border border-border rounded-2xl rounded-bl-sm py-3'
+          }`}
         >
-          <BookPlus className="h-3 w-3 mr-0.5" />
-          {saving ? '...' : 'Save'}
-        </Button>
-      ) : (
-        <span className="text-success text-[10px]">Saved</span>
-      )}
+          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+        </div>
+
+        {/* Corrections (assistant messages only) */}
+        {!isUser && message.corrections.length > 0 && (
+          <CorrectionPanel corrections={message.corrections} />
+        )}
+
+        {/* Vocab suggestions (assistant messages only) */}
+        {!isUser && message.vocabSuggestions.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-1">
+            {message.vocabSuggestions.map((v, i) => (
+              <VocabChip key={i} vocab={v} />
+            ))}
+          </div>
+        )}
+
+        {/* Timestamp */}
+        <p
+          className={`text-xs text-muted-foreground mt-1 ${isUser ? 'text-right' : 'text-left'}`}
+        >
+          {formatTime(message.createdAt)}
+        </p>
+      </div>
     </div>
   );
 }
