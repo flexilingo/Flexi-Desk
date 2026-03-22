@@ -135,7 +135,7 @@ export function ConversationList() {
         </div>
       )}
 
-      <NewConversationDialog open={showNew} onOpenChange={setShowNew} />
+      <NewConversationDialog open={showNew} onClose={() => setShowNew(false)} />
     </div>
   );
 }

@@ -4,14 +4,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InlineError } from '@/components/common/InlineError';
 import { useTutorStore } from '../stores/tutorStore';
-import { useOllamaStore } from '@/stores/ollamaStore';
+import { ModeCard } from './ModeCard';
+import type { ConversationMode } from '../types';
+
 const LANGUAGES = [
   { code: 'en', name: 'English' },
   { code: 'fa', name: 'Persian' },
@@ -25,103 +26,119 @@ const LANGUAGES = [
   { code: 'ru', name: 'Russian' },
 ];
 
-const CEFR_LEVELS: { value: string; desc: string }[] = [
-  { value: 'A1', desc: 'Beginner' },
-  { value: 'A2', desc: 'Elementary' },
-  { value: 'B1', desc: 'Intermediate' },
-  { value: 'B2', desc: 'Upper Intermediate' },
-  { value: 'C1', desc: 'Advanced' },
-  { value: 'C2', desc: 'Proficient' },
+const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+const PROVIDERS = [
+  { value: 'ollama', label: 'Ollama' },
+  { value: 'openai', label: 'OpenAI' },
+  { value: 'anthropic', label: 'Anthropic' },
 ];
 
-const PROVIDERS: { value: string; label: string; desc: string }[] = [
-  {
-    value: 'ollama',
-    label: 'Ollama (Local)',
-    desc: 'Free, runs locally. Requires Ollama installed.',
-  },
-  { value: 'openai', label: 'OpenAI', desc: 'GPT models. Requires API key in settings.' },
-];
+const DEFAULT_MODELS: Record<string, string> = {
+  ollama: 'llama3.2',
+  openai: 'gpt-4o-mini',
+  anthropic: 'claude-sonnet-4-20250514',
+};
 
-interface Props {
+interface NewConversationDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
 }
 
-export function NewConversationDialog({ open, onOpenChange }: Props) {
-  const startConversation = useTutorStore((s) => s.startConversation);
-  const { installedModels, selectedModel, fetchInstalledModels } = useOllamaStore();
-  const [title, setTitle] = useState('');
-  const [language, setLanguage] = useState('de');
-  const [cefrLevel, setCefrLevel] = useState('A2');
+export function NewConversationDialog({ open, onClose }: NewConversationDialogProps) {
+  const { startConversation, fetchModes, fetchScenarios, modes, scenarios } = useTutorStore();
+
+  // Form state
+  const [selectedMode, setSelectedMode] = useState<ConversationMode>('free');
+  const [language, setLanguage] = useState('en');
+  const [cefrLevel, setCefrLevel] = useState('B1');
   const [provider, setProvider] = useState('ollama');
-  const [model, setModel] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const [model, setModel] = useState(DEFAULT_MODELS.ollama);
+  const [topic, setTopic] = useState('');
+  const [scenarioId, setScenarioId] = useState('');
+  const [deckId, setDeckId] = useState('');
+
+  // UI state
+  const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch Ollama models when dialog opens
+  // Fetch modes and scenarios when dialog opens
   useEffect(() => {
-    if (open && provider === 'ollama') {
-      fetchInstalledModels();
+    if (open) {
+      fetchModes();
+      fetchScenarios();
     }
-  }, [open, provider, fetchInstalledModels]);
+  }, [open, fetchModes, fetchScenarios]);
 
-  // Set default model from installed models or selectedModel
-  useEffect(() => {
-    if (provider === 'ollama') {
-      if (selectedModel) {
-        setModel(selectedModel);
-      } else if (installedModels.length > 0) {
-        setModel(installedModels[0].name);
-      }
+  // Update default model when provider changes
+  const handleProviderChange = (newProvider: string) => {
+    setProvider(newProvider);
+    setModel(DEFAULT_MODELS[newProvider] ?? '');
+  };
+
+  const handleStart = async () => {
+    if (!language) {
+      setError('Please select a language.');
+      return;
     }
-  }, [provider, selectedModel, installedModels]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const finalTitle =
-      title.trim() || `${LANGUAGES.find((l) => l.code === language)?.name} Practice`;
-
-    setIsCreating(true);
+    setIsStarting(true);
     setError(null);
+
     try {
+      const title = `${LANGUAGES.find((l) => l.code === language)?.name ?? language} Practice`;
+
       await startConversation({
-        title: finalTitle,
+        title,
         language,
         cefrLevel,
         provider,
-        model: model.trim() || 'llama3.2',
+        model: model.trim() || DEFAULT_MODELS[provider],
+        mode: selectedMode,
+        topic: selectedMode === 'free' && topic.trim() ? topic.trim() : undefined,
+        scenarioId: selectedMode === 'role_play' && scenarioId ? scenarioId : undefined,
+        deckId: selectedMode === 'deck_practice' && deckId.trim() ? deckId.trim() : undefined,
       });
-      setTitle('');
-      onOpenChange(false);
+
+      onClose();
     } catch (err) {
       setError(String(err));
     } finally {
-      setIsCreating(false);
+      setIsStarting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New Conversation</DialogTitle>
-          <DialogDescription>Start a conversation with the AI tutor.</DialogDescription>
+          <DialogDescription>
+            Choose a practice mode and configure your session.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <div className="space-y-6 pt-2">
           {error && <InlineError message={error} onDismiss={() => setError(null)} />}
 
+          {/* Mode selector */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Title</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Auto-generated if empty"
-            />
+            <label className="text-sm font-medium text-foreground">Practice Mode</label>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {modes.map((mode) => (
+                <ModeCard
+                  key={mode.id}
+                  mode={mode}
+                  isSelected={selectedMode === mode.id}
+                  onClick={() => setSelectedMode(mode.id as ConversationMode)}
+                />
+              ))}
+            </div>
           </div>
 
+          {/* Language selector */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Practice Language *</label>
+            <label className="text-sm font-medium text-foreground">Practice Language</label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
@@ -135,110 +152,111 @@ export function NewConversationDialog({ open, onOpenChange }: Props) {
             </select>
           </div>
 
+          {/* CEFR level */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Your Level</label>
+            <label className="text-sm font-medium text-foreground">CEFR Level</label>
+            <div className="flex gap-2">
+              {CEFR_LEVELS.map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setCefrLevel(level)}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    cefrLevel === level
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-border bg-card text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Provider */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">AI Provider</label>
             <select
-              value={cefrLevel}
-              onChange={(e) => setCefrLevel(e.target.value)}
+              value={provider}
+              onChange={(e) => handleProviderChange(e.target.value)}
               className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              {CEFR_LEVELS.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.value} — {level.desc}
+              {PROVIDERS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">AI Provider</label>
-            <div className="space-y-2">
-              {PROVIDERS.map((p) => (
-                <label
-                  key={p.value}
-                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                    provider === p.value
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="provider"
-                    value={p.value}
-                    checked={provider === p.value}
-                    onChange={() => {
-                      setProvider(p.value);
-                      if (p.value === 'ollama') {
-                        setModel(selectedModel || (installedModels[0]?.name ?? ''));
-                      } else {
-                        setModel('gpt-4o-mini');
-                      }
-                    }}
-                    className="mt-0.5"
-                  />
-                  <div>
-                    <div className="text-sm font-medium">{p.label}</div>
-                    <div className="text-xs text-muted-foreground">{p.desc}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
+          {/* Model input */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Model</label>
-            {provider === 'ollama' ? (
-              installedModels.length > 0 ? (
-                <select
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  {installedModels.map((m) => (
-                    <option key={m.name} value={m.name}>
-                      {m.name} ({formatSize(m.size)})
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <div className="rounded-md border border-border bg-muted/50 px-3 py-2">
-                  <p className="text-sm text-muted-foreground">
-                    No Ollama models found. Install models in{' '}
-                    <span className="font-medium text-foreground">Settings &rarr; AI Provider</span>.
-                  </p>
-                </div>
-              )
-            ) : (
-              <Input
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                placeholder="gpt-4o-mini"
-              />
-            )}
+            <Input
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder={DEFAULT_MODELS[provider]}
+            />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isCreating || (provider === 'ollama' && installedModels.length === 0)}
-            >
-              {isCreating ? 'Starting...' : 'Start Conversation'}
-            </Button>
-          </DialogFooter>
-        </form>
+          {/* Conditional fields based on mode */}
+          {selectedMode === 'free' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                Topic <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <Input
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="What would you like to talk about?"
+              />
+            </div>
+          )}
+
+          {selectedMode === 'role_play' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Scenario</label>
+              <select
+                value={scenarioId}
+                onChange={(e) => setScenarioId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Select a scenario...</option>
+                {scenarios.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+              {scenarioId && (
+                <p className="text-sm text-muted-foreground">
+                  {scenarios.find((s) => s.id === scenarioId)?.description}
+                </p>
+              )}
+            </div>
+          )}
+
+          {selectedMode === 'deck_practice' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Deck ID</label>
+              <Input
+                value={deckId}
+                onChange={(e) => setDeckId(e.target.value)}
+                placeholder="Enter deck ID"
+              />
+            </div>
+          )}
+
+          {/* Start button */}
+          <Button
+            className="w-full"
+            disabled={isStarting}
+            onClick={handleStart}
+          >
+            {isStarting ? 'Starting...' : 'Start Conversation'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
-}
-
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '';
-  const gb = bytes / (1024 * 1024 * 1024);
-  if (gb >= 1) return `${gb.toFixed(1)} GB`;
-  const mb = bytes / (1024 * 1024);
-  return `${Math.round(mb)} MB`;
 }
