@@ -56,7 +56,6 @@ interface TutorState {
   // Voice
   isRecording: boolean;
   isTranscribing: boolean;
-  autoSpeak: boolean;
 
   // Modes
   modes: ModeInfo[];
@@ -76,7 +75,6 @@ interface TutorState {
   startRecording: () => Promise<void>;
   stopAndTranscribe: () => Promise<string | null>;
   speakText: (text: string) => Promise<void>;
-  toggleAutoSpeak: () => void;
   fetchModes: () => Promise<void>;
   fetchScenarios: () => Promise<void>;
   clearError: () => void;
@@ -96,7 +94,6 @@ export const useTutorStore = create<TutorState>()(
     isSending: false,
     isRecording: false,
     isTranscribing: false,
-    autoSpeak: false,
     modes: [],
     scenarios: [],
     error: null,
@@ -258,9 +255,15 @@ export const useTutorStore = create<TutorState>()(
           }
         });
 
-        // Auto-speak assistant response if enabled
-        if (get().autoSpeak) {
-          get().speakText(result.assistantMessage.content);
+        // Always auto-speak assistant response in voice mode
+        const speechText = result.assistantMessage.content
+          .replace(/```corrections[\s\S]*?```/g, '')
+          .replace(/```vocab[\s\S]*?```/g, '')
+          .replace(/\*\*Corrections?\*\*[\s\S]*?(?=\n\n|$)/g, '')
+          .replace(/\*\*New Words?\*\*[\s\S]*?(?=\n\n|$)/g, '')
+          .trim();
+        if (speechText) {
+          get().speakText(speechText);
         }
       } catch (e) {
         set((s) => {
@@ -316,12 +319,6 @@ export const useTutorStore = create<TutorState>()(
       const language = get().activeConversation?.language ?? null;
       invoke('tutor_speak_text', { text, language }).catch(() => {
         // Fire and forget — ignore TTS errors silently
-      });
-    },
-
-    toggleAutoSpeak: () => {
-      set((s) => {
-        s.autoSpeak = !s.autoSpeak;
       });
     },
 
