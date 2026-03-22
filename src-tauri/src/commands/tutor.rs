@@ -288,15 +288,15 @@ pub async fn tutor_start_conversation(
         },
     ];
 
-    // Store the opening user message (hidden/internal)
+    // Store the opening instruction as system message (hidden from UI)
     {
         let conn = lock_db(&state)?;
         conn.execute(
             "INSERT INTO messages (id, conversation_id, role, content, token_count)
-             VALUES (lower(hex(randomblob(16))), ?1, 'user', ?2, ?3)",
+             VALUES (lower(hex(randomblob(16))), ?1, 'system', ?2, ?3)",
             rusqlite::params![conv.id, opening_user_msg, count_tokens(&opening_user_msg)],
         )
-        .map_err(|e| format!("Opening user message insert error: {e}"))?;
+        .map_err(|e| format!("Opening system message insert error: {e}"))?;
     }
 
     let ai_response = chat_completion(

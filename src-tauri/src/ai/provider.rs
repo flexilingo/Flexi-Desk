@@ -149,7 +149,13 @@ pub async fn openai_chat(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("OpenAI request failed: {e}"))?;
+        .map_err(|e| {
+            if e.is_connect() && url.contains("localhost") {
+                "AI service is not running. Please start Ollama or check your AI provider settings.".to_string()
+            } else {
+                format!("OpenAI request failed: {e}")
+            }
+        })?;
 
     if !response.status().is_success() {
         let status = response.status();
@@ -357,7 +363,10 @@ pub async fn openai_chat_stream(
     max_tokens: Option<u32>,
     on_token: impl Fn(&str),
 ) -> Result<String, String> {
-    let url = format!("{base_url}/chat/completions");
+    let url = format!(
+        "{}/v1/chat/completions",
+        base_url.trim_end_matches('/')
+    );
 
     let mut body = serde_json::json!({
         "model": model,
@@ -379,7 +388,13 @@ pub async fn openai_chat_stream(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("OpenAI stream request failed: {e}"))?;
+        .map_err(|e| {
+            if e.is_connect() && url.contains("localhost") {
+                "AI service is not running. Please start Ollama or check your AI provider settings.".to_string()
+            } else {
+                format!("OpenAI stream request failed: {e}")
+            }
+        })?;
 
     if !response.status().is_success() {
         let status = response.status();

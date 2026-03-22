@@ -5,7 +5,7 @@ pub struct GrammarCorrection {
     pub original: String,
     pub corrected: String,
     pub explanation: String,
-    #[serde(rename = "type")]
+    #[serde(default, rename = "type", alias = "correction_type")]
     pub correction_type: String,
 }
 
@@ -13,9 +13,12 @@ pub struct GrammarCorrection {
 pub struct VocabSuggestion {
     pub word: String,
     pub translation: String,
+    #[serde(default, alias = "example_sentence")]
     pub example: String,
-    #[serde(default)]
+    #[serde(default, alias = "cefr_level")]
     pub cefr: String,
+    #[serde(default)]
+    pub pos: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -50,6 +53,62 @@ fn extract_code_block(text: &str, tag: &str) -> Option<(String, String, String)>
     let json_content = remaining[..end].trim().to_string();
     let before = text[..start].to_string();
     let after = remaining[end + 3..].to_string();
+    Some((before, json_content, after))
+}
+
+/// Extract a `### Tag:` or `**Tag:**` markdown section containing JSON.
+/// Looks for the section header, then finds the JSON array `[...]` within it.
+fn extract_markdown_section(text: &str, tag: &str) -> Option<(String, String, String)> {
+    let lower = text.to_lowercase();
+    let tag_lower = tag.to_lowercase();
+
+    // Find header like "### Corrections:", "**Corrections:**", "Corrections:"
+    let patterns = [
+        format!("### {}:", tag_lower),
+        format!("**{}:**", tag_lower),
+        format!("{}:", tag_lower),
+    ];
+
+    let mut start = None;
+    let mut header_len = 0;
+    for pattern in &patterns {
+        if let Some(pos) = lower.find(pattern.as_str()) {
+            start = Some(pos);
+            header_len = pattern.len();
+            break;
+        }
+    }
+
+    let start = start?;
+    let after_header = start + header_len;
+    let remaining = &text[after_header..];
+
+    // Find the JSON array in the remaining text
+    let arr_start = remaining.find('[')?;
+    let arr_text = &remaining[arr_start..];
+
+    // Find matching closing bracket (handle nested brackets)
+    let mut depth = 0;
+    let mut end_pos = None;
+    for (i, ch) in arr_text.char_indices() {
+        match ch {
+            '[' => depth += 1,
+            ']' => {
+                depth -= 1;
+                if depth == 0 {
+                    end_pos = Some(i + 1);
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let end_pos = end_pos?;
+    let json_content = arr_text[..end_pos].to_string();
+    let before = text[..start].to_string();
+    let after = remaining[arr_start + end_pos..].to_string();
+
     Some((before, json_content, after))
 }
 
@@ -91,6 +150,24 @@ pub fn parse_ai_response(raw: &str) -> ParsedResponse {
             vocabulary = parsed;
         }
         remaining = format!("{}{}", before, after);
+    }
+
+    // Fallback: try ### Corrections: / ### Vocabulary: markdown headers
+    if corrections.is_empty() {
+        if let Some((before, json, after)) = extract_markdown_section(&remaining, "Corrections") {
+            if let Ok(parsed) = serde_json::from_str::<Vec<GrammarCorrection>>(&json) {
+                corrections = parsed;
+            }
+            remaining = format!("{}{}", before, after);
+        }
+    }
+    if vocabulary.is_empty() {
+        if let Some((before, json, after)) = extract_markdown_section(&remaining, "Vocabulary") {
+            if let Ok(parsed) = serde_json::from_str::<Vec<VocabSuggestion>>(&json) {
+                vocabulary = parsed;
+            }
+            remaining = format!("{}{}", before, after);
+        }
     }
 
     ParsedResponse {
