@@ -33,8 +33,8 @@ Built with **Tauri 2 + Rust** on the backend and **React 19** on the frontend. A
 | 🧠 SRS Review | ✅ Available | Spaced repetition with Leitner, SM-2, and FSRS algorithms |
 | 📊 Dashboard | ✅ Available | XP, streaks, daily stats, learning overview |
 | ⚙️ Settings | ✅ Available | Theme, language, AI provider, Whisper model management |
-| 🎙 Caption | 🔄 In Development | Live audio capture + real-time Whisper transcription |
-| 🤖 Tutor | 🔄 In Development | AI conversation partner with scenarios |
+| 🎙 Caption | ✅ Available | Live audio capture + real-time Whisper transcription |
+| 🤖 AI Tutor | ✅ Available | Voice conversation partner with 63 scenarios, 5 practice modes, searchable role-plays, deck practice, and session scoring |
 | 📖 Reading | 🔄 In Development | Import PDF, EPUB, URLs with highlights and vocabulary |
 | 🗣 Pronunciation | 🔄 In Development | Speech analysis and feedback |
 | 📝 Writing | 🔄 In Development | Writing exercises with AI feedback |
