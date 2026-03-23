@@ -31,7 +31,7 @@ Built with **Tauri 2 + Rust** on the backend and **React 19** on the frontend. A
 | :--- | :---: | :---: | :--- |
 | 🎧 Podcast Player | v1.0 | ✅ Stable | PodcastIndex + RSS, Whisper transcription, CEFR subtitles, word lookup |
 | 🧠 SRS Review | v1.0 | ✅ Stable | Spaced repetition with Leitner, SM-2, and FSRS algorithms |
-| 📊 Dashboard | v1.0 | ✅ Stable | XP, streaks, daily stats, learning overview |
+| 📊 Dashboard | v1.0 | ✅ Stable | Streaks, daily study time, vocabulary count, review stats, activity feed |
 | ⚙️ Settings | v1.0 | ✅ Stable | Theme, language, AI provider, Whisper model management |
 | 🎙 Caption | v1.0-beta | 🧪 Beta | Live audio capture + real-time Whisper transcription |
 | 🤖 AI Tutor | v1.0-beta | 🧪 Beta | Voice conversation partner with 63 scenarios, 5 practice modes, searchable role-plays, deck practice, and session scoring |
