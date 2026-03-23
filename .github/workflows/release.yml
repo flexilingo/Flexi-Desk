@@ -14,8 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-latest
-            args: --target aarch64-apple-darwin
           - platform: ubuntu-22.04
             args: ""
           - platform: windows-latest
@@ -39,8 +37,6 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
 
       - name: Cache Cargo
         uses: actions/cache@v5
