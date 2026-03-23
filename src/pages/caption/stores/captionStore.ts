@@ -620,6 +620,7 @@ export const useCaptionStore = create<CaptionState>()(
           s.isTranscribing = false;
           s.activeSession = result.session;
           s.activeSegments = result.segments;
+          s.view = 'session-detail';
           // Update the session in the list too
           const idx = s.sessions.findIndex((sess) => sess.id === sessionId);
           if (idx >= 0) s.sessions[idx] = result.session;
@@ -730,18 +731,21 @@ export const useCaptionStore = create<CaptionState>()(
           s.captionStatus = {
             isCapturing: false,
             isLiveCapturing: false,
-            isTranscribing: false,
-            activeSessionId: undefined,
+            isTranscribing: true,
+            activeSessionId: session.id,
             deviceName: undefined,
           };
           s.isLiveCapturing = false;
           s.captureElapsed = 0;
-          // Navigate to session detail to see the result
           s.activeSession = session;
           s.view = 'session-detail';
         });
         get().fetchSessions();
-        get().fetchSegments(session.id);
+
+        // Auto-transcribe the saved WAV to get proper segments
+        // with word timestamps and confidence scores
+        await get().transcribeSession(session.id);
+
         return session;
       } catch (err) {
         set((s) => {

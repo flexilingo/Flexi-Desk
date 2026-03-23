@@ -37,7 +37,11 @@ import { mapDownloadProgress } from '../types';
 
 type SetupTab = 'download' | 'manual';
 
-export function WhisperSetup() {
+interface WhisperSetupProps {
+  onClose?: () => void;
+}
+
+export function WhisperSetup({ onClose }: WhisperSetupProps) {
   const {
     whisperInfo,
     isConfiguringWhisper,
@@ -170,8 +174,8 @@ export function WhisperSetup() {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          {whisperInfo?.isAvailable && (
-            <Button variant="ghost" size="icon" onClick={() => setView('sessions')}>
+          {(whisperInfo?.isAvailable || onClose) && (
+            <Button variant="ghost" size="icon" onClick={onClose ?? (() => setView('sessions'))}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}

@@ -158,13 +158,14 @@ pub fn caption_stop_capture(
     // Stop the recording thread and get the result
     let result = handle.stop()?;
 
-    // Update session in DB
+    // Update session in DB — mark as 'idle' (ready to transcribe).
+    // Frontend will trigger transcription separately via caption_transcribe_session.
     {
         let conn = lock_db(&state)?;
         conn.execute(
             "UPDATE caption_sessions SET
                 duration_seconds = ?1,
-                status = 'processing',
+                status = 'idle',
                 completed_at = datetime('now')
              WHERE id = ?2",
             rusqlite::params![result.duration_seconds, session_id],
@@ -1009,13 +1010,15 @@ pub async fn caption_stop_live_capture(
         0
     };
 
-    // Update session in DB
+    // Update session in DB — mark as 'idle' (ready for transcription).
+    // The frontend will trigger caption_transcribe_session to get proper
+    // segments with word timestamps and confidence scores from the saved WAV.
     {
         let conn = lock_db(&state)?;
         conn.execute(
             "UPDATE caption_sessions SET
                 duration_seconds = ?1,
-                status = 'completed',
+                status = 'idle',
                 completed_at = datetime('now')
              WHERE id = ?2",
             rusqlite::params![duration_seconds, session_id],

@@ -13,12 +13,12 @@ export const ENABLED_MODULES = {
   settings: true,
 
   // Tier 2 — High-value features (enable when tested)
-  caption: false,
+  caption: true,
   vocabulary: false,
 
   // Tier 3 — AI-powered (enable next)
   pronunciation: false,
-  tutor: false,
+  tutor: true,
   exam: false,
   podcastQuiz: false,
 

@@ -20,11 +20,12 @@ import { useCaptionStore } from '../stores/captionStore';
 import { TranscribeFileDialog } from './TranscribeFileDialog';
 import { DeviceSelector } from './DeviceSelector';
 import { ModelSelector } from './ModelSelector';
+import { WhisperSetup } from './WhisperSetup';
 import type { CaptionSession, CaptionSessionStatus } from '../types';
 import { formatDuration } from '../types';
 
 const STATUS_CONFIG: Record<CaptionSessionStatus, { label: string; className: string }> = {
-  idle: { label: 'Idle', className: 'bg-muted text-muted-foreground' },
+  idle: { label: 'Ready', className: 'bg-[#C58C6E]/15 text-[#C58C6E]' },
   capturing: { label: 'Capturing', className: 'bg-[#C58C6E]/15 text-[#C58C6E]' },
   'live-capturing': { label: 'Live', className: 'bg-[#8BB7A3]/15 text-[#8BB7A3]' },
   processing: { label: 'Processing', className: 'bg-primary/10 text-primary' },
@@ -70,13 +71,7 @@ export function SessionList() {
     setDeletingId(null);
   };
 
-  const handleManageModels = () => {
-    // Navigate to whisper setup — for now just show setup view
-    // The WhisperSetup component is shown when whisperInfo is unavailable,
-    // but we can also use setView if we add a 'setup' view
-    // For simplicity, open settings page in a new approach
-    // TODO: could open a dialog or navigate to settings
-  };
+  const [showWhisperSetup, setShowWhisperSetup] = useState(false);
 
   return (
     <>
@@ -126,7 +121,7 @@ export function SessionList() {
               </div>
 
               {/* Model selector */}
-              <ModelSelector onManageModels={handleManageModels} />
+              <ModelSelector onManageModels={() => setShowWhisperSetup(true)} />
             </div>
 
             <div className="flex gap-2">
@@ -198,6 +193,15 @@ export function SessionList() {
       </Card>
 
       <TranscribeFileDialog open={showFileDialog} onClose={() => setShowFileDialog(false)} />
+
+      {/* Whisper model management overlay */}
+      {showWhisperSetup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4">
+            <WhisperSetup onClose={() => setShowWhisperSetup(false)} />
+          </div>
+        </div>
+      )}
     </>
   );
 }

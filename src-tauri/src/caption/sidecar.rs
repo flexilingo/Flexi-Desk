@@ -1,5 +1,4 @@
 use std::process::Stdio;
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use tauri::Emitter;
@@ -112,6 +111,9 @@ impl WhisperSidecar {
             let mut line_buf = Vec::new();
             // Current segment index for partial updates — increments on \n (finalized)
             let mut current_segment: i64 = 0;
+            let start_time = std::time::Instant::now();
+            // Track when each segment started (first partial output for that index)
+            let mut segment_start_ms: i64 = 0;
 
             loop {
                 match reader.read(&mut buf).await {
@@ -129,12 +131,13 @@ impl WhisperSidecar {
                                         // \r = partial (whisper refining current text)
                                         // \n = finalized segment
                                         let is_partial = byte == b'\r';
+                                        let now_ms = start_time.elapsed().as_millis() as i64;
 
                                         let event = LiveSegmentEvent {
                                             session_id: session_id_clone.clone(),
                                             text: text.to_string(),
-                                            start_ms: 0,
-                                            end_ms: 0,
+                                            start_ms: segment_start_ms,
+                                            end_ms: now_ms,
                                             is_partial,
                                             segment_index: current_segment,
                                         };
@@ -145,9 +148,10 @@ impl WhisperSidecar {
                                     line_buf.clear();
                                 }
 
-                                // On newline, advance to next segment
+                                // On newline, advance to next segment and record start time
                                 if byte == b'\n' {
                                     current_segment += 1;
+                                    segment_start_ms = start_time.elapsed().as_millis() as i64;
                                 }
                             } else {
                                 line_buf.push(byte);

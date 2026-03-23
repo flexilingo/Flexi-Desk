@@ -122,7 +122,7 @@ pub fn parse_whisper_json(
                 return None;
             }
 
-            let words = seg.tokens.unwrap_or_default()
+            let words: Vec<WordTimestamp> = seg.tokens.unwrap_or_default()
                 .into_iter()
                 .filter_map(|tok| {
                     let word = tok.text.trim().to_string();
@@ -138,11 +138,19 @@ pub fn parse_whisper_json(
                 })
                 .collect();
 
+            // Calculate segment confidence as average of word confidences
+            let confidence = if words.is_empty() {
+                0.0
+            } else {
+                let sum: f64 = words.iter().map(|w| w.confidence).sum();
+                sum / words.len() as f64
+            };
+
             Some(ParsedSegment {
                 text,
                 start_ms: seg.offsets.from,
                 end_ms: seg.offsets.to,
-                confidence: 0.0,
+                confidence,
                 language: default_lang.to_string(),
                 words,
             })
