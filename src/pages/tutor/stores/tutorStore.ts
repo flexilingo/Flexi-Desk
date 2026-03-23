@@ -14,6 +14,14 @@ import type {
   RawSendMessageResult,
   Scenario,
 } from '../types';
+import type { RawDeckWithStats } from '@/pages/review/types';
+
+interface DeckOption {
+  id: string;
+  name: string;
+  language: string;
+  cardCount: number;
+}
 import {
   mapConversation,
   mapMessage,
@@ -21,6 +29,8 @@ import {
   mapScenario,
   mapSendMessageResult,
 } from '../types';
+
+export type TutorView = 'landing' | 'new_conversation' | 'detail' | 'session';
 
 // ── Params ──────────────────────────────────────────────
 
@@ -40,6 +50,9 @@ interface StartConversationParams {
 // ── State ───────────────────────────────────────────────
 
 interface TutorState {
+  // View
+  view: TutorView;
+
   // Navigation
   conversations: ConversationSummary[];
   activeConversation: ConversationSummary | null;
@@ -65,6 +78,10 @@ interface TutorState {
   modes: ModeInfo[];
   scenarios: Scenario[];
 
+  // Decks
+  decks: DeckOption[];
+  isLoadingDecks: boolean;
+
   // Error
   error: string | null;
 
@@ -72,6 +89,7 @@ interface TutorState {
   fetchConversations: () => Promise<void>;
   startConversation: (params: StartConversationParams) => Promise<void>;
   openConversation: (id: string) => Promise<void>;
+  viewConversation: (id: string) => Promise<void>;
   closeConversation: () => void;
   sendMessage: (content: string) => Promise<void>;
   endConversation: () => Promise<void>;
@@ -83,6 +101,8 @@ interface TutorState {
   toggleSubtitles: () => void;
   fetchModes: () => Promise<void>;
   fetchScenarios: () => Promise<void>;
+  fetchDecks: () => Promise<void>;
+  setView: (view: TutorView) => void;
   clearError: () => void;
 }
 
@@ -90,6 +110,7 @@ interface TutorState {
 
 export const useTutorStore = create<TutorState>()(
   immer((set, get) => ({
+    view: 'landing' as TutorView,
     conversations: [],
     activeConversation: null,
     messages: [],
@@ -103,6 +124,8 @@ export const useTutorStore = create<TutorState>()(
     showSubtitles: false,
     modes: [],
     scenarios: [],
+    decks: [],
+    isLoadingDecks: false,
     error: null,
 
     fetchConversations: async () => {
@@ -171,6 +194,33 @@ export const useTutorStore = create<TutorState>()(
           s.activeConversation = conv ?? null;
           s.messages = rawMessages.map(mapMessage);
           s.isLoadingMessages = false;
+          s.view = 'session';
+        });
+      } catch (e) {
+        set((s) => {
+          s.error = String(e);
+          s.isLoadingMessages = false;
+        });
+      }
+    },
+
+    viewConversation: async (id) => {
+      set((s) => {
+        s.isLoadingMessages = true;
+        s.error = null;
+      });
+      try {
+        const rawMessages = await invoke<RawMessageData[]>('tutor_get_messages', {
+          conversationId: id,
+        });
+
+        const conv = get().conversations.find((c) => c.id === id);
+
+        set((s) => {
+          s.activeConversation = conv ?? null;
+          s.messages = rawMessages.map(mapMessage);
+          s.isLoadingMessages = false;
+          s.view = 'detail';
         });
       } catch (e) {
         set((s) => {
@@ -188,6 +238,7 @@ export const useTutorStore = create<TutorState>()(
         s.messages = [];
         s.streamingContent = '';
         s.isStreaming = false;
+        s.view = 'landing';
       });
     },
 
@@ -404,6 +455,35 @@ export const useTutorStore = create<TutorState>()(
           s.error = String(e);
         });
       }
+    },
+
+    fetchDecks: async () => {
+      set((s) => {
+        s.isLoadingDecks = true;
+      });
+      try {
+        const raw = await invoke<RawDeckWithStats[]>('srs_list_decks');
+        set((s) => {
+          s.decks = raw.map((d) => ({
+            id: d.id,
+            name: d.name,
+            language: d.language,
+            cardCount: d.card_count,
+          }));
+          s.isLoadingDecks = false;
+        });
+      } catch (e) {
+        set((s) => {
+          s.isLoadingDecks = false;
+          s.error = String(e);
+        });
+      }
+    },
+
+    setView: (view: TutorView) => {
+      set((s) => {
+        s.view = view;
+      });
     },
 
     clearError: () => {

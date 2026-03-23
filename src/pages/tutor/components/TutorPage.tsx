@@ -1,10 +1,12 @@
 import { X } from 'lucide-react';
 import { useTutorStore } from '../stores/tutorStore';
-import { ConversationSetup } from './ConversationSetup';
+import { TutorLanding } from './TutorLanding';
+import { NewConversationWizard } from './NewConversationWizard';
+import { ConversationDetail } from './ConversationDetail';
 import { VoiceSession } from './VoiceSession';
 
 export function TutorPage() {
-  const { activeConversation, error, clearError } = useTutorStore();
+  const { view, error, clearError } = useTutorStore();
 
   return (
     <div className="relative h-[calc(100vh-4rem)]">
@@ -18,7 +20,10 @@ export function TutorPage() {
         </div>
       )}
 
-      {activeConversation ? <VoiceSession /> : <ConversationSetup />}
+      {view === 'landing' && <TutorLanding />}
+      {view === 'new_conversation' && <NewConversationWizard />}
+      {view === 'detail' && <ConversationDetail />}
+      {view === 'session' && <VoiceSession />}
     </div>
   );
 }

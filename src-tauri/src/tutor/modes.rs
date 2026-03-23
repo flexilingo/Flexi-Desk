@@ -75,7 +75,8 @@ fn free_prompt(topic: Option<&str>) -> String {
 ### Behavior
 - Be a natural, engaging conversation partner. Ask follow-up questions.
 - Introduce 1-2 new vocabulary words per exchange that are slightly above the student's level.
-- Transition to a new sub-topic every 5-6 turns to keep things interesting.
+- Let the conversation evolve naturally based on what the student says. Don't force topic changes.
+- If conversation stalls, gently introduce a related sub-topic rather than switching abruptly.
 - Share short personal anecdotes (as a tutor character) to make conversation feel real.
 - If the student gives short answers, ask open-ended questions to draw them out.
 
