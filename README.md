@@ -27,19 +27,19 @@
 
 Built with **Tauri 2 + Rust** on the backend and **React 19** on the frontend. All data lives in a local **SQLite** database and syncs to the cloud when online.
 
-| Module | Status | Description |
-| :--- | :---: | :--- |
-| 🎧 Podcast Player | ✅ Available | PodcastIndex + RSS, Whisper transcription, CEFR subtitles, word lookup |
-| 🧠 SRS Review | ✅ Available | Spaced repetition with Leitner, SM-2, and FSRS algorithms |
-| 📊 Dashboard | ✅ Available | XP, streaks, daily stats, learning overview |
-| ⚙️ Settings | ✅ Available | Theme, language, AI provider, Whisper model management |
-| 🎙 Caption | ✅ Available | Live audio capture + real-time Whisper transcription |
-| 🤖 AI Tutor | ✅ Available | Voice conversation partner with 63 scenarios, 5 practice modes, searchable role-plays, deck practice, and session scoring |
-| 📖 Reading | 🔄 In Development | Import PDF, EPUB, URLs with highlights and vocabulary |
-| 🗣 Pronunciation | 🔄 In Development | Speech analysis and feedback |
-| 📝 Writing | 🔄 In Development | Writing exercises with AI feedback |
-| 📚 Vocabulary | 🔄 In Development | Personal word list across all modules |
-| 📋 Exam | 🔄 In Development | Quiz and exam creation |
+| Module | Version | Status | Description |
+| :--- | :---: | :---: | :--- |
+| 🎧 Podcast Player | v1.0 | ✅ Stable | PodcastIndex + RSS, Whisper transcription, CEFR subtitles, word lookup |
+| 🧠 SRS Review | v1.0 | ✅ Stable | Spaced repetition with Leitner, SM-2, and FSRS algorithms |
+| 📊 Dashboard | v1.0 | ✅ Stable | XP, streaks, daily stats, learning overview |
+| ⚙️ Settings | v1.0 | ✅ Stable | Theme, language, AI provider, Whisper model management |
+| 🎙 Caption | v1.0-beta | 🧪 Beta | Live audio capture + real-time Whisper transcription |
+| 🤖 AI Tutor | v1.0-beta | 🧪 Beta | Voice conversation partner with 63 scenarios, 5 practice modes, searchable role-plays, deck practice, and session scoring |
+| 📖 Reading | — | 🔄 Planned | Import PDF, EPUB, URLs with highlights and vocabulary |
+| 🗣 Pronunciation | — | 🔄 Planned | Speech analysis and feedback |
+| 📝 Writing | — | 🔄 Planned | Writing exercises with AI feedback |
+| 📚 Vocabulary | — | 🔄 Planned | Personal word list across all modules |
+| 📋 Exam | — | 🔄 Planned | Quiz and exam creation |
 
 ## 🖥 Platform Support
 
