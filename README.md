@@ -27,7 +27,7 @@
 
 Built with **Tauri 2 + Rust** on the backend and **React 19** on the frontend. All data lives in a local **SQLite** database and syncs to the cloud when online.
 
-| Module | Version | Status | Description |
+| Module | Version&nbsp;&nbsp;&nbsp;&nbsp; | Status | Description |
 | :--- | :---: | :---: | :--- |
 | 🎧 Podcast Player | v1.0 | ✅ Stable | PodcastIndex + RSS, Whisper transcription, CEFR subtitles, word lookup |
 | 🧠 SRS Review | v1.0 | ✅ Stable | Spaced repetition with Leitner, SM-2, and FSRS algorithms |
