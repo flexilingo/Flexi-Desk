@@ -20,7 +20,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
-import { open as openUrl } from '@tauri-apps/plugin-shell';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { listen } from '@tauri-apps/api/event';
 import { Button } from '@/components/ui/button';
 import {
