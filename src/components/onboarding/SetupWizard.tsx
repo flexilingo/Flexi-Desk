@@ -849,8 +849,51 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
           </div>
         )}
 
-        {/* Error */}
-        {error && (
+        {/* AVX2 incompatibility — special guidance card */}
+        {error && error.includes('AVX2') && (
+          <div className="rounded-lg border border-warning/40 bg-warning/5 p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">CPU not compatible with this build</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your processor doesn't support AVX2 instructions required by the pre-built Whisper binary.
+                  This affects CPUs made before 2013 (Intel 3rd gen or older, early AMD).
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2 pl-8">
+              <p className="text-xs font-medium text-foreground">How to fix:</p>
+              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>
+                  Download a compatible build from{' '}
+                  <a
+                    href="https://github.com/ggerganov/whisper.cpp/releases"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline underline-offset-2 hover:text-primary/80"
+                    onClick={(e) => { e.preventDefault(); import('@tauri-apps/plugin-shell').then(m => m.open('https://github.com/ggerganov/whisper.cpp/releases')); }}
+                  >
+                    whisper.cpp releases
+                  </a>
+                  {' '}— look for a <strong>noavx</strong> or <strong>compat</strong> build if available,
+                  or build from source with AVX2 disabled.
+                </li>
+                <li>
+                  Once installed, set the binary path manually in{' '}
+                  <strong>Settings → Speech Recognition → Custom binary path</strong>.
+                </li>
+              </ol>
+              <p className="text-xs text-muted-foreground pt-1">
+                Or skip for now and use the AI Tutor and other features — transcription is only needed for
+                Live Caption and Podcast.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Generic error */}
+        {error && !error.includes('AVX2') && (
           <div className="flex items-start gap-3 rounded-lg border border-error/30 bg-error/5 p-4">
             <AlertCircle className="h-5 w-5 text-error mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">{error}</p>

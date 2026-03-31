@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   Languages,
+  AlertCircle,
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
@@ -288,8 +289,43 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
           {/* Not found — Install options */}
           {!binaryPath && !isAutoDetecting && whisperInstallStatus && (
             <div className="space-y-2">
-              {/* Error display */}
-              {storeError && (
+              {/* AVX2 incompatibility — guidance card */}
+              {storeError && storeError.includes('AVX2') && (
+                <div className="rounded-lg border border-warning/40 bg-warning/5 p-3 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">CPU not compatible with this build</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Your processor (pre-2013) doesn't support AVX2 instructions required by the
+                        pre-built Whisper binary.
+                      </p>
+                    </div>
+                  </div>
+                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside pl-1">
+                    <li>
+                      Download a compatible build from{' '}
+                      <a
+                        href="https://github.com/ggerganov/whisper.cpp/releases"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline underline-offset-2 hover:text-primary/80"
+                        onClick={(e) => { e.preventDefault(); import('@tauri-apps/plugin-shell').then(m => m.open('https://github.com/ggerganov/whisper.cpp/releases')); }}
+                      >
+                        whisper.cpp releases
+                      </a>
+                      {' '}(look for a noavx or compat build, or build from source).
+                    </li>
+                    <li>Use <strong>Custom binary path</strong> below to point to your installed binary.</li>
+                  </ol>
+                  <button onClick={clearError} className="text-xs text-muted-foreground underline">
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
+              {/* Generic error display */}
+              {storeError && !storeError.includes('AVX2') && (
                 <div className="flex items-center justify-between rounded-md bg-error/10 px-3 py-2 text-sm text-error">
                   <span className="truncate text-xs">{storeError}</span>
                   <button onClick={clearError} className="ml-2 shrink-0 text-xs underline">
