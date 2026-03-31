@@ -663,16 +663,13 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
   const handleInstallWhisper = useCallback(async () => {
     setError(null);
     try {
-      if (whisperInstallStatus && !whisperInstallStatus.homebrewAvailable) {
-        await installHomebrew();
-      }
       await installWhisper();
       await fetchAvailableModels();
       await checkWhisper();
     } catch (err) {
       setError(String(err));
     }
-  }, [whisperInstallStatus, installHomebrew, installWhisper, fetchAvailableModels, checkWhisper]);
+  }, [installWhisper, fetchAvailableModels, checkWhisper]);
 
   const handleDownloadModel = useCallback(async (modelId: string) => {
     setError(null);

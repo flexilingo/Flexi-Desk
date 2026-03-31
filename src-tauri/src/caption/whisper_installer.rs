@@ -130,12 +130,11 @@ pub fn whisper_install_status() -> WhisperInstallStatus {
 }
 
 /// GitHub release download URL for whisper.cpp pre-built binary.
+/// Uses the CPU-only build (no CUDA required) for maximum compatibility.
 fn whisper_download_url() -> Result<(&'static str, &'static str), String> {
-    // whisper.cpp releases: https://github.com/ggerganov/whisper.cpp/releases
-    // Pre-built binaries use naming like: whisper-<version>-bin-<platform>.zip
     match (std::env::consts::OS, std::env::consts::ARCH) {
         ("windows", "x86_64") => Ok((
-            "https://github.com/ggerganov/whisper.cpp/releases/latest/download/whisper-cublas-bin-x64.zip",
+            "https://github.com/ggerganov/whisper.cpp/releases/latest/download/whisper-bin-x64.zip",
             "zip",
         )),
         ("linux", "x86_64") => Ok((
@@ -148,6 +147,40 @@ fn whisper_download_url() -> Result<(&'static str, &'static str), String> {
         )),
         (os, arch) => Err(format!("Direct download not available for {os}/{arch}. Use Homebrew instead.")),
     }
+}
+
+/// Recursively search a directory for a whisper binary (whisper-cli or main).
+fn find_whisper_binary_in_dir(dir: &std::path::Path) -> Option<std::path::PathBuf> {
+    let names: &[&str] = if cfg!(target_os = "windows") {
+        &["whisper-cli.exe", "main.exe"]
+    } else {
+        &["whisper-cli", "main"]
+    };
+
+    // Check root first
+    for name in names {
+        let candidate = dir.join(name);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+
+    // Then check one level of subdirectories (zip usually extracts into a subfolder)
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                for name in names {
+                    let candidate = path.join(name);
+                    if candidate.is_file() {
+                        return Some(candidate);
+                    }
+                }
+            }
+        }
+    }
+
+    None
 }
 
 /// Install whisper-cli via direct binary download (Windows/Linux).
@@ -251,22 +284,30 @@ pub async fn install_whisper_direct(app: &AppHandle) -> Result<String, String> {
 
     let _ = std::fs::remove_file(&archive_path);
 
+    // Find the binary inside the extracted directory (may be in a subfolder)
+    let found = find_whisper_binary_in_dir(&bin_dir)
+        .ok_or_else(|| "whisper-cli was downloaded but could not be found after extraction. The archive may have a different structure.".to_string())?;
+
+    // Move to the expected managed location if it's in a subfolder
+    let target = bin_dir.join(whisper_binary_name());
+    if found != target {
+        std::fs::rename(&found, &target)
+            .map_err(|e| format!("Failed to move binary: {e}"))?;
+    }
+
     // Make executable on Unix
     #[cfg(unix)]
     {
-        let binary = bin_dir.join(whisper_binary_name());
-        if binary.is_file() {
-            use std::os::unix::fs::PermissionsExt;
-            let _ = std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755));
-        }
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o755));
     }
 
-    // Detect the installed binary
-    let binary = detect_whisper_binary()
-        .ok_or_else(|| "whisper-cli was downloaded but could not be found".to_string())?;
+    let binary_str = target.to_str()
+        .ok_or_else(|| "Path contains invalid UTF-8".to_string())?
+        .to_string();
 
-    emit_progress(app, "complete", &format!("Installed at {binary}"), 100.0);
-    Ok(binary)
+    emit_progress(app, "complete", &format!("Installed at {binary_str}"), 100.0);
+    Ok(binary_str)
 }
 
 /// Install whisper-cpp via Homebrew (macOS). Emits progress events line by line.
