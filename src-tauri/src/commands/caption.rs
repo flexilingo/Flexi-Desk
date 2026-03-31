@@ -1197,10 +1197,7 @@ pub fn caption_auto_detect_whisper(
 pub async fn caption_install_whisper(
     app: AppHandle,
 ) -> Result<String, String> {
-    let brew_path = whisper_installer::detect_homebrew()
-        .ok_or_else(|| "Homebrew not found. Please install Homebrew first.".to_string())?;
-
-    whisper_installer::install_whisper_via_brew(&app, &brew_path).await
+    whisper_installer::install_whisper_auto(&app).await
 }
 
 #[tauri::command]

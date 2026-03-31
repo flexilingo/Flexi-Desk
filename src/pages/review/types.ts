@@ -278,3 +278,90 @@ export function mapSummary(raw: RawSessionSummary): SessionSummary {
     durationSeconds: raw.duration_seconds,
   };
 }
+
+// ── Deck Hub Types ─────────────────────────────────────────
+
+export interface ExamplePair {
+  source: string;
+  target: string;
+}
+
+export interface AnalyzedItem {
+  word: string;
+  translation: string;
+  definition: string;
+  pos: string;
+  cefrLevel: string;
+  ipa: string;
+  examples: ExamplePair[];
+  memoryHook: string | null;
+  collocations: string[];
+  cardType: string;
+}
+
+export interface OcrResult {
+  text: string;
+  confidence: number;
+}
+
+export interface DeckHubCardInput {
+  word: string;
+  translation?: string;
+  definition?: string;
+  pos?: string;
+  cefrLevel?: string;
+  ipa?: string;
+  exampleSentence?: string;
+  memoryHook?: string;
+  collocations?: string[];
+  cardType?: string;
+}
+
+// Raw snake_case from Rust
+export interface RawAnalyzedItem {
+  word: string;
+  translation: string;
+  definition: string;
+  pos: string;
+  cefr_level: string;
+  ipa: string;
+  examples: { source: string; target: string }[];
+  memory_hook: string | null;
+  collocations: string[];
+  card_type: string;
+}
+
+export interface RawOcrResult {
+  text: string;
+  confidence: number;
+}
+
+export function mapAnalyzedItem(raw: RawAnalyzedItem): AnalyzedItem {
+  return {
+    word: raw.word,
+    translation: raw.translation,
+    definition: raw.definition,
+    pos: raw.pos,
+    cefrLevel: raw.cefr_level,
+    ipa: raw.ipa,
+    examples: raw.examples,
+    memoryHook: raw.memory_hook,
+    collocations: raw.collocations,
+    cardType: raw.card_type,
+  };
+}
+
+export function toDeckHubCardInput(item: AnalyzedItem): DeckHubCardInput {
+  return {
+    word: item.word,
+    translation: item.translation || undefined,
+    definition: item.definition || undefined,
+    pos: item.pos || undefined,
+    cefrLevel: item.cefrLevel || undefined,
+    ipa: item.ipa || undefined,
+    exampleSentence: item.examples[0]?.source || undefined,
+    memoryHook: item.memoryHook || undefined,
+    collocations: item.collocations.length > 0 ? item.collocations : undefined,
+    cardType: item.cardType || undefined,
+  };
+}

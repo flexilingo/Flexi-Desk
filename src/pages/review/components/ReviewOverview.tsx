@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import {
-  Brain, Plus, Search, Trash2, Merge, Clock, ChevronRight,
+  Brain, Plus, Search, Trash2, Merge, Clock, ChevronRight, Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,6 +93,10 @@ export function ReviewOverview() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate('/review/deck-hub')}>
+            <Layers className="w-4 h-4 mr-1.5" />
+            Deck Hub
+          </Button>
           {decks.length >= 2 && (
             <Button variant="outline" size="sm" onClick={() => setMergeOpen(true)}>
               <Merge className="w-4 h-4 mr-1.5" />

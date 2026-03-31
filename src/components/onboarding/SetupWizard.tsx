@@ -718,9 +718,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
               <div>
                 <p className="text-sm font-medium text-foreground">Whisper not found</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {whisperInstallStatus?.canAutoInstall
-                    ? 'Click below to install whisper-cli automatically via Homebrew.'
-                    : 'Whisper requires Homebrew. Click below to install both.'}
+                  Click below to install whisper-cli automatically.
                 </p>
               </div>
             </div>
@@ -737,7 +735,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
             <div className="flex items-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <span className="text-sm text-foreground">
-                {isInstallingHomebrew ? 'Installing Homebrew...' : 'Installing Whisper...'}
+                {isInstallingHomebrew ? 'Setting up dependencies...' : 'Installing Whisper...'}
               </span>
             </div>
             {whisperInstallMessage && (

@@ -1,7 +1,8 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use futures_util::StreamExt;
 use tauri::{AppHandle, Emitter};
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;
 
 use serde::{Deserialize, Serialize};
@@ -24,32 +25,81 @@ pub struct WhisperInstallProgress {
     pub percent: f64,
 }
 
+/// Directory where we store managed whisper binary on non-macOS platforms.
+fn whisper_managed_dir() -> Result<PathBuf, String> {
+    let base = dirs::data_dir()
+        .ok_or_else(|| "Could not determine data directory".to_string())?;
+    Ok(base.join("com.flexilingo.desk").join("whisper"))
+}
+
+/// Binary name for whisper-cli on current platform.
+fn whisper_binary_name() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "whisper-cli.exe"
+    } else {
+        "whisper-cli"
+    }
+}
+
 /// Try to find whisper-cli binary at common paths.
 pub fn detect_whisper_binary() -> Option<String> {
-    let candidates = [
-        "/opt/homebrew/bin/whisper-cli",
-        "/usr/local/bin/whisper-cli",
-        "/opt/homebrew/bin/main",
-        "/usr/local/bin/main",
-    ];
-    for path in &candidates {
-        if Path::new(path).is_file() {
-            return Some(path.to_string());
+    // Check managed install location first (cross-platform)
+    if let Ok(dir) = whisper_managed_dir() {
+        let managed = dir.join(whisper_binary_name());
+        if managed.is_file() {
+            return managed.to_str().map(|s| s.to_string());
         }
     }
+
+    #[cfg(unix)]
+    {
+        let candidates = [
+            "/opt/homebrew/bin/whisper-cli",
+            "/usr/local/bin/whisper-cli",
+            "/opt/homebrew/bin/main",
+            "/usr/local/bin/main",
+        ];
+        for path in &candidates {
+            if Path::new(path).is_file() {
+                return Some(path.to_string());
+            }
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        // Check if whisper-cli is on PATH
+        if let Ok(output) = std::process::Command::new("where")
+            .arg("whisper-cli")
+            .output()
+        {
+            if output.status.success() {
+                if let Ok(path) = String::from_utf8(output.stdout) {
+                    let first_line = path.lines().next().unwrap_or("").trim();
+                    if !first_line.is_empty() && Path::new(first_line).is_file() {
+                        return Some(first_line.to_string());
+                    }
+                }
+            }
+        }
+    }
+
     None
 }
 
-/// Try to find Homebrew installation.
+/// Try to find Homebrew installation (macOS/Linux only).
 pub fn detect_homebrew() -> Option<String> {
-    let candidates = [
-        "/opt/homebrew/bin/brew",
-        "/usr/local/bin/brew",
-        "/home/linuxbrew/.linuxbrew/bin/brew",
-    ];
-    for path in &candidates {
-        if Path::new(path).is_file() {
-            return Some(path.to_string());
+    #[cfg(unix)]
+    {
+        let candidates = [
+            "/opt/homebrew/bin/brew",
+            "/usr/local/bin/brew",
+            "/home/linuxbrew/.linuxbrew/bin/brew",
+        ];
+        for path in &candidates {
+            if Path::new(path).is_file() {
+                return Some(path.to_string());
+            }
         }
     }
     None
@@ -59,20 +109,167 @@ pub fn detect_homebrew() -> Option<String> {
 pub fn whisper_install_status() -> WhisperInstallStatus {
     let binary = detect_whisper_binary();
     let brew = detect_homebrew();
-    let is_macos = std::env::consts::OS == "macos";
+    let os = std::env::consts::OS;
+
+    // can_auto_install: macOS (brew) or direct download (Linux/Windows)
+    let can_auto_install = match os {
+        "macos" => brew.is_some() || true, // can install brew + whisper, or direct download
+        "linux" | "windows" => true,       // direct binary download
+        _ => false,
+    };
 
     WhisperInstallStatus {
         binary_detected: binary.is_some(),
         binary_path: binary,
         homebrew_available: brew.is_some(),
         homebrew_path: brew.clone(),
-        can_auto_install: brew.is_some() && is_macos,
-        platform: std::env::consts::OS.to_string(),
+        can_auto_install,
+        platform: os.to_string(),
         arch: std::env::consts::ARCH.to_string(),
     }
 }
 
-/// Install whisper-cpp via Homebrew. Emits progress events line by line.
+/// GitHub release download URL for whisper.cpp pre-built binary.
+fn whisper_download_url() -> Result<(&'static str, &'static str), String> {
+    // whisper.cpp releases: https://github.com/ggerganov/whisper.cpp/releases
+    // Pre-built binaries use naming like: whisper-<version>-bin-<platform>.zip
+    match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("windows", "x86_64") => Ok((
+            "https://github.com/ggerganov/whisper.cpp/releases/latest/download/whisper-cublas-bin-x64.zip",
+            "zip",
+        )),
+        ("linux", "x86_64") => Ok((
+            "https://github.com/ggerganov/whisper.cpp/releases/latest/download/whisper-bin-x64.zip",
+            "zip",
+        )),
+        ("linux", "aarch64") => Ok((
+            "https://github.com/ggerganov/whisper.cpp/releases/latest/download/whisper-bin-arm64.zip",
+            "zip",
+        )),
+        (os, arch) => Err(format!("Direct download not available for {os}/{arch}. Use Homebrew instead.")),
+    }
+}
+
+/// Install whisper-cli via direct binary download (Windows/Linux).
+pub async fn install_whisper_direct(app: &AppHandle) -> Result<String, String> {
+    let (url, _ext) = whisper_download_url()?;
+    let bin_dir = whisper_managed_dir()?;
+    std::fs::create_dir_all(&bin_dir)
+        .map_err(|e| format!("Failed to create directory: {e}"))?;
+
+    let archive_path = bin_dir.join("whisper-download.zip");
+
+    // Clean up previous download
+    if archive_path.exists() {
+        let _ = std::fs::remove_file(&archive_path);
+    }
+
+    emit_progress(app, "downloading", "Downloading whisper-cli...", 0.0);
+
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::limited(10))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
+
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("Download request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Download failed with status: {}", response.status()));
+    }
+
+    let total_bytes = response.content_length().unwrap_or(0);
+    let mut file = tokio::fs::File::create(&archive_path)
+        .await
+        .map_err(|e| format!("Failed to create file: {e}"))?;
+
+    let mut downloaded: u64 = 0;
+    let mut stream = response.bytes_stream();
+    let mut last_pct: f64 = -1.0;
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(|e| format!("Download error: {e}"))?;
+        file.write_all(&chunk)
+            .await
+            .map_err(|e| format!("Write error: {e}"))?;
+        downloaded += chunk.len() as u64;
+        let pct = if total_bytes > 0 {
+            (downloaded as f64 / total_bytes as f64) * 100.0
+        } else {
+            0.0
+        };
+        let rounded = (pct * 10.0).floor() / 10.0;
+        if (rounded - last_pct).abs() >= 1.0 {
+            last_pct = rounded;
+            emit_progress(app, "downloading", &format!("Downloading... {rounded:.0}%"), rounded);
+        }
+    }
+
+    file.flush().await.map_err(|e| format!("Flush error: {e}"))?;
+    drop(file);
+
+    // Extract
+    emit_progress(app, "extracting", "Extracting whisper-cli...", -1.0);
+
+    let archive_str = archive_path.to_str()
+        .ok_or_else(|| "Path contains invalid UTF-8".to_string())?;
+    let bin_dir_str = bin_dir.to_str()
+        .ok_or_else(|| "Path contains invalid UTF-8".to_string())?;
+
+    #[cfg(target_os = "windows")]
+    let extract_result = std::process::Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-Command",
+            &format!(
+                "Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
+                archive_str, bin_dir_str
+            ),
+        ])
+        .output();
+
+    #[cfg(not(target_os = "windows"))]
+    let extract_result = std::process::Command::new("unzip")
+        .args(["-o", archive_str, "-d", bin_dir_str])
+        .output();
+
+    match extract_result {
+        Ok(output) if output.status.success() => {}
+        Ok(output) => {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let _ = std::fs::remove_file(&archive_path);
+            return Err(format!("Failed to extract: {stderr}"));
+        }
+        Err(e) => {
+            let _ = std::fs::remove_file(&archive_path);
+            return Err(format!("Failed to extract: {e}"));
+        }
+    }
+
+    let _ = std::fs::remove_file(&archive_path);
+
+    // Make executable on Unix
+    #[cfg(unix)]
+    {
+        let binary = bin_dir.join(whisper_binary_name());
+        if binary.is_file() {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755));
+        }
+    }
+
+    // Detect the installed binary
+    let binary = detect_whisper_binary()
+        .ok_or_else(|| "whisper-cli was downloaded but could not be found".to_string())?;
+
+    emit_progress(app, "complete", &format!("Installed at {binary}"), 100.0);
+    Ok(binary)
+}
+
+/// Install whisper-cpp via Homebrew (macOS). Emits progress events line by line.
 pub async fn install_whisper_via_brew(
     app: &AppHandle,
     brew_path: &str,
@@ -113,8 +310,31 @@ pub async fn install_whisper_via_brew(
     Ok(binary)
 }
 
-/// Install Homebrew itself. Emits progress events.
+/// Platform-aware whisper installation: brew on macOS, direct download on Windows/Linux.
+pub async fn install_whisper_auto(app: &AppHandle) -> Result<String, String> {
+    match std::env::consts::OS {
+        "macos" => {
+            // Try brew first
+            if let Some(brew_path) = detect_homebrew() {
+                return install_whisper_via_brew(app, &brew_path).await;
+            }
+            // Install homebrew then whisper
+            let brew_path = install_homebrew(app).await?;
+            install_whisper_via_brew(app, &brew_path).await
+        }
+        "linux" | "windows" => {
+            install_whisper_direct(app).await
+        }
+        os => Err(format!("Unsupported platform: {os}")),
+    }
+}
+
+/// Install Homebrew itself (macOS only). Emits progress events.
 pub async fn install_homebrew(app: &AppHandle) -> Result<String, String> {
+    if std::env::consts::OS != "macos" && std::env::consts::OS != "linux" {
+        return Err("Homebrew is only available on macOS and Linux".to_string());
+    }
+
     emit_progress(app, "installing_homebrew", "Downloading Homebrew installer...", -1.0);
 
     let mut child = Command::new("/bin/bash")

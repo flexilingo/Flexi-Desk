@@ -1,6 +1,7 @@
 mod ai;
 mod auth;
 mod caption;
+mod deck_hub;
 mod commands;
 mod dashboard;
 mod db;
@@ -296,6 +297,7 @@ pub fn run() {
             // Export/Import
             commands::export::export_vocabulary_csv,
             commands::export::export_vocabulary_anki,
+            commands::export::export_deck_anki,
             commands::export::import_preview_csv,
             commands::export::import_execute,
             // Sync
@@ -318,6 +320,7 @@ pub fn run() {
             commands::jobs::job_list,
             commands::podcast::podcast_start_transcribe_job,
             commands::podcast::podcast_start_download_job,
+            commands::podcast::podcast_sync_to_cloud,
             // AI
             commands::ai::ai_word_analysis,
             commands::ai::ai_translate_words,
@@ -325,6 +328,15 @@ pub fn run() {
             commands::ai::ai_sentence_chat_history,
             commands::ai::ai_sentence_chat_clear,
             commands::ai::ai_evaluate_writing,
+            // Deck Hub
+            commands::deck_hub::deck_hub_analyze_text,
+            commands::deck_hub::deck_hub_batch_create,
+            commands::deck_hub::deck_hub_check_tesseract,
+            commands::deck_hub::deck_hub_tesseract_install_instructions,
+            commands::deck_hub::deck_hub_install_tesseract,
+            commands::deck_hub::deck_hub_ocr_image,
+            commands::deck_hub::deck_hub_export_quizlet,
+            commands::deck_hub::deck_hub_cloud_push,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

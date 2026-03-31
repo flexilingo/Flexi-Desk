@@ -1974,3 +1974,108 @@ async fn run_download_task(
 
     Ok(())
 }
+
+// ── Cloud Sync ─────────────────────────────────────────
+
+/// Push locally-transcribed podcast segments to the FlexiLingo cloud.
+/// Creates an nlp_jobs entry with transcription_complete=true so the
+/// worker-v2 skips Whisper and runs NLP-only (spaCy pipeline).
+#[tauri::command]
+pub async fn podcast_sync_to_cloud(
+    state: State<'_, AppState>,
+    episode_id: String,
+) -> Result<serde_json::Value, String> {
+    // 1. Read episode metadata + validate transcript is completed
+    let (title, transcript_status, feed_id) = {
+        let conn = lock_db(&state)?;
+        conn.query_row(
+            "SELECT title, transcript_status, feed_id FROM podcast_episodes WHERE id = ?1",
+            rusqlite::params![episode_id],
+            |row| Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            )),
+        )
+        .map_err(|e| format!("Episode not found: {e}"))?
+    };
+
+    if transcript_status != "completed" {
+        return Err(format!(
+            "Transcript not ready (status: '{transcript_status}'). Transcribe the episode first."
+        ));
+    }
+
+    // 2. Get language from feed
+    let source_language = {
+        let conn = lock_db(&state)?;
+        conn.query_row(
+            "SELECT COALESCE(language, 'en') FROM podcast_feeds WHERE id = ?1",
+            rusqlite::params![feed_id],
+            |row| row.get::<_, String>(0),
+        )
+        .unwrap_or_else(|_| "en".to_string())
+    };
+
+    // 3. Read transcript segments (text + timing only, no word timestamps)
+    let segments = {
+        let conn = lock_db(&state)?;
+        let mut stmt = conn
+            .prepare(
+                "SELECT text, start_ms, end_ms
+                 FROM podcast_transcript_segments
+                 WHERE episode_id = ?1
+                 ORDER BY start_ms ASC",
+            )
+            .map_err(|e| format!("Query error: {e}"))?;
+
+        let rows: Vec<(String, i64, i64)> = stmt
+            .query_map(rusqlite::params![episode_id], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, i64>(1)?,
+                    row.get::<_, i64>(2)?,
+                ))
+            })
+            .map_err(|e| format!("Query error: {e}"))?
+            .filter_map(|r| r.ok())
+            .collect();
+        rows
+    };
+
+    if segments.is_empty() {
+        return Err("No transcript segments found for this episode".to_string());
+    }
+
+    // 4. Build payload
+    let segments_json: Vec<serde_json::Value> = segments
+        .iter()
+        .map(|(text, start_ms, end_ms)| {
+            serde_json::json!({
+                "text": text,
+                "start_ms": start_ms,
+                "end_ms": end_ms,
+            })
+        })
+        .collect();
+
+    let video_id = format!("desk_podcast_{episode_id}");
+
+    let payload = serde_json::json!({
+        "video_id": video_id,
+        "title": title,
+        "source_language": source_language,
+        "segments": segments_json,
+    });
+
+    // 5. Send to cloud
+    let result = crate::auth::supabase_call(
+        state,
+        "POST".to_string(),
+        "/podcast?action=sync-desk-transcript".to_string(),
+        Some(payload),
+    )
+    .await?;
+
+    Ok(result)
+}

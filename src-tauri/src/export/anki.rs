@@ -353,6 +353,167 @@ pub fn import_anki(
     })
 }
 
+/// Export a specific deck (by deck_id) to an Anki .apkg file.
+/// Reads cards from deck_cards JOIN vocabulary for proper deck-scoped export.
+pub fn export_deck_anki(
+    conn: &Connection,
+    file_path: &str,
+    deck_id: &str,
+) -> Result<ExportResult, String> {
+    let sql = "SELECT v.word, COALESCE(dc.back, v.translation, '') AS back,
+                      COALESCE(v.definition, '') AS definition,
+                      COALESCE(v.pos, '') AS pos,
+                      COALESCE(v.cefr_level, '') AS cefr,
+                      COALESCE(v.phonetic, '') AS phonetic,
+                      COALESCE(v.examples, '') AS examples
+               FROM deck_cards dc
+               JOIN vocabulary v ON v.id = dc.vocabulary_id
+               WHERE dc.deck_id = ?1
+               ORDER BY dc.added_at ASC";
+
+    let mut stmt = conn.prepare(sql).map_err(|e| format!("Query error: {e}"))?;
+
+    let rows: Vec<(String, String, String, String, String, String, String)> = stmt
+        .query_map(rusqlite::params![deck_id], |row| {
+            Ok((
+                row.get::<_, String>(0).unwrap_or_default(),
+                row.get::<_, String>(1).unwrap_or_default(),
+                row.get::<_, String>(2).unwrap_or_default(),
+                row.get::<_, String>(3).unwrap_or_default(),
+                row.get::<_, String>(4).unwrap_or_default(),
+                row.get::<_, String>(5).unwrap_or_default(),
+                row.get::<_, String>(6).unwrap_or_default(),
+            ))
+        })
+        .map_err(|e| format!("Query error: {e}"))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    if rows.is_empty() {
+        return Err("Deck has no cards to export".to_string());
+    }
+
+    let total = rows.len() as i64;
+
+    // Get deck name for Anki deck metadata
+    let deck_name: String = conn
+        .query_row(
+            "SELECT name FROM decks WHERE id = ?1",
+            rusqlite::params![deck_id],
+            |row| row.get(0),
+        )
+        .unwrap_or_else(|_| "FlexiLingo Deck".to_string());
+
+    let tmp_dir = tempfile::tempdir().map_err(|e| format!("Temp dir error: {e}"))?;
+    let db_path = tmp_dir.path().join("collection.anki2");
+    let anki_conn =
+        rusqlite::Connection::open(&db_path).map_err(|e| format!("Anki DB error: {e}"))?;
+
+    anki_conn
+        .execute_batch(
+            "CREATE TABLE IF NOT EXISTS col (id INTEGER PRIMARY KEY, crt INTEGER NOT NULL, mod INTEGER NOT NULL, scm INTEGER NOT NULL, ver INTEGER NOT NULL, dty INTEGER NOT NULL, usn INTEGER NOT NULL, ls INTEGER NOT NULL, conf TEXT NOT NULL, models TEXT NOT NULL, decks TEXT NOT NULL, dconf TEXT NOT NULL, tags TEXT NOT NULL);
+             CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY, guid TEXT NOT NULL, mid INTEGER NOT NULL, mod INTEGER NOT NULL, usn INTEGER NOT NULL, tags TEXT NOT NULL, flds TEXT NOT NULL, sfld TEXT NOT NULL, csum INTEGER NOT NULL, flags INTEGER NOT NULL, data TEXT NOT NULL);
+             CREATE TABLE IF NOT EXISTS cards (id INTEGER PRIMARY KEY, nid INTEGER NOT NULL, did INTEGER NOT NULL, ord INTEGER NOT NULL, mod INTEGER NOT NULL, usn INTEGER NOT NULL, type INTEGER NOT NULL, queue INTEGER NOT NULL, due INTEGER NOT NULL, ivl INTEGER NOT NULL, factor INTEGER NOT NULL, reps INTEGER NOT NULL, lapses INTEGER NOT NULL, left INTEGER NOT NULL, odue INTEGER NOT NULL, odid INTEGER NOT NULL, flags INTEGER NOT NULL, data TEXT NOT NULL);
+             CREATE TABLE IF NOT EXISTS revlog (id INTEGER PRIMARY KEY, cid INTEGER NOT NULL, usn INTEGER NOT NULL, ease INTEGER NOT NULL, ivl INTEGER NOT NULL, lastIvl INTEGER NOT NULL, factor INTEGER NOT NULL, time INTEGER NOT NULL, type INTEGER NOT NULL);
+             CREATE TABLE IF NOT EXISTS graves (usn INTEGER NOT NULL, oid INTEGER NOT NULL, type INTEGER NOT NULL);",
+        )
+        .map_err(|e| format!("Schema error: {e}"))?;
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+
+    let model_id: i64 = now * 1000;
+    let did: i64 = now * 1000 + 1;
+
+    let models_json = format!(
+        r#"{{"{mid}":{{"id":{mid},"name":"FlexiLingo","type":0,"mod":0,"usn":0,"sortf":0,"did":{did},"tmpls":[{{"name":"Card 1","ord":0,"qfmt":"{{{{Front}}}}","afmt":"{{{{FrontSide}}}}<hr id=answer>{{{{Back}}}}","bqfmt":"","bafmt":"","did":null,"bfont":"","bsize":0}}],"flds":[{{"name":"Front","ord":0,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}},{{"name":"Back","ord":1,"sticky":false,"rtl":false,"font":"Arial","size":20,"media":[]}}],"css":".card {{font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white;}}","latexPre":"","latexPost":"","latexsvg":false,"req":[[0,"all",[0]]]}}}}"#,
+        mid = model_id,
+        did = did,
+    );
+
+    let decks_json = format!(
+        r#"{{"{did}":{{"id":{did},"name":"{name}","mod":0,"usn":0,"lrnToday":[0,0],"revToday":[0,0],"newToday":[0,0],"timeToday":[0,0],"collapsed":false,"browserCollapsed":false,"desc":"Exported from FlexiLingo","dyn":0,"conf":1,"extendNew":10,"extendRev":50}}}}"#,
+        did = did,
+        name = deck_name.replace('"', "\\\""),
+    );
+
+    anki_conn
+        .execute(
+            "INSERT INTO col VALUES (1, ?, ?, ?, 11, 0, 0, 0, '{}', ?, ?, '{}', '')",
+            rusqlite::params![now, now, now * 1000, models_json, decks_json],
+        )
+        .map_err(|e| format!("Insert col error: {e}"))?;
+
+    for (i, (word, back, definition, pos, cefr, phonetic, examples)) in rows.iter().enumerate() {
+        let note_id = now * 1000 + (i as i64) + 100;
+        let card_id = note_id + 100000;
+
+        let mut back_parts = vec![];
+        if !back.is_empty() {
+            back_parts.push(back.clone());
+        }
+        if !definition.is_empty() {
+            back_parts.push(definition.clone());
+        }
+        if !pos.is_empty() {
+            back_parts.push(format!("({})", pos));
+        }
+        if !phonetic.is_empty() {
+            back_parts.push(format!("/{}/", phonetic));
+        }
+        if !cefr.is_empty() {
+            back_parts.push(format!("[{}]", cefr));
+        }
+        if !examples.is_empty() {
+            back_parts.push(format!("Examples: {}", examples));
+        }
+
+        let back_str = back_parts.join(" | ");
+        let flds = format!("{}\x1f{}", word, back_str);
+        let csum = crc32(&word.to_lowercase()) as i64;
+
+        anki_conn
+            .execute(
+                "INSERT INTO notes VALUES (?, ?, ?, ?, 0, '', ?, ?, ?, 0, '')",
+                rusqlite::params![note_id, format!("fl{:010}", i), model_id, now, flds, word, csum],
+            )
+            .map_err(|e| format!("Insert note error: {e}"))?;
+
+        anki_conn
+            .execute(
+                "INSERT INTO cards VALUES (?, ?, ?, 0, ?, 0, 0, 0, ?, 0, 0, 0, 0, 0, 0, 0, 0, '')",
+                rusqlite::params![card_id, note_id, did, now, i as i64],
+            )
+            .map_err(|e| format!("Insert card error: {e}"))?;
+    }
+
+    drop(anki_conn);
+
+    let apkg_file =
+        std::fs::File::create(file_path).map_err(|e| format!("File create error: {e}"))?;
+    let mut zip = zip::ZipWriter::new(apkg_file);
+    let zip_options =
+        zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+
+    zip.start_file("collection.anki2", zip_options)
+        .map_err(|e| format!("ZIP error: {e}"))?;
+    let db_bytes = std::fs::read(&db_path).map_err(|e| format!("Read DB error: {e}"))?;
+    zip.write_all(&db_bytes)
+        .map_err(|e| format!("ZIP write error: {e}"))?;
+    zip.start_file("media", zip_options)
+        .map_err(|e| format!("ZIP error: {e}"))?;
+    zip.write_all(b"{}").map_err(|e| format!("ZIP write error: {e}"))?;
+    zip.finish().map_err(|e| format!("ZIP finish error: {e}"))?;
+
+    Ok(ExportResult {
+        file_path: file_path.to_string(),
+        total_items: total,
+        format: "anki".to_string(),
+    })
+}
+
 /// Simple CRC32 for Anki note checksums.
 fn crc32(s: &str) -> u32 {
     let mut crc: u32 = 0xFFFF_FFFF;

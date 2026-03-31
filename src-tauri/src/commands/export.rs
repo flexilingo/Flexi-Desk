@@ -38,6 +38,16 @@ pub fn import_preview_csv(
 }
 
 #[tauri::command]
+pub fn export_deck_anki(
+    state: State<'_, AppState>,
+    file_path: String,
+    deck_id: String,
+) -> Result<ExportResult, String> {
+    let conn = lock_db(&state)?;
+    crate::export::anki::export_deck_anki(&conn, &file_path, &deck_id)
+}
+
+#[tauri::command]
 pub fn import_execute(
     state: State<'_, AppState>,
     file_path: String,

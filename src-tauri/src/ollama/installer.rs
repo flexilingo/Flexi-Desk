@@ -17,7 +17,12 @@ pub fn ollama_bin_dir() -> Result<PathBuf, String> {
 
 /// Full path to the managed Ollama binary.
 pub fn ollama_binary_path() -> Result<PathBuf, String> {
-    Ok(ollama_bin_dir()?.join("ollama"))
+    let name = if cfg!(target_os = "windows") {
+        "ollama.exe"
+    } else {
+        "ollama"
+    };
+    Ok(ollama_bin_dir()?.join(name))
 }
 
 /// Check if our managed binary exists.
@@ -29,14 +34,41 @@ pub fn is_managed_ollama_installed() -> bool {
 
 /// Try to find a system-wide Ollama installation.
 pub fn detect_system_ollama() -> Option<String> {
-    let candidates = [
-        "/opt/homebrew/bin/ollama",
-        "/usr/local/bin/ollama",
-        "/usr/bin/ollama",
-    ];
-    for path in &candidates {
-        if std::path::Path::new(path).is_file() {
-            return Some(path.to_string());
+    #[cfg(unix)]
+    {
+        let candidates = [
+            "/opt/homebrew/bin/ollama",
+            "/usr/local/bin/ollama",
+            "/usr/bin/ollama",
+        ];
+        for path in &candidates {
+            if std::path::Path::new(path).is_file() {
+                return Some(path.to_string());
+            }
+        }
+    }
+    #[cfg(windows)]
+    {
+        // Check common Windows install locations + PATH
+        let candidates = [
+            r"C:\Program Files\Ollama\ollama.exe",
+            r"C:\Users\Default\AppData\Local\Programs\Ollama\ollama.exe",
+        ];
+        for path in &candidates {
+            if std::path::Path::new(path).is_file() {
+                return Some(path.to_string());
+            }
+        }
+        // Also check if ollama is on PATH via `where`
+        if let Ok(output) = Command::new("where").arg("ollama").output() {
+            if output.status.success() {
+                if let Ok(path) = String::from_utf8(output.stdout) {
+                    let first_line = path.lines().next().unwrap_or("").trim();
+                    if !first_line.is_empty() && std::path::Path::new(first_line).is_file() {
+                        return Some(first_line.to_string());
+                    }
+                }
+            }
         }
     }
     None
@@ -56,7 +88,7 @@ pub fn resolve_ollama_binary() -> Option<String> {
 }
 
 /// Platform download URL and archive extension.
-/// macOS: .tgz (gzip tar), Linux: .tar.zst (zstd tar)
+/// macOS: .tgz (gzip tar), Linux: .tar.zst (zstd tar), Windows: .zip
 fn download_info() -> Result<(&'static str, &'static str), String> {
     match (std::env::consts::OS, std::env::consts::ARCH) {
         ("macos", _) => Ok((
@@ -70,6 +102,14 @@ fn download_info() -> Result<(&'static str, &'static str), String> {
         ("linux", "aarch64") => Ok((
             "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-arm64.tar.zst",
             "tar.zst",
+        )),
+        ("windows", "x86_64") => Ok((
+            "https://github.com/ollama/ollama/releases/latest/download/ollama-windows-amd64.zip",
+            "zip",
+        )),
+        ("windows", "aarch64") => Ok((
+            "https://github.com/ollama/ollama/releases/latest/download/ollama-windows-arm64.zip",
+            "zip",
         )),
         (os, arch) => Err(format!("Unsupported platform: {os}/{arch}")),
     }
@@ -154,19 +194,31 @@ pub async fn download_ollama(app: &AppHandle) -> Result<String, String> {
         .to_str()
         .ok_or_else(|| "Path contains invalid UTF-8".to_string())?;
 
-    let tar_result = if ext == "tgz" {
+    let extract_result = if ext == "tgz" {
         // macOS: tar xzf
         Command::new("tar")
             .args(["xzf", archive_str, "-C", bin_dir_str])
             .output()
-    } else {
-        // Linux: tar with zstd (tar on modern Linux supports --zstd)
+    } else if ext == "tar.zst" {
+        // Linux: tar with zstd
         Command::new("tar")
             .args(["--zstd", "-xf", archive_str, "-C", bin_dir_str])
             .output()
+    } else {
+        // Windows: PowerShell Expand-Archive
+        Command::new("powershell")
+            .args([
+                "-NoProfile",
+                "-Command",
+                &format!(
+                    "Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
+                    archive_str, bin_dir_str
+                ),
+            ])
+            .output()
     };
 
-    match tar_result {
+    match extract_result {
         Ok(output) if output.status.success() => {}
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -175,7 +227,7 @@ pub async fn download_ollama(app: &AppHandle) -> Result<String, String> {
         }
         Err(e) => {
             let _ = std::fs::remove_file(&archive_path);
-            return Err(format!("Failed to run tar: {e}"));
+            return Err(format!("Failed to extract: {e}"));
         }
     }
 
@@ -183,7 +235,12 @@ pub async fn download_ollama(app: &AppHandle) -> Result<String, String> {
     let _ = std::fs::remove_file(&archive_path);
 
     // ── Step 3: Verify binary exists ──
-    let binary = bin_dir.join("ollama");
+    let binary_name = if cfg!(target_os = "windows") {
+        "ollama.exe"
+    } else {
+        "ollama"
+    };
+    let binary = bin_dir.join(binary_name);
     if !binary.is_file() {
         return Err("Archive extracted but ollama binary not found".to_string());
     }

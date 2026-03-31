@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, FileText, Loader2, Info, X, Calendar, Clock, HardDrive, Settings } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, Info, X, Calendar, Clock, HardDrive, Settings, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EpisodeInfo {
@@ -22,6 +22,8 @@ interface TopBarProps {
   isDownloading?: boolean;
   downloadProgress?: { percent: number } | null;
   onOpenWhisperSettings?: () => void;
+  onSyncToCloud?: () => void;
+  hasTranscript?: boolean;
   episodeInfo?: EpisodeInfo;
   sidebarAction?: React.ReactNode;
 }
@@ -64,6 +66,8 @@ export function TopBar({
   isDownloading,
   downloadProgress,
   onOpenWhisperSettings,
+  onSyncToCloud,
+  hasTranscript,
   episodeInfo,
   sidebarAction,
 }: TopBarProps) {
@@ -136,6 +140,18 @@ export function TopBar({
           >
             <Settings className="w-4 h-4" />
           </button>
+        )}
+
+        {hasTranscript && onSyncToCloud && (
+          <Button
+            onClick={onSyncToCloud}
+            size="sm"
+            variant="outline"
+            className="border-accent text-accent hover:bg-accent/10"
+          >
+            <Cloud className="w-4 h-4 mr-1" />
+            Sync
+          </Button>
         )}
 
         {canTranscribe && onTranscribe && (

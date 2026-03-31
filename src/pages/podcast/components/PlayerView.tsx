@@ -26,6 +26,7 @@ import { mapSyncPoint, getEffectiveOffset, mapTranscriptSegment } from '../types
 import type { RawModelCompatibility } from '@/pages/caption/types';
 import { ModelSuggestionDialog } from './ModelSuggestionDialog';
 import { WhisperSettingsDialog } from './WhisperSettingsDialog';
+import { CloudSyncDialog } from './CloudSyncDialog';
 import { ENABLED_MODULES } from '@/config/features';
 import { useJobStore } from '@/stores/jobStore';
 
@@ -123,6 +124,7 @@ export function PlayerView() {
   const [showQuiz, setShowQuiz] = useState(false);
   const [addToDeckWords, setAddToDeckWords] = useState<string[]>([]);
   const [whisperSettingsOpen, setWhisperSettingsOpen] = useState(false);
+  const [cloudSyncOpen, setCloudSyncOpen] = useState(false);
   const [addToDeckOpen, setAddToDeckOpen] = useState(false);
   const [wordDialogOpen, setWordDialogOpen] = useState(false);
 
@@ -327,6 +329,8 @@ export function PlayerView() {
           isDownloading={isDownloading}
           downloadProgress={downloadProgress}
           onOpenWhisperSettings={canTranscribe && !isTranscribingOrProcessing ? () => setWhisperSettingsOpen(true) : undefined}
+          onSyncToCloud={() => setCloudSyncOpen(true)}
+          hasTranscript={activeEpisode.transcriptStatus === 'completed'}
           episodeInfo={{
             title: activeEpisode.title,
             image: activeFeed?.artworkUrl ?? undefined,
@@ -626,6 +630,13 @@ export function PlayerView() {
             .then((info) => setWhisperAvailable(info.is_available))
             .catch(() => setWhisperAvailable(false));
         }}
+      />
+
+      <CloudSyncDialog
+        open={cloudSyncOpen}
+        onOpenChange={setCloudSyncOpen}
+        episodeId={activeEpisode.id}
+        episodeTitle={activeEpisode.title}
       />
 
       {/* XP Toast */}

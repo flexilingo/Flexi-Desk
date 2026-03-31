@@ -13,6 +13,7 @@ pub mod srs;
 pub mod tutor;
 pub mod vocabulary;
 pub mod writing;
+pub mod deck_hub;
 pub mod export;
 pub mod plugins;
 pub mod shortcuts;

@@ -10,6 +10,7 @@ import { useReviewStore } from '../stores/reviewStore';
 import { AlgorithmBadge } from './AlgorithmBadge';
 import { DeckStudyPanel } from './DeckStudyPanel';
 import { AddCardDialog } from './AddCardDialog';
+import { ExportHub } from './deck-hub/ExportHub';
 
 const PAGE_SIZE = 20;
 
@@ -114,6 +115,11 @@ export function DeckDetailPage() {
 
       {/* Study Panel */}
       <DeckStudyPanel deckId={deckId} />
+
+      {/* Export & Sync */}
+      <div className="border border-border rounded-xl p-4">
+        <ExportHub deckId={deckId} />
+      </div>
 
       {/* Cards Section */}
       <div className="space-y-3">
