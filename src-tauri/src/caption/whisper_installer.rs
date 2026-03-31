@@ -43,11 +43,12 @@ fn whisper_binary_name() -> &'static str {
 
 /// Try to find whisper-cli binary at common paths.
 pub fn detect_whisper_binary() -> Option<String> {
-    // Check managed install location first (cross-platform)
+    // Check managed install location first (cross-platform).
+    // Search subdirectories too — the zip extracts into a subfolder (e.g. whisper-bin-x64/)
+    // and we leave the binary there alongside its DLLs.
     if let Ok(dir) = whisper_managed_dir() {
-        let managed = dir.join(whisper_binary_name());
-        if managed.is_file() {
-            return managed.to_str().map(|s| s.to_string());
+        if let Some(found) = find_whisper_binary_in_dir(&dir) {
+            return found.to_str().map(|s| s.to_string());
         }
     }
 
