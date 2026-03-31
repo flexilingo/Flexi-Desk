@@ -53,8 +53,15 @@ pub async fn transcribe_file(
 
     if !output.status.success() {
         let _ = tokio::fs::remove_file(format!("{output_prefix_str}.json")).await;
-        return Err(format!("Whisper process failed (exit {}): {stderr_text}",
-            output.status.code().unwrap_or(-1)));
+        let code = output.status.code().unwrap_or(-1);
+        // 0xC000001D = STATUS_ILLEGAL_INSTRUCTION — CPU doesn't support AVX/AVX2
+        let hint = if code == -1073741795_i32 {
+            " (Your CPU may not support AVX2 instructions required by this whisper build. \
+             Try reinstalling Whisper from Settings — a compatible build may be available.)"
+        } else {
+            ""
+        };
+        return Err(format!("Whisper process failed (exit {code}): {stderr_text}{hint}"));
     }
 
     // Read the generated JSON file

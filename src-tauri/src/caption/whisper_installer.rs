@@ -301,6 +301,27 @@ pub async fn install_whisper_direct(app: &AppHandle) -> Result<String, String> {
         .ok_or_else(|| "Path contains invalid UTF-8".to_string())?
         .to_string();
 
+    // Sanity-check: run the binary with --help to catch CPU incompatibility early.
+    // whisper-cli exits 0 on --help, but even a non-zero exit is fine here — the important
+    // thing is that it doesn't crash with STATUS_ILLEGAL_INSTRUCTION (0xC000001D = -1073741795).
+    emit_progress(app, "verifying", "Verifying binary compatibility...", 99.0);
+    match std::process::Command::new(&binary_str).arg("--help").output() {
+        Ok(out) => {
+            let code = out.status.code().unwrap_or(0);
+            if code == -1073741795_i32 {
+                // Clean up the incompatible binary
+                let _ = std::fs::remove_dir_all(&bin_dir);
+                return Err(
+                    "Whisper was downloaded but your CPU does not support the AVX2 instructions \
+                     required by this build. Please install whisper-cpp manually from \
+                     https://github.com/ggerganov/whisper.cpp and point the app to your binary \
+                     in Settings → Speech Recognition.".to_string()
+                );
+            }
+        }
+        Err(_) => {} // Ignore launch errors here; they'll surface at transcription time
+    }
+
     emit_progress(app, "complete", &format!("Installed at {binary_str}"), 100.0);
     Ok(binary_str)
 }
