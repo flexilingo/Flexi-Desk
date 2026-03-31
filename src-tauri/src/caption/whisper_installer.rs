@@ -284,25 +284,19 @@ pub async fn install_whisper_direct(app: &AppHandle) -> Result<String, String> {
 
     let _ = std::fs::remove_file(&archive_path);
 
-    // Find the binary inside the extracted directory (may be in a subfolder)
+    // Find the binary inside the extracted directory (may be in a subfolder).
+    // IMPORTANT: do NOT move the binary — it needs its sibling DLLs (whisper.dll, ggml.dll, etc.)
     let found = find_whisper_binary_in_dir(&bin_dir)
         .ok_or_else(|| "whisper-cli was downloaded but could not be found after extraction. The archive may have a different structure.".to_string())?;
-
-    // Move to the expected managed location if it's in a subfolder
-    let target = bin_dir.join(whisper_binary_name());
-    if found != target {
-        std::fs::rename(&found, &target)
-            .map_err(|e| format!("Failed to move binary: {e}"))?;
-    }
 
     // Make executable on Unix
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        let _ = std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o755));
+        let _ = std::fs::set_permissions(&found, std::fs::Permissions::from_mode(0o755));
     }
 
-    let binary_str = target.to_str()
+    let binary_str = found.to_str()
         .ok_or_else(|| "Path contains invalid UTF-8".to_string())?
         .to_string();
 
