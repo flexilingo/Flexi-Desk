@@ -20,6 +20,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
+import { open as openUrl } from '@tauri-apps/plugin-shell';
 import { listen } from '@tauri-apps/api/event';
 import { Button } from '@/components/ui/button';
 import {
@@ -310,7 +311,7 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary underline underline-offset-2 hover:text-primary/80"
-                        onClick={(e) => { e.preventDefault(); import('@tauri-apps/plugin-shell').then(m => m.open('https://github.com/ggerganov/whisper.cpp/releases')); }}
+                        onClick={(e) => { e.preventDefault(); openUrl('https://github.com/ggerganov/whisper.cpp/releases'); }}
                       >
                         whisper.cpp releases
                       </a>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { open as openUrl } from '@tauri-apps/plugin-shell';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { setSetting } from '@/lib/tauri-bridge';
 import { useCaptionStore } from '@/pages/caption/stores/captionStore';
@@ -872,7 +873,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary underline underline-offset-2 hover:text-primary/80"
-                    onClick={(e) => { e.preventDefault(); import('@tauri-apps/plugin-shell').then(m => m.open('https://github.com/ggerganov/whisper.cpp/releases')); }}
+                    onClick={(e) => { e.preventDefault(); openUrl('https://github.com/ggerganov/whisper.cpp/releases'); }}
                   >
                     whisper.cpp releases
                   </a>
