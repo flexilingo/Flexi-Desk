@@ -671,6 +671,16 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
     }
   }, [installWhisper, fetchAvailableModels, checkWhisper]);
 
+  const handleUseModel = useCallback(async (modelId: string) => {
+    setError(null);
+    try {
+      await setActiveModel(modelId);
+      await checkWhisper();
+    } catch (err) {
+      setError(String(err));
+    }
+  }, [setActiveModel, checkWhisper]);
+
   const handleDownloadModel = useCallback(async (modelId: string) => {
     setError(null);
     try {
@@ -777,7 +787,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDownloadModel(model.id)}
+                        onClick={() => handleUseModel(model.id)}
                         className="shrink-0 gap-1.5"
                       >
                         <CheckCircle className="h-3.5 w-3.5" />
