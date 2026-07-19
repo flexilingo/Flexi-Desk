@@ -4,7 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { NlpAnalysis } from '../../types';
 
-const CEFR_LEVELS = ['C1', 'C2', 'B2', 'B1', 'A2', 'A1'] as const;
+// 'unknown' = words the backend couldn't level (cache-miss + no cefrpy fallback) → "Unrated".
+const CEFR_LEVELS = ['C1', 'C2', 'B2', 'B1', 'A2', 'A1', 'unknown'] as const;
+
+const LEVEL_LABEL: Record<string, string> = { unknown: 'Unrated' };
 
 const CEFR_CHIP_COLORS: Record<string, { active: string; badge: string }> = {
   A1: {
@@ -30,6 +33,10 @@ const CEFR_CHIP_COLORS: Record<string, { active: string; badge: string }> = {
   C2: {
     active: 'bg-red-500/15 text-red-400 border-red-500/30',
     badge: 'bg-red-500/15 text-red-400',
+  },
+  unknown: {
+    active: 'bg-muted text-muted-foreground border-border',
+    badge: 'bg-muted text-muted-foreground',
   },
 };
 
@@ -57,6 +64,10 @@ const CEFR_WORD_CHIP_COLORS: Record<string, { selected: string; unselected: stri
   C2: {
     selected: 'bg-red-500/15 text-red-400 border-red-500/30',
     unselected: 'bg-transparent text-foreground border-border hover:border-red-500/30',
+  },
+  unknown: {
+    selected: 'bg-muted text-muted-foreground border-border',
+    unselected: 'bg-transparent text-foreground border-border hover:border-muted-foreground/40',
   },
 };
 
@@ -194,7 +205,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
                     : 'bg-transparent text-muted-foreground/50 border-border/50'
                 }`}
               >
-                {level}
+                {LEVEL_LABEL[level] ?? level}
                 <span className="tabular-nums">{count}</span>
               </button>
             );
@@ -236,7 +247,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
                       <Badge
                         className={`text-[10px] px-1.5 py-0 font-semibold border-0 ${colors.badge}`}
                       >
-                        {group.level}
+                        {LEVEL_LABEL[group.level] ?? group.level}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground tabular-nums">
                         {group.words.length} words
