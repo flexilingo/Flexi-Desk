@@ -661,7 +661,14 @@ export function PdfPageView({
           // interrupts exactly the reading the mode exists for. The chip comes
           // with the click instead.
           if (onSpeakWordRef.current) return;
-          dwell = setTimeout(() => placeChip(hot, word), HOVER_DWELL_MS);
+          dwell = setTimeout(() => {
+            // A drag in progress is a phrase, and the phrase chip is already
+            // offering to say it. Two speakers over one selection is one too many
+            // (the same rule as `TappableText`).
+            const selection = window.getSelection();
+            if (selection && !selection.isCollapsed) return;
+            placeChip(hot, word);
+          }, HOVER_DWELL_MS);
         };
 
         container.addEventListener('click', handleClick);
@@ -752,7 +759,14 @@ export function PdfPageView({
     window.addEventListener('scroll', clear, { capture: true, passive: true });
     window.addEventListener('keydown', clear);
     document.addEventListener('pointerdown', clearUnlessOurs, true);
+    // A speaker already up when a drag starts would sit beside the phrase chip.
+    const clearOnSelect = () => {
+      const selection = window.getSelection();
+      if (selection && !selection.isCollapsed) setSpoken(null);
+    };
+    document.addEventListener('selectionchange', clearOnSelect);
     return () => {
+      document.removeEventListener('selectionchange', clearOnSelect);
       window.removeEventListener('scroll', clear, { capture: true });
       window.removeEventListener('keydown', clear);
       document.removeEventListener('pointerdown', clearUnlessOurs, true);

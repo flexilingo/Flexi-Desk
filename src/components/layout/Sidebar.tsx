@@ -63,6 +63,25 @@ const bottomNavItems = [
   { to: '/settings', label: 'Settings', icon: Settings, module: 'settings' as ModuleKey },
 ];
 
+/**
+ * The page title for a route, so the header names where you ARE rather than
+ * the last sidebar entry clicked (a deep link or an in-page navigation never
+ * touches the sidebar). Longest matching `to` wins; null for an unknown route.
+ */
+export function routeTitle(pathname: string, t: (key: string) => string): string | null {
+  const items = [...allNavItems, ...bottomNavItems];
+  let best: NavItem | null = null;
+  for (const item of items) {
+    const hit =
+      item.to === '/'
+        ? pathname === '/'
+        : pathname === item.to || pathname.startsWith(`${item.to}/`);
+    if (hit && (!best || item.to.length > best.to.length)) best = item;
+  }
+  if (!best) return null;
+  return best.labelKey ? t(best.labelKey) : best.label;
+}
+
 const navItems = allNavItems.filter((item) => ENABLED_MODULES[item.module]);
 
 export function Sidebar() {

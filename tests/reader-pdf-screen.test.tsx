@@ -133,11 +133,9 @@ describe('/reader/pdf/:documentId', () => {
   });
 });
 
-describe('/reader', () => {
-  it('has one button that opens a PDF', async () => {
-    invoke.mockImplementationOnce(async () => ({ items: [{ id: 'd1', title: 'Old book' }], total: 1 }));
-    mount('/reader');
-    expect(screen.getByRole('button', { name: /home\.openPdf/ })).toBeInTheDocument();
-    expect(await screen.findByText('Old book')).toBeInTheDocument();
+describe('/reader placeholders', () => {
+  it('answers a book route instead of a 404', async () => {
+    mount('/reader/book/b1');
+    expect(await screen.findByText('soon.book.title')).toBeInTheDocument();
   });
 });

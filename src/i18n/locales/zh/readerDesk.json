@@ -1,6 +1,11 @@
 {
   "home": {
-    "openPdf": "打开 PDF"
+    "openPdf": "打开 PDF",
+    "signInHint": "登录后可在此查看现成的图书馆和你的书架。你自己的文档始终在这里，保存在这台电脑上。",
+    "signIn": "登录",
+    "retry": "重试",
+    "libraryFailed": "暂时无法加载图书馆。你的文档不受影响。",
+    "cancel": "取消"
   },
   "errors": {
     "PDF_PASSWORD_PROTECTED": "此 PDF 有密码保护。",
@@ -10,7 +15,7 @@
     "FILE_MISSING": "此文档的文件已不在这台电脑上。",
     "FILE_NOT_FOUND": "此文档的文件已不在这台电脑上。",
     "NOT_A_PDF": "此文件不是 PDF。",
-    "UNSUPPORTED_FILE_TYPE": "此文件不是 PDF。",
+    "UNSUPPORTED_FILE_TYPE": "不支持此文件类型。请使用 PDF、JPG、PNG 或 WebP。",
     "EMPTY_FILE": "此文件是空的。",
     "FILE_READ_FAILED": "无法读取该文件。",
     "FILE_WRITE_FAILED": "无法将文件保存到这台电脑。",
@@ -21,6 +26,28 @@
     "WORD_LOG_FAILED": "无法将此单词保存到你的列表。",
     "DOCUMENTS_FETCH_FAILED": "无法加载你的文档。",
     "DOCUMENT_FETCH_FAILED": "找不到此文档。",
-    "DOCUMENT_CREATE_FAILED": "无法将文件保存到这台电脑。"
+    "DOCUMENT_CREATE_FAILED": "无法将文件保存到这台电脑。",
+    "INVALID_FILE": "无法读取这张照片。"
+  },
+  "upload": {
+    "hint": "PDF、JPG、PNG 或 WebP。不限大小。",
+    "filterName": "PDF 和照片",
+    "privacy": "只保存在这台电脑上，不会上传任何内容。",
+    "submitting": "正在添加...",
+    "clear": "选择其他文件",
+    "dropHere": "松开即可加入你的阅读",
+    "duplicate": {
+      "again": "添加新副本"
+    }
+  },
+  "soon": {
+    "book": {
+      "title": "图书馆的书"
+    },
+    "library": {
+      "title": "图书馆"
+    },
+    "body": "在桌面端阅读图书馆的书将在之后的更新中推出。你自己的文档现在就能使用。",
+    "back": "返回你的阅读"
   }
 }
