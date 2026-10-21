@@ -1,7 +1,10 @@
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard,
   BookOpen,
+  BookOpenText,
   MessageSquare,
   Captions,
   Mic,
@@ -25,12 +28,28 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { ENABLED_MODULES, type ModuleKey } from '@/config/features';
 
-const allNavItems = [
+interface NavItem {
+  to: string;
+  label: string;
+  /** i18n key (namespace:key) resolved at render; `label` is the fallback and the page name. */
+  labelKey?: string;
+  icon: LucideIcon;
+  module: ModuleKey;
+}
+
+const allNavItems: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' as ModuleKey },
   { to: '/study', label: 'Study', icon: Dumbbell, module: 'study' as ModuleKey },
   { to: '/vocabulary', label: 'Vocabulary', icon: Library, module: 'vocabulary' as ModuleKey },
   { to: '/review', label: 'Decks', icon: Layers, module: 'review' as ModuleKey },
   { to: '/reading', label: 'Reading', icon: BookOpen, module: 'reading' as ModuleKey },
+  {
+    to: '/reader',
+    label: 'Reader',
+    labelKey: 'reader:title',
+    icon: BookOpenText,
+    module: 'reader' as ModuleKey,
+  },
   { to: '/tutor', label: 'AI Tutor', icon: MessageSquare, module: 'tutor' as ModuleKey },
   { to: '/caption', label: 'Live Caption', icon: Captions, module: 'caption' as ModuleKey },
   { to: '/pronunciation', label: 'Pronunciation', icon: Mic, module: 'pronunciation' as ModuleKey },
@@ -50,6 +69,9 @@ export function Sidebar() {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
+
+  const { t } = useTranslation();
+  const labelOf = (item: NavItem) => (item.labelKey ? t(item.labelKey) : item.label);
 
   const isRtl = document.documentElement.dir === 'rtl';
 
@@ -102,7 +124,7 @@ export function Sidebar() {
                   }
                 >
                   <Icon className="h-5 w-5 shrink-0" />
-                  {sidebarOpen && <span>{item.label}</span>}
+                  {sidebarOpen && <span>{labelOf(item)}</span>}
                 </NavLink>
               );
 
@@ -110,7 +132,7 @@ export function Sidebar() {
                 return (
                   <Tooltip key={item.to}>
                     <TooltipTrigger asChild>{link}</TooltipTrigger>
-                    <TooltipContent side={isRtl ? 'left' : 'right'}>{item.label}</TooltipContent>
+                    <TooltipContent side={isRtl ? 'left' : 'right'}>{labelOf(item)}</TooltipContent>
                   </Tooltip>
                 );
               }

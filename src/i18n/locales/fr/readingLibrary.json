@@ -1,0 +1,74 @@
+{
+  "catalog": {
+    "heading": "Bibliothèque",
+    "subtitle": "Des histoires et des livres classés par niveau. Touchez un mot pour voir sa traduction.",
+    "allLanguages": "Toutes les langues",
+    "allLevels": "Tous les niveaux",
+    "allSeries": "Toutes les séries",
+    "empty": "Pas encore de livres ici",
+    "emptyBody": "Essayez une autre langue ou un autre niveau — de nouvelles histoires arrivent régulièrement.",
+    "read": "Lire",
+    "add": "Ajouter à ma bibliothèque",
+    "added": "Dans votre bibliothèque",
+    "remove": "Retirer",
+    "pages": "{{n}} pages",
+    "minutes": "{{n}} min",
+    "episode": "Épisode {{n}}",
+    "kind": {
+      "original": "Histoire FlexiLingo",
+      "classic": "Classique",
+      "adapted": "Version facile d'un classique"
+    }
+  },
+  "shelf": {
+    "heading": "Vos lectures en cours",
+    "page": "Page {{n}} sur {{total}}",
+    "finished": "Terminé",
+    "continue": "Continuer",
+    "start": "Commencer"
+  },
+  "book": {
+    "backToLibrary": "Bibliothèque",
+    "by": "de {{author}}",
+    "source": "Source",
+    "license": {
+      "own": "© FlexiLingo",
+      "public_domain": "Domaine public",
+      "cc0": "CC0",
+      "cc_by": "CC BY",
+      "cc_by_sa": "CC BY-SA"
+    },
+    "nextEpisode": "Épisode suivant",
+    "chapter": "Chapitre"
+  },
+  "public": {
+    "listTitle": "Histoires et livres en {{language}} par niveau | FlexiLingo",
+    "listDescription": "Lectures gratuites en {{language}} pour apprenants : nouvelles et livres classiques classés par niveau CECRL, de A1 à C2. Touchez un mot pour voir sa traduction.",
+    "listHeading": "Histoires et livres en {{language}} par niveau",
+    "listIntro": "Des nouvelles écrites pour les apprenants et des livres classiques, classés par niveau. Lisez-les ici en entier — chaque mot affiche son sens.",
+    "bookTitle": "{{title}} — lecture en {{language}}, niveau {{level}} | FlexiLingo",
+    "level": "Niveau {{level}}",
+    "firstPage": "Première page",
+    "cta": "Continuer la lecture dans FlexiLingo",
+    "ctaBody": "Dans FlexiLingo, les mots que vous cherchez deviennent des cartes mémoire et votre page est gardée sur tous vos appareils. Gratuit.",
+    "moreInSeries": "Dans la même série",
+    "moreBooks": "Autres livres en {{language}}",
+    "searchPlaceholder": "Rechercher un titre ou un auteur",
+    "language": "Langue",
+    "type": "Type",
+    "allTypes": "Tous les types",
+    "series": "Série",
+    "results_one": "{{count}} livre",
+    "results_other": "{{count}} livres",
+    "noResults": "Aucun livre ne correspond à ces filtres. Essayez un autre niveau ou effacez les filtres.",
+    "coverAlt": "Couverture de {{title}}",
+    "readHere": "Lisez ici — touchez un mot pour voir son sens",
+    "resume": "Reprendre à la page {{n}}",
+    "pageError": "Cette page ne s'est pas chargée. Vérifiez votre connexion et réessayez.",
+    "readerCtaTitle": "Gardez les mots que vous touchez",
+    "filters": "Filtres",
+    "all": "Tous",
+    "showResults_one": "Voir {{count}} livre",
+    "showResults_other": "Voir {{count}} livres"
+  }
+}

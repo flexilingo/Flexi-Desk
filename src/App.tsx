@@ -13,6 +13,7 @@ import { CaptionPage } from '@/pages/caption';
 import { PronunciationPage } from '@/pages/pronunciation';
 import { WritingPage } from '@/pages/writing';
 import { CelpipPage } from '@/pages/celpip';
+import { ReaderPage } from '@/pages/reader';
 import { PodcastPage } from '@/pages/podcast';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { VocabularyPage } from '@/pages/vocabulary';
@@ -72,6 +73,7 @@ function App() {
         {ENABLED_MODULES.study && <Route path="study/*" element={<StudyPage />} />}
         {ENABLED_MODULES.review && <Route path="review/*" element={<ReviewPage />} />}
         {ENABLED_MODULES.reading && <Route path="reading" element={<ReadingPage />} />}
+        {ENABLED_MODULES.reader && <Route path="reader/*" element={<ReaderPage />} />}
         {ENABLED_MODULES.tutor && <Route path="tutor" element={<TutorPage />} />}
         {ENABLED_MODULES.caption && <Route path="caption" element={<CaptionPage />} />}
         {ENABLED_MODULES.pronunciation && (

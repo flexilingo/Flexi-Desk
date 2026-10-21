@@ -64,6 +64,7 @@ fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(
         ("V032", ""),
         ("V033", V033_TRANSCRIPT_LANG),
         ("V034", V034_BACKFILL_TRANSCRIPT_LANG),
+        ("V035", V035_READER),
     ];
 
     for (version, sql) in migrations {
@@ -1865,5 +1866,262 @@ mod study_migration_tests {
 
         // Re-running migrations is idempotent (the ledger skips the ALTERs).
         run_migrations(&conn).expect("re-run migrations idempotent");
+    }
+}
+
+// V035 — the Reader. PDFs and photos stay on this computer: `file_path` points into
+// `$APPDATA/reader/`, and extraction (text layer + OCR) runs locally. The tables mirror
+// the cloud's `reader_*` tables minus `user_id`, so the JSON the commands return has the
+// same field names the website's components already consume. Everything cascades off
+// `reader_documents`, so deleting a document leaves nothing behind.
+//
+// Columns whose name differs from the cloud (`kind`, `size_bytes`, `page`) are aliased
+// back to the cloud's name (`source_kind`, `byte_size`, `page_number`) in the SELECTs.
+const V035_READER: &str = "
+    CREATE TABLE IF NOT EXISTS reader_documents (
+        id                     TEXT PRIMARY KEY,
+        title                  TEXT NOT NULL,
+        original_filename      TEXT NOT NULL,
+        kind                   TEXT NOT NULL DEFAULT 'pdf' CHECK (kind IN ('pdf', 'image')),
+        file_path              TEXT NOT NULL,
+        size_bytes             INTEGER NOT NULL DEFAULT 0,
+        language               TEXT NOT NULL DEFAULT 'en',
+        page_count             INTEGER,
+        word_count             INTEGER,
+        extraction_method      TEXT CHECK (extraction_method IS NULL OR extraction_method IN ('text', 'ocr', 'mixed')),
+        last_page              INTEGER NOT NULL DEFAULT 1 CHECK (last_page >= 1),
+        last_scroll_pct        INTEGER NOT NULL DEFAULT 0 CHECK (last_scroll_pct BETWEEN 0 AND 100),
+        last_read_at           TEXT,
+        finished_at            TEXT,
+        book_edition           TEXT,
+        text_layer_status      TEXT CHECK (text_layer_status IS NULL OR text_layer_status IN ('pending', 'running', 'ready', 'failed')),
+        text_layer_pages_done  INTEGER,
+        text_layer_pages_total INTEGER,
+        text_layer_error       TEXT,
+        created_at             TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updated_at             TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_reader_documents_created ON reader_documents(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_reader_documents_size    ON reader_documents(size_bytes);
+
+    -- One row per scanned page. `words_json` is the cloud's `ocr_words` shape:
+    -- {\"v\":1,\"lines\":[[x0,y0,x1,y1]],\"words\":[[text,x0,y0,x1,y1,line]]}, fractions of the page.
+    CREATE TABLE IF NOT EXISTS reader_ocr_pages (
+        document_id TEXT NOT NULL REFERENCES reader_documents(id) ON DELETE CASCADE,
+        page        INTEGER NOT NULL CHECK (page >= 1),
+        words_json  TEXT,
+        status      TEXT NOT NULL DEFAULT 'ready' CHECK (status IN ('ready', 'failed')),
+        error_code  TEXT,
+        updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        PRIMARY KEY (document_id, page)
+    );
+
+    CREATE TABLE IF NOT EXISTS reader_sessions (
+        id           TEXT PRIMARY KEY,
+        document_id  TEXT NOT NULL REFERENCES reader_documents(id) ON DELETE CASCADE,
+        started_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        last_seen_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        start_page   INTEGER NOT NULL DEFAULT 1 CHECK (start_page >= 1),
+        end_page     INTEGER NOT NULL DEFAULT 1 CHECK (end_page >= 1),
+        word_count   INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_reader_sessions_doc ON reader_sessions(document_id, last_seen_at DESC);
+
+    -- Every word opened while reading. Not deduplicated: repetition is the signal.
+    CREATE TABLE IF NOT EXISTS reader_word_log (
+        id          TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL REFERENCES reader_documents(id) ON DELETE CASCADE,
+        session_id  TEXT REFERENCES reader_sessions(id) ON DELETE SET NULL,
+        word        TEXT NOT NULL CHECK (length(word) BETWEEN 1 AND 120),
+        word_key    TEXT NOT NULL CHECK (length(word_key) BETWEEN 1 AND 120),
+        context     TEXT,
+        page        INTEGER NOT NULL CHECK (page >= 1),
+        language    TEXT NOT NULL DEFAULT 'en',
+        created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_reader_word_log_doc     ON reader_word_log(document_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_reader_word_log_session ON reader_word_log(session_id);
+
+    CREATE TABLE IF NOT EXISTS reader_notes (
+        id          TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL REFERENCES reader_documents(id) ON DELETE CASCADE,
+        page_number INTEGER NOT NULL CHECK (page_number >= 1),
+        quote       TEXT NOT NULL DEFAULT '' CHECK (length(quote) <= 2000),
+        body        TEXT NOT NULL DEFAULT '' CHECK (length(body) <= 8000),
+        run_start   INTEGER,
+        run_end     INTEGER,
+        rect_x      REAL NOT NULL DEFAULT 0 CHECK (rect_x BETWEEN 0 AND 100),
+        rect_y      REAL NOT NULL DEFAULT 0 CHECK (rect_y BETWEEN 0 AND 100),
+        rect_w      REAL NOT NULL DEFAULT 0 CHECK (rect_w BETWEEN 0 AND 100),
+        rect_h      REAL NOT NULL DEFAULT 0 CHECK (rect_h BETWEEN 0 AND 100),
+        created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_reader_notes_doc_page ON reader_notes(document_id, page_number);
+
+    CREATE TABLE IF NOT EXISTS reader_text_boxes (
+        id          TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL REFERENCES reader_documents(id) ON DELETE CASCADE,
+        page_number INTEGER NOT NULL CHECK (page_number >= 1),
+        body        TEXT NOT NULL DEFAULT '' CHECK (length(body) <= 2000),
+        x           REAL NOT NULL CHECK (x BETWEEN 0 AND 100),
+        y           REAL NOT NULL CHECK (y BETWEEN 0 AND 100),
+        w           REAL NOT NULL CHECK (w BETWEEN 1 AND 100),
+        font_size   REAL NOT NULL DEFAULT 1.6 CHECK (font_size BETWEEN 0.3 AND 10),
+        color       TEXT NOT NULL DEFAULT 'terra',
+        bold        INTEGER NOT NULL DEFAULT 0 CHECK (bold IN (0, 1)),
+        background  INTEGER NOT NULL DEFAULT 0 CHECK (background IN (0, 1)),
+        created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_reader_text_boxes_doc_page ON reader_text_boxes(document_id, page_number);
+
+    CREATE TABLE IF NOT EXISTS reader_marks (
+        id          TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL REFERENCES reader_documents(id) ON DELETE CASCADE,
+        page_number INTEGER NOT NULL CHECK (page_number >= 1),
+        kind        TEXT NOT NULL CHECK (kind IN ('arrow', 'box', 'check', 'cross', 'question', 'star', 'highlight')),
+        x1          REAL NOT NULL CHECK (x1 BETWEEN 0 AND 100),
+        y1          REAL NOT NULL CHECK (y1 BETWEEN 0 AND 100),
+        x2          REAL NOT NULL CHECK (x2 BETWEEN 0 AND 100),
+        y2          REAL NOT NULL CHECK (y2 BETWEEN 0 AND 100),
+        size        REAL NOT NULL DEFAULT 1.6 CHECK (size BETWEEN 0.3 AND 10),
+        color       TEXT NOT NULL DEFAULT 'terra',
+        created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_reader_marks_doc_page ON reader_marks(document_id, page_number);
+";
+
+#[cfg(test)]
+mod v035_reader_migration_tests {
+    use super::*;
+
+    fn at_v034() -> Connection {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations_through(&conn, "V034").expect("migrations up to V034");
+        conn
+    }
+
+    fn table_exists(conn: &Connection, name: &str) -> bool {
+        conn.query_row(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
+            rusqlite::params![name],
+            |r| r.get::<_, i64>(0),
+        )
+        .unwrap()
+            == 1
+    }
+
+    #[test]
+    fn creates_every_reader_table_on_an_existing_database() {
+        let conn = at_v034();
+        assert!(!table_exists(&conn, "reader_documents"), "precondition: V035 has not run");
+        // Existing data must survive the migration.
+        conn.execute(
+            "INSERT INTO podcast_feeds (id, feed_url, title, language) VALUES ('f1', 'https://example.com/rss', 'Feed', 'en')",
+            [],
+        )
+        .unwrap();
+
+        run_migrations(&conn).expect("V035 applies on top of V034");
+
+        for t in [
+            "reader_documents",
+            "reader_ocr_pages",
+            "reader_sessions",
+            "reader_word_log",
+            "reader_notes",
+            "reader_text_boxes",
+            "reader_marks",
+        ] {
+            assert!(table_exists(&conn, t), "{t} should exist");
+        }
+        let feeds: i64 = conn.query_row("SELECT COUNT(*) FROM podcast_feeds", [], |r| r.get(0)).unwrap();
+        assert_eq!(feeds, 1);
+        let applied: i64 = conn
+            .query_row("SELECT COUNT(*) FROM _migrations WHERE version = 'V035'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(applied, 1);
+
+        // Idempotent.
+        run_migrations(&conn).expect("re-run is a no-op");
+    }
+
+    #[test]
+    fn deleting_a_document_cascades_to_everything_hanging_off_it() {
+        let conn = at_v034();
+        run_migrations(&conn).unwrap();
+
+        conn.execute(
+            "INSERT INTO reader_documents (id, title, original_filename, file_path) VALUES ('d1', 'T', 't.pdf', 'd1.pdf')",
+            [],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO reader_ocr_pages (document_id, page, words_json) VALUES ('d1', 1, '{}')", []).unwrap();
+        conn.execute("INSERT INTO reader_sessions (id, document_id) VALUES ('s1', 'd1')", []).unwrap();
+        conn.execute(
+            "INSERT INTO reader_word_log (id, document_id, session_id, word, word_key, page) VALUES ('w1', 'd1', 's1', 'Hi', 'hi', 1)",
+            [],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO reader_notes (id, document_id, page_number) VALUES ('n1', 'd1', 1)", []).unwrap();
+        conn.execute(
+            "INSERT INTO reader_text_boxes (id, document_id, page_number, x, y, w) VALUES ('t1', 'd1', 1, 1, 1, 10)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO reader_marks (id, document_id, page_number, kind, x1, y1, x2, y2) VALUES ('m1', 'd1', 1, 'box', 1, 1, 2, 2)",
+            [],
+        )
+        .unwrap();
+
+        conn.execute("DELETE FROM reader_documents WHERE id = 'd1'", []).unwrap();
+
+        for t in [
+            "reader_ocr_pages",
+            "reader_sessions",
+            "reader_word_log",
+            "reader_notes",
+            "reader_text_boxes",
+            "reader_marks",
+        ] {
+            let n: i64 = conn.query_row(&format!("SELECT COUNT(*) FROM {t}"), [], |r| r.get(0)).unwrap();
+            assert_eq!(n, 0, "{t} must be emptied by the cascade");
+        }
+    }
+
+    #[test]
+    fn check_constraints_reject_bad_enums_and_ranges() {
+        let conn = at_v034();
+        run_migrations(&conn).unwrap();
+        conn.execute(
+            "INSERT INTO reader_documents (id, title, original_filename, file_path) VALUES ('d1', 'T', 't.pdf', 'd1.pdf')",
+            [],
+        )
+        .unwrap();
+        assert!(conn
+            .execute(
+                "INSERT INTO reader_documents (id, title, original_filename, file_path, kind) VALUES ('d2', 'T', 't', 'p', 'video')",
+                [],
+            )
+            .is_err());
+        assert!(conn
+            .execute(
+                "INSERT INTO reader_marks (id, document_id, page_number, kind, x1, y1, x2, y2) VALUES ('m', 'd1', 1, 'sparkle', 1, 1, 2, 2)",
+                [],
+            )
+            .is_err());
+        assert!(conn
+            .execute(
+                "INSERT INTO reader_text_boxes (id, document_id, page_number, x, y, w) VALUES ('t', 'd1', 1, 101, 1, 10)",
+                [],
+            )
+            .is_err());
+        assert!(conn
+            .execute("INSERT INTO reader_ocr_pages (document_id, page, status) VALUES ('d1', 1, 'weird')", [])
+            .is_err());
     }
 }

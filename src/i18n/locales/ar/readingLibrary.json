@@ -1,0 +1,76 @@
+{
+  "catalog": {
+    "heading": "المكتبة",
+    "subtitle": "قصص وكتب مرتبة حسب المستوى. انقر على أي كلمة لترى معناها.",
+    "allLanguages": "كل اللغات",
+    "allLevels": "كل المستويات",
+    "allSeries": "كل السلاسل",
+    "empty": "لا توجد كتب هنا بعد",
+    "emptyBody": "جرّب لغة أو مستوى آخر — تُضاف قصص جديدة باستمرار.",
+    "read": "اقرأ",
+    "add": "أضف إلى مكتبتي",
+    "added": "في مكتبتك",
+    "remove": "إزالة",
+    "pages": "{{n}} صفحات",
+    "minutes": "{{n}} دقيقة",
+    "episode": "الحلقة {{n}}",
+    "kind": {
+      "original": "قصة من FlexiLingo",
+      "classic": "كلاسيكي",
+      "adapted": "نسخة مبسطة من عمل كلاسيكي"
+    }
+  },
+  "shelf": {
+    "heading": "الكتب التي تقرؤها",
+    "page": "الصفحة {{n}} من {{total}}",
+    "finished": "انتهيت",
+    "continue": "تابع",
+    "start": "ابدأ"
+  },
+  "book": {
+    "backToLibrary": "المكتبة",
+    "by": "بقلم {{author}}",
+    "source": "المصدر",
+    "license": {
+      "own": "© FlexiLingo",
+      "public_domain": "ملكية عامة",
+      "cc0": "CC0",
+      "cc_by": "CC BY",
+      "cc_by_sa": "CC BY-SA"
+    },
+    "nextEpisode": "الحلقة التالية",
+    "chapter": "الفصل"
+  },
+  "public": {
+    "listTitle": "قصص وكتب باللغة {{language}} حسب المستوى | FlexiLingo",
+    "listDescription": "قراءة مجانية باللغة {{language}} للمتعلمين: قصص قصيرة وكتب كلاسيكية مرتبة حسب مستوى CEFR من A1 إلى C2. انقر على أي كلمة لترى معناها.",
+    "listHeading": "قصص وكتب باللغة {{language}} حسب المستوى",
+    "listIntro": "قصص قصيرة كُتبت للمتعلمين وكتب كلاسيكية، مرتبة حسب المستوى. اقرأ أيًّا منها هنا كاملًا — كل كلمة تُظهر معناها.",
+    "bookTitle": "{{title}} — قراءة باللغة {{language}}، المستوى {{level}} | FlexiLingo",
+    "level": "المستوى {{level}}",
+    "firstPage": "الصفحة الأولى",
+    "cta": "تابع القراءة في FlexiLingo",
+    "ctaBody": "في FlexiLingo تتحوّل الكلمات التي تبحث عنها إلى بطاقات تعليمية، ويُحفظ مكانك في الكتاب على كل أجهزتك. مجانًا.",
+    "moreInSeries": "المزيد من هذه السلسلة",
+    "moreBooks": "المزيد من الكتب باللغة {{language}}",
+    "searchPlaceholder": "ابحث بالعنوان أو المؤلف",
+    "language": "اللغة",
+    "type": "النوع",
+    "allTypes": "كل الأنواع",
+    "series": "السلسلة",
+    "results_one": "كتاب واحد",
+    "results_two": "كتابان",
+    "results_few": "{{count}} كتب",
+    "results_many": "{{count}} كتابًا",
+    "results_other": "{{count}} كتاب",
+    "noResults": "لا يوجد كتاب يطابق هذه الفلاتر. جرّب مستوى آخر أو امسح الفلاتر.",
+    "coverAlt": "غلاف {{title}}",
+    "readHere": "اقرأ هنا — اضغط على أي كلمة لترى معناها",
+    "resume": "تابع من الصفحة {{n}}",
+    "pageError": "لم تُحمَّل هذه الصفحة. تحقّق من الاتصال وحاول مرة أخرى.",
+    "readerCtaTitle": "احتفظ بالكلمات التي تضغط عليها",
+    "filters": "عوامل التصفية",
+    "all": "الكل",
+    "showResults": "عرض {{count}} كتاب"
+  }
+}

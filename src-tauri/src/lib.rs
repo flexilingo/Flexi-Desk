@@ -13,6 +13,7 @@ mod ollama;
 mod plugins;
 mod podcast;
 mod pronunciation;
+mod reader;
 mod shortcuts;
 mod sidecar;
 mod srs;
@@ -362,6 +363,35 @@ pub fn run() {
             commands::deck_hub::deck_hub_ocr_image,
             commands::deck_hub::deck_hub_export_quizlet,
             commands::deck_hub::deck_hub_cloud_push,
+            commands::reader::reader_inspect_path,
+            commands::reader::reader_check_duplicate,
+            commands::reader::reader_import_path,
+            commands::reader::reader_import_bytes,
+            commands::reader::reader_list,
+            commands::reader::reader_get,
+            commands::reader::reader_rename,
+            commands::reader::reader_delete,
+            commands::reader::reader_set_position,
+            commands::reader::reader_set_language,
+            commands::reader::reader_set_edition,
+            commands::reader::reader_set_page_count,
+            commands::reader::reader_file_path,
+            commands::reader::reader_start_session,
+            commands::reader::reader_log_word,
+            commands::reader::reader_words,
+            commands::reader::reader_notes,
+            commands::reader::reader_save_note,
+            commands::reader::reader_delete_note,
+            commands::reader::reader_text_boxes,
+            commands::reader::reader_save_text_box,
+            commands::reader::reader_delete_text_box,
+            commands::reader::reader_marks,
+            commands::reader::reader_save_mark,
+            commands::reader::reader_delete_mark,
+            commands::reader::reader_ocr_page_get,
+            commands::reader::reader_ocr_page_save,
+            commands::reader::reader_ocr_summary,
+            commands::reader::reader_set_text_layer_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

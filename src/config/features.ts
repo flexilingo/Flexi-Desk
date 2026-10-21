@@ -28,6 +28,8 @@ export const ENABLED_MODULES = {
 
   // Tier 4 — Early stage (enable later)
   reading: false,
+  // The website's Reader, ported: PDFs and photos stay on this computer.
+  reader: true,
   writing: false,
   plugins: false,
 } as const;

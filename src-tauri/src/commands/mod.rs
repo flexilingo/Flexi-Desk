@@ -7,6 +7,7 @@ pub mod jobs;
 pub mod ollama;
 pub mod podcast;
 pub mod pronunciation;
+pub mod reader;
 pub mod reading;
 pub mod settings;
 pub mod sidecar;

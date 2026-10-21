@@ -21,14 +21,62 @@ import arCelpip from './locales/ar/celpip.json';
 import frCelpip from './locales/fr/celpip.json';
 import hiCelpip from './locales/hi/celpip.json';
 import zhCelpip from './locales/zh/celpip.json';
+import enReader from './locales/en/reader.json';
+import enReadingLibrary from './locales/en/readingLibrary.json';
+import faReader from './locales/fa/reader.json';
+import faReadingLibrary from './locales/fa/readingLibrary.json';
+import arReader from './locales/ar/reader.json';
+import arReadingLibrary from './locales/ar/readingLibrary.json';
+import frReader from './locales/fr/reader.json';
+import frReadingLibrary from './locales/fr/readingLibrary.json';
+import hiReader from './locales/hi/reader.json';
+import hiReadingLibrary from './locales/hi/readingLibrary.json';
+import zhReader from './locales/zh/reader.json';
+import zhReadingLibrary from './locales/zh/readingLibrary.json';
 
 const resources = {
-  en: { common: enCommon, study: enStudy, celpip: enCelpip },
-  fa: { common: faCommon, study: faStudy, celpip: faCelpip },
-  ar: { common: arCommon, study: arStudy, celpip: arCelpip },
-  fr: { common: frCommon, study: frStudy, celpip: frCelpip },
-  hi: { common: hiCommon, study: hiStudy, celpip: hiCelpip },
-  zh: { common: zhCommon, study: zhStudy, celpip: zhCelpip },
+  en: {
+    common: enCommon,
+    study: enStudy,
+    celpip: enCelpip,
+    reader: enReader,
+    readingLibrary: enReadingLibrary,
+  },
+  fa: {
+    common: faCommon,
+    study: faStudy,
+    celpip: faCelpip,
+    reader: faReader,
+    readingLibrary: faReadingLibrary,
+  },
+  ar: {
+    common: arCommon,
+    study: arStudy,
+    celpip: arCelpip,
+    reader: arReader,
+    readingLibrary: arReadingLibrary,
+  },
+  fr: {
+    common: frCommon,
+    study: frStudy,
+    celpip: frCelpip,
+    reader: frReader,
+    readingLibrary: frReadingLibrary,
+  },
+  hi: {
+    common: hiCommon,
+    study: hiStudy,
+    celpip: hiCelpip,
+    reader: hiReader,
+    readingLibrary: hiReadingLibrary,
+  },
+  zh: {
+    common: zhCommon,
+    study: zhStudy,
+    celpip: zhCelpip,
+    reader: zhReader,
+    readingLibrary: zhReadingLibrary,
+  },
 };
 
 i18n

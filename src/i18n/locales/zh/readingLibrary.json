@@ -1,0 +1,72 @@
+{
+  "catalog": {
+    "heading": "书库",
+    "subtitle": "按级别排列的故事和书籍。点击任何单词即可查看释义。",
+    "allLanguages": "所有语言",
+    "allLevels": "所有级别",
+    "allSeries": "所有系列",
+    "empty": "这里还没有书",
+    "emptyBody": "试试其他语言或级别——新故事会定期添加。",
+    "read": "阅读",
+    "add": "加入我的书库",
+    "added": "已在书库中",
+    "remove": "移除",
+    "pages": "{{n}} 页",
+    "minutes": "{{n}} 分钟",
+    "episode": "第 {{n}} 集",
+    "kind": {
+      "original": "FlexiLingo 原创故事",
+      "classic": "经典名著",
+      "adapted": "经典名著简易版"
+    }
+  },
+  "shelf": {
+    "heading": "正在阅读的书",
+    "page": "第 {{n}} / {{total}} 页",
+    "finished": "已读完",
+    "continue": "继续",
+    "start": "开始"
+  },
+  "book": {
+    "backToLibrary": "书库",
+    "by": "作者：{{author}}",
+    "source": "来源",
+    "license": {
+      "own": "© FlexiLingo",
+      "public_domain": "公有领域",
+      "cc0": "CC0",
+      "cc_by": "CC BY",
+      "cc_by_sa": "CC BY-SA"
+    },
+    "nextEpisode": "下一集",
+    "chapter": "章节"
+  },
+  "public": {
+    "listTitle": "按级别分类的{{language}}故事和书籍 | FlexiLingo",
+    "listDescription": "面向学习者的免费{{language}}读物：按 CEFR 级别（A1 至 C2）排列的短篇故事和经典书籍。点击任何单词即可查看释义。",
+    "listHeading": "按级别分类的{{language}}故事和书籍",
+    "listIntro": "专为学习者写的短篇故事和经典书籍，按级别排列。每一本都可以在这里完整阅读——每个单词都能显示释义。",
+    "bookTitle": "{{title}} — {{language}}读物，{{level}} 级 | FlexiLingo",
+    "level": "{{level}} 级",
+    "firstPage": "第一页",
+    "cta": "在 FlexiLingo 中继续阅读",
+    "ctaBody": "在 FlexiLingo 中，你查过的单词会变成记忆卡片，阅读进度也会在所有设备上保存。免费。",
+    "moreInSeries": "本系列更多内容",
+    "moreBooks": "更多{{language}}书籍",
+    "searchPlaceholder": "按书名或作者搜索",
+    "language": "语言",
+    "type": "类型",
+    "allTypes": "所有类型",
+    "series": "系列",
+    "results": "{{count}} 本书",
+    "noResults": "没有符合这些筛选条件的书。试试其他级别，或清除筛选。",
+    "coverAlt": "《{{title}}》封面",
+    "readHere": "在这里阅读——点任意单词查看释义",
+    "resume": "从第 {{n}} 页继续",
+    "pageError": "这一页没有加载出来。请检查网络后重试。",
+    "readerCtaTitle": "保存你点过的单词",
+    "filters": "筛选",
+    "all": "全部",
+    "showResults": "查看 {{count}} 本书"
+  }
+}

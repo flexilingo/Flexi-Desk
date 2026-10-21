@@ -1,0 +1,74 @@
+{
+  "catalog": {
+    "heading": "Library",
+    "subtitle": "Stories and books sorted by level. Tap any word for its meaning.",
+    "allLanguages": "All languages",
+    "allLevels": "All levels",
+    "allSeries": "All series",
+    "empty": "No books here yet",
+    "emptyBody": "Try another language or level — new stories are added regularly.",
+    "read": "Read",
+    "add": "Add to my library",
+    "added": "In your library",
+    "remove": "Remove",
+    "pages": "{{n}} pages",
+    "minutes": "{{n}} min",
+    "episode": "Episode {{n}}",
+    "kind": {
+      "original": "FlexiLingo story",
+      "classic": "Classic",
+      "adapted": "Easy version of a classic"
+    }
+  },
+  "shelf": {
+    "heading": "Books you are reading",
+    "page": "Page {{n}} of {{total}}",
+    "finished": "Finished",
+    "continue": "Continue",
+    "start": "Start"
+  },
+  "book": {
+    "backToLibrary": "Library",
+    "by": "by {{author}}",
+    "source": "Source",
+    "license": {
+      "own": "© FlexiLingo",
+      "public_domain": "Public domain",
+      "cc0": "CC0",
+      "cc_by": "CC BY",
+      "cc_by_sa": "CC BY-SA"
+    },
+    "nextEpisode": "Next episode",
+    "chapter": "Chapter"
+  },
+  "public": {
+    "listTitle": "{{language}} stories and books by level | FlexiLingo",
+    "listDescription": "Free {{language}} reading for learners: short stories and classic books sorted by CEFR level from A1 to C2. Tap any word for its meaning.",
+    "listHeading": "{{language}} stories and books by level",
+    "listIntro": "Short stories written for learners and classic books, sorted by level. Read any of them here in full — every word opens its meaning.",
+    "bookTitle": "{{title}} — {{level}} {{language}} reading | FlexiLingo",
+    "level": "Level {{level}}",
+    "firstPage": "First page",
+    "cta": "Continue reading in FlexiLingo",
+    "ctaBody": "In FlexiLingo the words you look up become flashcards, and your place in the book is saved on every device. Free.",
+    "moreInSeries": "More in this series",
+    "moreBooks": "More {{language}} books",
+    "searchPlaceholder": "Search by title or author",
+    "language": "Language",
+    "type": "Type",
+    "allTypes": "All types",
+    "series": "Series",
+    "results_one": "{{count}} book",
+    "results_other": "{{count}} books",
+    "noResults": "No book matches these filters. Try another level or clear the filters.",
+    "coverAlt": "Cover of {{title}}",
+    "readHere": "Read it here — tap any word for its meaning",
+    "resume": "Continue from page {{n}}",
+    "pageError": "This page did not load. Check your connection and try again.",
+    "readerCtaTitle": "Keep the words you tap",
+    "filters": "Filters",
+    "all": "All",
+    "showResults_one": "Show {{count}} book",
+    "showResults_other": "Show {{count}} books"
+  }
+}
