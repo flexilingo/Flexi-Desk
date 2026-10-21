@@ -1,0 +1,26 @@
+{
+  "home": {
+    "openPdf": "باز کردن یک PDF"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "این PDF رمز دارد.",
+    "PDF_COULD_NOT_OPEN": "این PDF باز نشد. شاید خراب باشد.",
+    "UNKNOWN_ERROR": "مشکلی پیش آمد. دوباره امتحان کنید.",
+    "DOCUMENT_NOT_FOUND": "این سند پیدا نشد.",
+    "FILE_MISSING": "فایل این سند روی این کامپیوتر نیست.",
+    "FILE_NOT_FOUND": "فایل این سند روی این کامپیوتر نیست.",
+    "NOT_A_PDF": "این فایل PDF نیست.",
+    "UNSUPPORTED_FILE_TYPE": "این فایل PDF نیست.",
+    "EMPTY_FILE": "این فایل خالی است.",
+    "FILE_READ_FAILED": "خواندن فایل ممکن نشد.",
+    "FILE_WRITE_FAILED": "ذخیره فایل روی این کامپیوتر ممکن نشد.",
+    "INVALID_FILE_PATH": "خواندن فایل ممکن نشد.",
+    "OCR_FAILED": "خواندن این صفحه انجام نشد.",
+    "OCR_PAGE_FAILED": "خواندن این صفحه انجام نشد.",
+    "POSITION_SAVE_FAILED": "جای شما در کتاب ذخیره نشد.",
+    "WORD_LOG_FAILED": "این واژه در فهرست شما ذخیره نشد.",
+    "DOCUMENTS_FETCH_FAILED": "سندهای شما بارگذاری نشدند.",
+    "DOCUMENT_FETCH_FAILED": "این سند پیدا نشد.",
+    "DOCUMENT_CREATE_FAILED": "ذخیره فایل روی این کامپیوتر ممکن نشد."
+  }
+}

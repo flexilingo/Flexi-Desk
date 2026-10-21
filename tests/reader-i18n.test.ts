@@ -44,3 +44,15 @@ describe.each(NAMESPACES)('%s namespace', (ns) => {
     }
   });
 });
+
+describe('readerDesk namespace (desk-only strings)', () => {
+  const keys = (l: string) => [...flatten(load(l, 'readerDesk')).keys()].sort();
+  it.each(LOCALES.filter((l) => l !== 'en'))('%s has the same keys as en', (l) => {
+    expect(keys(l)).toEqual(keys('en'));
+  });
+  it('covers the codes the viewer resolves', () => {
+    expect(keys('en')).toEqual(
+      expect.arrayContaining(['errors.PDF_PASSWORD_PROTECTED', 'errors.PDF_COULD_NOT_OPEN', 'errors.UNKNOWN_ERROR', 'home.openPdf']),
+    );
+  });
+});

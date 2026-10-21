@@ -1,0 +1,26 @@
+{
+  "home": {
+    "openPdf": "打开 PDF"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "此 PDF 有密码保护。",
+    "PDF_COULD_NOT_OPEN": "无法打开此 PDF，文件可能已损坏。",
+    "UNKNOWN_ERROR": "出错了，请重试。",
+    "DOCUMENT_NOT_FOUND": "找不到此文档。",
+    "FILE_MISSING": "此文档的文件已不在这台电脑上。",
+    "FILE_NOT_FOUND": "此文档的文件已不在这台电脑上。",
+    "NOT_A_PDF": "此文件不是 PDF。",
+    "UNSUPPORTED_FILE_TYPE": "此文件不是 PDF。",
+    "EMPTY_FILE": "此文件是空的。",
+    "FILE_READ_FAILED": "无法读取该文件。",
+    "FILE_WRITE_FAILED": "无法将文件保存到这台电脑。",
+    "INVALID_FILE_PATH": "无法读取该文件。",
+    "OCR_FAILED": "读取此页失败。",
+    "OCR_PAGE_FAILED": "读取此页失败。",
+    "POSITION_SAVE_FAILED": "无法保存你在书中的位置。",
+    "WORD_LOG_FAILED": "无法将此单词保存到你的列表。",
+    "DOCUMENTS_FETCH_FAILED": "无法加载你的文档。",
+    "DOCUMENT_FETCH_FAILED": "找不到此文档。",
+    "DOCUMENT_CREATE_FAILED": "无法将文件保存到这台电脑。"
+  }
+}

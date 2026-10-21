@@ -1,0 +1,26 @@
+{
+  "home": {
+    "openPdf": "PDF खोलें"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "यह PDF पासवर्ड से सुरक्षित है।",
+    "PDF_COULD_NOT_OPEN": "यह PDF नहीं खुल सका। शायद यह क्षतिग्रस्त है।",
+    "UNKNOWN_ERROR": "कुछ गड़बड़ हो गई। फिर से कोशिश करें।",
+    "DOCUMENT_NOT_FOUND": "यह दस्तावेज़ नहीं मिला।",
+    "FILE_MISSING": "इस दस्तावेज़ की फ़ाइल इस कंप्यूटर पर नहीं है।",
+    "FILE_NOT_FOUND": "इस दस्तावेज़ की फ़ाइल इस कंप्यूटर पर नहीं है।",
+    "NOT_A_PDF": "यह फ़ाइल PDF नहीं है।",
+    "UNSUPPORTED_FILE_TYPE": "यह फ़ाइल PDF नहीं है।",
+    "EMPTY_FILE": "यह फ़ाइल खाली है।",
+    "FILE_READ_FAILED": "फ़ाइल पढ़ी नहीं जा सकी।",
+    "FILE_WRITE_FAILED": "फ़ाइल इस कंप्यूटर पर सहेजी नहीं जा सकी।",
+    "INVALID_FILE_PATH": "फ़ाइल पढ़ी नहीं जा सकी।",
+    "OCR_FAILED": "इस पन्ने को पढ़ना विफल रहा।",
+    "OCR_PAGE_FAILED": "इस पन्ने को पढ़ना विफल रहा।",
+    "POSITION_SAVE_FAILED": "किताब में आपकी जगह सहेजी नहीं जा सकी।",
+    "WORD_LOG_FAILED": "यह शब्द आपकी सूची में सहेजा नहीं जा सका।",
+    "DOCUMENTS_FETCH_FAILED": "आपके दस्तावेज़ लोड नहीं हो सके।",
+    "DOCUMENT_FETCH_FAILED": "यह दस्तावेज़ नहीं मिला।",
+    "DOCUMENT_CREATE_FAILED": "फ़ाइल इस कंप्यूटर पर सहेजी नहीं जा सकी।"
+  }
+}

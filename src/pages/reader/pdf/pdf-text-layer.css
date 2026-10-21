@@ -1,0 +1,177 @@
+/*
+ * The pdf.js text layer, scoped to this feature.
+ *
+ * Transplanted from `pdfjs-dist/web/pdf_viewer.css` rather than imported: that
+ * file is 160 KB of viewer chrome (toolbar, dialogs, annotation editors) and,
+ * worse, it declares `:root` variables that would leak into every page of the
+ * app. Only the `.textLayer` block matters here.
+ *
+ * Two deliberate differences from the original, both flowing from the fact that
+ * this layer is not just for text selection — every word in it is a button:
+ *
+ * 1. Nesting is expanded. (kept from the website, where Tailwind 3 has no nesting plugin;
+ *    plain selectors work everywhere, so desk keeps them as they are).
+ * 2. `.flexi-pdf-word` undoes the run styling with `!important`. pdf.js styles
+ *    EVERY descendant span as an absolutely-positioned run, and a run inside
+ *    marked content is matched at a specificity this file cannot outrank
+ *    (`.textLayer .markedContent span:not(.markedContent)`). Without the
+ *    override, the word spans we insert inside each run would be ripped out of
+ *    flow and given `font-size: 0`.
+ *
+ * The layer sits ON TOP of the rendered canvas with transparent text, which is
+ * what makes a highlight on hover read as a highlight on the real page.
+ */
+
+.flexi-pdf-textlayer {
+  color-scheme: only light;
+  position: absolute;
+  inset: 0;
+  text-align: initial;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  z-index: 0;
+
+  --min-font-size: 1;
+  --total-scale-factor: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+  /* pdf.js sizes the layer with `round(down, …, var(--scale-round-x))`. Unset,
+     that whole declaration is invalid at computed-value time and the layer
+     collapses to auto width — the viewer sets these from JS, we set them here. */
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+}
+
+/*
+ * A page with /Rotate. pdf.js lays the layer out in the page's UNROTATED space
+ * and turns it into place — these are pdf_viewer.css' `[data-main-rotation]`
+ * rules, which the TextLayer constructor's attribute expects. Without them the
+ * words of a quarter-turned page (a scanner's landscape page shown upright)
+ * sat a quarter-turn away from the print they belong to.
+ */
+.flexi-pdf-textlayer[data-main-rotation='90'] {
+  transform: rotate(90deg) translateY(-100%);
+}
+
+.flexi-pdf-textlayer[data-main-rotation='180'] {
+  transform: rotate(180deg) translate(-100%, -100%);
+}
+
+.flexi-pdf-textlayer[data-main-rotation='270'] {
+  transform: rotate(270deg) translateX(-100%);
+}
+
+.flexi-pdf-textlayer span,
+.flexi-pdf-textlayer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+
+.flexi-pdf-textlayer > :not(.markedContent),
+.flexi-pdf-textlayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  --scale-x: 1;
+  --rotate: 0deg;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.flexi-pdf-textlayer .markedContent {
+  display: contents;
+}
+
+.flexi-pdf-textlayer span[role='img'] {
+  user-select: none;
+  cursor: default;
+}
+
+/* Selection stays visible even though the text itself is transparent. */
+.flexi-pdf-textlayer ::selection {
+  background: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  color: transparent;
+}
+
+.flexi-pdf-textlayer br::selection {
+  background: transparent;
+}
+
+.flexi-pdf-textlayer .endOfContent {
+  display: block;
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: 0;
+  cursor: default;
+  user-select: none;
+}
+
+/* One tappable word inside a run. See the header for why every line shouts. */
+.flexi-pdf-word {
+  position: static !important;
+  display: inline !important;
+  font-size: inherit !important;
+  transform: none !important;
+  transform-origin: inherit !important;
+  cursor: pointer !important;
+  border-radius: 3px;
+  transition: background-color 120ms ease;
+}
+
+/* Set by the page on every piece of the hovered word — see `HOT_CLASS`. A CSS
+   `:hover` cannot do this: a word broken across runs by a ligature is several
+   spans, and only one of them is ever under the cursor. */
+.flexi-pdf-word.is-hot {
+  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+/*
+ * Reserve the scrollbar's width whether or not it is showing.
+ *
+ * Without this the viewer fights itself on every document: the first page is
+ * laid out to the full column width, that makes the stack tall enough to need a
+ * vertical scrollbar, the scrollbar takes ~11px off the column, the fit-to-width
+ * scale drops, and every page re-renders at the new size. Two renders then race
+ * for one canvas — which is how a page ended up painted by the STALE one, at the
+ * wrong scale and with no text layer at all. Reserving the gutter up front means
+ * the width the first render measures is the width it keeps.
+ */
+.flexi-pdf-scroll {
+  scrollbar-gutter: stable;
+}
+
+/* The indeterminate loading bar: a band that crosses and comes back, which
+   reads as "working" where a static bar reads as "stuck". */
+@keyframes pdfSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* THE HAND TOOL (PdfViewControls). A drag moves the page instead of selecting
+   text; words keep their pointer, because a plain click still looks one up. */
+.flexi-pdf-scroll[data-tool='hand'] {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.flexi-pdf-scroll[data-tool='hand'] .flexi-pdf-textlayer span {
+  cursor: grab;
+}
+.flexi-pdf-scroll[data-panning],
+.flexi-pdf-scroll[data-panning] * {
+  cursor: grabbing !important;
+}

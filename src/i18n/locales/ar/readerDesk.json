@@ -1,0 +1,26 @@
+{
+  "home": {
+    "openPdf": "فتح ملف PDF"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "ملف PDF هذا محمي بكلمة مرور.",
+    "PDF_COULD_NOT_OPEN": "تعذّر فتح ملف PDF هذا. قد يكون تالفاً.",
+    "UNKNOWN_ERROR": "حدث خطأ ما. حاول مرة أخرى.",
+    "DOCUMENT_NOT_FOUND": "تعذّر العثور على هذا المستند.",
+    "FILE_MISSING": "ملف هذا المستند غير موجود على هذا الكمبيوتر.",
+    "FILE_NOT_FOUND": "ملف هذا المستند غير موجود على هذا الكمبيوتر.",
+    "NOT_A_PDF": "هذا الملف ليس PDF.",
+    "UNSUPPORTED_FILE_TYPE": "هذا الملف ليس PDF.",
+    "EMPTY_FILE": "هذا الملف فارغ.",
+    "FILE_READ_FAILED": "تعذّرت قراءة الملف.",
+    "FILE_WRITE_FAILED": "تعذّر حفظ الملف على هذا الكمبيوتر.",
+    "INVALID_FILE_PATH": "تعذّرت قراءة الملف.",
+    "OCR_FAILED": "فشلت قراءة هذه الصفحة.",
+    "OCR_PAGE_FAILED": "فشلت قراءة هذه الصفحة.",
+    "POSITION_SAVE_FAILED": "تعذّر حفظ موضعك في الكتاب.",
+    "WORD_LOG_FAILED": "تعذّر حفظ هذه الكلمة في قائمتك.",
+    "DOCUMENTS_FETCH_FAILED": "تعذّر تحميل مستنداتك.",
+    "DOCUMENT_FETCH_FAILED": "تعذّر العثور على هذا المستند.",
+    "DOCUMENT_CREATE_FAILED": "تعذّر حفظ الملف على هذا الكمبيوتر."
+  }
+}

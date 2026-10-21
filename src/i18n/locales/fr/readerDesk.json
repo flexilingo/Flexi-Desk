@@ -1,0 +1,26 @@
+{
+  "home": {
+    "openPdf": "Ouvrir un PDF"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "Ce PDF est protégé par un mot de passe.",
+    "PDF_COULD_NOT_OPEN": "Impossible d'ouvrir ce PDF. Il est peut-être endommagé.",
+    "UNKNOWN_ERROR": "Une erreur s'est produite. Réessayez.",
+    "DOCUMENT_NOT_FOUND": "Ce document est introuvable.",
+    "FILE_MISSING": "Le fichier de ce document est absent de cet ordinateur.",
+    "FILE_NOT_FOUND": "Le fichier de ce document est absent de cet ordinateur.",
+    "NOT_A_PDF": "Ce fichier n'est pas un PDF.",
+    "UNSUPPORTED_FILE_TYPE": "Ce fichier n'est pas un PDF.",
+    "EMPTY_FILE": "Ce fichier est vide.",
+    "FILE_READ_FAILED": "Le fichier n'a pas pu être lu.",
+    "FILE_WRITE_FAILED": "Le fichier n'a pas pu être enregistré sur cet ordinateur.",
+    "INVALID_FILE_PATH": "Le fichier n'a pas pu être lu.",
+    "OCR_FAILED": "La lecture de cette page a échoué.",
+    "OCR_PAGE_FAILED": "La lecture de cette page a échoué.",
+    "POSITION_SAVE_FAILED": "Votre position dans le livre n'a pas pu être enregistrée.",
+    "WORD_LOG_FAILED": "Ce mot n'a pas pu être ajouté à votre liste.",
+    "DOCUMENTS_FETCH_FAILED": "Vos documents n'ont pas pu être chargés.",
+    "DOCUMENT_FETCH_FAILED": "Ce document est introuvable.",
+    "DOCUMENT_CREATE_FAILED": "Le fichier n'a pas pu être enregistré sur cet ordinateur."
+  }
+}

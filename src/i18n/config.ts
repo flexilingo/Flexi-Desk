@@ -23,16 +23,22 @@ import hiCelpip from './locales/hi/celpip.json';
 import zhCelpip from './locales/zh/celpip.json';
 import enReader from './locales/en/reader.json';
 import enReadingLibrary from './locales/en/readingLibrary.json';
+import enReaderDesk from './locales/en/readerDesk.json';
 import faReader from './locales/fa/reader.json';
 import faReadingLibrary from './locales/fa/readingLibrary.json';
+import faReaderDesk from './locales/fa/readerDesk.json';
 import arReader from './locales/ar/reader.json';
 import arReadingLibrary from './locales/ar/readingLibrary.json';
+import arReaderDesk from './locales/ar/readerDesk.json';
 import frReader from './locales/fr/reader.json';
 import frReadingLibrary from './locales/fr/readingLibrary.json';
+import frReaderDesk from './locales/fr/readerDesk.json';
 import hiReader from './locales/hi/reader.json';
 import hiReadingLibrary from './locales/hi/readingLibrary.json';
+import hiReaderDesk from './locales/hi/readerDesk.json';
 import zhReader from './locales/zh/reader.json';
 import zhReadingLibrary from './locales/zh/readingLibrary.json';
+import zhReaderDesk from './locales/zh/readerDesk.json';
 
 const resources = {
   en: {
@@ -41,6 +47,7 @@ const resources = {
     celpip: enCelpip,
     reader: enReader,
     readingLibrary: enReadingLibrary,
+    readerDesk: enReaderDesk,
   },
   fa: {
     common: faCommon,
@@ -48,6 +55,7 @@ const resources = {
     celpip: faCelpip,
     reader: faReader,
     readingLibrary: faReadingLibrary,
+    readerDesk: faReaderDesk,
   },
   ar: {
     common: arCommon,
@@ -55,6 +63,7 @@ const resources = {
     celpip: arCelpip,
     reader: arReader,
     readingLibrary: arReadingLibrary,
+    readerDesk: arReaderDesk,
   },
   fr: {
     common: frCommon,
@@ -62,6 +71,7 @@ const resources = {
     celpip: frCelpip,
     reader: frReader,
     readingLibrary: frReadingLibrary,
+    readerDesk: frReaderDesk,
   },
   hi: {
     common: hiCommon,
@@ -69,6 +79,7 @@ const resources = {
     celpip: hiCelpip,
     reader: hiReader,
     readingLibrary: hiReadingLibrary,
+    readerDesk: hiReaderDesk,
   },
   zh: {
     common: zhCommon,
@@ -76,6 +87,7 @@ const resources = {
     celpip: zhCelpip,
     reader: zhReader,
     readingLibrary: zhReadingLibrary,
+    readerDesk: zhReaderDesk,
   },
 };
 

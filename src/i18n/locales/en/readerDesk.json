@@ -1,0 +1,26 @@
+{
+  "home": {
+    "openPdf": "Open a PDF"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "This PDF is password protected.",
+    "PDF_COULD_NOT_OPEN": "This PDF could not be opened. It may be damaged.",
+    "UNKNOWN_ERROR": "Something went wrong. Please try again.",
+    "DOCUMENT_NOT_FOUND": "This document could not be found.",
+    "FILE_MISSING": "The file of this document is missing from this computer.",
+    "FILE_NOT_FOUND": "The file of this document is missing from this computer.",
+    "NOT_A_PDF": "This file is not a PDF.",
+    "UNSUPPORTED_FILE_TYPE": "This file is not a PDF.",
+    "EMPTY_FILE": "This file is empty.",
+    "FILE_READ_FAILED": "The file could not be read.",
+    "FILE_WRITE_FAILED": "The file could not be saved on this computer.",
+    "INVALID_FILE_PATH": "The file could not be read.",
+    "OCR_FAILED": "Reading this page failed.",
+    "OCR_PAGE_FAILED": "Reading this page failed.",
+    "POSITION_SAVE_FAILED": "Your place in the book could not be saved.",
+    "WORD_LOG_FAILED": "This word could not be saved to your list.",
+    "DOCUMENTS_FETCH_FAILED": "Your documents could not be loaded.",
+    "DOCUMENT_FETCH_FAILED": "This document could not be found.",
+    "DOCUMENT_CREATE_FAILED": "The file could not be saved on this computer."
+  }
+}

@@ -14,6 +14,7 @@ export function Shell() {
   const { pathname } = useLocation();
 
   // Hide the mini player while the full player route is open.
+  const fillsPage = pathname.startsWith('/reader/pdf/');
   const showMiniPlayer = currentEpisode && !pathname.startsWith('/podcast/player/');
 
   return (
@@ -21,11 +22,19 @@ export function Shell() {
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Header />
-        <ScrollArea className="flex-1">
-          <main className="p-6 min-w-0 max-w-full">
+        {fillsPage ? (
+          // The PDF reader owns its own scrolling (pages, side panels), so it gets the
+          // whole area instead of a padded scroll column.
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <Outlet />
           </main>
-        </ScrollArea>
+        ) : (
+          <ScrollArea className="flex-1">
+            <main className="p-6 min-w-0 max-w-full">
+              <Outlet />
+            </main>
+          </ScrollArea>
+        )}
       </div>
       {showMiniPlayer && <MiniPlayer />}
       <JobToastStack />
