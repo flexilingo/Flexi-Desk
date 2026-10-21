@@ -55,5 +55,14 @@
   "ocr": {
     "downloading": "正在下载{{language}}的识别数据… {{percent}}%",
     "languageFallback": "此文档将按英语识别"
+  },
+  "notes": {
+    "saveFailed": "笔记未能保存。你写的内容仍在此处，请重试。",
+    "deleteFailed": "笔记未能删除，请重试。",
+    "bold": "加粗",
+    "italic": "斜体",
+    "list": "项目符号列表",
+    "preview": "预览",
+    "write": "编辑"
   }
 }

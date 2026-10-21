@@ -25,12 +25,13 @@ import {
 import { usePageOcrWords } from '../lib/use-page-ocr-words';
 import { paintsImage } from '../ocr/scan-detection';
 import { PdfPageWorkingDialog } from './PdfPageWorkingDialog';
-import type { TextBoxShape, TextBoxStore, WriteTool, MarkStore } from '../lib/write-types';
-// PHASE E: PdfTextBox and PdfMarksLayer (the written boxes, arrows and stamps) are
-// drawn on the page from here; their imports return with the write-mode port.
+import type { TextBox, TextBoxShape, TextBoxStore, WriteTool } from '../lib/text-box-store';
+import type { MarkStore } from '../lib/mark-store';
+import { blankAt } from '../lib/blank-at';
+import { PdfTextBox } from './PdfTextBox';
+import { PdfMarksLayer } from './PdfMarksLayer';
 
-/** A printed blank: a run of ellipses, dots or underscores. */
-const BLANK = /…{2,}|\.{4,}|_{3,}/g;
+const NO_BOXES: TextBox[] = [];
 
 /**
  * A new box's width when there is no blank to take it from, as % of page width.
@@ -40,36 +41,6 @@ const BLANK = /…{2,}|\.{4,}|_{3,}/g;
  * A longer answer wraps, and the right edge still drags wider.
  */
 const DEFAULT_BOX_WIDTH = 12;
-
-/**
- * The printed blank at a point on the page, if the click landed on or right
- * beside one.
- *
- * Textbook blanks are TEXT — "…………………" — so pdf.js knows exactly where each
- * one sits. Measured with a Range over just the dots, so a blank in the middle
- * of a sentence gives its own box, not the whole line's.
- */
-function blankAt(layer: HTMLElement, x: number, y: number): DOMRect | null {
-  const walker = document.createTreeWalker(layer, NodeFilter.SHOW_TEXT);
-  let best: DOMRect | null = null;
-  let bestDistance = Number.POSITIVE_INFINITY;
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    for (const match of (node.textContent ?? '').matchAll(BLANK)) {
-      const range = document.createRange();
-      range.setStart(node, match.index);
-      range.setEnd(node, match.index + match[0].length);
-      for (const rect of range.getClientRects()) {
-        const dx = x < rect.left ? rect.left - x : x > rect.right ? x - rect.right : 0;
-        const dy = y < rect.top ? rect.top - y : y > rect.bottom ? y - rect.bottom : 0;
-        // Close enough to have meant it; any further and it is a click on the page.
-        if (dx > 8 || dy > 10 || dx + dy >= bestDistance) continue;
-        best = rect;
-        bestDistance = dx + dy;
-      }
-    }
-  }
-  return best;
-}
 
 /** The page number travels with the word: a lookup is only reviewable if you know where it happened. */
 export type PdfWordHandler = (word: string, context: string, pageNumber: number) => void;
@@ -766,9 +737,16 @@ export function PdfPageView({
     };
   }, [spoken]);
 
-  // PHASE E: `boxes` — this page's written boxes, subscribed per page through
-  // `useSyncExternalStore(boxStore.subscribe(pageNumber), boxStore.snapshot(pageNumber))`
-  // so typing on page 40 re-renders page 40 and nothing else.
+  // This page's boxes only — typing on page 40 re-renders page 40, nothing else.
+  const subscribeBoxes = useCallback(
+    (listener: () => void) => boxStore?.subscribe(pageNumber, listener) ?? (() => {}),
+    [boxStore, pageNumber],
+  );
+  const boxes = useSyncExternalStore(
+    subscribeBoxes,
+    () => boxStore?.snapshot(pageNumber) ?? NO_BOXES,
+    () => NO_BOXES,
+  );
 
   // Which tool a click on the page uses. A string, so a pen change that is not
   // a tool change (a colour, a size) re-renders none of the pages.
@@ -898,9 +876,31 @@ export function PdfPageView({
         <div aria-hidden onClick={placeBox} className="absolute inset-0 z-[4] cursor-text" />
       )}
 
-      {/* PHASE E: the learner's text boxes (`PdfTextBox`, one per entry of `boxes`)
-          and the arrows / boxes / stamps layer (`PdfMarksLayer`) are drawn here, in
-          this order, above the write sheet and below the text layer. */}
+      {boxStore &&
+        boxes.map((box) => (
+          <PdfTextBox
+            key={box.key}
+            box={box}
+            store={boxStore}
+            pageWidth={pageWidth}
+            pageHeight={pageHeight}
+            writing={writing}
+          />
+        ))}
+
+      {/* Arrows, boxes and stamps. With another tool than text picked up, this
+          layer brings its own drawing sheet in place of the one above. */}
+      {boxStore && markStore && (
+        <PdfMarksLayer
+          store={markStore}
+          pen={boxStore}
+          page={pageNumber}
+          pageWidth={pageWidth}
+          pageHeight={pageHeight}
+          writing={writing}
+          tool={tool}
+        />
+      )}
 
       {/* `data-lookup-text` is what `useSelectionPhrase` looks for: without it a
           selection inside the page is invisible to the chip, so dragging across

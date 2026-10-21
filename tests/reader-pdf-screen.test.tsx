@@ -31,7 +31,11 @@ const invoke = vi.fn(async (command: string) => {
     case 'reader_file_path':
       return '/data/reader/doc1.pdf';
     case 'reader_notes':
+    case 'reader_text_boxes':
+    case 'reader_marks':
       return { items: [] };
+    case 'reader_words':
+      return { items: [], total_events: 0 };
     case 'reader_start_session':
       return { session_id: 's1', resumed: false };
     default:

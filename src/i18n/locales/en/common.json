@@ -278,7 +278,8 @@
     "errors": {
       "OLLAMA_NOT_RUNNING": "The on-device AI model isn't running. Start Ollama from Settings → AI Provider and try again.",
       "UNKNOWN_ERROR": "Something went wrong. Please try again."
-    }
+    },
+    "createNamed": "Create deck “{{name}}”"
   },
   "dictionary": {
     "translationLanguage": "Translation language"

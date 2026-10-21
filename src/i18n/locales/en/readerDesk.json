@@ -55,5 +55,14 @@
   "ocr": {
     "downloading": "Downloading the reading data for {{language}}… {{percent}}%",
     "languageFallback": "Reading this document as English"
+  },
+  "notes": {
+    "saveFailed": "The note could not be saved. Your text is still here — try again.",
+    "deleteFailed": "The note could not be deleted. Try again.",
+    "bold": "Bold",
+    "italic": "Italic",
+    "list": "Bulleted list",
+    "preview": "Preview",
+    "write": "Edit"
   }
 }

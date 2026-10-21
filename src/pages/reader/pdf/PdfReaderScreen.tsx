@@ -1,17 +1,26 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { LookupProvider } from '@/components/lookup/LookupProvider';
 import { speak, stop as stopSpeaking, useSpeechState } from '@/lib/speech';
 import {
+  deleteReaderMark,
+  deleteReaderNote,
+  deleteReaderTextBox,
   getReaderFileUrl,
+  getReaderMarks,
   getReaderNotes,
+  getReaderTextBoxes,
+  getReaderWords,
   logReaderWord,
+  saveReaderMark,
+  saveReaderNote,
+  saveReaderTextBox,
   setReaderPageCount,
   setReaderPosition,
   startReaderSession,
 } from '../services/readerService';
-import type { ReaderNote } from '../types';
+import type { ReaderNote, ReaderWordSummary } from '../types';
 import { PDF_ASSET_OPTIONS, destroyDocument, loadPdfjs } from '../lib/pdfjs';
 import { ReaderToolbar } from '../text/ReaderToolbar';
 import { PdfLoading } from './PdfLoading';
@@ -21,9 +30,18 @@ import { PdfTextLayerStatus } from './PdfTextLayerStatus';
 import { documentBoilerplate } from '../lib/document-boilerplate';
 import { useDocumentOcr } from '../lib/use-document-ocr';
 import { PdfViewControls, type PdfPointerTool } from './PdfViewControls';
+import { PdfNoteDialog, type EditingNote } from './PdfNoteDialog';
+import { PdfNotesPanel } from './PdfNotesPanel';
+import { PdfWordsPanel } from './PdfWordsPanel';
+import { PdfWritingPanel } from './PdfWritingPanel';
+import { PdfEditorBar } from './PdfEditorBar';
+import { ReaderDeckButton } from '../components/ReaderDeckButton';
+import { anchorSelection, type NoteAnchor } from '../lib/note-anchor';
+import { TextBoxStore } from '../lib/text-box-store';
+import { MarkStore } from '../lib/mark-store';
+import { usePageText } from '../lib/use-page-text';
 
-// PHASE E: notes dialog + panel, words panel, write mode (`PdfEditorBar`, `PdfWritingPanel`,
-// the box and mark stores). PHASE F: audio, video, cheatsheet, edition picker and the
+// PHASE F: audio, video, cheatsheet, edition picker and the
 // `useAudioHold` / `usePlayerKeys` hooks (ported in `../lib`, wired with the audio panel).
 
 /** How long the reader must sit still on a page before the bookmark is written. */
@@ -36,6 +54,18 @@ const TAP_TO_SPEAK_KEY = 'flexi-reader-tap-to-speak';
 const HAND_HINT_KEY = 'flexi-reader-hand-hint-seen';
 
 type FileInfo = Awaited<ReturnType<typeof getReaderFileUrl>>;
+
+/** A re-saved note keeps the place it was pinned to. */
+function existingRect(note: ReaderNote | undefined) {
+  return note
+    ? {
+        x: Number(note.rect_x),
+        y: Number(note.rect_y),
+        w: Number(note.rect_w),
+        h: Number(note.rect_h),
+      }
+    : { x: 0, y: 0, w: 0, h: 0 };
+}
 
 /** The backend rejects with its code string; anything else is unknown. */
 function errorCodeOf(cause: unknown): string {
@@ -62,6 +92,106 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
   const [file, setFile] = useState<FileInfo | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [notesData, setNotesData] = useState<ReaderNote[]>([]);
+  const [words, setWords] = useState<ReaderWordSummary[]>([]);
+  const [wordsLoading, setWordsLoading] = useState(true);
+
+  const refreshWords = useCallback(() => {
+    getReaderWords({ documentId })
+      .then((result) => setWords(result.items ?? []))
+      .catch(() => {})
+      .finally(() => setWordsLoading(false));
+  }, [documentId]);
+  const refreshNotes = useCallback(
+    () =>
+      getReaderNotes(documentId)
+        .then((result) => setNotesData(result.items))
+        .catch(() => {}),
+    [documentId],
+  );
+  useEffect(refreshWords, [refreshWords]);
+
+  /*
+   * WHAT THE LEARNER HAS WRITTEN on the pages. Loaded once, then owned by the
+   * stores — see `TextBoxStore` for why this is not React state. The local
+   * database is written to behind the typing, never in front of it.
+   */
+  const [boxStore] = useState(() => new TextBoxStore());
+  const [markStore] = useState(() => new MarkStore());
+  const [writeLoadFailed, setWriteLoadFailed] = useState(false);
+  const [writing, setWriting] = useState(false);
+  /** Leaving write mode also stops the bar pointing at a box or a mark. */
+  const toggleWriting = useCallback(
+    () =>
+      setWriting((on) => {
+        if (on) {
+          boxStore.setActive(null);
+          markStore.setActive(null);
+        }
+        return !on;
+      }),
+    [boxStore, markStore],
+  );
+
+  useEffect(() => {
+    boxStore.connect({
+      save: (box) =>
+        saveReaderTextBox({ document_id: documentId, ...box }).then((saved) => saved.id),
+      remove: (id) => deleteReaderTextBox({ id }).then(() => undefined),
+    });
+    markStore.connect({
+      save: (mark) =>
+        saveReaderMark({ document_id: documentId, ...mark }).then((saved) => saved.id),
+      remove: (id) => deleteReaderMark({ id }).then(() => undefined),
+    });
+  }, [boxStore, markStore, documentId]);
+
+  const loadWritten = useCallback(() => {
+    setWriteLoadFailed(false);
+    Promise.all([getReaderTextBoxes(documentId), getReaderMarks(documentId)])
+      .then(([boxes, marks]) => {
+        boxStore.load(boxes.items);
+        markStore.load(marks.items);
+      })
+      .catch(() => setWriteLoadFailed(true));
+  }, [boxStore, markStore, documentId]);
+  useEffect(loadWritten, [loadWritten]);
+
+  // Leaving the book mid-sentence still keeps the sentence.
+  useEffect(
+    () => () => {
+      boxStore.flushAll();
+      markStore.flushAll();
+    },
+    [boxStore, markStore],
+  );
+
+  // One selection at a time: stepping into a text box lets go of any mark, so
+  // the bar's delete and ink can never be pointed at two things at once.
+  useEffect(
+    () =>
+      boxStore.subscribePen(() => {
+        if (boxStore.penSnapshot().active) markStore.setActive(null);
+      }),
+    [boxStore, markStore],
+  );
+
+  // Only for the toolbar's count; the panel reads the boxes themselves.
+  const subscribeWritten = useCallback(
+    (listener: () => void) => boxStore.subscribeAll(listener),
+    [boxStore],
+  );
+  const writtenCount = useSyncExternalStore(
+    subscribeWritten,
+    () => boxStore.allBoxes().filter((box) => box.body.trim()).length,
+    () => 0,
+  );
+
+  // One panel at a time: they sit in the same column.
+  const [panel, setPanel] = useState<'notes' | 'words' | 'written' | null>(null);
+  const [editing, setEditing] = useState<(EditingNote & { anchor?: NoteAnchor | null }) | null>(
+    null,
+  );
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -308,10 +438,73 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
         word,
         context,
         page: pageNumber,
-      }).catch(() => {});
+      })
+        .then(refreshWords)
+        .catch(() => {});
     },
-    [documentId],
+    [documentId, refreshWords],
   );
+
+  const handleNoteFromSelection = useCallback(() => {
+    const anchor = anchorSelection();
+    if (!anchor) return;
+    setEditing({ quote: anchor.quote, body: '', pageNumber: anchor.pageNumber, anchor });
+    window.getSelection()?.removeAllRanges();
+  }, []);
+
+  // A note that is about the page rather than about a phrase. It gets no
+  // rectangle, so nothing is drawn over the page — it lives in the panel, which
+  // is where "this whole exercise was hard" belongs anyway.
+  const handleNoteOnPage = useCallback(() => {
+    setEditing({ quote: '', body: '', pageNumber: currentPageRef.current });
+  }, []);
+
+  // Rejects on failure: the dialog stays open with the text still in it and says why.
+  const handleSaveNote = useCallback(
+    async (body: string) => {
+      if (!editing) return;
+      const anchor = editing.anchor;
+      // The local update writes every column, so a re-saved note carries its
+      // stored place and text anchor along rather than blanking them.
+      const stored = notesData.find((item) => item.id === editing.id);
+      await saveReaderNote({
+        id: editing.id,
+        document_id: documentId,
+        page: editing.pageNumber,
+        quote: editing.quote,
+        body,
+        run_start: anchor ? anchor.runStart : (stored?.run_start ?? null),
+        run_end: anchor ? anchor.runEnd : (stored?.run_end ?? null),
+        rect: anchor?.rect ?? existingRect(stored),
+      });
+      setEditing(null);
+      void refreshNotes();
+    },
+    [editing, documentId, notesData, refreshNotes],
+  );
+
+  const handleDeleteNote = useCallback(async () => {
+    if (!editing?.id) return;
+    await deleteReaderNote({ id: editing.id, document_id: documentId });
+    setEditing(null);
+    void refreshNotes();
+  }, [editing, documentId, refreshNotes]);
+
+  /** Go to a note and mark it, so arriving somewhere mid-page still shows WHERE. */
+  const openNoteInPlace = useCallback(
+    (note: { id: string; page_number: number; rect_y: number }) => {
+      viewHandle.current?.scrollToPage(note.page_number, Number(note.rect_y));
+      setActiveNoteId(note.id);
+    },
+    [],
+  );
+  const openNote = useCallback(
+    (note: { id: string; quote: string; body: string; page_number: number }) =>
+      setEditing({ id: note.id, quote: note.quote, body: note.body, pageNumber: note.page_number }),
+    [],
+  );
+
+  const pageText = usePageText(pdf, documentId, currentPage);
 
   const notes = useMemo<PdfNoteMark[]>(
     () =>
@@ -385,8 +578,8 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
       translateLabel={t('read.translateSelection')}
       audioLabel={t('read.playSelection')}
       closeLabel={t('pdf.notes.close')}
-      // PHASE E: `noteLabel={t('pdf.notes.add')}` and `onNote={handleNoteFromSelection}`
-      // (anchorSelection -> note dialog). Without `onNote` the chip has no note button.
+      noteLabel={t('pdf.notes.add')}
+      onNote={handleNoteFromSelection}
     >
       <ReaderToolbar
         fileName={title}
@@ -395,15 +588,51 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
         zoom={zoom}
         language={language}
         noteCount={notes.length}
-        // PHASE E: onToggleNotes / onToggleWords / onToggleWriting / onToggleWritten
-        // (+ wordCount, writtenCount, open flags). PHASE F: onToggleAudio / onToggleVideo /
-        // onToggleCheatsheet / editions / onEditionChange. Omitted handlers hide their buttons.
+        notesOpen={panel === 'notes'}
+        onToggleNotes={() => setPanel((open) => (open === 'notes' ? null : 'notes'))}
+        wordCount={words.length}
+        wordsOpen={panel === 'words'}
+        onToggleWords={() => setPanel((open) => (open === 'words' ? null : 'words'))}
+        writing={writing}
+        onToggleWriting={toggleWriting}
+        writtenCount={writtenCount}
+        writtenOpen={panel === 'written'}
+        onToggleWritten={() => setPanel((open) => (open === 'written' ? null : 'written'))}
+        // PHASE F: onToggleAudio / onToggleVideo / onToggleCheatsheet / editions /
+        // onEditionChange. Omitted handlers hide their buttons.
         onZoomChange={changeZoom}
         tapToSpeak={tapToSpeak}
         onTapToSpeakChange={setTapToSpeak}
         onLanguageChange={setPickedLanguage}
         onGoToPage={(pageNumber) => viewHandle.current?.scrollToPage(pageNumber)}
-      />
+      >
+        <ReaderDeckButton
+          pageText={pageText}
+          page={currentPage}
+          documentTitle={title}
+          language={language}
+        />
+      </ReaderToolbar>
+
+      {writing && <PdfEditorBar store={boxStore} marks={markStore} onDone={toggleWriting} />}
+
+      {/* Said, not swallowed: a page that silently shows none of your answers
+          looks exactly like a page you never wrote on. */}
+      {writeLoadFailed && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 border-b border-border bg-error/10 px-4 py-2 text-xs text-error"
+        >
+          <span className="font-semibold">{t('pdf.write.loadFailed')}</span>
+          <button
+            type="button"
+            onClick={loadWritten}
+            className="inline-flex items-center rounded-md border border-error/40 px-2 py-0.5 font-semibold hover:bg-error/10"
+          >
+            {t('pdf.write.tryAgain')}
+          </button>
+        </div>
+      )}
 
       <div className="relative flex min-h-0 flex-1">
         <div className="relative flex min-h-0 min-w-0 flex-1">
@@ -414,16 +643,18 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
             onCurrentPageChange={setCurrentPage}
             handleRef={viewHandle}
             notes={notes}
-            // PHASE E: opens the note dialog for this note.
-            onOpenNote={() => {}}
+            onOpenNote={openNote}
+            activeNoteId={activeNoteId}
             language={language}
             onWordLookedUp={handleWordLookedUp}
             onSpeakWord={tapToSpeak ? speakWord : undefined}
             speech={speech}
             onStopSpeaking={stopSpeaking}
             ocr={ocrLayer}
-            // PHASE E: boxStore / markStore / writing.
-            tool={tool}
+            boxStore={boxStore}
+            markStore={markStore}
+            writing={writing}
+            tool={writing ? 'select' : tool}
             onZoomChange={changeZoom}
           />
           <PdfViewControls
@@ -431,13 +662,59 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
             onZoomChange={changeZoom}
             tool={tool}
             onToolChange={chooseTool}
-            showTools
+            showTools={!writing}
             hint={handHint}
             onDismissHint={() => setHandHint(false)}
           />
         </div>
-        {/* PHASE E/F: the side panel (notes, words, written, video, cheatsheet, audio) opens here. */}
+
+        {panel === 'notes' && (
+          <PdfNotesPanel
+            notes={notesData}
+            currentPage={currentPage}
+            onOpen={openNote}
+            onGoToNote={openNoteInPlace}
+            onAddToCurrentPage={handleNoteOnPage}
+            onClose={() => setPanel(null)}
+          />
+        )}
+
+        {panel === 'words' && (
+          <PdfWordsPanel
+            words={words}
+            loading={wordsLoading}
+            documentTitle={title}
+            language={language}
+            onGoToPage={(pageNumber) => viewHandle.current?.scrollToPage(pageNumber)}
+            onClose={() => setPanel(null)}
+          />
+        )}
+
+        {panel === 'written' && (
+          <PdfWritingPanel
+            store={boxStore}
+            currentPage={currentPage}
+            onGoToBox={(box) => {
+              // Lands at the height the box sits at, not at the top of the
+              // page — on a dense page the answer is the thing being looked for.
+              viewHandle.current?.scrollToPage(box.page, box.y);
+              if (writing) boxStore.setActive(box.key);
+            }}
+            onClose={() => setPanel(null)}
+          />
+        )}
+        {/* PHASE F: the audio, video and cheatsheet panels open here too. */}
       </div>
+
+      {editing && (
+        <PdfNoteDialog
+          key={editing.id ?? 'new'}
+          note={editing}
+          onSave={handleSaveNote}
+          onDelete={editing.id ? handleDeleteNote : undefined}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </LookupProvider>
   );
 }

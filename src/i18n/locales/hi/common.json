@@ -278,7 +278,8 @@
     "errors": {
       "OLLAMA_NOT_RUNNING": "डिवाइस पर AI मॉडल नहीं चल रहा है। सेटिंग्स → AI प्रदाता से Ollama शुरू करें और पुनः प्रयास करें।",
       "UNKNOWN_ERROR": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।"
-    }
+    },
+    "createNamed": "डेक “{{name}}” बनाएँ"
   },
   "dictionary": {
     "translationLanguage": "अनुवाद भाषा"

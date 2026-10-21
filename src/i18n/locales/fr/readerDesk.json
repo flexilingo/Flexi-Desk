@@ -55,5 +55,14 @@
   "ocr": {
     "downloading": "Téléchargement des données de lecture pour {{language}}… {{percent}} %",
     "languageFallback": "Lecture de ce document en anglais"
+  },
+  "notes": {
+    "saveFailed": "La note n’a pas pu être enregistrée. Votre texte est toujours là — réessayez.",
+    "deleteFailed": "La note n’a pas pu être supprimée. Réessayez.",
+    "bold": "Gras",
+    "italic": "Italique",
+    "list": "Liste à puces",
+    "preview": "Aperçu",
+    "write": "Modifier"
   }
 }

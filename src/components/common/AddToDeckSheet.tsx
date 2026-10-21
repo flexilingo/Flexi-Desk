@@ -50,6 +50,12 @@ interface Props {
   sourceLanguage?: string;
   /** Called with the number of cards actually saved after a successful add. */
   onAdded?: (count: number) => void;
+  /**
+   * A deck named after where the words came from (a document, a page). An
+   * existing deck of that name is preselected; otherwise it is offered as a
+   * one-click "create" row and prefilled in the new-deck dialog.
+   */
+  defaultDeckName?: string;
 }
 
 export function AddToDeckSheet({
@@ -59,6 +65,7 @@ export function AddToDeckSheet({
   defaultLanguage,
   sourceLanguage,
   onAdded,
+  defaultDeckName,
 }: Props) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
@@ -116,12 +123,15 @@ export function AddToDeckSheet({
     setTargetLanguage(defaultLanguage ?? (getLanguageByCode(nativeLang) ? nativeLang : 'en'));
   }, [open, defaultLanguage, nativeLang, fetchDecks]);
 
-  // Auto-select the first deck once the list loads.
+  // Auto-select the deck named `defaultDeckName` if there is one, else the first.
+  const namedDeck = defaultDeckName
+    ? decks.find((d) => d.name.trim().toLowerCase() === defaultDeckName.trim().toLowerCase())
+    : undefined;
   useEffect(() => {
     if (open && decks.length > 0 && !selectedDeckId) {
-      setSelectedDeckId(decks[0].id);
+      setSelectedDeckId((namedDeck ?? decks[0]).id);
     }
-  }, [open, decks, selectedDeckId]);
+  }, [open, decks, selectedDeckId, namedDeck]);
 
   const resolveErrorCode = (e: unknown): string => {
     const s = String(e);
@@ -135,8 +145,8 @@ export function AddToDeckSheet({
     return msg === key ? t('deck.errors.UNKNOWN_ERROR') : msg;
   };
 
-  const handleCreateDeck = async () => {
-    const name = newDeckName.trim();
+  const handleCreateDeck = async (nameOverride?: string) => {
+    const name = (nameOverride ?? newDeckName).trim();
     if (!name) {
       setCreateError(t('deck.newDeckRequired'));
       return;
@@ -156,7 +166,10 @@ export function AddToDeckSheet({
       setNewDeckName('');
       setShowCreateDeck(false);
     } catch (e) {
-      setCreateError(errorMessage(resolveErrorCode(e)));
+      const message = errorMessage(resolveErrorCode(e));
+      // The quick-create row lives in the main form, the dialog has its own line.
+      if (nameOverride) setError(message);
+      else setCreateError(message);
     } finally {
       setIsCreatingDeck(false);
     }
@@ -406,7 +419,7 @@ export function AddToDeckSheet({
             className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent/80 transition-colors shrink-0 disabled:opacity-50"
             onClick={() => {
               setCreateError(null);
-              setNewDeckName('');
+              setNewDeckName(defaultDeckName ?? '');
               setShowCreateDeck(true);
             }}
           >
@@ -414,6 +427,25 @@ export function AddToDeckSheet({
             {t('deck.createNewDeck')}
           </button>
         </div>
+
+        {defaultDeckName && !namedDeck && (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={processing || isCreatingDeck}
+            onClick={() => handleCreateDeck(defaultDeckName)}
+            className="inline-flex max-w-full"
+          >
+            {isCreatingDeck ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+            )}
+            <span className="truncate" dir="auto">
+              {t('deck.createNamed', { name: defaultDeckName })}
+            </span>
+          </Button>
+        )}
 
         {decks.length === 0 ? (
           <div className="py-8 text-center flex flex-col items-center gap-2">
@@ -552,7 +584,7 @@ export function AddToDeckSheet({
             <Button
               variant="default"
               size="sm"
-              onClick={handleCreateDeck}
+              onClick={() => handleCreateDeck()}
               disabled={isCreatingDeck || !newDeckName.trim()}
             >
               {isCreatingDeck && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

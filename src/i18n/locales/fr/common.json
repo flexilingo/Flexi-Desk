@@ -278,7 +278,8 @@
     "errors": {
       "OLLAMA_NOT_RUNNING": "Le modèle d'IA local n'est pas lancé. Démarrez Ollama depuis Paramètres → Fournisseur d'IA et réessayez.",
       "UNKNOWN_ERROR": "Une erreur s'est produite. Veuillez réessayer."
-    }
+    },
+    "createNamed": "Créer le paquet « {{name}} »"
   },
   "dictionary": {
     "translationLanguage": "Langue de traduction"

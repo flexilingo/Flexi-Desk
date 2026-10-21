@@ -278,7 +278,8 @@
     "errors": {
       "OLLAMA_NOT_RUNNING": "本机 AI 模型未运行。请从“设置 → AI 提供方”启动 Ollama 后重试。",
       "UNKNOWN_ERROR": "出错了，请重试。"
-    }
+    },
+    "createNamed": "创建牌组“{{name}}”"
   },
   "dictionary": {
     "translationLanguage": "翻译语言"
