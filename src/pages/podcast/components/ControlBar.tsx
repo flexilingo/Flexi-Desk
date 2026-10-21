@@ -1,29 +1,32 @@
 import { useRef, useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Volume1,
-  SkipBack,
-  SkipForward,
-  Gauge,
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  BookOpen,
   Captions,
   CaptionsOff,
-  NotebookPen,
-  LogOut,
   Focus,
+  Gauge,
+  HelpCircle,
+  Languages,
+  Library,
+  Loader2,
+  LogOut,
+  MessageCircle,
+  Microscope,
+  MoreHorizontal,
+  NotebookPen,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
   SlidersHorizontal,
   Timer,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  MessageCircle,
-  Languages,
-  BookOpen,
-  HelpCircle,
-  Loader2,
+  Volume1,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 function formatTime(seconds: number): string {
@@ -54,6 +57,9 @@ interface ControlBarProps {
   onToggleSubtitles?: () => void;
   onNote?: () => void;
   onExit?: () => void;
+  /** Open the insights drawer on a given tab (the collapsed rail was removed). */
+  onOpenVocab?: () => void;
+  onOpenAnalysis?: () => void;
   // Subtitle settings
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
@@ -75,8 +81,6 @@ interface ControlBarProps {
   translationAlignment?: 'left' | 'center' | 'right';
   onTranslationAlignmentChange?: (alignment: 'left' | 'center' | 'right') => void;
   // Show estimated CEFR
-  showEstimatedOnSubtitles?: boolean;
-  onToggleShowEstimated?: () => void;
 }
 
 const SPEED_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -101,6 +105,8 @@ export function ControlBar({
   onToggleSubtitles,
   onNote,
   onExit,
+  onOpenVocab,
+  onOpenAnalysis,
   hasCurrentSegment,
   onAnalyzeSentence,
   onTranslateSentence,
@@ -117,16 +123,16 @@ export function ControlBar({
   onTogglePauseOnHover,
   translationAlignment,
   onTranslationAlignmentChange,
-  showEstimatedOnSubtitles,
-  onToggleShowEstimated,
 }: ControlBarProps) {
   const { t } = useTranslation();
   const [showSpeedPopover, setShowSpeedPopover] = useState(false);
   const [showVolumePopover, setShowVolumePopover] = useState(false);
   const [showSubtitlePopover, setShowSubtitlePopover] = useState(false);
+  const [showMorePopover, setShowMorePopover] = useState(false);
   const speedRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
   const displayVolume = isMuted ? 0 : volume;
@@ -139,6 +145,7 @@ export function ControlBar({
         setShowVolumePopover(false);
       if (subtitleRef.current && !subtitleRef.current.contains(e.target as Node))
         setShowSubtitlePopover(false);
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMorePopover(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -151,6 +158,8 @@ export function ControlBar({
   };
 
   const hasCenter = !!(
+    onOpenVocab ||
+    onOpenAnalysis ||
     onToggleSubtitles ||
     onNote ||
     onAnalyzeSentence ||
@@ -194,11 +203,13 @@ export function ControlBar({
           />
           <ControlButton
             icon={
-              isBuffering
-                ? <Loader2 className="w-full h-full animate-spin" />
-                : isPlaying
-                  ? <Pause className="w-full h-full" />
-                  : <Play className="w-full h-full" />
+              isBuffering ? (
+                <Loader2 className="w-full h-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-full h-full" />
+              ) : (
+                <Play className="w-full h-full" />
+              )
             }
             label={isBuffering ? 'Loading…' : isPlaying ? t('podcast.pause') : t('podcast.play')}
             onClick={onPlayPause}
@@ -306,9 +317,23 @@ export function ControlBar({
         {/* Separator */}
         {hasCenter && <div className="w-px h-8 bg-border/50 hidden md:block" />}
 
-        {/* CENTER: Features (CC, Note, Ask Lena, Translate, Grammar) */}
+        {/* CENTER: Vocab, Analysis, CC, Note, Ask Lena, Translate, Grammar */}
         {hasCenter && (
           <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
+            {onOpenVocab && (
+              <ControlButton
+                icon={<Library className="w-full h-full" />}
+                label={t('podcast.vocabLabel')}
+                onClick={onOpenVocab}
+              />
+            )}
+            {onOpenAnalysis && (
+              <ControlButton
+                icon={<Microscope className="w-full h-full" />}
+                label={t('podcast.analysisLabel')}
+                onClick={onOpenAnalysis}
+              />
+            )}
             {onToggleSubtitles && (
               <ControlButton
                 icon={
@@ -392,37 +417,57 @@ export function ControlBar({
                     onTogglePauseOnHover={onTogglePauseOnHover}
                     alignment={translationAlignment}
                     onAlignmentChange={onTranslationAlignmentChange}
-                    showEstimatedOnSubtitles={showEstimatedOnSubtitles}
-                    onToggleShowEstimated={onToggleShowEstimated}
                   />
                 )}
               </div>
             )}
 
-            {onToggleFocusMode && (
-              <ControlButton
-                icon={<Focus className="w-full h-full" />}
-                label={t('podcast.focusLabel')}
-                primary={focusMode}
-                onClick={onToggleFocusMode}
-              />
-            )}
-
-            {onHelp && (
-              <ControlButton
-                icon={<HelpCircle className="w-full h-full" />}
-                label={t('podcast.helpLabel')}
-                onClick={onHelp}
-              />
-            )}
-
-            {onExit && (
-              <ControlButton
-                icon={<LogOut className="w-full h-full" />}
-                label={t('podcast.exitLabel')}
-                danger
-                onClick={onExit}
-              />
+            {/* Everything else lives behind "More", as on the web player. */}
+            {(onToggleFocusMode || onHelp || onExit) && (
+              <div className="relative" ref={moreRef}>
+                <ControlButton
+                  icon={<MoreHorizontal className="w-full h-full" />}
+                  label={t('podcast.moreLabel')}
+                  onClick={() => setShowMorePopover((v) => !v)}
+                  active={showMorePopover}
+                />
+                {showMorePopover && (
+                  <div className="absolute bottom-full right-0 mb-3 min-w-44 rounded-xl border border-border bg-popover p-1.5 shadow-xl z-[1000]">
+                    {onToggleFocusMode && (
+                      <MoreItem
+                        icon={<Focus className="h-4 w-4" />}
+                        label={t('podcast.focusLabel')}
+                        active={focusMode}
+                        onClick={() => {
+                          setShowMorePopover(false);
+                          onToggleFocusMode();
+                        }}
+                      />
+                    )}
+                    {onHelp && (
+                      <MoreItem
+                        icon={<HelpCircle className="h-4 w-4" />}
+                        label={t('podcast.helpLabel')}
+                        onClick={() => {
+                          setShowMorePopover(false);
+                          onHelp();
+                        }}
+                      />
+                    )}
+                    {onExit && (
+                      <MoreItem
+                        icon={<LogOut className="h-4 w-4" />}
+                        label={t('podcast.exitLabel')}
+                        danger
+                        onClick={() => {
+                          setShowMorePopover(false);
+                          onExit();
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -521,8 +566,6 @@ function SubtitleSettingsPopover({
   onTogglePauseOnHover,
   alignment,
   onAlignmentChange,
-  showEstimatedOnSubtitles,
-  onToggleShowEstimated,
 }: {
   fontSize: number;
   onFontSizeChange: (size: number) => void;
@@ -534,8 +577,6 @@ function SubtitleSettingsPopover({
   onTogglePauseOnHover?: () => void;
   alignment?: 'left' | 'center' | 'right';
   onAlignmentChange?: (alignment: 'left' | 'center' | 'right') => void;
-  showEstimatedOnSubtitles?: boolean;
-  onToggleShowEstimated?: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -632,15 +673,38 @@ function SubtitleSettingsPopover({
           onChange={() => onTogglePauseOnHover()}
         />
       )}
-
-      {/* Show estimated CEFR */}
-      {onToggleShowEstimated && (
-        <PopoverToggle
-          label={t('podcast.showEstimatedCefr', 'Show estimated CEFR')}
-          checked={!!showEstimatedOnSubtitles}
-          onChange={() => onToggleShowEstimated()}
-        />
-      )}
     </div>
+  );
+}
+
+/** A row inside the control bar's "More" popover. */
+function MoreItem({
+  icon,
+  label,
+  active,
+  danger,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  active?: boolean;
+  danger?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors ${
+        danger
+          ? 'text-error hover:bg-error/10'
+          : active
+            ? 'bg-primary/10 text-primary'
+            : 'text-foreground hover:bg-muted'
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

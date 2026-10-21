@@ -1,4 +1,5 @@
 pub mod caption;
+pub mod celpip;
 pub mod dashboard;
 pub mod database;
 pub mod exam;
@@ -10,6 +11,7 @@ pub mod reading;
 pub mod settings;
 pub mod sidecar;
 pub mod srs;
+pub mod study;
 pub mod tutor;
 pub mod vocabulary;
 pub mod writing;

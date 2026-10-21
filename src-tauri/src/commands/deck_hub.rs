@@ -10,6 +10,28 @@ use crate::deck_hub::types::{AnalyzedItem, DeckHubCardInput, OcrResult};
 use crate::export::types::ExportResult;
 use crate::AppState;
 
+/// Cards of one deck, flattened for a Quizlet TSV export.
+///
+/// `LEFT JOIN vocabulary`, not `JOIN`: since migration V032 a card need not be backed by
+/// a dictionary word (cloned public decks, grammar cards). An inner join silently omitted
+/// those cards from the export file.
+pub(crate) const QUIZLET_EXPORT_SQL: &str = "
+    SELECT dc.front, dc.back, v.translation
+    FROM deck_cards dc
+    LEFT JOIN vocabulary v ON v.id = dc.vocabulary_id
+    WHERE dc.deck_id = ?1
+    ORDER BY dc.order_index ASC, dc.added_at ASC";
+
+/// Cards of one deck, with their dictionary enrichment, for pushing to the cloud.
+/// Same `LEFT JOIN` reasoning as [`QUIZLET_EXPORT_SQL`].
+pub(crate) const CLOUD_PUSH_SQL: &str = "
+    SELECT dc.front, dc.back, dc.notes, v.translation, v.definition,
+           v.pos, v.cefr_level, v.phonetic, v.examples
+    FROM deck_cards dc
+    LEFT JOIN vocabulary v ON v.id = dc.vocabulary_id
+    WHERE dc.deck_id = ?1
+    ORDER BY dc.order_index ASC, dc.added_at ASC";
+
 fn lock_db<'a>(
     state: &'a State<'a, AppState>,
 ) -> Result<std::sync::MutexGuard<'a, rusqlite::Connection>, String> {
@@ -167,7 +189,8 @@ pub fn deck_hub_batch_create(
         // Return DeckWithStats
         let deck = conn
             .query_row(
-                "SELECT id, name, description, language, algorithm, card_count, created_at, updated_at
+                "SELECT id, name, description, language, algorithm, card_count, created_at, updated_at,
+                        tags, is_public, original_deck_id, cloud_deck_id
                  FROM decks WHERE id = ?1",
                 rusqlite::params![deck_id],
                 |row| {
@@ -180,8 +203,13 @@ pub fn deck_hub_batch_create(
                         card_count: row.get(5)?,
                         created_at: row.get(6)?,
                         updated_at: row.get(7)?,
+                        tags: crate::commands::srs::parse_tags(row.get::<_, Option<String>>(8)?),
+                        is_public: row.get::<_, Option<i64>>(9)?.unwrap_or(0) != 0,
+                        original_deck_id: row.get(10)?,
+                        cloud_deck_id: row.get(11)?,
                         due_today: 0,
                         new_cards: inserted,
+                        mastered: 0,
                     })
                 },
             )
@@ -311,11 +339,7 @@ pub fn deck_hub_export_quizlet(
 
     let mut stmt = conn
         .prepare(
-            "SELECT dc.front, dc.back, v.translation
-             FROM deck_cards dc
-             JOIN vocabulary v ON v.id = dc.vocabulary_id
-             WHERE dc.deck_id = ?1
-             ORDER BY dc.added_at ASC",
+            QUIZLET_EXPORT_SQL,
         )
         .map_err(|e| format!("Query error: {e}"))?;
 
@@ -384,12 +408,7 @@ pub async fn deck_hub_cloud_push(
         let conn = lock_db(&state)?;
         let mut stmt = conn
             .prepare(
-                "SELECT dc.front, dc.back, dc.notes, v.translation, v.definition,
-                        v.pos, v.cefr_level, v.phonetic, v.examples
-                 FROM deck_cards dc
-                 JOIN vocabulary v ON v.id = dc.vocabulary_id
-                 WHERE dc.deck_id = ?1
-                 ORDER BY dc.added_at ASC",
+                CLOUD_PUSH_SQL,
             )
             .map_err(|e| format!("Query error: {e}"))?;
 

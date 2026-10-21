@@ -1,3 +1,5 @@
+import { BookOpen, Link2, MessageSquare, Pencil, Type } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
@@ -5,7 +7,7 @@ import type { PodcastTranscriptSegment, PodcastWordTimestamp } from '../types';
 import type { EnhancedWord, EnhancedSubtitle } from '../studio-types';
 import { WordDialog } from './WordDialog';
 import { QuickAddNoteDialog } from './QuickAddNoteDialog';
-import { useLanguageSettings } from '@/hooks/useLanguageSettings';
+import { cleanWord, cefrCacheKey } from '../utils/words';
 import { usePlayerStore } from '../stores/playerStore';
 import {
   useWordRangeSelection,
@@ -137,18 +139,18 @@ function getCefrLabel(cefr: string): { label: string; labelFa: string } {
   return labels[cefr] ?? { label: cefr, labelFa: '' };
 }
 
-function getPhraseTypeLabel(phraseType?: string): { icon: string; label: string } {
+function getPhraseTypeLabel(phraseType?: string): { icon: LucideIcon; label: string } {
   switch (phraseType) {
     case 'phrasal_verb':
-      return { icon: '🔗', label: 'Phrasal Verb' };
+      return { icon: Link2, label: 'Phrasal Verb' };
     case 'idiom':
-      return { icon: '💬', label: 'Idiom' };
+      return { icon: MessageSquare, label: 'Idiom' };
     case 'collocation':
-      return { icon: '🔤', label: 'Collocation' };
+      return { icon: Type, label: 'Collocation' };
     case 'fixed_expression':
-      return { icon: '📝', label: 'Expression' };
+      return { icon: Pencil, label: 'Expression' };
     default:
-      return { icon: '📖', label: 'Phrase' };
+      return { icon: BookOpen, label: 'Phrase' };
   }
 }
 
@@ -178,7 +180,6 @@ interface ClickableWordProps {
   onClick: (word: EnhancedWord) => void;
   onAddToDeck?: (word: EnhancedWord) => void;
   showAddOnWords?: boolean;
-  showEstimatedOnSubtitles?: boolean;
   fontSize?: number;
   onWordHover?: () => void;
   isSelected?: boolean;
@@ -195,7 +196,6 @@ function ClickableWord({
   onClick,
   onAddToDeck,
   showAddOnWords = true,
-  showEstimatedOnSubtitles = true,
   fontSize = 24,
   onWordHover,
   isSelected = false,
@@ -296,21 +296,6 @@ function ClickableWord({
       }}
     >
       {word.text}
-      {showEstimatedOnSubtitles && word.isEstimated && word.cefr !== 'unknown' && (
-        <span
-          style={{
-            position: 'absolute',
-            top: '-8px',
-            right: '-4px',
-            fontSize: '10px',
-            fontWeight: 700,
-            color: '#fbbf24',
-            textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-          }}
-        >
-          ?
-        </span>
-      )}
       {isHovered && !isSelecting && showAddOnWords && word.isClickable && (
         <button
           type="button"
@@ -328,7 +313,10 @@ function ClickableWord({
           {word.phraseText && (
             <div className="mb-2.5 pb-2.5 border-b border-border">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <span>{getPhraseTypeLabel(word.phraseType).icon}</span>
+                {(() => {
+                  const PhraseIcon = getPhraseTypeLabel(word.phraseType).icon;
+                  return <PhraseIcon className="h-3 w-3" />;
+                })()}
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">
                   {getPhraseTypeLabel(word.phraseType).label}
                 </span>
@@ -368,7 +356,7 @@ function ClickableWord({
           )}
           {word.collocationText && word.collocationText !== word.phraseText && (
             <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-white/10 text-xs text-white/80">
-              <span className="opacity-70">🔤</span>
+              <Type className="h-3 w-3 opacity-70" />
               <span>&quot;{word.collocationText}&quot;</span>
             </div>
           )}
@@ -575,12 +563,10 @@ interface SubtitleBarProps {
   episodeId?: string;
   subtitlesEnabled?: boolean;
   sourceLang?: string;
-  targetLang?: string;
   syncOffset?: number;
   autoPauseOnBoundary?: boolean;
   pauseOnHover?: boolean;
   subtitleAlignment?: 'left' | 'center' | 'right';
-  showEstimatedOnSubtitles?: boolean;
   onAddToDeck?: (words: string[]) => void;
   onDialogOpenChange?: (open: boolean) => void;
 }
@@ -600,18 +586,14 @@ export function SubtitleBar({
   episodeId,
   subtitlesEnabled = true,
   sourceLang = 'en',
-  targetLang: targetLangProp,
   syncOffset = 0,
   autoPauseOnBoundary = false,
   pauseOnHover = false,
   subtitleAlignment = 'center',
-  showEstimatedOnSubtitles = true,
   onAddToDeck,
   onDialogOpenChange,
 }: SubtitleBarProps) {
   const { t } = useTranslation();
-  const { nativeLang } = useLanguageSettings();
-  const targetLang = targetLangProp || nativeLang;
   const containerRef = useRef<HTMLDivElement>(null);
   const effectiveTime = currentTime - syncOffset;
   const currentTimeMs = effectiveTime * 1000;
@@ -672,59 +654,64 @@ export function SubtitleBar({
     return detectCollocations(rawWords.map((w) => w.word));
   }, [rawWords]);
 
-  // Fetch CEFR levels
+  // Fetch CEFR levels — in the EPISODE's language, cached per language.
   useEffect(() => {
     if (!rawWords.length) return;
 
-    const uncached = rawWords
-      .map((w) => w.word.toLowerCase().replace(/[^a-z']/g, ''))
-      .filter((w) => w.length > 1 && !cefrCache.has(w));
-
-    if (uncached.length === 0) {
+    const rebuildMap = () => {
       const map: Record<string, string> = {};
       for (const w of rawWords) {
-        const clean = w.word.toLowerCase().replace(/[^a-z']/g, '');
-        if (clean.length > 1 && cefrCache.has(clean)) {
-          map[clean] = cefrCache.get(clean)!;
+        const clean = cleanWord(w.word);
+        const cached = cefrCache.get(cefrCacheKey(sourceLang, clean));
+        // '' is the negative-cache marker: the language has no CEFR table.
+        if (clean.length > 1 && cached) {
+          map[clean] = cached;
         }
       }
       setCefrMap(map);
+    };
+
+    const uncached = rawWords
+      .map((w) => cleanWord(w.word))
+      .filter((w) => w.length > 1 && !cefrCache.has(cefrCacheKey(sourceLang, w)));
+
+    if (uncached.length === 0) {
+      rebuildMap();
       return;
     }
 
     const unique = [...new Set(uncached)];
-    invoke<[string, string][]>('podcast_get_words_cefr', { words: unique })
+    invoke<[string, string][]>('podcast_get_words_cefr', { words: unique, lang: sourceLang })
       .then((result) => {
-        const map: Record<string, string> = {};
+        const returned = new Set<string>();
         for (const [w, cefr] of result) {
-          cefrCache.set(w.toLowerCase(), cefr);
-          map[w.toLowerCase()] = cefr;
+          cefrCache.set(cefrCacheKey(sourceLang, w.toLowerCase()), cefr);
+          returned.add(w.toLowerCase());
         }
-        for (const w of rawWords) {
-          const clean = w.word.toLowerCase().replace(/[^a-z']/g, '');
-          if (clean.length > 1 && cefrCache.has(clean)) {
-            map[clean] = cefrCache.get(clean)!;
-          }
+        // Words the backend didn't return (unsupported language) are negative-cached
+        // so we don't refetch them on every subtitle line.
+        for (const w of unique) {
+          if (!returned.has(w)) cefrCache.set(cefrCacheKey(sourceLang, w), '');
         }
-        setCefrMap(map);
+        rebuildMap();
       })
       .catch(() => {});
-  }, [rawWords]);
+  }, [rawWords, sourceLang]);
 
   // Convert raw words to EnhancedWord[]
   const enhancedWords = useMemo<EnhancedWord[]>(() => {
     return rawWords.map((w, idx) => {
-      const cleanWord = w.word.toLowerCase().replace(/[^a-z']/g, '');
-      const cefr = cefrMap[cleanWord] || 'unknown';
+      const clean = cleanWord(w.word);
+      const cefr = cefrMap[clean] || 'unknown';
       const collMatch = getCollocationAt(idx, collocations);
 
       return {
         text: w.word,
-        cleanText: cleanWord,
+        cleanText: clean,
         index: idx,
         cefr: cefr as EnhancedWord['cefr'],
         status: 'new' as const,
-        isClickable: cleanWord.length > 1,
+        isClickable: clean.length > 1,
         collocationId: collMatch ? `coll-${collMatch.startIdx}` : undefined,
         collocationText: collMatch?.phrase,
         collocationScore: collMatch?.score,
@@ -810,6 +797,9 @@ export function SubtitleBar({
     [selection.isDragging, selection.isSelectionActive, rawWords, handleDialogOpenChange],
   );
 
+  // Store sentence context for dialog (persists even when segment changes)
+  const [dialogSentenceContext, setDialogSentenceContext] = useState<string | undefined>();
+
   const handleAddToDeckWord = useCallback(
     (word: EnhancedWord) => {
       onAddToDeck?.([word.cleanText || word.text]);
@@ -829,16 +819,10 @@ export function SubtitleBar({
   );
 
   // Note: open QuickAddNoteDialog with selected text
-  const handleNoteSelection = useCallback(
-    (text: string, _time: number) => {
-      setNoteText(text);
-      setNoteDialogOpen(true);
-    },
-    [],
-  );
-
-  // Store sentence context for dialog (persists even when segment changes)
-  const [dialogSentenceContext, setDialogSentenceContext] = useState<string | undefined>();
+  const handleNoteSelection = useCallback((text: string, _time: number) => {
+    setNoteText(text);
+    setNoteDialogOpen(true);
+  }, []);
 
   // Update sentence context when opening dialog
   const handleWordClickWrapped = useCallback(
@@ -858,7 +842,6 @@ export function SubtitleBar({
         episodeId={episodeId}
         positionMs={selectedPositionMs}
         sourceLang={sourceLang}
-        targetLang={targetLang}
         sentenceContext={dialogSentenceContext}
       />
     );
@@ -885,7 +868,6 @@ export function SubtitleBar({
           episodeId={episodeId}
           positionMs={selectedPositionMs}
           sourceLang={sourceLang}
-          targetLang={targetLang}
           sentenceContext={dialogSentenceContext}
         />
       </>
@@ -938,7 +920,6 @@ export function SubtitleBar({
                 onClick={handleWordClickWrapped}
                 onAddToDeck={handleAddToDeckWord}
                 showAddOnWords={true}
-                showEstimatedOnSubtitles={showEstimatedOnSubtitles}
                 fontSize={fontSize}
                 isSelected={selection.isWordSelected(group.wordIndices[0])}
                 isSelecting={selection.selectionState.isSelecting}
@@ -974,7 +955,6 @@ export function SubtitleBar({
         episodeId={episodeId}
         positionMs={selectedPositionMs}
         sourceLang={sourceLang}
-        targetLang={targetLang}
         sentenceContext={dialogSentenceContext}
       />
 

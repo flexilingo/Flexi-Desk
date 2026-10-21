@@ -1,2 +1,2 @@
-cd flexi-lingo-desk
+cd "$(git rev-parse --show-toplevel)"
 pnpm lint-staged

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Volume2 } from 'lucide-react';
+import { BookOpen, Volume2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { DictionaryResponse } from './types';
@@ -33,7 +33,12 @@ async function fetchFromFreeDict(word: string): Promise<DictionaryResponse> {
       meanings: (first.meanings ?? []).map(
         (m: {
           partOfSpeech: string;
-          definitions: { definition: string; example?: string; synonyms: string[]; antonyms: string[] }[];
+          definitions: {
+            definition: string;
+            example?: string;
+            synonyms: string[];
+            antonyms: string[];
+          }[];
         }) => ({
           partOfSpeech: m.partOfSpeech,
           definitions: m.definitions.map((d) => ({
@@ -94,7 +99,7 @@ export function DictionaryTab({ word, isActive }: DictionaryTabProps) {
   if (!data || !data.found || !data.entry) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-        <span className="text-3xl">📖</span>
+        <BookOpen className="h-8 w-8 text-muted-foreground/50" />
         <p className="text-sm text-muted-foreground">
           {data?.error || 'Word not found in dictionary'}
         </p>

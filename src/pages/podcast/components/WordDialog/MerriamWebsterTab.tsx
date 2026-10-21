@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Library } from 'lucide-react';
 
 interface MerriamWebsterTabProps {
   word: string;
@@ -15,15 +15,13 @@ export function MerriamWebsterTab({ word }: MerriamWebsterTabProps) {
         <span className="text-sm font-bold text-red-500 uppercase">Merriam-Webster</span>
       </div>
 
-      <span className="text-3xl">📚</span>
+      <Library className="h-8 w-8 text-muted-foreground/50" />
 
       <div className="space-y-1.5 max-w-xs">
-        <p className="text-sm font-medium text-foreground">
-          Merriam-Webster requires an API key
-        </p>
+        <p className="text-sm font-medium text-foreground">Merriam-Webster requires an API key</p>
         <p className="text-xs text-muted-foreground">
-          This feature uses a private API and is not available in local mode.
-          You can look up the word directly on the Merriam-Webster website.
+          This feature uses a private API and is not available in local mode. You can look up the
+          word directly on the Merriam-Webster website.
         </p>
       </div>
 

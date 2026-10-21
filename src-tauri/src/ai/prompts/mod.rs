@@ -1,4 +1,6 @@
 pub mod sentence_chat;
+pub mod study_content;
+pub mod study_grading;
 pub mod word_analysis;
 pub mod word_batch;
 pub mod writing_eval;

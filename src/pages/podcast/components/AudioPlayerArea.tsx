@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Headphones } from 'lucide-react';
 import { EpisodeInfoBadges } from './EpisodeInfoBadges';
-import type { NlpAnalysis } from '../types';
+import type { NlpAnalysis, PodcastEpisode } from '../types';
 
 function formatTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -21,6 +21,8 @@ interface AudioPlayerAreaProps {
   onPlayClick: () => void;
   onSeek?: (seconds: number) => void;
   analysis?: NlpAnalysis | null;
+  /** Supplies the cloud v2 difficulty score / speech rate badges. */
+  episode?: PodcastEpisode | null;
 }
 
 export function AudioPlayerArea({
@@ -33,6 +35,7 @@ export function AudioPlayerArea({
   onPlayClick,
   onSeek,
   analysis,
+  episode,
 }: AudioPlayerAreaProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -173,7 +176,7 @@ export function AudioPlayerArea({
             <span className="opacity-60"> / </span>
             <span>{formatTime(duration)}</span>
           </div>
-          <EpisodeInfoBadges analysis={analysis} />
+          <EpisodeInfoBadges analysis={analysis} episode={episode} />
         </div>
       </div>
     </div>

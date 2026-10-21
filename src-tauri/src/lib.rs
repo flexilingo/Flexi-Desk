@@ -1,6 +1,7 @@
 mod ai;
 mod auth;
 mod caption;
+pub mod celpip;
 mod deck_hub;
 mod commands;
 mod dashboard;
@@ -15,6 +16,7 @@ mod pronunciation;
 mod shortcuts;
 mod sidecar;
 mod srs;
+mod study;
 mod sync;
 mod tutor;
 mod writing;
@@ -37,6 +39,8 @@ pub struct AppState {
     pub jobs: tokio::sync::Mutex<jobs::JobRegistry>,
     pub ollama_process: tokio::sync::Mutex<Option<std::process::Child>>,
     pub tutor_recording: Mutex<Option<caption::audio::RecordingHandle>>,
+    /// In-flight CELPIP speaking recording: the handle plus where it's writing.
+    pub celpip_recording: Mutex<Option<(caption::audio::RecordingHandle, std::path::PathBuf)>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -72,6 +76,7 @@ pub fn run() {
                 jobs: tokio::sync::Mutex::new(jobs::JobRegistry::new()),
                 ollama_process: tokio::sync::Mutex::new(None),
                 tutor_recording: Mutex::new(None),
+                celpip_recording: Mutex::new(None),
             });
 
             // System tray
@@ -113,21 +118,24 @@ pub fn run() {
             commands::srs::srs_delete_deck,
             commands::srs::srs_add_card,
             commands::srs::srs_get_deck_cards,
+            commands::srs::srs_count_deck_cards,
             commands::srs::srs_delete_card,
             commands::srs::srs_get_due_cards,
-            commands::srs::srs_start_session,
-            commands::srs::srs_get_session_card,
-            commands::srs::srs_rate_card,
-            commands::srs::srs_complete_session,
-            commands::srs::srs_get_incomplete_session,
             commands::srs::srs_merge_decks,
             commands::srs::srs_add_vocabulary,
             commands::srs::srs_update_card,
-            commands::srs::srs_delete_session,
-            commands::srs::srs_list_sessions,
-            commands::srs::srs_get_session_detail,
             commands::srs::srs_get_deck_stats,
-            commands::srs::srs_start_multi_deck_session,
+            commands::study::study_get_config,
+            commands::study::study_update_config,
+            commands::study::study_get_daily_plan,
+            commands::study::study_regenerate_plan,
+            commands::study::study_start,
+            commands::study::study_next_activity,
+            commands::study::study_submit_activity,
+            commands::study::study_end,
+            commands::study::study_deck_status,
+            commands::study::study_set_srs_algorithm,
+            commands::study::study_get_srs_algorithm,
             commands::reading::reading_import_text,
             commands::reading::reading_list_documents,
             commands::reading::reading_get_document,
@@ -188,6 +196,7 @@ pub fn run() {
             commands::pronunciation::pronunciation_get_progress,
             commands::podcast::podcast_add_feed,
             commands::podcast::podcast_list_feeds,
+            commands::podcast::podcast_get_feed,
             commands::podcast::podcast_delete_feed,
             commands::podcast::podcast_refresh_feed,
             commands::podcast::podcast_list_episodes,
@@ -321,6 +330,22 @@ pub fn run() {
             commands::podcast::podcast_start_transcribe_job,
             commands::podcast::podcast_start_download_job,
             commands::podcast::podcast_sync_to_cloud,
+            commands::podcast::podcast_import_cloud_episode,
+            commands::celpip::celpip_save_draft,
+            commands::celpip::celpip_load_draft,
+            commands::celpip::celpip_clear_draft,
+            commands::celpip::celpip_clear_all_drafts,
+            commands::celpip::celpip_record_start,
+            commands::celpip::celpip_record_stop,
+            commands::celpip::celpip_record_cancel,
+            commands::celpip::celpip_transcribe_recording,
+            commands::celpip::celpip_upload_recording,
+            commands::celpip::celpip_local_insight_all,
+            commands::celpip::celpip_clear_local_insight,
+            commands::celpip::celpip_generate_local_insight,
+            commands::podcast::podcast_fetch_cloud_transcript,
+            commands::podcast::podcast_set_transcript_source,
+            commands::podcast::podcast_transcript_source_info,
             // AI
             commands::ai::ai_word_analysis,
             commands::ai::ai_translate_words,

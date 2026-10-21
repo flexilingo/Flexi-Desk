@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Maximize2, Pause, Play, X, Volume2, VolumeX, Volume1 } from 'lucide-react';
+import { Maximize2, Mic, Pause, Play, Volume1, Volume2, VolumeX, X } from 'lucide-react';
 import { usePlayerStore } from '../stores/playerStore';
 import { usePodcastStore } from '../stores/podcastStore';
 
@@ -22,7 +22,7 @@ export function MiniPlayer() {
   const seek = usePlayerStore((s) => s.seek);
   const stop = usePlayerStore((s) => s.stop);
   const setVolume = usePlayerStore((s) => s.setVolume);
-  const openPlayer = usePodcastStore((s) => s.openPlayer);
+  const loadEpisode = usePodcastStore((s) => s.loadEpisode);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,14 +39,11 @@ export function MiniPlayer() {
     seek(Math.max(0, Math.min(1, ratio)) * duration);
   };
 
+  // The player is a real route now, so expanding is just navigation.
   const handleExpand = () => {
-    if (currentEpisode) {
-      openPlayer(currentEpisode, currentFeed ?? undefined);
-      // Navigate to podcast page if not already there
-      if (!location.pathname.includes('/podcast')) {
-        navigate('/podcast');
-      }
-    }
+    if (!currentEpisode) return;
+    loadEpisode(currentEpisode, currentFeed ?? undefined);
+    navigate(`/podcast/player/${currentEpisode.id}`);
   };
 
   const isMuted = volume === 0;
@@ -104,7 +101,9 @@ export function MiniPlayer() {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-lg">🎙</div>
+            <div className="w-full h-full flex items-center justify-center">
+              <Mic className="h-5 w-5 text-muted-foreground/50" />
+            </div>
           )}
         </div>
 

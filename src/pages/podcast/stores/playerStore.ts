@@ -2,6 +2,14 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import type { PodcastEpisode, PodcastFeed } from '../types';
+import {
+  beginCloudProgress,
+  endCloudProgress,
+  flushCloudProgress,
+  reportCloudCompletion,
+  reportCloudProgress,
+} from '../services/cloudProgress';
+import { loadPlayerPrefs, savePlayerPrefs, type PlayerPrefs } from '../services/playerPrefs';
 
 // ── Singleton Audio Element ────────────────────────────
 
@@ -46,7 +54,6 @@ interface PlayerState {
   autoPauseOnBoundary: boolean;
   pauseOnHover: boolean;
   subtitleAlignment: 'left' | 'center' | 'right';
-  showEstimatedOnSubtitles: boolean;
 
   // Buffering
   isBuffering: boolean;
@@ -85,7 +92,6 @@ interface PlayerState {
   toggleAutoPauseOnBoundary: () => void;
   togglePauseOnHover: () => void;
   setSubtitleAlignment: (alignment: 'left' | 'center' | 'right') => void;
-  toggleShowEstimated: () => void;
 
   // Session analytics actions
   recordWordClick: () => void;
@@ -137,19 +143,27 @@ export const usePlayerStore = create<PlayerState>()(
     });
 
     audio.addEventListener('loadstart', () => {
-      set((s) => { s.isBuffering = true; });
+      set((s) => {
+        s.isBuffering = true;
+      });
     });
 
     audio.addEventListener('waiting', () => {
-      set((s) => { s.isBuffering = true; });
+      set((s) => {
+        s.isBuffering = true;
+      });
     });
 
     audio.addEventListener('playing', () => {
-      set((s) => { s.isBuffering = false; });
+      set((s) => {
+        s.isBuffering = false;
+      });
     });
 
     audio.addEventListener('canplay', () => {
-      set((s) => { s.isBuffering = false; });
+      set((s) => {
+        s.isBuffering = false;
+      });
     });
 
     return {
@@ -170,7 +184,6 @@ export const usePlayerStore = create<PlayerState>()(
       autoPauseOnBoundary: false,
       pauseOnHover: false,
       subtitleAlignment: 'center' as const,
-      showEstimatedOnSubtitles: true,
       isBuffering: false,
       playError: null,
       wordsClicked: 0,
@@ -215,6 +228,10 @@ export const usePlayerStore = create<PlayerState>()(
           s.activeTimeSpent = 0;
           s.showCompleteOverlay = false;
         });
+
+        // Curated episodes report listening back to the account; everything else
+        // (local RSS, PodcastIndex-only) is a no-op here.
+        beginCloudProgress(episode.curatedEpisodeId);
 
         // Try to play: local file first, then fall back to remote URL
         const localSrc = episode.localPath ? convertFileSrc(episode.localPath) : null;
@@ -388,7 +405,10 @@ export const usePlayerStore = create<PlayerState>()(
 
       stop: () => {
         const audio = getAudio();
-        saveProgress(get());
+        const state = get();
+        saveProgress(state);
+        flushCloudProgress(state.currentTime);
+        endCloudProgress();
         audio.pause();
         audio.src = '';
         stopProgressSaving();
@@ -446,12 +466,6 @@ export const usePlayerStore = create<PlayerState>()(
         });
       },
 
-      toggleShowEstimated: () => {
-        set((s) => {
-          s.showEstimatedOnSubtitles = !s.showEstimatedOnSubtitles;
-        });
-      },
-
       setSubtitleAlignment: (alignment) => {
         set((s) => {
           s.subtitleAlignment = alignment;
@@ -492,6 +506,7 @@ export const usePlayerStore = create<PlayerState>()(
         set((s) => {
           s.currentTime = time;
         });
+        reportCloudProgress(time, state.duration);
       },
 
       _onDurationChange: (dur) => {
@@ -501,7 +516,9 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       _onEnded: () => {
-        saveProgress(get());
+        const state = get();
+        saveProgress(state);
+        reportCloudCompletion(state.currentTime);
         set((s) => {
           s.isPlaying = false;
           s.showCompleteOverlay = true;
@@ -511,6 +528,43 @@ export const usePlayerStore = create<PlayerState>()(
     };
   }),
 );
+
+// ── Preference Persistence ──────────────────────────────
+
+function snapshotPrefs(s: PlayerState): PlayerPrefs {
+  return {
+    playbackRate: s.playbackRate,
+    volume: s.volume,
+    subtitlesEnabled: s.subtitlesEnabled,
+    fontSize: s.fontSize,
+    subtitleBgOpacity: s.subtitleBgOpacity,
+    autoPauseOnBoundary: s.autoPauseOnBoundary,
+    pauseOnHover: s.pauseOnHover,
+    subtitleAlignment: s.subtitleAlignment,
+  };
+}
+
+function prefsEqual(a: PlayerPrefs, b: PlayerPrefs): boolean {
+  return (Object.keys(a) as (keyof PlayerPrefs)[]).every((k) => a[k] === b[k]);
+}
+
+// Hydrate from the local `settings` table, then keep it in sync. `focusMode` is
+// deliberately NOT persisted — it's a per-session view mode, not a preference.
+void loadPlayerPrefs().then((prefs) => {
+  if (Object.keys(prefs).length === 0) return;
+  usePlayerStore.setState((s) => {
+    Object.assign(s, prefs);
+  });
+  const audio = getAudio();
+  if (prefs.playbackRate != null) audio.playbackRate = prefs.playbackRate;
+  if (prefs.volume != null) audio.volume = prefs.volume;
+});
+
+usePlayerStore.subscribe((state, prev) => {
+  const next = snapshotPrefs(state);
+  if (prefsEqual(next, snapshotPrefs(prev))) return;
+  savePlayerPrefs(next);
+});
 
 // ── Progress Persistence ────────────────────────────────
 

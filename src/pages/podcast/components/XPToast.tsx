@@ -1,3 +1,4 @@
+import { Clock, Pencil, Pointer } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 interface XPBreakdown {
@@ -34,9 +35,21 @@ export function XPToast({ visible, earned, breakdown, onHide }: XPToastProps) {
       </div>
       {breakdown && (
         <div className="flex gap-2 text-xs text-muted-foreground">
-          {breakdown.time ? <span title="Study time">⏱ {breakdown.time}</span> : null}
-          {breakdown.words ? <span title="Words explored">📝 {breakdown.words}</span> : null}
-          {breakdown.clicks ? <span title="Interactions">👆 {breakdown.clicks}</span> : null}
+          {breakdown.time ? (
+            <span title="Study time" className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {breakdown.time}
+            </span>
+          ) : null}
+          {breakdown.words ? (
+            <span title="Words explored" className="inline-flex items-center gap-1">
+              <Pencil className="h-3 w-3" /> {breakdown.words}
+            </span>
+          ) : null}
+          {breakdown.clicks ? (
+            <span title="Interactions" className="inline-flex items-center gap-1">
+              <Pointer className="h-3 w-3" /> {breakdown.clicks}
+            </span>
+          ) : null}
         </div>
       )}
     </div>

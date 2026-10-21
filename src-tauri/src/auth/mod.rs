@@ -1,7 +1,7 @@
 use tauri::State;
 use crate::AppState;
 
-const SUPABASE_URL: &str = "https://uagjgbpeeauablccvkgs.supabase.co";
+const SUPABASE_URL: &str = "https://api.flexilingo.com";
 const SUPABASE_ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhZ2pnYnBlZWF1YWJsY2N2a2dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1OTE4NDIsImV4cCI6MjA4MTE2Nzg0Mn0.bim07d-SPrjViZ5qcugIGggfBd3iv0WF4RrdV3wgiTQ";
 
 // ── DB helpers ─────────────────────────────────────────
@@ -175,6 +175,55 @@ pub fn auth_logout(
 
 // ── Supabase Edge Function proxy ───────────────────────
 
+/// Reads the stored session's access token, if the user is signed in.
+///
+/// Kept separate from `supabase_call` so other modules can build their own edge
+/// requests without holding the DB lock across an `.await`.
+pub fn stored_access_token(state: &State<'_, AppState>) -> Option<String> {
+    stored_session(state).map(|s| s.access_token)
+}
+
+/// The signed-in session, if any. Callers need `user_id` to build storage paths.
+pub fn stored_session(state: &State<'_, AppState>) -> Option<AuthSession> {
+    let conn = state.db.lock().ok()?;
+    get_token(&conn, "session").and_then(|json| serde_json::from_str::<AuthSession>(&json).ok())
+}
+
+/// Uploads bytes to a Supabase Storage bucket and returns the public URL.
+///
+/// Storage RLS lets a user write only under their own `{user_id}/` prefix, so
+/// `object_path` must start with the signed-in user's id.
+pub async fn storage_upload(
+    access_token: &str,
+    bucket: &str,
+    object_path: &str,
+    content_type: &str,
+    bytes: Vec<u8>,
+) -> Result<String, String> {
+    let url = format!("{SUPABASE_URL}/storage/v1/object/{bucket}/{object_path}");
+    let resp = reqwest::Client::new()
+        .post(&url)
+        .header("apikey", SUPABASE_ANON_KEY)
+        .header("Authorization", format!("Bearer {access_token}"))
+        .header("Content-Type", content_type)
+        // The exam never overwrites a task's recording: each carries a timestamp.
+        .header("x-upsert", "false")
+        .body(bytes)
+        .send()
+        .await
+        .map_err(|e| format!("Storage upload failed: {e}"))?;
+
+    let status = resp.status().as_u16();
+    if status >= 400 {
+        let body = resp.text().await.unwrap_or_default();
+        return Err(format!("Storage upload failed ({status}): {body}"));
+    }
+
+    Ok(format!(
+        "{SUPABASE_URL}/storage/v1/object/public/{bucket}/{object_path}"
+    ))
+}
+
 #[tauri::command]
 pub async fn supabase_call(
     state: State<'_, AppState>,
@@ -188,7 +237,17 @@ pub async fn supabase_call(
             .and_then(|json| serde_json::from_str::<AuthSession>(&json).ok())
             .map(|s| s.access_token)
     };
+    call_edge_function(access_token, &method, &path, body).await
+}
 
+/// Raw call to a FlexiLingo edge function. `path` starts with `/` and may carry a
+/// query string, e.g. `/get-content-status?video_id=...`.
+pub async fn call_edge_function(
+    access_token: Option<String>,
+    method: &str,
+    path: &str,
+    body: Option<serde_json::Value>,
+) -> Result<serde_json::Value, String> {
     let url = format!("{SUPABASE_URL}/functions/v1{path}");
     let client = reqwest::Client::new();
 

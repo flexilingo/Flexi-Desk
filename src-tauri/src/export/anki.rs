@@ -353,23 +353,32 @@ pub fn import_anki(
     })
 }
 
+/// Every card in a deck, flattened for export.
+///
+/// `LEFT JOIN vocabulary`: since V032 a card need not be backed by a dictionary word
+/// (cloned decks, grammar cards). An inner join dropped those cards from the export
+/// without a word of warning. `v.word` is therefore coalesced to the card's own front
+/// text — otherwise the NULL would fail the `String` column mapping below.
+pub(crate) const DECK_EXPORT_SQL: &str = "
+    SELECT COALESCE(v.word, dc.front) AS word,
+           COALESCE(dc.back, v.translation, '') AS back,
+           COALESCE(v.definition, '') AS definition,
+           COALESCE(v.pos, '') AS pos,
+           COALESCE(v.cefr_level, '') AS cefr,
+           COALESCE(v.phonetic, '') AS phonetic,
+           COALESCE(v.examples, '') AS examples
+    FROM deck_cards dc
+    LEFT JOIN vocabulary v ON v.id = dc.vocabulary_id
+    WHERE dc.deck_id = ?1
+    ORDER BY dc.order_index ASC, dc.added_at ASC";
+
 /// Export a specific deck (by deck_id) to an Anki .apkg file.
-/// Reads cards from deck_cards JOIN vocabulary for proper deck-scoped export.
 pub fn export_deck_anki(
     conn: &Connection,
     file_path: &str,
     deck_id: &str,
 ) -> Result<ExportResult, String> {
-    let sql = "SELECT v.word, COALESCE(dc.back, v.translation, '') AS back,
-                      COALESCE(v.definition, '') AS definition,
-                      COALESCE(v.pos, '') AS pos,
-                      COALESCE(v.cefr_level, '') AS cefr,
-                      COALESCE(v.phonetic, '') AS phonetic,
-                      COALESCE(v.examples, '') AS examples
-               FROM deck_cards dc
-               JOIN vocabulary v ON v.id = dc.vocabulary_id
-               WHERE dc.deck_id = ?1
-               ORDER BY dc.added_at ASC";
+    let sql = DECK_EXPORT_SQL;
 
     let mut stmt = conn.prepare(sql).map_err(|e| format!("Query error: {e}"))?;
 

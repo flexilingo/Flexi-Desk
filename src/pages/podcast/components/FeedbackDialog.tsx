@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, MessageSquare, Bug, Lightbulb, HelpCircle, Loader2 } from 'lucide-react';
+import { Bug, HelpCircle, Lightbulb, Loader2, MessageSquare, PartyPopper, X } from 'lucide-react';
 import { supabaseCall } from '../../../lib/supabase';
 
 interface FeedbackDialogProps {
@@ -88,7 +88,7 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
         <div className="p-4 space-y-4">
           {success ? (
             <div className="text-center py-8">
-              <p className="text-4xl mb-3">🎉</p>
+              <PartyPopper className="mx-auto mb-3 h-10 w-10 text-success" />
               <p className="font-semibold text-foreground">Thank you!</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Your feedback has been submitted.

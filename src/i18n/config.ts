@@ -9,14 +9,26 @@ import arCommon from './locales/ar/common.json';
 import frCommon from './locales/fr/common.json';
 import hiCommon from './locales/hi/common.json';
 import zhCommon from './locales/zh/common.json';
+import enStudy from './locales/en/study.json';
+import faStudy from './locales/fa/study.json';
+import arStudy from './locales/ar/study.json';
+import frStudy from './locales/fr/study.json';
+import hiStudy from './locales/hi/study.json';
+import zhStudy from './locales/zh/study.json';
+import enCelpip from './locales/en/celpip.json';
+import faCelpip from './locales/fa/celpip.json';
+import arCelpip from './locales/ar/celpip.json';
+import frCelpip from './locales/fr/celpip.json';
+import hiCelpip from './locales/hi/celpip.json';
+import zhCelpip from './locales/zh/celpip.json';
 
 const resources = {
-  en: { common: enCommon },
-  fa: { common: faCommon },
-  ar: { common: arCommon },
-  fr: { common: frCommon },
-  hi: { common: hiCommon },
-  zh: { common: zhCommon },
+  en: { common: enCommon, study: enStudy, celpip: enCelpip },
+  fa: { common: faCommon, study: faStudy, celpip: faCelpip },
+  ar: { common: arCommon, study: arStudy, celpip: arCelpip },
+  fr: { common: frCommon, study: frStudy, celpip: frCelpip },
+  hi: { common: hiCommon, study: hiStudy, celpip: hiCelpip },
+  zh: { common: zhCommon, study: zhStudy, celpip: zhCelpip },
 };
 
 i18n

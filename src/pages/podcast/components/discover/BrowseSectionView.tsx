@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Flame,
@@ -40,24 +41,31 @@ const SECTION_MAP: Record<string, SectionConfig> = {
 export function BrowseSectionView() {
   const session = useAuthStore((s) => s.session);
   const {
-    browseSectionSlug,
     browseSectionItems,
     browseSectionTotal,
     browseSectionLoading,
     followedPodcasts,
     followedFeedIds,
     followingFeedId,
-    clearBrowseSection,
     fetchBrowseSection,
     followPodcast,
   } = useDiscoverStore();
 
-  const { addFeed, openFeed } = usePodcastStore();
+  const { section } = useParams<{ section: string }>();
+  const navigate = useNavigate();
+  const { addFeed, loadFeed } = usePodcastStore();
 
   const [page, setPage] = useState(1);
 
-  const slug = browseSectionSlug ?? '';
+  // The section now comes from the URL, not from store state.
+  const slug = section ?? '';
   const config = SECTION_MAP[slug];
+
+  // Switching sections keeps this component mounted (only the param changes), so
+  // the page has to be reset explicitly — `setBrowseSection` used to do it.
+  useEffect(() => {
+    setPage(1);
+  }, [slug]);
 
   useEffect(() => {
     if (slug) {
@@ -69,7 +77,10 @@ export function BrowseSectionView() {
     if (!rssUrl) return;
     await addFeed(rssUrl);
     const newFeed = usePodcastStore.getState().feeds[0];
-    if (newFeed) openFeed(newFeed);
+    if (newFeed) {
+      loadFeed(newFeed);
+      navigate(`/podcast/feed/${newFeed.id}`);
+    }
   };
 
   if (!config) return null;
@@ -94,7 +105,7 @@ export function BrowseSectionView() {
     <div className="space-y-6">
       {/* Back button */}
       <button
-        onClick={clearBrowseSection}
+        onClick={() => navigate('/podcast')}
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -122,16 +133,12 @@ export function BrowseSectionView() {
         </div>
       ) : (
         <>
-          {total > 0 && (
-            <p className="text-sm text-muted-foreground">
-              Showing {total} podcasts
-            </p>
-          )}
+          {total > 0 && <p className="text-sm text-muted-foreground">Showing {total} podcasts</p>}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {isFollowed
               ? displayItems.map((p) => {
-                  const podcast = p as typeof followedPodcasts[number];
+                  const podcast = p as (typeof followedPodcasts)[number];
                   return (
                     <PodcastCardCompact
                       key={podcast.id}

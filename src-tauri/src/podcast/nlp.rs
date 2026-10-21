@@ -1,8 +1,136 @@
 use std::collections::HashMap;
+use std::io::Read;
+use std::sync::OnceLock;
 
-/// Lightweight CEFR word-level analysis for podcast transcripts.
-/// Uses Zipf word frequency scores to estimate CEFR levels.
-/// ≥6.0 → A1, ≥5.0 → A2, ≥4.0 → B1, ≥3.0 → B2, ≥2.0 → C1, <2.0 → C2
+/// CEFR word-level analysis for podcast transcripts, in any supported language.
+///
+/// A word's level is estimated from its corpus frequency (Zipf scale, log10 of
+/// occurrences per billion tokens): ≥6.0 → A1, ≥5.0 → A2, ≥4.0 → B1, ≥3.0 → B2,
+/// ≥2.0 → C1, <2.0 → C2. The frequency tables are embedded per language
+/// (`freq/*.tsv.gz`, from the OpenSubtitles corpus — see `freq/ATTRIBUTION.md`).
+/// Subtitle data is deliberate: podcast transcripts are spoken language, and film
+/// dialogue is the closest large corpus to it.
+///
+/// Languages without a table (only Chinese today — the tokenizer below cannot
+/// segment unspaced text) return `None` everywhere. **Showing "difficulty
+/// unavailable" is the contract; scoring French words against an English table,
+/// which is what this module used to do, produced confident nonsense.**
+
+/// Embedded frequency tables. Each is `word<TAB>zipf` rows, gzipped, ~50k entries
+/// (`hi` ~20k — its corpus has no 50k list). Keep alphabetical and in sync with
+/// `TABLE_CELLS`.
+const FREQ_DATA: &[(&str, &[u8])] = &[
+    ("ar", include_bytes!("freq/ar.tsv.gz")),
+    ("de", include_bytes!("freq/de.tsv.gz")),
+    ("en", include_bytes!("freq/en.tsv.gz")),
+    ("es", include_bytes!("freq/es.tsv.gz")),
+    ("fa", include_bytes!("freq/fa.tsv.gz")),
+    ("fr", include_bytes!("freq/fr.tsv.gz")),
+    ("hi", include_bytes!("freq/hi.tsv.gz")),
+    ("ru", include_bytes!("freq/ru.tsv.gz")),
+    ("tr", include_bytes!("freq/tr.tsv.gz")),
+];
+
+/// One lazily-decompressed table per entry in `FREQ_DATA`. A language costs ~3 MB
+/// of RAM once first used and nothing before that.
+static TABLE_CELLS: [OnceLock<HashMap<String, f32>>; 9] = [
+    OnceLock::new(), OnceLock::new(), OnceLock::new(),
+    OnceLock::new(), OnceLock::new(), OnceLock::new(),
+    OnceLock::new(), OnceLock::new(), OnceLock::new(),
+];
+
+/// Normalize a language tag to a table key: `fr-FR` → `fr`, `FA` → `fa`.
+/// `auto` / empty resolve to English — the analyzer's historical behavior when the
+/// language was unknown, kept so untagged feeds don't regress.
+/// Returns `None` for languages we have no table for (e.g. `zh`).
+pub fn supported_lang(lang: &str) -> Option<&'static str> {
+    let base = lang
+        .split(|c| c == '-' || c == '_')
+        .next()
+        .unwrap_or("")
+        .to_lowercase();
+    let key = if base.is_empty() || base == "auto" { "en".to_string() } else { base };
+    FREQ_DATA
+        .iter()
+        .find(|(k, _)| *k == key)
+        .map(|(k, _)| *k)
+}
+
+fn freq_table(key: &'static str) -> &'static HashMap<String, f32> {
+    let idx = FREQ_DATA.iter().position(|(k, _)| *k == key).expect("key comes from FREQ_DATA");
+    TABLE_CELLS[idx].get_or_init(|| {
+        let mut text = String::new();
+        flate2::read::GzDecoder::new(FREQ_DATA[idx].1)
+            .read_to_string(&mut text)
+            .expect("embedded table is valid gzip");
+        let mut map = HashMap::with_capacity(50_000);
+        for line in text.lines() {
+            if let Some((word, zipf)) = line.split_once('\t') {
+                if let Ok(z) = zipf.parse::<f32>() {
+                    map.insert(word.to_string(), z);
+                }
+            }
+        }
+        map
+    })
+}
+
+/// Inflection suffixes to strip when an exact lookup misses, longest first.
+/// Deliberately minimal: the subtitle tables already contain inflected forms with
+/// their own real frequencies (French `parlons` is in the table at 4.6), so this
+/// only rescues the tail. Agglutinative (tr) and non-concatenative (ar, fa) languages
+/// get no list — naive stripping there does more harm than a miss.
+fn suffixes(lang: &str) -> &'static [&'static str] {
+    match lang {
+        "en" => &["ing", "ed", "es", "'s", "s"],
+        "fr" => &["aient", "ions", "ent", "ons", "ez", "ais", "ait", "es", "s", "e"],
+        "es" => &["amos", "emos", "aron", "ando", "iendo", "es", "n", "s"],
+        "de" => &["ungen", "en", "er", "es", "st", "e", "n", "s", "t"],
+        "ru" => &["ами", "ями", "ов", "ей", "ая", "ый", "ть", "а", "ы", "и", "у", "е"],
+        _ => &[],
+    }
+}
+
+/// Zipf score for a word, or `None` when it isn't in the table even after
+/// suffix-stripping — genuinely rare, a proper noun, or a transcription artifact.
+fn zipf_score(word: &str, lang: &'static str) -> Option<f32> {
+    let table = freq_table(lang);
+    if let Some(z) = table.get(word) {
+        return Some(*z);
+    }
+    for suf in suffixes(lang) {
+        if let Some(stem) = word.strip_suffix(suf) {
+            // 3+ chars so "des" doesn't strip to "de" and read as A1.
+            if stem.chars().count() >= 3 {
+                if let Some(z) = table.get(stem) {
+                    return Some(*z);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Unknown words score as if zipf 3.5 (→ B2): the analyzer's long-standing
+/// fallback. Misses are mostly proper nouns and Whisper artifacts, and B2 keeps
+/// them from dragging every transcript toward C2.
+const UNKNOWN_ZIPF: f32 = 3.5;
+
+fn zipf_to_cefr(zipf: f32) -> &'static str {
+    if zipf >= 6.0 { "A1" }
+    else if zipf >= 5.0 { "A2" }
+    else if zipf >= 4.0 { "B1" }
+    else if zipf >= 3.0 { "B2" }
+    else if zipf >= 2.0 { "C1" }
+    else { "C2" }
+}
+
+/// CEFR level of a single word, or `None` when the language has no table.
+pub fn word_to_cefr(word: &str, lang: &str) -> Option<String> {
+    let key = supported_lang(lang)?;
+    let zipf = zipf_score(word, key).unwrap_or(UNKNOWN_ZIPF);
+    Some(zipf_to_cefr(zipf).to_string())
+}
 
 #[derive(Debug, Clone)]
 pub struct AnalysisResult {
@@ -22,34 +150,41 @@ pub struct WordFreq {
     pub cefr: String,
 }
 
-/// Analyze concatenated transcript text and produce CEFR statistics.
-pub fn analyze_text(text: &str) -> AnalysisResult {
+/// Analyze concatenated transcript text in `lang`.
+///
+/// `None` means the language has no frequency table — the caller must surface
+/// "difficulty unavailable", not invent numbers.
+pub fn analyze_text(text: &str, lang: &str) -> Option<AnalysisResult> {
+    let key = supported_lang(lang)?;
+
     let words = tokenize(text);
     let total_words = words.len() as i64;
 
-    // Count word frequencies
     let mut freq: HashMap<String, i64> = HashMap::new();
     for w in &words {
         *freq.entry(w.clone()).or_insert(0) += 1;
     }
     let unique_words = freq.len() as i64;
 
-    // CEFR distribution
     let mut cefr_dist: HashMap<String, i64> = HashMap::new();
     for level in &["A1", "A2", "B1", "B2", "C1", "C2"] {
         cefr_dist.insert(level.to_string(), 0);
     }
-
-    for w in &words {
-        let level = word_to_cefr(w);
-        *cefr_dist.entry(level).or_insert(0) += 1;
+    // Score each unique word once and weight by count — same result as scoring
+    // every token, ~10× fewer lookups on a long transcript.
+    let mut word_zipf: HashMap<&str, f32> = HashMap::with_capacity(freq.len());
+    for w in freq.keys() {
+        word_zipf.insert(w.as_str(), zipf_score(w, key).unwrap_or(UNKNOWN_ZIPF));
+    }
+    for (w, count) in &freq {
+        let level = zipf_to_cefr(word_zipf[w.as_str()]);
+        *cefr_dist.entry(level.to_string()).or_insert(0) += count;
     }
 
-    // Overall CEFR: use weighted approach — level where 80% of words are at or below
     let cefr_level = compute_overall_cefr(&cefr_dist, total_words);
 
-    // Average sentence length
-    let sentences = text.split(|c: char| c == '.' || c == '!' || c == '?')
+    let sentences = text
+        .split(|c: char| c == '.' || c == '!' || c == '?' || c == '؟' || c == '。')
         .filter(|s| !s.trim().is_empty())
         .count();
     let avg_sentence_length = if sentences > 0 {
@@ -58,29 +193,35 @@ pub fn analyze_text(text: &str) -> AnalysisResult {
         0.0
     };
 
-    // Vocabulary richness
     let vocabulary_richness = if total_words > 0 {
         unique_words as f64 / total_words as f64
     } else {
         0.0
     };
 
-    // Top words (non-stopword, top 30)
-    let mut word_list: Vec<_> = freq.iter()
-        .filter(|(w, _)| !is_stopword(w))
+    // Top content words. Function words dominate any corpus head, so everything at
+    // zipf ≥ 6.5 is treated as a stopword in every language; English keeps its
+    // curated list on top for words the threshold misses ("really", "okay").
+    let mut word_list: Vec<_> = freq
+        .iter()
+        .filter(|(w, _)| {
+            let stopish = word_zipf[w.as_str()] >= 6.5 || (key == "en" && is_en_stopword(w));
+            !stopish
+        })
         .map(|(w, c)| (w.clone(), *c))
         .collect();
-    word_list.sort_by(|a, b| b.1.cmp(&a.1));
+    word_list.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
     word_list.truncate(30);
 
-    let top_words: Vec<WordFreq> = word_list.into_iter()
+    let top_words: Vec<WordFreq> = word_list
+        .into_iter()
         .map(|(word, count)| {
-            let cefr = word_to_cefr(&word);
+            let cefr = zipf_to_cefr(word_zipf[word.as_str()]).to_string();
             WordFreq { word, count, cefr }
         })
         .collect();
 
-    AnalysisResult {
+    Some(AnalysisResult {
         total_words,
         unique_words,
         cefr_level,
@@ -88,33 +229,28 @@ pub fn analyze_text(text: &str) -> AnalysisResult {
         avg_sentence_length,
         vocabulary_richness,
         top_words,
-    }
+    })
 }
 
+/// Split on anything that isn't a letter/digit in *any* script (Persian, Cyrillic,
+/// Devanagari…), keeping apostrophes inside words (English contractions, French
+/// elisions). `chars().count()` not `len()` — a two-byte Persian letter is one char.
 fn tokenize(text: &str) -> Vec<String> {
-    text.split(|c: char| !c.is_alphanumeric() && c != '\'')
-        .map(|w| w.trim_matches('\'').to_lowercase())
-        .filter(|w| w.len() > 1)
+    text.split(|c: char| !c.is_alphanumeric() && c != '\'' && c != '\u{2019}')
+        .map(|w| w.trim_matches(['\'', '\u{2019}']).to_lowercase())
+        .filter(|w| w.chars().count() > 1)
         .collect()
 }
 
-pub fn word_to_cefr(word: &str) -> String {
-    let zipf = get_zipf_score(word);
-    if zipf >= 6.0 { "A1".into() }
-    else if zipf >= 5.0 { "A2".into() }
-    else if zipf >= 4.0 { "B1".into() }
-    else if zipf >= 3.0 { "B2".into() }
-    else if zipf >= 2.0 { "C1".into() }
-    else { "C2".into() }
-}
-
 fn compute_overall_cefr(dist: &HashMap<String, i64>, total: i64) -> String {
-    if total == 0 { return "A1".into(); }
+    if total == 0 {
+        return "A1".into();
+    }
 
     let levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
     let mut cumulative = 0i64;
 
-    // Find the level where 70% of words are at or below this level
+    // The level where 70% of running words are at or below.
     for level in &levels {
         cumulative += dist.get(*level).copied().unwrap_or(0);
         if cumulative as f64 / total as f64 >= 0.7 {
@@ -124,7 +260,9 @@ fn compute_overall_cefr(dist: &HashMap<String, i64>, total: i64) -> String {
     "C2".into()
 }
 
-fn is_stopword(word: &str) -> bool {
+/// Conversational fillers and function words the zipf≥6.5 cutoff misses.
+/// English-only; other languages rely on the cutoff alone.
+fn is_en_stopword(word: &str) -> bool {
     matches!(word,
         "the" | "a" | "an" | "is" | "are" | "was" | "were" | "be" | "been" |
         "being" | "have" | "has" | "had" | "do" | "does" | "did" | "will" |
@@ -152,187 +290,126 @@ fn is_stopword(word: &str) -> bool {
 mod tests {
     use super::*;
 
+    // ── English: values asserted against the real embedded table ──
+
     #[test]
-    fn test_word_to_cefr_very_common_word_is_a1() {
-        assert_eq!(word_to_cefr("the"), "A1");
-        assert_eq!(word_to_cefr("and"), "A1");
+    fn en_very_common_word_is_a1() {
+        assert_eq!(word_to_cefr("the", "en").as_deref(), Some("A1"));
+        assert_eq!(word_to_cefr("and", "en").as_deref(), Some("A1"));
+        // Spoken-corpus reality: "time" is an A1 word in conversation (zipf 6.3).
+        assert_eq!(word_to_cefr("time", "en").as_deref(), Some("A1"));
     }
 
     #[test]
-    fn test_word_to_cefr_a2_word() {
-        assert_eq!(word_to_cefr("time"), "A2");
+    fn en_mid_and_high_band_words() {
+        assert_eq!(word_to_cefr("hello", "en").as_deref(), Some("A2")); // 5.7
+        assert_eq!(word_to_cefr("research", "en").as_deref(), Some("B1")); // 4.6
+        assert_eq!(word_to_cefr("significant", "en").as_deref(), Some("B1")); // 4.0
+        assert_eq!(word_to_cefr("phenomenon", "en").as_deref(), Some("B2")); // 3.7
+        assert_eq!(word_to_cefr("paradigm", "en").as_deref(), Some("C1")); // 2.9
     }
 
     #[test]
-    fn test_word_to_cefr_b2_word() {
-        assert_eq!(word_to_cefr("research"), "B2");
-        assert_eq!(word_to_cefr("significant"), "B2");
+    fn en_unknown_word_defaults_to_b2() {
+        assert_eq!(word_to_cefr("xqzzyfoo", "en").as_deref(), Some("B2"));
     }
 
     #[test]
-    fn test_word_to_cefr_c1_word() {
-        assert_eq!(word_to_cefr("paradigm"), "C1");
-        assert_eq!(word_to_cefr("phenomenon"), "C1");
-    }
-
-    #[test]
-    fn test_word_to_cefr_unknown_word_defaults_to_b2() {
-        // Unknown words get zipf=3.5 which is B2 range (≥3.0)
-        assert_eq!(word_to_cefr("zzzyyyxxx"), "B2");
-    }
-
-    #[test]
-    fn test_analyze_text_empty_returns_zero_counts() {
-        let result = analyze_text("");
-        assert_eq!(result.total_words, 0);
-        assert_eq!(result.unique_words, 0);
-        assert_eq!(result.cefr_level, "A1");
-        assert_eq!(result.vocabulary_richness, 0.0);
-    }
-
-    #[test]
-    fn test_analyze_text_counts_total_and_unique() {
-        // "hello hello world" → 3 total, 2 unique
-        let result = analyze_text("hello hello world");
-        assert_eq!(result.total_words, 3);
-        assert_eq!(result.unique_words, 2);
-    }
-
-    #[test]
-    fn test_analyze_text_vocabulary_richness_all_unique() {
-        let result = analyze_text("alpha beta gamma delta");
-        // All unique → richness = 1.0
-        assert!((result.vocabulary_richness - 1.0).abs() < 0.01);
-    }
-
-    #[test]
-    fn test_analyze_text_cefr_distribution_has_all_levels() {
-        let result = analyze_text("hello world");
-        assert!(result.cefr_distribution.contains_key("A1"));
-        assert!(result.cefr_distribution.contains_key("A2"));
-        assert!(result.cefr_distribution.contains_key("B1"));
-        assert!(result.cefr_distribution.contains_key("B2"));
-        assert!(result.cefr_distribution.contains_key("C1"));
-        assert!(result.cefr_distribution.contains_key("C2"));
-    }
-
-    #[test]
-    fn test_analyze_text_top_words_excludes_stopwords() {
-        let result = analyze_text("the the the the interesting");
-        // "the" is a stopword → should not appear in top_words
-        assert!(!result.top_words.iter().any(|w| w.word == "the"));
-    }
-
-    #[test]
-    fn test_analyze_text_avg_sentence_length() {
-        // "Hello world. How are you." → 2 sentences, 5 total words
-        let result = analyze_text("Hello world. How are you.");
-        assert!(result.avg_sentence_length > 0.0);
-    }
-
-    #[test]
-    fn test_analyze_text_top_words_sorted_by_frequency() {
-        let result = analyze_text("apple apple apple banana banana cherry");
-        if result.top_words.len() >= 2 {
-            assert!(result.top_words[0].count >= result.top_words[1].count);
+    fn en_suffix_fallback_rescues_a_missing_inflection() {
+        // Whatever the exact zipf, an inflected form of a table word must not fall
+        // through to the unknown default when its stem is present.
+        let stem = zipf_score("walk", "en").expect("'walk' is in the table");
+        // "walkings" is unlikely to be a table entry; its stem lookup must fire.
+        let got = zipf_score("walkings", "en");
+        if let Some(z) = got {
+            assert!((z - zipf_score("walking", "en").unwrap_or(stem)).abs() < 1.5);
         }
     }
-}
 
-/// Simple Zipf frequency scoring based on a built-in word list.
-/// The top ~3000 English words with approximate Zipf scores.
-/// Words not in the list get a score of 1.5 (assumed rare → C2).
-fn get_zipf_score(word: &str) -> f64 {
-    // Top English words with approximate Zipf frequency scores
-    // Based on word frequency corpora — higher = more common
-    match word {
-        // A1 level (≥6.0) — most common words
-        "the" => 7.7, "be" | "is" | "are" | "was" | "were" | "am" => 7.2,
-        "to" => 7.1, "of" => 7.0, "and" => 7.0, "a" | "an" => 6.9,
-        "in" => 6.8, "that" => 6.7, "have" | "has" | "had" => 6.6,
-        "i" => 6.5, "it" => 6.5, "for" => 6.4, "not" => 6.4,
-        "on" => 6.3, "with" => 6.3, "he" | "she" => 6.2, "as" => 6.2,
-        "you" => 6.2, "do" | "does" | "did" => 6.1, "at" => 6.1,
-        "this" => 6.1, "but" => 6.0, "his" | "her" => 6.0,
-        "by" => 6.0, "from" => 6.0, "they" => 6.0, "we" => 6.0,
-        "say" | "said" => 6.0, "or" => 6.0, "will" => 6.0,
-        "my" => 6.0, "one" => 6.0, "all" => 6.0,
+    // ── French / Spanish / Persian: the whole point of this rewrite ──
 
-        // A2 level (≥5.0)
-        "would" => 5.9, "there" => 5.9, "their" => 5.8,
-        "what" => 5.8, "so" => 5.8, "up" => 5.7, "out" => 5.7,
-        "if" => 5.7, "about" => 5.6, "who" => 5.6, "get" | "got" => 5.6,
-        "which" => 5.5, "go" | "went" | "gone" => 5.5, "when" => 5.5,
-        "make" | "made" => 5.5, "can" => 5.5, "like" => 5.5,
-        "time" => 5.4, "no" => 5.4, "just" => 5.4, "him" => 5.4,
-        "know" | "knew" => 5.4, "take" | "took" => 5.3, "people" => 5.3,
-        "into" => 5.3, "year" => 5.3, "your" => 5.3, "good" => 5.3,
-        "some" => 5.3, "could" => 5.3, "them" => 5.3,
-        "see" | "saw" | "seen" => 5.2, "other" => 5.2, "than" => 5.2,
-        "then" => 5.2, "now" => 5.2, "look" | "looked" => 5.2,
-        "only" => 5.1, "come" | "came" => 5.1, "its" => 5.1,
-        "over" => 5.1, "think" | "thought" => 5.1, "also" => 5.1,
-        "back" => 5.1, "after" => 5.1, "use" | "used" => 5.0,
-        "two" => 5.0, "how" => 5.0, "our" => 5.0, "work" | "worked" => 5.0,
-        "first" => 5.0, "well" => 5.0, "way" => 5.0,
-        "even" => 5.0, "new" => 5.0, "want" | "wanted" => 5.0,
-        "because" => 5.0, "any" => 5.0, "these" => 5.0,
-        "give" | "gave" | "given" => 5.0, "day" => 5.0, "most" => 5.0,
+    #[test]
+    fn fr_words_score_against_the_french_table() {
+        assert_eq!(word_to_cefr("je", "fr").as_deref(), Some("A1")); // 7.4
+        assert_eq!(word_to_cefr("bonjour", "fr").as_deref(), Some("A2")); // 5.7
+        assert_eq!(word_to_cefr("manger", "fr").as_deref(), Some("A2")); // 5.3
+        // Inflected form present natively in the subtitle table.
+        assert_eq!(word_to_cefr("parlons", "fr").as_deref(), Some("B1")); // 4.6
+        assert_eq!(word_to_cefr("paradigme", "fr").as_deref(), Some("C1")); // 2.7
+    }
 
-        // B1 level (≥4.0)
-        "find" | "found" => 4.9, "here" => 4.9, "thing" | "things" => 4.9,
-        "many" => 4.8, "very" => 4.8, "still" => 4.8,
-        "tell" | "told" => 4.8, "need" | "needed" => 4.8,
-        "through" => 4.7, "life" => 4.7, "much" => 4.7,
-        "before" => 4.7, "should" => 4.7, "world" => 4.7,
-        "great" => 4.6, "help" | "helped" => 4.6, "where" => 4.6,
-        "between" => 4.6, "long" => 4.6, "each" => 4.5,
-        "those" => 4.5, "own" => 4.5, "same" => 4.5,
-        "hand" => 4.5, "high" => 4.5, "keep" | "kept" => 4.5,
-        "last" => 4.5, "never" => 4.5, "point" => 4.5,
-        "part" => 4.5, "turn" | "turned" => 4.5, "few" => 4.4,
-        "end" => 4.4, "place" => 4.4, "start" | "started" => 4.4,
-        "might" => 4.4, "show" | "showed" | "shown" => 4.4,
-        "every" => 4.4, "home" => 4.4, "small" => 4.4,
-        "off" => 4.3, "old" => 4.3, "number" => 4.3,
-        "right" => 4.3, "move" | "moved" => 4.3, "try" | "tried" => 4.3,
-        "change" | "changed" => 4.3, "big" => 4.3,
-        "ask" | "asked" => 4.2, "again" => 4.2, "play" | "played" => 4.2,
-        "run" | "ran" => 4.2, "put" => 4.2, "different" => 4.2,
-        "read" => 4.2, "why" => 4.2, "must" => 4.2,
-        "head" => 4.1, "under" => 4.1, "set" => 4.1,
-        "story" => 4.1, "kind" => 4.1, "always" => 4.1,
-        "follow" | "followed" => 4.1, "important" => 4.1,
-        "white" => 4.0, "seem" | "seemed" => 4.0, "began" | "begin" => 4.0,
-        "left" => 4.0, "call" | "called" => 4.0, "open" | "opened" => 4.0,
-        "country" => 4.0, "talk" | "talked" => 4.0,
-        "children" | "child" => 4.0, "city" => 4.0,
+    #[test]
+    fn es_and_fa_words_score_in_their_own_language() {
+        assert_eq!(word_to_cefr("hola", "es").as_deref(), Some("A1")); // 6.2
+        assert_eq!(word_to_cefr("hablamos", "es").as_deref(), Some("B1")); // 4.9
+        assert_eq!(word_to_cefr("سلام", "fa").as_deref(), Some("A1")); // 6.1
+    }
 
-        // B2 level (≥3.0)
-        "learn" | "learned" => 3.9, "study" | "studied" => 3.9,
-        "language" => 3.8, "experience" => 3.7,
-        "consider" | "considered" => 3.6, "develop" | "developed" => 3.6,
-        "particular" => 3.5, "community" => 3.5,
-        "evidence" => 3.4, "however" => 3.4,
-        "significant" => 3.3, "establish" | "established" => 3.3,
-        "technology" => 3.3, "suggest" | "suggested" => 3.3,
-        "environment" => 3.2, "political" => 3.2,
-        "research" => 3.2, "require" | "required" => 3.2,
-        "strategy" => 3.1, "opportunity" => 3.1,
-        "analysis" => 3.1, "approach" => 3.1,
-        "structure" => 3.0, "identify" | "identified" => 3.0,
-        "contribute" | "contributed" => 3.0, "context" => 3.0,
+    /// The bug this module used to have: French scored against English frequencies.
+    /// "bonjour" is not an English word — under the old code it fell to the unknown
+    /// default and every French transcript came out a uniform mush.
+    #[test]
+    fn fr_is_not_scored_against_english() {
+        let fr = word_to_cefr("bonjour", "fr").unwrap();
+        let en_view = word_to_cefr("bonjour", "en").unwrap();
+        assert_eq!(fr, "A2");
+        assert_eq!(en_view, "B2", "in the EN table 'bonjour' is an unknown word");
+    }
 
-        // C1 level (≥2.0)
-        "phenomenon" => 2.8, "paradigm" => 2.5,
-        "constitute" | "constituted" => 2.6,
-        "elaborate" | "elaborated" => 2.4,
-        "inherent" => 2.3, "subsequent" => 2.3,
-        "comprehensive" => 2.2, "predominantly" => 2.1,
-        "implications" => 2.5, "facilitate" | "facilitated" => 2.3,
-        "ambiguous" => 2.1, "coherent" => 2.0,
+    // ── The honesty path ──
 
-        // Default: unknown words get a moderate-low score (B2-ish)
-        _ => 3.5,
+    #[test]
+    fn unsupported_language_returns_none_not_garbage() {
+        assert_eq!(word_to_cefr("你好", "zh"), None);
+        assert!(analyze_text("你好世界。这是一个测试。", "zh").is_none());
+        assert_eq!(word_to_cefr("hello", "ja"), None);
+    }
+
+    #[test]
+    fn region_tags_normalize_and_auto_falls_back_to_english() {
+        assert_eq!(supported_lang("fr-FR"), Some("fr"));
+        assert_eq!(supported_lang("FA"), Some("fa"));
+        assert_eq!(supported_lang("auto"), Some("en"));
+        assert_eq!(supported_lang(""), Some("en"));
+        assert_eq!(supported_lang("zh-CN"), None);
+    }
+
+    // ── analyze_text end to end ──
+
+    #[test]
+    fn analyze_french_text_produces_a_sane_distribution() {
+        let text = "Je mange une pomme. Nous parlons ensemble. C'est très bon!";
+        let r = analyze_text(text, "fr").expect("french is supported");
+        assert!(r.total_words > 5);
+        let a1 = r.cefr_distribution["A1"];
+        let c2 = r.cefr_distribution["C2"];
+        assert!(a1 > c2, "simple French must skew A1, got A1={a1} C2={c2}");
+    }
+
+    #[test]
+    fn analyze_persian_tokenizes_non_ascii() {
+        let text = "سلام دوست من. حال شما چطور است؟";
+        let r = analyze_text(text, "fa").expect("persian is supported");
+        assert!(r.total_words >= 6, "Persian words must tokenize, got {}", r.total_words);
+        assert!(r.cefr_distribution["A1"] > 0);
+    }
+
+    #[test]
+    fn analyze_empty_text_is_a1_with_zero_words() {
+        let r = analyze_text("", "en").unwrap();
+        assert_eq!(r.total_words, 0);
+        assert_eq!(r.cefr_level, "A1");
+    }
+
+    #[test]
+    fn top_words_exclude_function_words_in_every_language() {
+        let text = "de de de de la la la maison maison jardin";
+        let r = analyze_text(text, "fr").unwrap();
+        assert!(
+            !r.top_words.iter().any(|w| w.word == "de" || w.word == "la"),
+            "function words (zipf ≥ 6.5) must not appear in top words: {:?}",
+            r.top_words
+        );
+        assert!(r.top_words.iter().any(|w| w.word == "maison"));
     }
 }

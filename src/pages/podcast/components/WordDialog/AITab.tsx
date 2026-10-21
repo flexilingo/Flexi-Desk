@@ -1,3 +1,4 @@
+import { Bot, Lightbulb } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -56,7 +57,12 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
   }, [word, sentenceContext, targetLang, sourceLang]);
 
   // Trigger fetch when tab becomes active
-  if (isActive && sentenceContext && lastFetchedRef.current !== `${word}::${sentenceContext}` && !loading) {
+  if (
+    isActive &&
+    sentenceContext &&
+    lastFetchedRef.current !== `${word}::${sentenceContext}` &&
+    !loading
+  ) {
     fetchAI();
   }
 
@@ -94,7 +100,7 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg">🤖</span>
+          <Bot className="h-5 w-5" />
           <span className="text-sm font-semibold text-[#C58C6E]">AI Analysis</span>
         </div>
       </div>
@@ -165,9 +171,7 @@ export function AITab({ word, sentenceContext, sourceLang, targetLang, isActive 
       {/* Tip */}
       {data.tip && (
         <div className="rounded-lg border border-[#C58C6E]/30 bg-[#C58C6E]/5 p-4">
-          <p className="text-xs font-semibold text-[#C58C6E] uppercase tracking-wide mb-2">
-            💡 Tip
-          </p>
+          <p className="text-xs font-semibold text-[#C58C6E] uppercase tracking-wide mb-2">Tip</p>
           <p className="text-sm leading-relaxed" dir="auto">
             {data.tip}
           </p>

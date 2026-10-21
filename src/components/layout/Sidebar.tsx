@@ -14,7 +14,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Layers,
-  History,
+  Dumbbell,
   Bug,
 } from 'lucide-react';
 import { openUrl } from '@tauri-apps/plugin-opener';
@@ -27,15 +27,15 @@ import { ENABLED_MODULES, type ModuleKey } from '@/config/features';
 
 const allNavItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' as ModuleKey },
+  { to: '/study', label: 'Study', icon: Dumbbell, module: 'study' as ModuleKey },
   { to: '/vocabulary', label: 'Vocabulary', icon: Library, module: 'vocabulary' as ModuleKey },
   { to: '/review', label: 'Decks', icon: Layers, module: 'review' as ModuleKey },
-  { to: '/review/history', label: 'Reviews', icon: History, module: 'review' as ModuleKey },
   { to: '/reading', label: 'Reading', icon: BookOpen, module: 'reading' as ModuleKey },
   { to: '/tutor', label: 'AI Tutor', icon: MessageSquare, module: 'tutor' as ModuleKey },
   { to: '/caption', label: 'Live Caption', icon: Captions, module: 'caption' as ModuleKey },
   { to: '/pronunciation', label: 'Pronunciation', icon: Mic, module: 'pronunciation' as ModuleKey },
   { to: '/writing', label: 'Writing', icon: PenLine, module: 'writing' as ModuleKey },
-  { to: '/exam', label: 'Exam', icon: GraduationCap, module: 'exam' as ModuleKey },
+  { to: '/celpip', label: 'CELPIP', icon: GraduationCap, module: 'celpip' as ModuleKey },
   { to: '/podcast', label: 'Podcast', icon: Podcast, module: 'podcast' as ModuleKey },
   { to: '/plugins', label: 'Plugins', icon: Puzzle, module: 'plugins' as ModuleKey },
 ];
@@ -182,7 +182,14 @@ export function Sidebar() {
         {/* Footer */}
         <div className="flex h-10 items-center justify-center px-3">
           {sidebarOpen ? (
-            <a href="https://flexilingo.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">Powered by FlexiLingo</a>
+            <a
+              href="https://flexilingo.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              Powered by FlexiLingo
+            </a>
           ) : (
             <span className="text-xs font-bold text-primary">FL</span>
           )}

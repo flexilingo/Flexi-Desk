@@ -8,6 +8,7 @@
 export const ENABLED_MODULES = {
   // Tier 1 — Core loop (stable, ship first)
   dashboard: true,
+  study: true,
   review: true,
   podcast: true,
   settings: true,
@@ -19,6 +20,9 @@ export const ENABLED_MODULES = {
   // Tier 3 — AI-powered (enable next)
   pronunciation: false,
   tutor: true,
+  celpip: true,
+  // The legacy local-SQLite exam module (`src/pages/exam/`) is superseded by
+  // CELPIP but left in the tree, unrouted, until you say to remove it.
   exam: false,
   podcastQuiz: false,
 

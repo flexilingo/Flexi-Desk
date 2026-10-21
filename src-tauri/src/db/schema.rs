@@ -3,6 +3,20 @@ use rusqlite::Connection;
 /// Run all database migrations in order.
 /// Each migration is idempotent (uses IF NOT EXISTS).
 pub fn run_migrations(conn: &Connection) -> Result<(), String> {
+    run_migrations_inner(conn, None)
+}
+
+/// Apply migrations only up to and including `last`.
+///
+/// Test-only. It exists so a migration can be exercised against a database that already
+/// holds rows in the *old* shape — running every migration first leaves the tables empty
+/// and a "did the rebuild preserve my data" test would prove nothing.
+#[cfg(test)]
+pub fn run_migrations_through(conn: &Connection, last: &str) -> Result<(), String> {
+    run_migrations_inner(conn, Some(last))
+}
+
+fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(), String> {
     // Create migrations tracking table
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS _migrations (
@@ -39,6 +53,17 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
         ("V023", V023_SESSION_NAME),
         ("V024", V024_FIX_CAPTION_SEGMENTS_FK),
         ("V025", V025_TUTOR_MODES),
+        ("V026", V026_STUDY_TABLES),
+        ("V027", V027_STUDY_SRS_DELTAS),
+        ("V028", V028_PODCAST_DIFFICULTY_V2),
+        ("V029", V029_TRANSCRIPT_SOURCES),
+        ("V030", V030_EPISODE_IMAGE),
+        ("V031", V031_CELPIP),
+        // Special-handled below: rebuilding `deck_cards` requires toggling the
+        // foreign_keys pragma, which cannot be done from inside execute_batch.
+        ("V032", ""),
+        ("V033", V033_TRANSCRIPT_LANG),
+        ("V034", V034_BACKFILL_TRANSCRIPT_LANG),
     ];
 
     for (version, sql) in migrations {
@@ -52,6 +77,8 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
             // V014 needs special handling for SQLite table recreation
             if version == "V014" {
                 run_v014_caption_live_status(conn)?;
+            } else if version == "V032" {
+                run_v032_decks_notes(conn)?;
             } else if !sql.is_empty() {
                 conn.execute_batch(sql)
                     .map_err(|e| format!("Failed to run migration {version}: {e}"))?;
@@ -63,10 +90,224 @@ pub fn run_migrations(conn: &Connection) -> Result<(), String> {
             )
             .map_err(|e| format!("Failed to record migration {version}: {e}"))?;
         }
+
+        if stop_after == Some(version) {
+            break;
+        }
     }
 
     Ok(())
 }
+
+/// Does `table` have a column named `column`?
+fn column_exists(conn: &Connection, table: &str, column: &str) -> bool {
+    conn.prepare(&format!("PRAGMA table_info({table})"))
+        .and_then(|mut stmt| {
+            let mut rows = stmt.query([])?;
+            while let Some(row) = rows.next()? {
+                let name: String = row.get(1)?;
+                if name == column {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        })
+        .unwrap_or(false)
+}
+
+/// V032: deck/card columns for the decks + explore modules, and the unified `notes` table.
+///
+/// The dangerous part is `deck_cards`. Its `vocabulary_id` is `NOT NULL REFERENCES
+/// vocabulary(id)`, which makes it impossible to store a card that isn't a dictionary
+/// word — a cloned public deck, a grammar card, a sentence. SQLite cannot drop a NOT
+/// NULL constraint, so the table must be rebuilt.
+///
+/// Five tables cascade off `deck_cards(id)`: `srs_progress`, `review_logs`,
+/// `pr_card_proficiency`, `pr_activity_template`, `pr_card_encounter`. With
+/// `foreign_keys=ON` (which is how the app opens the DB), `DROP TABLE deck_cards`
+/// fires those `ON DELETE CASCADE` rules and silently destroys the user's entire SRS
+/// scheduling history. So the rebuild runs with the pragma OFF, inside a transaction,
+/// and `PRAGMA foreign_key_check` must come back clean before we commit.
+fn run_v032_decks_notes(conn: &Connection) -> Result<(), String> {
+    // The pragma is a no-op inside a transaction, so it has to be toggled out here.
+    let fk_was_on: i64 = conn
+        .query_row("PRAGMA foreign_keys", [], |r| r.get(0))
+        .unwrap_or(0);
+    conn.pragma_update(None, "foreign_keys", "OFF")
+        .map_err(|e| format!("V032: could not disable foreign keys: {e}"))?;
+
+    let result = (|| -> Result<(), String> {
+        let tx = conn
+            .unchecked_transaction()
+            .map_err(|e| format!("V032: begin: {e}"))?;
+
+        // ── decks: columns the deck manager and explore clones need ──
+        // Guarded individually so a crash halfway through can be re-run.
+        for (col, ddl) in [
+            ("tags", "ALTER TABLE decks ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'"),
+            ("is_public", "ALTER TABLE decks ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0"),
+            ("source_url", "ALTER TABLE decks ADD COLUMN source_url TEXT"),
+            ("source_type", "ALTER TABLE decks ADD COLUMN source_type TEXT"),
+            ("original_deck_id", "ALTER TABLE decks ADD COLUMN original_deck_id TEXT"),
+            ("total_clones", "ALTER TABLE decks ADD COLUMN total_clones INTEGER NOT NULL DEFAULT 0"),
+            ("cloud_deck_id", "ALTER TABLE decks ADD COLUMN cloud_deck_id TEXT"),
+        ] {
+            if !column_exists(&tx, "decks", col) {
+                tx.execute_batch(ddl)
+                    .map_err(|e| format!("V032: decks.{col}: {e}"))?;
+            }
+        }
+
+        // Re-cloning the same public deck must update, never duplicate. Partial index
+        // because every locally-created deck has a NULL cloud_deck_id.
+        tx.execute_batch(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_decks_cloud_deck
+                 ON decks(cloud_deck_id) WHERE cloud_deck_id IS NOT NULL;",
+        )
+        .map_err(|e| format!("V032: decks cloud index: {e}"))?;
+
+        // ── deck_cards: rebuild so vocabulary_id may be NULL ──
+        if !column_exists(&tx, "deck_cards", "order_index") {
+            tx.execute_batch(V032_DECK_CARDS_REBUILD)
+                .map_err(|e| format!("V032: deck_cards rebuild: {e}"))?;
+        }
+
+        // ── unified notes ──
+        tx.execute_batch(V032_NOTES)
+            .map_err(|e| format!("V032: notes: {e}"))?;
+
+        // A dangling row here would mean the rebuild lost a card that something still
+        // points at. Refuse to commit rather than ship a corrupt DB.
+        let violations: i64 = {
+            let mut stmt = tx
+                .prepare("PRAGMA foreign_key_check")
+                .map_err(|e| format!("V032: foreign_key_check: {e}"))?;
+            let mut rows = stmt.query([]).map_err(|e| format!("V032: fk rows: {e}"))?;
+            let mut n = 0i64;
+            while rows.next().map_err(|e| format!("V032: fk row: {e}"))?.is_some() {
+                n += 1;
+            }
+            n
+        };
+        if violations > 0 {
+            return Err(format!(
+                "V032: {violations} foreign-key violations after rebuild; refusing to commit"
+            ));
+        }
+
+        tx.commit().map_err(|e| format!("V032: commit: {e}"))
+    })();
+
+    if fk_was_on != 0 {
+        conn.pragma_update(None, "foreign_keys", "ON")
+            .map_err(|e| format!("V032: could not restore foreign keys: {e}"))?;
+    }
+
+    result
+}
+
+/// The language of the transcript the episode currently shows.
+///
+/// Stamped when a transcript is CREATED — by local Whisper (the resolved language,
+/// or whisper's own detection when it ran on auto) and by the cloud fetch (the
+/// cloud's per-chunk language). This is the authoritative answer to "what language
+/// is the word the user just clicked": `difficulty_lang` only exists after cloud
+/// analysis, and the feed's declared language is publisher-supplied and often wrong
+/// or defaulted — a French feed without an RSS `<language>` tag is stored as 'en',
+/// which sent en→fa word-translation requests for French words.
+const V033_TRANSCRIPT_LANG: &str = "
+    ALTER TABLE podcast_episodes ADD COLUMN transcript_lang TEXT;
+";
+
+
+/// Backfill `transcript_lang` for episodes transcribed before V033.
+///
+/// LOCAL segments only: their `language` is the language Whisper was actually
+/// invoked with, recorded honestly per segment. Cloud segments are excluded —
+/// the old fetch code stamped them `'en'` as a hard fallback whenever the cloud
+/// omitted a chunk language, so for them `'en'` is fabricated, not observed.
+/// Episodes left NULL keep using the difficulty/feed fallback chain.
+const V034_BACKFILL_TRANSCRIPT_LANG: &str = "
+    UPDATE podcast_episodes SET transcript_lang = (
+        SELECT s.language FROM podcast_transcript_segments s
+        WHERE s.episode_id = podcast_episodes.id
+          AND s.source = 'local'
+          AND s.language IS NOT NULL AND s.language != '' AND s.language != 'auto'
+        GROUP BY s.language ORDER BY COUNT(*) DESC LIMIT 1
+    )
+    WHERE transcript_lang IS NULL
+      AND transcript_source = 'local';
+";
+
+/// Rebuild `deck_cards` with a nullable `vocabulary_id`, plus `tags` / `order_index`.
+///
+/// `UNIQUE(deck_id, vocabulary_id)` is kept: SQLite treats NULLs as distinct, so a deck
+/// can hold many cards with no vocabulary row (cloned cards) while still refusing to add
+/// the same dictionary word twice.
+const V032_DECK_CARDS_REBUILD: &str = "
+    CREATE TABLE deck_cards_new (
+        id              TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        deck_id         TEXT NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
+        vocabulary_id   INTEGER REFERENCES vocabulary(id) ON DELETE CASCADE,
+        front           TEXT NOT NULL,
+        back            TEXT NOT NULL,
+        notes           TEXT,
+        tags            TEXT NOT NULL DEFAULT '[]',
+        order_index     INTEGER NOT NULL DEFAULT 0,
+        added_at        TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(deck_id, vocabulary_id)
+    );
+
+    INSERT INTO deck_cards_new (id, deck_id, vocabulary_id, front, back, notes, order_index, added_at)
+    SELECT id, deck_id, vocabulary_id, front, back, notes,
+           ROW_NUMBER() OVER (PARTITION BY deck_id ORDER BY added_at, id) - 1,
+           added_at
+    FROM deck_cards;
+
+    DROP TABLE deck_cards;
+    ALTER TABLE deck_cards_new RENAME TO deck_cards;
+
+    CREATE INDEX IF NOT EXISTS idx_deck_cards_deck  ON deck_cards(deck_id);
+    CREATE INDEX IF NOT EXISTS idx_deck_cards_vocab ON deck_cards(vocabulary_id);
+    CREATE INDEX IF NOT EXISTS idx_deck_cards_order ON deck_cards(deck_id, order_index);
+";
+
+/// One notes table for every source. Front only supports notes on videos; desk covers
+/// podcast episodes, reading documents and caption sessions.
+///
+/// `source_id` deliberately carries no foreign key — it is polymorphic across three
+/// tables. Deleting an episode therefore leaves its notes behind; the notes page filters
+/// out sources it can no longer resolve rather than losing the user's writing.
+const V032_NOTES: &str = "
+    CREATE TABLE IF NOT EXISTS notes (
+        id             TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        source_module  TEXT NOT NULL CHECK(source_module IN ('podcast', 'reading', 'caption')),
+        source_id      TEXT NOT NULL,
+        source_title   TEXT,
+        position_ms    INTEGER,
+        label          TEXT,
+        note           TEXT,
+        excerpt        TEXT,
+        translation    TEXT,
+        tags           TEXT NOT NULL DEFAULT '[]',
+        color          TEXT,
+        created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_notes_source  ON notes(source_module, source_id);
+    CREATE INDEX IF NOT EXISTS idx_notes_created ON notes(created_at);
+
+    -- Carry every existing podcast bookmark over, preserving its id so nothing that
+    -- already references it breaks. Re-runnable.
+    INSERT INTO notes (id, source_module, source_id, position_ms, label, note, created_at, updated_at)
+    SELECT b.id, 'podcast', b.episode_id, b.position_ms, b.label, b.note, b.created_at, b.created_at
+    FROM podcast_bookmarks b
+    WHERE NOT EXISTS (SELECT 1 FROM notes n WHERE n.id = b.id);
+
+    -- `lookup_count` on the vocabulary page is COUNT(*) over this table.
+    CREATE INDEX IF NOT EXISTS idx_vocab_sources_vocab ON vocabulary_sources(vocabulary_id);
+";
 
 /// V014: Recreate caption_sessions with updated CHECK constraint.
 /// Handles partial state from previous failed attempts.
@@ -966,3 +1207,663 @@ const V025_TUTOR_MODES: &str = "
 
     CREATE INDEX IF NOT EXISTS idx_tutor_vocab_conv ON tutor_vocab_results(conversation_id);
 ";
+
+// V026 — Study engine (local reimplementation of the practice-session backend).
+// These pr_* tables layer a multi-dimensional proficiency + activity model on top
+// of the existing SRS deck/card/progress tables (V002/V015). Single-user local DB,
+// so NO user_id columns. JSON payloads/arrays are stored as TEXT. See
+// docs/STUDY_ENGINE.md and memory desk-study-port.md.
+const V026_STUDY_TABLES: &str = "
+    -- Practice config — a single row keyed by a fixed sentinel id.
+    CREATE TABLE IF NOT EXISTS pr_practice_config (
+        id                      TEXT PRIMARY KEY DEFAULT 'default',
+        preset                  TEXT NOT NULL DEFAULT 'vocabulary',
+        enabled_activities      TEXT NOT NULL DEFAULT '[\"recall\",\"cloze\",\"type_test\"]',
+        activity_weights        TEXT NOT NULL DEFAULT '{\"recall\":0.4,\"cloze\":0.35,\"type_test\":0.25}',
+        stage_overrides         TEXT NOT NULL DEFAULT '{}',
+        daily_minutes           INTEGER NOT NULL DEFAULT 20,
+        goal                    TEXT NOT NULL DEFAULT 'maintenance',
+        always_show_translation INTEGER NOT NULL DEFAULT 0,
+        auto_pronounce          INTEGER NOT NULL DEFAULT 1,
+        reverse_card            INTEGER NOT NULL DEFAULT 0,
+        use_listen_again        INTEGER NOT NULL DEFAULT 1,
+        use_ai_grading          INTEGER NOT NULL DEFAULT 1,
+        deck_strategy           TEXT NOT NULL DEFAULT 'mix',
+        deck_weights            TEXT NOT NULL DEFAULT '{}',
+        active_deck_id          TEXT,
+        focus                   TEXT,
+        created_at              TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at              TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Per-card multi-dimensional proficiency.
+    CREATE TABLE IF NOT EXISTS pr_card_proficiency (
+        id                  TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        card_id             TEXT NOT NULL REFERENCES deck_cards(id) ON DELETE CASCADE,
+        deck_id             TEXT NOT NULL REFERENCES decks(id) ON DELETE CASCADE,
+        recognition_score   REAL NOT NULL DEFAULT 0,
+        recall_score        REAL NOT NULL DEFAULT 0,
+        listening_score     REAL NOT NULL DEFAULT 0,
+        production_score    REAL NOT NULL DEFAULT 0,
+        pronunciation_score REAL NOT NULL DEFAULT 0,
+        learning_stage      TEXT NOT NULL DEFAULT 'new'
+                            CHECK(learning_stage IN ('new','learning','reinforcing','solidifying','mature','leech')),
+        consecutive_failures INTEGER NOT NULL DEFAULT 0,
+        total_attempts      INTEGER NOT NULL DEFAULT 0,
+        last_practiced_at   TEXT,
+        created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(card_id)
+    );
+
+    -- A study session, with its own locked card_queue snapshot.
+    CREATE TABLE IF NOT EXISTS pr_session (
+        id                 TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        preset             TEXT NOT NULL DEFAULT 'vocabulary',
+        enabled_activities TEXT NOT NULL DEFAULT '[]',
+        deck_strategy      TEXT NOT NULL DEFAULT 'mix',
+        deck_ids           TEXT NOT NULL DEFAULT '[]',
+        goal_minutes       INTEGER,
+        started_at         TEXT NOT NULL DEFAULT (datetime('now')),
+        ended_at           TEXT,
+        total_seconds      INTEGER,
+        activities_total   INTEGER NOT NULL DEFAULT 0,
+        activities_correct INTEGER NOT NULL DEFAULT 0,
+        status             TEXT NOT NULL DEFAULT 'active'
+                           CHECK(status IN ('active','completed','abandoned')),
+        card_queue         TEXT,
+        consumed_count     INTEGER NOT NULL DEFAULT 0,
+        estimated_minutes  INTEGER
+    );
+
+    -- One materialized activity served during a session.
+    CREATE TABLE IF NOT EXISTS pr_activity (
+        id                  TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        session_id          TEXT NOT NULL REFERENCES pr_session(id) ON DELETE CASCADE,
+        card_id             TEXT,
+        related_card_ids    TEXT NOT NULL DEFAULT '[]',
+        activity_type       TEXT NOT NULL,
+        prompt_payload      TEXT NOT NULL DEFAULT '{}',
+        template_id         TEXT,
+        user_response       TEXT,
+        user_audio_url      TEXT,
+        response_time_ms    INTEGER,
+        is_correct          INTEGER,
+        score               REAL,
+        ai_feedback         TEXT,
+        affected_dimensions TEXT NOT NULL DEFAULT '[]',
+        created_at          TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Cached generated activity content (cloze/synonym/use_in_sentence/mini_reading).
+    CREATE TABLE IF NOT EXISTS pr_activity_template (
+        id               TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        card_id          TEXT NOT NULL REFERENCES deck_cards(id) ON DELETE CASCADE,
+        activity_type    TEXT NOT NULL,
+        payload          TEXT NOT NULL,
+        difficulty       TEXT NOT NULL DEFAULT 'medium',
+        language_variant TEXT NOT NULL DEFAULT 'en-US',
+        generated_by     TEXT,
+        generated_at     TEXT NOT NULL DEFAULT (datetime('now')),
+        used_count       INTEGER NOT NULL DEFAULT 0,
+        success_rate     REAL,
+        reported_issues  INTEGER NOT NULL DEFAULT 0
+    );
+
+    -- Real-content audio encounters for listen_again (podcast/video/manual clips).
+    CREATE TABLE IF NOT EXISTS pr_card_encounter (
+        id              TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        card_id         TEXT NOT NULL REFERENCES deck_cards(id) ON DELETE CASCADE,
+        source_type     TEXT NOT NULL DEFAULT 'manual',
+        source_id       TEXT,
+        source_position INTEGER,
+        source_snippet  TEXT,
+        audio_clip_url  TEXT,
+        audio_start_ms  INTEGER,
+        audio_end_ms    INTEGER,
+        encountered_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    -- Landing-page daily plan preview (one row per date).
+    CREATE TABLE IF NOT EXISTS pr_daily_plan (
+        plan_date        TEXT PRIMARY KEY,
+        card_queue       TEXT NOT NULL DEFAULT '[]',
+        total_cards      INTEGER NOT NULL DEFAULT 0,
+        estimated_minutes INTEGER NOT NULL DEFAULT 0,
+        config_snapshot  TEXT,
+        generated_at     TEXT NOT NULL DEFAULT (datetime('now')),
+        consumed_at      TEXT,
+        consumed_count   INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_pr_prof_card       ON pr_card_proficiency(card_id);
+    CREATE INDEX IF NOT EXISTS idx_pr_prof_deck       ON pr_card_proficiency(deck_id);
+    CREATE INDEX IF NOT EXISTS idx_pr_prof_stage      ON pr_card_proficiency(learning_stage);
+    CREATE INDEX IF NOT EXISTS idx_pr_activity_session ON pr_activity(session_id);
+    CREATE INDEX IF NOT EXISTS idx_pr_activity_card    ON pr_activity(card_id);
+    CREATE INDEX IF NOT EXISTS idx_pr_template_card    ON pr_activity_template(card_id, activity_type);
+    CREATE INDEX IF NOT EXISTS idx_pr_encounter_card   ON pr_card_encounter(card_id);
+";
+
+// V028 — podcast v2 per-episode difficulty + cloud identity.
+//
+// The web app scores every episode individually (`difficulty_band` A1..C2 +
+// `difficulty_score` 0-100 + a band range and confidence), replacing the coarse
+// per-feed `cefr_level`. We mirror those columns locally so cloud-discovered
+// episodes keep their scores after `podcast_import_cloud_episode`.
+//
+// `video_id` (`podcast_{feed}_ep_{ep}`) and `curated_episode_id` (the
+// `curated_episodes.id` UUID) are the cloud identities: the first addresses an
+// episode in `?action=get-episode`, the second is what `?action=
+// update-episode-activity` expects. Episodes that exist only on PodcastIndex
+// (never curated) leave `curated_episode_id` NULL and skip the cloud heartbeat.
+const V028_PODCAST_DIFFICULTY_V2: &str = "
+    ALTER TABLE podcast_episodes ADD COLUMN video_id             TEXT;
+    ALTER TABLE podcast_episodes ADD COLUMN curated_episode_id   TEXT;
+    ALTER TABLE podcast_episodes ADD COLUMN difficulty_band      TEXT;
+    ALTER TABLE podcast_episodes ADD COLUMN difficulty_score     INTEGER;
+    ALTER TABLE podcast_episodes ADD COLUMN difficulty_range_low TEXT;
+    ALTER TABLE podcast_episodes ADD COLUMN difficulty_range_high TEXT;
+    ALTER TABLE podcast_episodes ADD COLUMN difficulty_confidence TEXT;
+    ALTER TABLE podcast_episodes ADD COLUMN difficulty_lang      TEXT;
+    ALTER TABLE podcast_episodes ADD COLUMN speech_rate_wpm      INTEGER;
+
+    ALTER TABLE podcast_feeds ADD COLUMN remote_feed_id            INTEGER;
+    ALTER TABLE podcast_feeds ADD COLUMN difficulty_band_low       TEXT;
+    ALTER TABLE podcast_feeds ADD COLUMN difficulty_band_high      TEXT;
+    ALTER TABLE podcast_feeds ADD COLUMN difficulty_score_median   INTEGER;
+    ALTER TABLE podcast_feeds ADD COLUMN difficulty_episodes_scored INTEGER;
+
+    CREATE INDEX IF NOT EXISTS idx_podcast_episodes_video    ON podcast_episodes(video_id);
+    CREATE INDEX IF NOT EXISTS idx_podcast_feeds_remote      ON podcast_feeds(remote_feed_id);
+";
+
+/// Two transcripts can coexist per episode: the one Whisper produced on this
+/// machine (`local`, with word-level timestamps) and the one FlexiLingo already
+/// analyzed in the cloud (`cloud`, segment-level only). `podcast_episodes
+/// .transcript_source` records which one the player is showing.
+///
+/// `podcast_nlp_analysis` had a column-level `UNIQUE(episode_id)`, which SQLite
+/// cannot drop in place — so the table is rebuilt with a composite key. Existing
+/// rows were all produced locally, hence `source = 'local'`.
+const V029_TRANSCRIPT_SOURCES: &str = "
+    ALTER TABLE podcast_transcript_segments ADD COLUMN source TEXT NOT NULL DEFAULT 'local';
+    CREATE INDEX IF NOT EXISTS idx_pts_episode_source
+        ON podcast_transcript_segments(episode_id, source, start_ms);
+
+    ALTER TABLE podcast_episodes ADD COLUMN transcript_source       TEXT NOT NULL DEFAULT 'local';
+    ALTER TABLE podcast_episodes ADD COLUMN cloud_transcript_status TEXT NOT NULL DEFAULT 'unknown';
+
+    CREATE TABLE podcast_nlp_analysis_v2 (
+        id                  TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        episode_id          TEXT NOT NULL REFERENCES podcast_episodes(id) ON DELETE CASCADE,
+        source              TEXT NOT NULL DEFAULT 'local',
+        total_words         INTEGER DEFAULT 0,
+        unique_words        INTEGER DEFAULT 0,
+        cefr_level          TEXT,
+        cefr_distribution   TEXT,
+        avg_sentence_length REAL DEFAULT 0.0,
+        vocabulary_richness REAL DEFAULT 0.0,
+        top_words           TEXT,
+        created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(episode_id, source)
+    );
+
+    INSERT INTO podcast_nlp_analysis_v2
+        (id, episode_id, source, total_words, unique_words, cefr_level,
+         cefr_distribution, avg_sentence_length, vocabulary_richness, top_words, created_at)
+    SELECT id, episode_id, 'local', total_words, unique_words, cefr_level,
+           cefr_distribution, avg_sentence_length, vocabulary_richness, top_words, created_at
+    FROM podcast_nlp_analysis;
+
+    DROP TABLE podcast_nlp_analysis;
+    ALTER TABLE podcast_nlp_analysis_v2 RENAME TO podcast_nlp_analysis;
+
+    CREATE INDEX IF NOT EXISTS idx_pna_episode ON podcast_nlp_analysis(episode_id, source);
+";
+
+/// Episodes carry their own artwork — a podcast's cover is often not the
+/// episode's. The cloud import was already sending `image_url`; there was simply
+/// nowhere to put it, so the player fell back to the feed art (or nothing).
+const V030_EPISODE_IMAGE: &str = "
+    ALTER TABLE podcast_episodes ADD COLUMN image_url TEXT;
+";
+
+/// CELPIP local state. The exam itself (parts, grading, scoring) is a FlexiLingo
+/// service — these tables hold only what must survive a crash on THIS machine:
+/// in-progress section drafts, speaking recordings, and locally-generated AI
+/// insight for users without a Pro subscription.
+const V031_CELPIP: &str = "
+    CREATE TABLE IF NOT EXISTS celpip_drafts (
+        session_id   TEXT NOT NULL,
+        section      TEXT NOT NULL,
+        payload      TEXT NOT NULL,
+        updated_at   TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (session_id, section)
+    );
+
+    CREATE TABLE IF NOT EXISTS celpip_recordings (
+        id           TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        session_id   TEXT NOT NULL,
+        task_key     TEXT NOT NULL,
+        local_path   TEXT NOT NULL,
+        duration_sec INTEGER NOT NULL DEFAULT 0,
+        transcript   TEXT,
+        audio_url    TEXT,
+        created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(session_id, task_key)
+    );
+
+    -- One row per (session, skill). `status` mirrors the cloud's insight states
+    -- so the UI can share a single state machine.
+    CREATE TABLE IF NOT EXISTS celpip_local_insight (
+        session_id  TEXT NOT NULL,
+        skill       TEXT NOT NULL,
+        status      TEXT NOT NULL DEFAULT 'pending',
+        result      TEXT,
+        error       TEXT,
+        updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (session_id, skill)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_celpip_drafts_session ON celpip_drafts(session_id);
+    CREATE INDEX IF NOT EXISTS idx_celpip_rec_session    ON celpip_recordings(session_id);
+";
+
+// V027 — record the SRS interval on each activity so the session summary can
+// report real promotions/demotions. `review_logs` can't be reused: its FK points
+// at `review_sessions`, not `pr_session`. NULL when the score stayed below
+// SRS_WRITE_THRESHOLD (the schedule was left untouched).
+const V027_STUDY_SRS_DELTAS: &str = "
+    ALTER TABLE pr_activity ADD COLUMN srs_interval_before REAL;
+    ALTER TABLE pr_activity ADD COLUMN srs_interval_after  REAL;
+";
+
+#[cfg(test)]
+mod v032_migration_tests {
+    use super::*;
+
+    /// Seed a deck, a word-backed card and SRS state **at the pre-V032 schema**, then
+    /// let V032 run. This is the only arrangement that actually exercises the rebuild:
+    /// migrating first and inserting afterwards copies an empty table and proves nothing.
+    fn seeded() -> Connection {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        // Match how the app opens the DB — cascades armed.
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+
+        run_migrations_through(&conn, "V031").expect("migrations up to V031");
+        assert!(
+            !column_exists(&conn, "deck_cards", "order_index"),
+            "precondition: V032 has not run yet",
+        );
+
+        conn.execute(
+            "INSERT INTO decks (id, name, language) VALUES ('d1', 'Deck', 'en')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO vocabulary (id, word, language) VALUES (1, 'hello', 'en')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back)
+             VALUES ('c1', 'd1', 1, 'hello', 'salam')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO srs_progress (id, card_id, algorithm, box_number)
+             VALUES ('p1', 'c1', 'fsrs', 3)",
+            [],
+        )
+        .unwrap();
+
+        // Now the rebuild runs against a populated table.
+        run_migrations(&conn).expect("V032 applies cleanly over existing data");
+        conn
+    }
+
+    /// The whole reason V032 exists: a card that is not a dictionary word.
+    /// Before the rebuild this INSERT failed with a NOT NULL violation.
+    #[test]
+    fn v032_allows_a_card_with_no_vocabulary_row() {
+        let conn = seeded();
+        conn.execute(
+            "INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back)
+             VALUES ('c2', 'd1', NULL, 'a cloned card', 'from the cloud')",
+            [],
+        )
+        .expect("cloned cards carry no vocabulary_id");
+
+        // NULLs are distinct in SQLite, so many such cards may coexist in one deck.
+        conn.execute(
+            "INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back)
+             VALUES ('c3', 'd1', NULL, 'another', 'one')",
+            [],
+        )
+        .expect("UNIQUE(deck_id, vocabulary_id) must not collide on NULL");
+    }
+
+    /// ...while still refusing to add the same real word to a deck twice.
+    #[test]
+    fn v032_still_rejects_a_duplicate_word_in_one_deck() {
+        let conn = seeded();
+        let err = conn.execute(
+            "INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back)
+             VALUES ('c9', 'd1', 1, 'hello', 'dup')",
+            [],
+        );
+        assert!(err.is_err(), "UNIQUE(deck_id, vocabulary_id) must still hold");
+    }
+
+    /// The migration drops and recreates `deck_cards`. Five tables cascade off it.
+    /// If the pragma toggle regressed, this test loses the SRS row.
+    #[test]
+    fn v032_rebuild_preserves_srs_progress_and_card_ids() {
+        let conn = seeded();
+
+        let cards: i64 = conn
+            .query_row("SELECT COUNT(*) FROM deck_cards WHERE id = 'c1'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(cards, 1, "the card survived the rebuild with its id intact");
+
+        let srs: i64 = conn
+            .query_row("SELECT COUNT(*) FROM srs_progress WHERE card_id = 'c1'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(srs, 1, "the cascade must NOT have fired during the rebuild");
+
+        let box_number: i64 = conn
+            .query_row("SELECT box_number FROM srs_progress WHERE id = 'p1'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(box_number, 3, "scheduling state is untouched");
+    }
+
+    /// Foreign keys must be back ON when the migration returns, or every later
+    /// cascade in the app silently stops working.
+    #[test]
+    fn v032_restores_the_foreign_keys_pragma() {
+        let conn = seeded();
+        let fk: i64 = conn.query_row("PRAGMA foreign_keys", [], |r| r.get(0)).unwrap();
+        assert_eq!(fk, 1, "foreign_keys must be re-enabled after V032");
+
+        // Prove enforcement is live: deleting the deck cascades to its cards.
+        conn.execute("DELETE FROM decks WHERE id = 'd1'", []).unwrap();
+        let left: i64 = conn
+            .query_row("SELECT COUNT(*) FROM deck_cards", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(left, 0, "cascade is active again");
+    }
+
+    /// Every podcast bookmark becomes a note, keeping its id.
+    #[test]
+    fn v032_migrates_podcast_bookmarks_into_notes() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+
+        // The bookmark must exist BEFORE V032, or the data migration copies nothing.
+        run_migrations_through(&conn, "V031").expect("migrations up to V031");
+        conn.execute(
+            "INSERT INTO podcast_feeds (id, feed_url, title, language)
+             VALUES ('f1', 'https://example.com/rss', 'Feed', 'en')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO podcast_episodes (id, feed_id, title, audio_url, duration_seconds)
+             VALUES ('e1', 'f1', 'Ep', 'https://example.com/a.mp3', 60)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO podcast_bookmarks (id, episode_id, position_ms, label, note)
+             VALUES ('bk1', 'e1', 12000, 'a label', 'a note')",
+            [],
+        )
+        .unwrap();
+
+        run_migrations(&conn).expect("V032 applies cleanly");
+
+        // Re-running the copy must not duplicate the row.
+        conn.execute_batch(V032_NOTES).unwrap();
+
+        let n: i64 = conn
+            .query_row("SELECT COUNT(*) FROM notes WHERE id = 'bk1'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 1, "the bookmark migrates exactly once, keeping its id");
+
+        let (module, source_id, pos): (String, String, i64) = conn
+            .query_row(
+                "SELECT source_module, source_id, position_ms FROM notes WHERE id = 'bk1'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            )
+            .unwrap();
+        assert_eq!((module.as_str(), source_id.as_str(), pos), ("podcast", "e1", 12000));
+    }
+
+    /// The notes table refuses a source it cannot render.
+    #[test]
+    fn v032_notes_reject_an_unknown_source_module() {
+        let conn = seeded();
+        let err = conn.execute(
+            "INSERT INTO notes (source_module, source_id) VALUES ('youtube', 'x')",
+            [],
+        );
+        assert!(err.is_err(), "source_module CHECK must hold");
+    }
+}
+
+#[cfg(test)]
+mod study_migration_tests {
+    use super::*;
+
+    /// The V029 rebuild of `podcast_nlp_analysis` must carry existing rows over and
+    /// stamp them `local` — a silent data loss here would wipe every offline analysis.
+    #[test]
+    fn v029_transcript_sources_preserve_existing_nlp_rows() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+
+        // Run everything up to (not including) V029, then seed a legacy NLP row.
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS _migrations (version TEXT PRIMARY KEY, applied_at TEXT);",
+        )
+        .unwrap();
+        run_migrations(&conn).expect("migrations run cleanly");
+
+        conn.execute(
+            "INSERT INTO podcast_feeds (id, feed_url, title, language)
+             VALUES ('f1', 'https://example.com/rss', 'Feed', 'en')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO podcast_episodes (id, feed_id, title, audio_url, duration_seconds)
+             VALUES ('e1', 'f1', 'Ep', 'https://example.com/a.mp3', 60)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO podcast_nlp_analysis (episode_id, source, total_words, cefr_level)
+             VALUES ('e1', 'local', 42, 'B1')",
+            [],
+        )
+        .unwrap();
+
+        // Both sources can hold an analysis for the same episode simultaneously.
+        conn.execute(
+            "INSERT INTO podcast_nlp_analysis (episode_id, source, total_words, cefr_level)
+             VALUES ('e1', 'cloud', 99, 'B2')",
+            [],
+        )
+        .expect("composite UNIQUE(episode_id, source) must allow a second source");
+
+        let n: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM podcast_nlp_analysis WHERE episode_id = 'e1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(n, 2, "local and cloud analyses coexist");
+
+        // The old column-level UNIQUE(episode_id) must be gone.
+        conn.execute(
+            "INSERT INTO podcast_nlp_analysis (episode_id, source, total_words) VALUES ('e1', 'local', 1)",
+            [],
+        )
+        .expect_err("re-inserting the same (episode_id, source) must still conflict");
+    }
+
+    #[test]
+    fn v031_creates_celpip_tables() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        run_migrations(&conn).expect("migrations run cleanly");
+
+        for table in ["celpip_drafts", "celpip_recordings", "celpip_local_insight"] {
+            let count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+                    rusqlite::params![table],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(count, 1, "table {table} should exist");
+        }
+
+        // A draft is unique per (session, section) so re-saving overwrites.
+        conn.execute(
+            "INSERT INTO celpip_drafts (session_id, section, payload) VALUES ('s1','listening','{}')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO celpip_drafts (session_id, section, payload) VALUES ('s1','listening','{\"a\":1}')
+             ON CONFLICT(session_id, section) DO UPDATE SET payload = excluded.payload",
+            [],
+        )
+        .unwrap();
+        let n: i64 = conn
+            .query_row("SELECT COUNT(*) FROM celpip_drafts", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 1, "draft upsert must not duplicate");
+
+        // Insight is unique per (session, skill).
+        conn.execute(
+            "INSERT INTO celpip_local_insight (session_id, skill, status) VALUES ('s1','writing','ready')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO celpip_local_insight (session_id, skill, status) VALUES ('s1','writing','pending')",
+            [],
+        )
+        .expect_err("same (session, skill) must conflict");
+    }
+
+    #[test]
+    fn v029_adds_transcript_source_columns() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        run_migrations(&conn).expect("migrations run cleanly");
+
+        for col in ["transcript_source", "cloud_transcript_status"] {
+            let found: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM pragma_table_info('podcast_episodes') WHERE name = ?1",
+                    rusqlite::params![col],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(found, 1, "podcast_episodes.{col} should exist");
+        }
+
+        let found: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM pragma_table_info('podcast_transcript_segments') WHERE name = 'source'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(found, 1, "podcast_transcript_segments.source should exist");
+    }
+
+    #[test]
+    fn v026_study_tables_created() {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        run_migrations(&conn).expect("migrations run cleanly");
+
+        // All pr_* study tables must exist after V026.
+        for table in [
+            "pr_practice_config",
+            "pr_card_proficiency",
+            "pr_session",
+            "pr_activity",
+            "pr_activity_template",
+            "pr_card_encounter",
+            "pr_daily_plan",
+        ] {
+            let count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+                    rusqlite::params![table],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(count, 1, "table {table} should exist");
+        }
+
+        // V027 adds the SRS delta columns used by the session summary.
+        for col in ["srs_interval_before", "srs_interval_after"] {
+            let found: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM pragma_table_info('pr_activity') WHERE name = ?1",
+                    rusqlite::params![col],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(found, 1, "pr_activity.{col} should exist");
+        }
+
+        // V028 adds the podcast v2 difficulty + cloud-identity columns.
+        for col in [
+            "video_id",
+            "curated_episode_id",
+            "difficulty_band",
+            "difficulty_score",
+            "difficulty_range_low",
+            "difficulty_range_high",
+            "difficulty_confidence",
+            "difficulty_lang",
+            "speech_rate_wpm",
+        ] {
+            let found: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM pragma_table_info('podcast_episodes') WHERE name = ?1",
+                    rusqlite::params![col],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(found, 1, "podcast_episodes.{col} should exist");
+        }
+        for col in [
+            "remote_feed_id",
+            "difficulty_band_low",
+            "difficulty_band_high",
+            "difficulty_score_median",
+            "difficulty_episodes_scored",
+        ] {
+            let found: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM pragma_table_info('podcast_feeds') WHERE name = ?1",
+                    rusqlite::params![col],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(found, 1, "podcast_feeds.{col} should exist");
+        }
+
+        // Re-running migrations is idempotent (the ledger skips the ALTERs).
+        run_migrations(&conn).expect("re-run migrations idempotent");
+    }
+}

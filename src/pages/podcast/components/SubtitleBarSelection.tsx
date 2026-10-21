@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 import type { EnhancedWord } from '../studio-types';
 
 // ============================================
@@ -456,10 +456,11 @@ export function SelectionActionBar({
       )}
       <button
         type="button"
-        className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-600 text-slate-400 hover:bg-slate-500 hover:text-slate-200 border-0 cursor-pointer transition-colors duration-150 text-xs"
+        aria-label="Clear selection"
+        className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-600 text-slate-400 hover:bg-slate-500 hover:text-slate-200 border-0 cursor-pointer transition-colors duration-150"
         onClick={() => onClear()}
       >
-        ✕
+        <X className="h-3 w-3" />
       </button>
       <div
         className="absolute bg-slate-700 border-r border-b border-white/10"

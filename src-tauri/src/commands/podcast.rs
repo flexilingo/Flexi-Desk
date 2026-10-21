@@ -105,22 +105,34 @@ pub async fn podcast_add_feed(
     get_feed_by_id(&conn, &feed_id)
 }
 
+/// One feed by id, regardless of subscription state.
+///
+/// `podcast_list_feeds` intentionally returns only subscribed feeds, but an episode
+/// imported from the cloud or played from discovery belongs to an UNSUBSCRIBED feed
+/// row — and the player still needs that row (it carries the feed's language).
+#[tauri::command]
+pub fn podcast_get_feed(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<PodcastFeed, String> {
+    let conn = lock_db(&state)?;
+    let sql = format!("SELECT {FEED_COLUMNS} FROM podcast_feeds WHERE id = ?1");
+    conn.query_row(&sql, rusqlite::params![id], map_feed_row)
+        .map_err(|e| format!("Feed not found: {e}"))
+}
+
 #[tauri::command]
 pub fn podcast_list_feeds(
     state: State<'_, AppState>,
 ) -> Result<Vec<PodcastFeed>, String> {
     let conn = lock_db(&state)?;
 
-    let mut stmt = conn
-        .prepare(
-            "SELECT id, title, author, description, feed_url, website_url, artwork_url,
-                    language, category, episode_count, last_refreshed, is_subscribed,
-                    created_at, updated_at
-             FROM podcast_feeds
-             WHERE is_subscribed = 1
-             ORDER BY updated_at DESC",
-        )
-        .map_err(|e| format!("Query error: {e}"))?;
+    let sql = format!(
+        "SELECT {FEED_COLUMNS} FROM podcast_feeds
+         WHERE is_subscribed = 1
+         ORDER BY updated_at DESC"
+    );
+    let mut stmt = conn.prepare(&sql).map_err(|e| format!("Query error: {e}"))?;
 
     let rows = stmt
         .query_map([], map_feed_row)
@@ -234,18 +246,13 @@ pub fn podcast_list_episodes(
     let conn = lock_db(&state)?;
     let max = limit.unwrap_or(100);
 
-    let mut stmt = conn
-        .prepare(
-            "SELECT id, feed_id, guid, title, description, audio_url,
-                    duration_seconds, published_at, file_size, is_downloaded,
-                    local_path, play_position, is_played, transcript,
-                    transcript_status, cefr_level, word_count, created_at
-             FROM podcast_episodes
-             WHERE feed_id = ?1
-             ORDER BY published_at DESC
-             LIMIT ?2",
-        )
-        .map_err(|e| format!("Query error: {e}"))?;
+    let sql = format!(
+        "SELECT {EPISODE_COLUMNS} FROM podcast_episodes
+         WHERE feed_id = ?1
+         ORDER BY published_at DESC
+         LIMIT ?2"
+    );
+    let mut stmt = conn.prepare(&sql).map_err(|e| format!("Query error: {e}"))?;
 
     let rows = stmt
         .query_map(rusqlite::params![feed_id, max], map_episode_row)
@@ -264,16 +271,9 @@ pub fn podcast_get_episode(
     id: String,
 ) -> Result<PodcastEpisode, String> {
     let conn = lock_db(&state)?;
-    conn.query_row(
-        "SELECT id, feed_id, guid, title, description, audio_url,
-                duration_seconds, published_at, file_size, is_downloaded,
-                local_path, play_position, is_played, transcript,
-                transcript_status, cefr_level, word_count, created_at
-         FROM podcast_episodes WHERE id = ?1",
-        rusqlite::params![id],
-        map_episode_row,
-    )
-    .map_err(|e| format!("Episode not found: {e}"))
+    let sql = format!("SELECT {EPISODE_COLUMNS} FROM podcast_episodes WHERE id = ?1");
+    conn.query_row(&sql, rusqlite::params![id], map_episode_row)
+        .map_err(|e| format!("Episode not found: {e}"))
 }
 
 #[tauri::command]
@@ -405,7 +405,542 @@ pub async fn podcast_search_itunes(
     rss::parse_itunes_results(&json)
 }
 
+// ── Cloud → local bridge ────────────────────────────────
+
+/// Materialize a cloud-discovered episode (from `episodes-by-level`,
+/// `browse-episodes`, `curated-episodes`, …) as local `podcast_feeds` +
+/// `podcast_episodes` rows, returning the local episode id.
+///
+/// This is the bridge that lets every existing local capability — player,
+/// download, Whisper transcription, bookmarks, NLP, vocab, quiz — operate on
+/// cloud episodes without a parallel "cloud episode" code path.
+///
+/// **Idempotent.** Re-importing the same episode updates its cloud metadata
+/// (difficulty, ids) but never duplicates a row and never clobbers local
+/// listening state (`play_position`, `is_played`, `is_downloaded`, `local_path`,
+/// `transcript*`). The feed is inserted unsubscribed — importing an episode to
+/// listen to it is not the same as subscribing to the show.
+#[tauri::command]
+pub fn podcast_import_cloud_episode(
+    state: State<'_, AppState>,
+    episode: CloudEpisodeInput,
+) -> Result<String, String> {
+    let conn = lock_db(&state)?;
+    import_cloud_episode(&conn, &episode)
+}
+
+fn import_cloud_episode(
+    conn: &rusqlite::Connection,
+    episode: &CloudEpisodeInput,
+) -> Result<String, String> {
+    // A stable feed_url is the natural key for podcast_feeds. Cloud episodes may
+    // not carry one, so synthesize a deterministic placeholder from the remote id.
+    let feed_url = match (&episode.feed_url, episode.remote_feed_id) {
+        (Some(u), _) if !u.trim().is_empty() => u.clone(),
+        (_, Some(rid)) => format!("flexilingo://podcastindex/{rid}"),
+        _ => return Err("CLOUD_EPISODE_MISSING_FEED".to_string()),
+    };
+
+    let feed_title = episode
+        .podcast_title
+        .clone()
+        .unwrap_or_else(|| "Unknown podcast".to_string());
+    let language = episode
+        .podcast_language
+        .clone()
+        .or_else(|| episode.difficulty_lang.clone())
+        .unwrap_or_else(|| "en".to_string());
+
+    // Upsert the feed. `is_subscribed` is only set on INSERT so a later import
+    // can't silently unsubscribe a show the user actually follows.
+    conn.execute(
+        "INSERT INTO podcast_feeds
+            (id, title, author, description, feed_url, artwork_url, language,
+             is_subscribed, remote_feed_id, last_refreshed)
+         VALUES (lower(hex(randomblob(16))), ?1, ?2, NULL, ?3, ?4, ?5, 0, ?6, datetime('now'))
+         ON CONFLICT(feed_url) DO UPDATE SET
+            title = ?1,
+            author = COALESCE(?2, author),
+            artwork_url = COALESCE(?4, artwork_url),
+            language = ?5,
+            remote_feed_id = COALESCE(?6, remote_feed_id),
+            updated_at = datetime('now')",
+        rusqlite::params![
+            feed_title,
+            episode.podcast_author,
+            feed_url,
+            episode.podcast_image_url,
+            language,
+            episode.remote_feed_id,
+        ],
+    )
+    .map_err(|e| format!("Feed upsert error: {e}"))?;
+
+    let feed_id: String = conn
+        .query_row(
+            "SELECT id FROM podcast_feeds WHERE feed_url = ?1",
+            rusqlite::params![feed_url],
+            |r| r.get(0),
+        )
+        .map_err(|e| format!("Feed lookup error: {e}"))?;
+
+    // `guid` is the episode's natural key within a feed (UNIQUE(feed_id, guid)).
+    // Cloud rows are addressed by video_id, so fall back to it, then to audio_url.
+    let guid = episode
+        .guid
+        .clone()
+        .or_else(|| episode.video_id.clone())
+        .unwrap_or_else(|| episode.audio_url.clone());
+
+    // Only cloud-owned columns are updated on conflict — local listening state
+    // (play_position/is_played/is_downloaded/local_path/transcript) is preserved.
+    conn.execute(
+        "INSERT INTO podcast_episodes
+            (id, feed_id, guid, title, description, audio_url, duration_seconds,
+             published_at, video_id, curated_episode_id, difficulty_band,
+             difficulty_score, difficulty_range_low, difficulty_range_high,
+             difficulty_confidence, difficulty_lang, speech_rate_wpm, image_url)
+         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,
+                 ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)
+         ON CONFLICT(feed_id, guid) DO UPDATE SET
+            title = ?3,
+            description = COALESCE(?4, description),
+            audio_url = ?5,
+            duration_seconds = CASE WHEN ?6 > 0 THEN ?6 ELSE duration_seconds END,
+            published_at = COALESCE(?7, published_at),
+            video_id = COALESCE(?8, video_id),
+            curated_episode_id = COALESCE(?9, curated_episode_id),
+            difficulty_band = COALESCE(?10, difficulty_band),
+            difficulty_score = COALESCE(?11, difficulty_score),
+            difficulty_range_low = COALESCE(?12, difficulty_range_low),
+            difficulty_range_high = COALESCE(?13, difficulty_range_high),
+            difficulty_confidence = COALESCE(?14, difficulty_confidence),
+            difficulty_lang = COALESCE(?15, difficulty_lang),
+            speech_rate_wpm = COALESCE(?16, speech_rate_wpm),
+            image_url = COALESCE(?17, image_url)",
+        rusqlite::params![
+            feed_id,
+            guid,
+            episode.title,
+            episode.description,
+            episode.audio_url,
+            episode.duration_seconds.unwrap_or(0),
+            episode.published_at,
+            episode.video_id,
+            episode.curated_episode_id,
+            episode.difficulty_band,
+            episode.difficulty_score,
+            episode.difficulty_range_low,
+            episode.difficulty_range_high,
+            episode.difficulty_confidence,
+            episode.difficulty_lang,
+            episode.speech_rate_wpm,
+            episode.image_url,
+        ],
+    )
+    .map_err(|e| format!("Episode upsert error: {e}"))?;
+
+    conn.query_row(
+        "SELECT id FROM podcast_episodes WHERE feed_id = ?1 AND guid = ?2",
+        rusqlite::params![feed_id, guid],
+        |r| r.get::<_, String>(0),
+    )
+    .map_err(|e| format!("Episode lookup error: {e}"))
+}
+
+#[cfg(test)]
+mod import_tests {
+    use super::*;
+    use crate::db::schema::run_migrations;
+
+    fn seed_episode(conn: &rusqlite::Connection) {
+        conn.execute(
+            "INSERT INTO podcast_feeds (id, feed_url, title, language)
+             VALUES ('f1', 'https://example.com/rss', 'Feed', 'en')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO podcast_episodes (id, feed_id, title, audio_url, duration_seconds, video_id)
+             VALUES ('e1', 'f1', 'Ep', 'https://example.com/a.mp3', 60, 'podcast_9_ep_1')",
+            [],
+        )
+        .unwrap();
+    }
+
+    fn seed_local_segment(conn: &rusqlite::Connection) {
+        conn.execute(
+            "INSERT INTO podcast_transcript_segments
+                (id, episode_id, text, start_ms, end_ms, confidence, language, source)
+             VALUES ('loc1', 'e1', 'local words', 0, 1000, 0.9, 'en', 'local')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO podcast_word_timestamps (segment_id, word, start_ms, end_ms, confidence)
+             VALUES ('loc1', 'local', 0, 500, 0.9)",
+            [],
+        )
+        .unwrap();
+    }
+
+    fn chunk(i: i64, start: f64, end: f64, text: &str) -> CloudChunk {
+        CloudChunk { chunk_index: i, start_time: start, end_time: end, text: text.into(), language: Some("en".into()) }
+    }
+
+
+    /// Fetching a cloud transcript stamps the episode with the transcript's
+    /// language — the word dialog's source language for a French episode must be
+    /// 'fr' even when the feed row says 'en'.
+
+    /// V034 backfills episodes transcribed before the stamp existed — from LOCAL
+    /// segments only. Cloud segments' 'en' was a fabricated default, not data.
+    #[test]
+    fn v034_backfills_from_local_segments_only() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        crate::db::schema::run_migrations_through(&conn, "V033").unwrap();
+
+        conn.execute_batch(
+            "INSERT INTO podcast_feeds (id, feed_url, title, language)
+             VALUES ('f1', 'u1', 'F', 'en');
+             INSERT INTO podcast_episodes (id, feed_id, title, audio_url, duration_seconds, transcript_source)
+             VALUES ('local_ep', 'f1', 'A', 'a1', 60, 'local'),
+                    ('cloud_ep', 'f1', 'B', 'a2', 60, 'cloud');
+             INSERT INTO podcast_transcript_segments (id, episode_id, text, start_ms, end_ms, language, source)
+             VALUES ('s1', 'local_ep', 'bonjour', 0, 1000, 'fr', 'local'),
+                    ('s2', 'local_ep', 'salut', 1000, 2000, 'fr', 'local'),
+                    ('s3', 'cloud_ep', 'hello?', 0, 1000, 'en', 'cloud');",
+        )
+        .unwrap();
+
+        crate::db::schema::run_migrations(&conn).unwrap();
+
+        let local: Option<String> = conn
+            .query_row("SELECT transcript_lang FROM podcast_episodes WHERE id='local_ep'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(local.as_deref(), Some("fr"), "local segments backfill the stamp");
+
+        let cloud: Option<String> = conn
+            .query_row("SELECT transcript_lang FROM podcast_episodes WHERE id='cloud_ep'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(cloud, None, "fabricated cloud 'en' must NOT be trusted");
+    }
+
+    #[test]
+    fn cloud_fetch_stamps_transcript_lang() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        run_migrations(&conn).unwrap();
+        seed_episode(&conn); // feed language: 'en'
+
+        let chunks = vec![CloudChunk {
+            chunk_index: 0,
+            start_time: 0.0,
+            end_time: 2.0,
+            text: "Bonjour tout le monde".into(),
+            language: Some("fr".into()),
+        }];
+        store_cloud_transcript(&conn, "e1", chunks, None).unwrap();
+
+        let lang: Option<String> = conn
+            .query_row(
+                "SELECT transcript_lang FROM podcast_episodes WHERE id = 'e1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(lang.as_deref(), Some("fr"));
+        // And the analysis language follows it, not the feed's 'en'.
+        assert_eq!(episode_analysis_lang(&conn, "e1"), "fr");
+    }
+
+    #[test]
+    fn cloud_transcript_coexists_with_local_and_never_clobbers_it() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        run_migrations(&conn).unwrap();
+        seed_episode(&conn);
+        seed_local_segment(&conn);
+
+        store_cloud_transcript(
+            &conn,
+            "e1",
+            vec![chunk(1, 1.5, 2.25, "second"), chunk(0, 0.0, 1.5, "first")],
+            None,
+        )
+        .unwrap();
+
+        // Local rows survive untouched, including their word timestamps.
+        assert_eq!(segment_count(&conn, "e1", "local"), 1);
+        let words: i64 = conn
+            .query_row("SELECT COUNT(*) FROM podcast_word_timestamps WHERE segment_id = 'loc1'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(words, 1, "local word timestamps must not be wiped");
+
+        // Cloud rows land, ordered by chunk_index, with seconds converted to ms.
+        assert_eq!(segment_count(&conn, "e1", "cloud"), 2);
+        let (text, start, end): (String, i64, i64) = conn
+            .query_row(
+                "SELECT text, start_ms, end_ms FROM podcast_transcript_segments
+                 WHERE episode_id='e1' AND source='cloud' ORDER BY start_ms LIMIT 1",
+                [], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            )
+            .unwrap();
+        assert_eq!((text.as_str(), start, end), ("first", 0, 1500));
+
+        // Fetching the cloud transcript activates it.
+        let (active, status): (String, String) = conn
+            .query_row("SELECT transcript_source, cloud_transcript_status FROM podcast_episodes WHERE id='e1'", [],
+                       |r| Ok((r.get(0)?, r.get(1)?)))
+            .unwrap();
+        assert_eq!(active, "cloud");
+        assert_eq!(status, "ready");
+    }
+
+    #[test]
+    fn refetching_cloud_transcript_is_idempotent() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        run_migrations(&conn).unwrap();
+        seed_episode(&conn);
+
+        for _ in 0..3 {
+            store_cloud_transcript(&conn, "e1", vec![chunk(0, 0.0, 1.0, "hello")], None).unwrap();
+        }
+        assert_eq!(segment_count(&conn, "e1", "cloud"), 1, "re-import must replace, not duplicate");
+    }
+
+    #[test]
+    fn cloud_cefr_analysis_collapses_to_level_counts() {
+        // The UI reads a flat {level: count} map; the cloud sends word lists.
+        let nlp = serde_json::json!({
+            "cefr_analysis": { "vocabulary": { "words_by_level": {
+                "a1": ["the", "a"], "B2": ["nuance"], "C1": ["ostensibly", "coda", "elide"]
+            }}}
+        });
+        let dist = cloud_cefr_distribution(&nlp);
+        assert_eq!(dist.get("A1"), Some(&2), "levels are upper-cased");
+        assert_eq!(dist.get("B2"), Some(&1));
+        assert_eq!(dist.get("C1"), Some(&3));
+        assert_eq!(dist.get("C2"), None);
+
+        // A payload without the nested vocabulary block must not panic.
+        assert!(cloud_cefr_distribution(&serde_json::json!({})).is_empty());
+    }
+
+    #[test]
+    fn cloud_nlp_is_stored_separately_from_local_nlp() {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        run_migrations(&conn).unwrap();
+        seed_episode(&conn);
+
+        conn.execute(
+            "INSERT INTO podcast_nlp_analysis (episode_id, source, total_words, cefr_level)
+             VALUES ('e1', 'local', 10, 'A2')",
+            [],
+        )
+        .unwrap();
+
+        let nlp = serde_json::json!({
+            "total_words": 200, "unique_words": 120, "average_cefr_level": "B2",
+            "cefr_analysis": {"B2": 40}, "vocabulary_stats": {"x": 1}
+        });
+        store_cloud_transcript(&conn, "e1", vec![chunk(0, 0.0, 1.0, "hi")], Some(&nlp)).unwrap();
+
+        let local_cefr: String = conn
+            .query_row("SELECT cefr_level FROM podcast_nlp_analysis WHERE episode_id='e1' AND source='local'", [], |r| r.get(0))
+            .unwrap();
+        let cloud_cefr: String = conn
+            .query_row("SELECT cefr_level FROM podcast_nlp_analysis WHERE episode_id='e1' AND source='cloud'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(local_cefr, "A2", "local analysis is preserved");
+        assert_eq!(cloud_cefr, "B2", "cloud analysis is stored alongside it");
+    }
+
+    #[test]
+    fn whisper_lang_is_normalized() {
+        assert_eq!(normalize_whisper_lang("en-us"), "en");
+        assert_eq!(normalize_whisper_lang("fr_CA"), "fr");
+        assert_eq!(normalize_whisper_lang("es"), "es");
+        assert_eq!(normalize_whisper_lang("auto"), "auto");
+        // A leading separator must not yield an empty language code.
+        assert_eq!(normalize_whisper_lang("-us"), "auto");
+    }
+
+    #[test]
+    fn episode_language_beats_feed_language() {
+        // A feed tagged `en` that publishes a Spanish episode must transcribe as Spanish.
+        assert_eq!(resolve_transcribe_lang(Some("es"), Some("en")), "es");
+        // Fall back to the feed when the episode was never analyzed.
+        assert_eq!(resolve_transcribe_lang(None, Some("fr-CA")), "fr");
+        assert_eq!(resolve_transcribe_lang(Some(""), Some("de")), "de");
+        // Nothing known at all → let whisper detect.
+        assert_eq!(resolve_transcribe_lang(None, None), "auto");
+    }
+
+    fn cloud_episode() -> CloudEpisodeInput {
+        CloudEpisodeInput {
+            remote_feed_id: Some(12345),
+            feed_url: None,
+            podcast_title: Some("Test Show".into()),
+            podcast_author: Some("Author".into()),
+            podcast_image_url: Some("http://img".into()),
+            podcast_language: Some("en".into()),
+            video_id: Some("podcast_12345_ep_678".into()),
+            curated_episode_id: Some("uuid-abc".into()),
+            guid: None,
+            title: "Episode One".into(),
+            description: Some("Desc".into()),
+            audio_url: "http://audio.mp3".into(),
+            duration_seconds: Some(1800),
+            published_at: Some("2026-07-01".into()),
+            image_url: None,
+            difficulty_band: Some("B1".into()),
+            difficulty_score: Some(62),
+            difficulty_range_low: Some("A2".into()),
+            difficulty_range_high: Some("B2".into()),
+            difficulty_confidence: Some("high".into()),
+            difficulty_lang: Some("en".into()),
+            speech_rate_wpm: Some(150),
+        }
+    }
+
+    fn setup() -> rusqlite::Connection {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        run_migrations(&conn).unwrap();
+        conn
+    }
+
+    #[test]
+    fn imports_cloud_episode_with_difficulty() {
+        let conn = setup();
+        let id = import_cloud_episode(&conn, &cloud_episode()).unwrap();
+        assert!(!id.is_empty());
+
+        let (band, score, video_id, curated): (String, i64, String, String) = conn
+            .query_row(
+                "SELECT difficulty_band, difficulty_score, video_id, curated_episode_id
+                 FROM podcast_episodes WHERE id = ?1",
+                rusqlite::params![id],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+            )
+            .unwrap();
+        assert_eq!(band, "B1");
+        assert_eq!(score, 62);
+        assert_eq!(video_id, "podcast_12345_ep_678");
+        assert_eq!(curated, "uuid-abc");
+
+        // The feed is created but NOT subscribed — importing to listen != following.
+        let (subscribed, remote): (i64, i64) = conn
+            .query_row(
+                "SELECT is_subscribed, remote_feed_id FROM podcast_feeds LIMIT 1",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(subscribed, 0);
+        assert_eq!(remote, 12345);
+    }
+
+    #[test]
+    fn reimport_is_idempotent_and_preserves_local_state() {
+        let conn = setup();
+        let id = import_cloud_episode(&conn, &cloud_episode()).unwrap();
+
+        // Simulate the user listening + downloading + transcribing locally.
+        conn.execute(
+            "UPDATE podcast_episodes
+             SET play_position = 42000, is_played = 1, is_downloaded = 1,
+                 local_path = '/tmp/ep.mp3', transcript_status = 'completed'
+             WHERE id = ?1",
+            rusqlite::params![id],
+        )
+        .unwrap();
+
+        // Re-import the same episode with a refreshed difficulty score.
+        let mut updated = cloud_episode();
+        updated.difficulty_score = Some(70);
+        updated.title = "Episode One (remastered)".into();
+        let id2 = import_cloud_episode(&conn, &updated).unwrap();
+
+        assert_eq!(id, id2, "same row, not a duplicate");
+        let n: i64 = conn
+            .query_row("SELECT COUNT(*) FROM podcast_episodes", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(n, 1);
+        let feeds: i64 = conn
+            .query_row("SELECT COUNT(*) FROM podcast_feeds", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(feeds, 1);
+
+        let (pos, played, downloaded, path, tstatus, score, title): (
+            i64, i64, i64, String, String, i64, String,
+        ) = conn
+            .query_row(
+                "SELECT play_position, is_played, is_downloaded, local_path,
+                        transcript_status, difficulty_score, title
+                 FROM podcast_episodes WHERE id = ?1",
+                rusqlite::params![id],
+                |r| {
+                    Ok((
+                        r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?,
+                    ))
+                },
+            )
+            .unwrap();
+
+        // Local listening state survives the re-import…
+        assert_eq!(pos, 42000, "play_position must not be clobbered");
+        assert_eq!(played, 1);
+        assert_eq!(downloaded, 1);
+        assert_eq!(path, "/tmp/ep.mp3");
+        assert_eq!(tstatus, "completed");
+        // …while cloud-owned fields refresh.
+        assert_eq!(score, 70);
+        assert_eq!(title, "Episode One (remastered)");
+    }
+
+    #[test]
+    fn subscribed_feed_is_not_unsubscribed_by_import() {
+        let conn = setup();
+        import_cloud_episode(&conn, &cloud_episode()).unwrap();
+        conn.execute("UPDATE podcast_feeds SET is_subscribed = 1", []).unwrap();
+
+        import_cloud_episode(&conn, &cloud_episode()).unwrap();
+        let subscribed: i64 = conn
+            .query_row("SELECT is_subscribed FROM podcast_feeds LIMIT 1", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(subscribed, 1, "import must never unsubscribe a followed show");
+    }
+
+    #[test]
+    fn missing_feed_identity_is_rejected() {
+        let conn = setup();
+        let mut ep = cloud_episode();
+        ep.remote_feed_id = None;
+        ep.feed_url = None;
+        assert_eq!(
+            import_cloud_episode(&conn, &ep).unwrap_err(),
+            "CLOUD_EPISODE_MISSING_FEED"
+        );
+    }
+}
+
 // ── Row Mappers ─────────────────────────────────────────
+
+/// Column list for every `podcast_feeds` SELECT that feeds `map_feed_row`.
+/// Keep the order in lockstep with the mapper's positional `row.get(n)`.
+const FEED_COLUMNS: &str = "id, title, author, description, feed_url, website_url, artwork_url,
+     language, category, episode_count, last_refreshed, is_subscribed,
+     created_at, updated_at, remote_feed_id, difficulty_band_low,
+     difficulty_band_high, difficulty_score_median, difficulty_episodes_scored";
+
+/// Column list for every `podcast_episodes` SELECT that feeds `map_episode_row`.
+const EPISODE_COLUMNS: &str = "id, feed_id, guid, title, description, audio_url,
+     duration_seconds, published_at, file_size, is_downloaded,
+     local_path, play_position, is_played, transcript,
+     transcript_status, cefr_level, word_count, created_at,
+     video_id, curated_episode_id, difficulty_band, difficulty_score,
+     difficulty_range_low, difficulty_range_high, difficulty_confidence,
+     difficulty_lang, speech_rate_wpm,
+     transcript_source, cloud_transcript_status, image_url, transcript_lang";
 
 fn map_feed_row(row: &rusqlite::Row) -> rusqlite::Result<PodcastFeed> {
     Ok(PodcastFeed {
@@ -423,6 +958,11 @@ fn map_feed_row(row: &rusqlite::Row) -> rusqlite::Result<PodcastFeed> {
         is_subscribed: row.get::<_, i32>(11)? != 0,
         created_at: row.get(12)?,
         updated_at: row.get(13)?,
+        remote_feed_id: row.get(14)?,
+        difficulty_band_low: row.get(15)?,
+        difficulty_band_high: row.get(16)?,
+        difficulty_score_median: row.get(17)?,
+        difficulty_episodes_scored: row.get(18)?,
     })
 }
 
@@ -446,6 +986,19 @@ fn map_episode_row(row: &rusqlite::Row) -> rusqlite::Result<PodcastEpisode> {
         cefr_level: row.get(15)?,
         word_count: row.get(16)?,
         created_at: row.get(17)?,
+        video_id: row.get(18)?,
+        curated_episode_id: row.get(19)?,
+        difficulty_band: row.get(20)?,
+        difficulty_score: row.get(21)?,
+        difficulty_range_low: row.get(22)?,
+        difficulty_range_high: row.get(23)?,
+        difficulty_confidence: row.get(24)?,
+        difficulty_lang: row.get(25)?,
+        speech_rate_wpm: row.get(26)?,
+        transcript_source: row.get(27)?,
+        cloud_transcript_status: row.get(28)?,
+        image_url: row.get(29)?,
+        transcript_lang: row.get(30)?,
     })
 }
 
@@ -463,15 +1016,9 @@ fn map_bookmark_row(row: &rusqlite::Row) -> rusqlite::Result<PodcastBookmark> {
 // ── Internal Helpers ────────────────────────────────────
 
 fn get_feed_by_id(conn: &rusqlite::Connection, id: &str) -> Result<PodcastFeed, String> {
-    conn.query_row(
-        "SELECT id, title, author, description, feed_url, website_url, artwork_url,
-                language, category, episode_count, last_refreshed, is_subscribed,
-                created_at, updated_at
-         FROM podcast_feeds WHERE id = ?1",
-        rusqlite::params![id],
-        map_feed_row,
-    )
-    .map_err(|e| format!("Feed not found: {e}"))
+    let sql = format!("SELECT {FEED_COLUMNS} FROM podcast_feeds WHERE id = ?1");
+    conn.query_row(&sql, rusqlite::params![id], map_feed_row)
+        .map_err(|e| format!("Feed not found: {e}"))
 }
 
 fn urlencoded(s: &str) -> String {
@@ -646,6 +1193,42 @@ pub fn podcast_delete_download(
 
 // ── Transcription Commands ─────────────────────────────
 
+/// Normalize a language tag for whisper: `en-us` → `en`, `fr_CA` → `fr`.
+/// `auto` passes through so whisper does its own detection.
+fn normalize_whisper_lang(lang: &str) -> String {
+    if lang == "auto" {
+        return lang.to_string();
+    }
+    lang.split(|c| c == '-' || c == '_')
+        .next()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("auto")
+        .to_string()
+}
+
+/// The episode's cloud-detected language beats the feed's declared one, because
+/// RSS publishers routinely tag a feed `en` while publishing other languages.
+/// When Whisper runs without `-l` it prints its detection to stderr, e.g.
+/// `whisper_full_with_state: auto-detected language: fr (p = 0.976211)`.
+/// This is the only place the detected language surfaces in streaming mode.
+fn whisper_detected_lang(stderr: &str) -> Option<String> {
+    let idx = stderr.find("auto-detected language:")?;
+    let rest = stderr["auto-detected language:".len() + idx..].trim_start();
+    let code: String = rest
+        .chars()
+        .take_while(|c| c.is_ascii_alphabetic())
+        .collect();
+    (!code.is_empty()).then(|| code.to_lowercase())
+}
+
+fn resolve_transcribe_lang(episode_lang: Option<&str>, feed_lang: Option<&str>) -> String {
+    let pick = episode_lang
+        .filter(|l| !l.is_empty())
+        .or(feed_lang.filter(|l| !l.is_empty()))
+        .unwrap_or("auto");
+    normalize_whisper_lang(pick)
+}
+
 #[tauri::command]
 pub async fn podcast_transcribe_episode(
     app: tauri::AppHandle,
@@ -656,23 +1239,25 @@ pub async fn podcast_transcribe_episode(
     let (local_path, language, binary_path, model_path) = {
         let conn = lock_db(&state)?;
 
-        let (local_path, feed_id): (Option<String>, String) = conn
+        let (local_path, feed_id, episode_lang): (Option<String>, String, Option<String>) = conn
             .query_row(
-                "SELECT local_path, feed_id FROM podcast_episodes WHERE id = ?1",
+                "SELECT local_path, feed_id, difficulty_lang FROM podcast_episodes WHERE id = ?1",
                 rusqlite::params![episode_id],
-                |row: &rusqlite::Row| Ok((row.get(0)?, row.get(1)?)),
+                |row: &rusqlite::Row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .map_err(|e| format!("Episode not found: {e}"))?;
 
         let audio_path = local_path.ok_or("Episode must be downloaded before transcription")?;
 
-        let feed_lang: String = conn
+        let feed_lang: Option<String> = conn
             .query_row(
                 "SELECT language FROM podcast_feeds WHERE id = ?1",
                 rusqlite::params![feed_id],
                 |row: &rusqlite::Row| row.get(0),
             )
-            .unwrap_or_else(|_| "auto".into());
+            .ok();
+
+        let lang = resolve_transcribe_lang(episode_lang.as_deref(), feed_lang.as_deref());
 
         let bin = conn
             .query_row(
@@ -689,13 +1274,6 @@ pub async fn podcast_transcribe_episode(
                 |row: &rusqlite::Row| row.get::<_, String>(0),
             )
             .map_err(|_| "Whisper model not configured".to_string())?;
-
-        // Normalize language code for whisper (e.g. "en-us" → "en", "fr-CA" → "fr")
-        let lang = if feed_lang == "auto" {
-            feed_lang
-        } else {
-            feed_lang.split(|c| c == '-' || c == '_').next().unwrap_or("auto").to_string()
-        };
 
         (audio_path, lang, bin, model)
     };
@@ -828,7 +1406,8 @@ pub async fn podcast_transcribe_episode(
 
         // Delete old segments if re-transcribing
         conn.execute(
-            "DELETE FROM podcast_transcript_segments WHERE episode_id = ?1",
+            // Scoped to 'local': re-transcribing must not wipe a cached cloud transcript.
+            "DELETE FROM podcast_transcript_segments WHERE episode_id = ?1 AND source = 'local'",
             rusqlite::params![episode_id],
         ).ok();
 
@@ -844,8 +1423,8 @@ pub async fn podcast_transcribe_episode(
 
             conn.execute(
                 "INSERT INTO podcast_transcript_segments
-                    (id, episode_id, text, start_ms, end_ms, confidence, language)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    (id, episode_id, text, start_ms, end_ms, confidence, language, source)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'local')",
                 rusqlite::params![
                     seg_id, episode_id, seg.text, seg.start_ms, seg.end_ms,
                     seg.confidence, seg.language,
@@ -885,14 +1464,25 @@ pub async fn podcast_transcribe_episode(
             });
         }
 
+        // The transcript's language becomes the episode's authoritative language for
+        // word lookups and analysis: the language we forced on Whisper, or — when it
+        // ran on auto — whatever Whisper itself detected on stderr.
+        let transcript_lang: Option<String> = if language != "auto" {
+            Some(language.clone())
+        } else {
+            whisper_detected_lang(&stderr_text)
+        };
+
         // Update episode
         conn.execute(
             "UPDATE podcast_episodes SET
                 transcript = ?1,
                 transcript_status = 'completed',
-                word_count = ?2
+                 transcript_source = 'local',
+                word_count = ?2,
+                transcript_lang = COALESCE(?4, transcript_lang)
              WHERE id = ?3",
-            rusqlite::params![full_text, total_word_count, episode_id],
+            rusqlite::params![full_text, total_word_count, episode_id, transcript_lang],
         ).map_err(|e| format!("Episode update error: {e}"))?;
 
         drop(conn);
@@ -916,10 +1506,11 @@ pub fn podcast_get_transcript_segments(
 
     let mut stmt = conn
         .prepare(
-            "SELECT id, episode_id, text, start_ms, end_ms, confidence, language
-             FROM podcast_transcript_segments
-             WHERE episode_id = ?1
-             ORDER BY start_ms ASC",
+            "SELECT s.id, s.episode_id, s.text, s.start_ms, s.end_ms, s.confidence, s.language
+             FROM podcast_transcript_segments s
+             JOIN podcast_episodes e ON e.id = s.episode_id
+             WHERE s.episode_id = ?1 AND s.source = e.transcript_source
+             ORDER BY s.start_ms ASC",
         )
         .map_err(|e| format!("Query error: {e}"))?;
 
@@ -972,12 +1563,39 @@ pub fn podcast_get_transcript_segments(
 
 // ── NLP Analysis Commands ──────────────────────────────
 
+/// The language a transcript should be analyzed in.
+///
+/// `transcript_lang` — the language the transcript was actually MADE in — is
+/// authoritative. Then the episode's cloud-detected language, then the feed's
+/// declared one (publishers mistag feeds; a missing RSS tag is stored as 'en').
+/// Mirrors `episodeSourceLang` on the frontend — keep the two in step.
+fn episode_analysis_lang(conn: &rusqlite::Connection, episode_id: &str) -> String {
+    conn.query_row(
+        "SELECT COALESCE(NULLIF(e.transcript_lang, ''), NULLIF(e.difficulty_lang, ''),
+                         NULLIF(f.language, ''), 'en')
+         FROM podcast_episodes e
+         JOIN podcast_feeds f ON f.id = e.feed_id
+         WHERE e.id = ?1",
+        rusqlite::params![episode_id],
+        |row| row.get(0),
+    )
+    .unwrap_or_else(|_| "en".to_string())
+}
+
+/// Error code for transcripts in a language the local analyzer has no frequency
+/// table for. The frontend resolves it via i18n; wrong numbers are never stored.
+pub const NLP_LANG_UNSUPPORTED: &str = "NLP_LANG_UNSUPPORTED";
+
 fn run_nlp_analysis(
     state: &State<'_, AppState>,
     episode_id: &str,
     text: &str,
 ) -> Result<NlpAnalysis, String> {
-    let result = nlp::analyze_text(text);
+    let lang = {
+        let conn = lock_db(state)?;
+        episode_analysis_lang(&conn, episode_id)
+    };
+    let result = nlp::analyze_text(text, &lang).ok_or(NLP_LANG_UNSUPPORTED)?;
 
     let cefr_dist_json = serde_json::to_string(&result.cefr_distribution)
         .unwrap_or_else(|_| "{}".into());
@@ -989,10 +1607,10 @@ fn run_nlp_analysis(
     // Upsert analysis
     conn.execute(
         "INSERT INTO podcast_nlp_analysis
-            (id, episode_id, total_words, unique_words, cefr_level,
+            (id, episode_id, source, total_words, unique_words, cefr_level,
              cefr_distribution, avg_sentence_length, vocabulary_richness, top_words)
-         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-         ON CONFLICT(episode_id) DO UPDATE SET
+         VALUES (lower(hex(randomblob(16))), ?1, 'local', ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+         ON CONFLICT(episode_id, source) DO UPDATE SET
             total_words = ?2, unique_words = ?3, cefr_level = ?4,
             cefr_distribution = ?5, avg_sentence_length = ?6,
             vocabulary_richness = ?7, top_words = ?8",
@@ -1017,10 +1635,12 @@ fn run_nlp_analysis(
 
     // Fetch the stored analysis
     conn.query_row(
-        "SELECT id, episode_id, total_words, unique_words, cefr_level,
-                cefr_distribution, avg_sentence_length, vocabulary_richness,
-                top_words, created_at
-         FROM podcast_nlp_analysis WHERE episode_id = ?1",
+        "SELECT n.id, n.episode_id, n.total_words, n.unique_words, n.cefr_level,
+                n.cefr_distribution, n.avg_sentence_length, n.vocabulary_richness,
+                n.top_words, n.created_at
+         FROM podcast_nlp_analysis n
+         JOIN podcast_episodes e ON e.id = n.episode_id
+         WHERE n.episode_id = ?1 AND n.source = e.transcript_source",
         rusqlite::params![episode_id],
         map_nlp_row,
     )
@@ -1052,10 +1672,12 @@ pub fn podcast_get_analysis(
 ) -> Result<NlpAnalysis, String> {
     let conn = lock_db(&state)?;
     conn.query_row(
-        "SELECT id, episode_id, total_words, unique_words, cefr_level,
-                cefr_distribution, avg_sentence_length, vocabulary_richness,
-                top_words, created_at
-         FROM podcast_nlp_analysis WHERE episode_id = ?1",
+        "SELECT n.id, n.episode_id, n.total_words, n.unique_words, n.cefr_level,
+                n.cefr_distribution, n.avg_sentence_length, n.vocabulary_richness,
+                n.top_words, n.created_at
+         FROM podcast_nlp_analysis n
+         JOIN podcast_episodes e ON e.id = n.episode_id
+         WHERE n.episode_id = ?1 AND n.source = e.transcript_source",
         rusqlite::params![episode_id],
         map_nlp_row,
     )
@@ -1131,8 +1753,8 @@ pub async fn podcast_translate_word(
         }
     }
 
-    // CEFR level from our local word list
-    let cefr_level = nlp::word_to_cefr(&word.to_lowercase());
+    // CEFR level from the word's own language table; None when unsupported.
+    let cefr_level = nlp::word_to_cefr(&word.to_lowercase(), &source_lang);
 
     Ok(TranslationResult {
         word,
@@ -1147,15 +1769,21 @@ pub async fn podcast_translate_word(
 
 // ── Word CEFR Batch ────────────────────────────────────
 
+/// Batch CEFR lookup for the subtitle/transcript word chips.
+///
+/// Empty result when `lang` has no table — the chips simply don't render, which is
+/// the honest state. (This command used to score every word against English no
+/// matter what language the episode was in.)
 #[tauri::command]
 pub fn podcast_get_words_cefr(
     words: Vec<String>,
+    lang: Option<String>,
 ) -> Result<Vec<(String, String)>, String> {
+    let lang = lang.unwrap_or_else(|| "en".to_string());
     Ok(words
         .into_iter()
-        .map(|w| {
-            let cefr = nlp::word_to_cefr(&w.to_lowercase());
-            (w, cefr)
+        .filter_map(|w| {
+            nlp::word_to_cefr(&w.to_lowercase(), &lang).map(|cefr| (w, cefr))
         })
         .collect())
 }
@@ -1265,12 +1893,19 @@ fn map_nlp_row(row: &rusqlite::Row) -> rusqlite::Result<NlpAnalysis> {
 }
 
 /// Run NLP analysis using a raw connection (for use in spawned tasks).
+///
+/// An unsupported language is a clean skip, not an error: this runs as a side
+/// effect of transcription, and a Chinese transcript must not fail the transcribe
+/// job just because local difficulty analysis can't cover it.
 fn run_nlp_analysis_with_conn(
     conn: &rusqlite::Connection,
     episode_id: &str,
     text: &str,
 ) -> Result<(), String> {
-    let result = nlp::analyze_text(text);
+    let lang = episode_analysis_lang(conn, episode_id);
+    let Some(result) = nlp::analyze_text(text, &lang) else {
+        return Ok(());
+    };
 
     let cefr_dist_json = serde_json::to_string(&result.cefr_distribution)
         .unwrap_or_else(|_| "{}".into());
@@ -1279,10 +1914,10 @@ fn run_nlp_analysis_with_conn(
 
     conn.execute(
         "INSERT INTO podcast_nlp_analysis
-            (id, episode_id, total_words, unique_words, cefr_level,
+            (id, episode_id, source, total_words, unique_words, cefr_level,
              cefr_distribution, avg_sentence_length, vocabulary_richness, top_words)
-         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-         ON CONFLICT(episode_id) DO UPDATE SET
+         VALUES (lower(hex(randomblob(16))), ?1, 'local', ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+         ON CONFLICT(episode_id, source) DO UPDATE SET
             total_words = ?2, unique_words = ?3, cefr_level = ?4,
             cefr_distribution = ?5, avg_sentence_length = ?6,
             vocabulary_richness = ?7, top_words = ?8",
@@ -1654,7 +2289,8 @@ async fn run_transcribe_task(
 
         // Delete old segments if re-transcribing
         conn.execute(
-            "DELETE FROM podcast_transcript_segments WHERE episode_id = ?1",
+            // Scoped to 'local': re-transcribing must not wipe a cached cloud transcript.
+            "DELETE FROM podcast_transcript_segments WHERE episode_id = ?1 AND source = 'local'",
             rusqlite::params![episode_id],
         ).ok();
 
@@ -1669,8 +2305,8 @@ async fn run_transcribe_task(
 
             conn.execute(
                 "INSERT INTO podcast_transcript_segments
-                    (id, episode_id, text, start_ms, end_ms, confidence, language)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    (id, episode_id, text, start_ms, end_ms, confidence, language, source)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'local')",
                 rusqlite::params![
                     seg_id, episode_id, seg.text, seg.start_ms, seg.end_ms,
                     seg.confidence, seg.language,
@@ -1692,14 +2328,25 @@ async fn run_transcribe_task(
             total_word_count += seg.text.split_whitespace().count() as i64;
         }
 
+        // The transcript's language becomes the episode's authoritative language for
+        // word lookups and analysis: the language we forced on Whisper, or — when it
+        // ran on auto — whatever Whisper itself detected on stderr.
+        let transcript_lang: Option<String> = if language != "auto" {
+            Some(language.to_string())
+        } else {
+            whisper_detected_lang(&stderr_text)
+        };
+
         // Update episode
         conn.execute(
             "UPDATE podcast_episodes SET
                 transcript = ?1,
                 transcript_status = 'completed',
-                word_count = ?2
+                 transcript_source = 'local',
+                word_count = ?2,
+                transcript_lang = COALESCE(?4, transcript_lang)
              WHERE id = ?3",
-            rusqlite::params![full_text, total_word_count, episode_id],
+            rusqlite::params![full_text, total_word_count, episode_id, transcript_lang],
         ).map_err(|e| format!("Episode update error: {e}"))?;
 
         // Auto-run NLP analysis
@@ -1986,16 +2633,12 @@ pub async fn podcast_sync_to_cloud(
     episode_id: String,
 ) -> Result<serde_json::Value, String> {
     // 1. Read episode metadata + validate transcript is completed
-    let (title, transcript_status, feed_id) = {
+    let (title, transcript_status) = {
         let conn = lock_db(&state)?;
         conn.query_row(
-            "SELECT title, transcript_status, feed_id FROM podcast_episodes WHERE id = ?1",
+            "SELECT title, transcript_status FROM podcast_episodes WHERE id = ?1",
             rusqlite::params![episode_id],
-            |row| Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, String>(2)?,
-            )),
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
         )
         .map_err(|e| format!("Episode not found: {e}"))?
     };
@@ -2006,15 +2649,15 @@ pub async fn podcast_sync_to_cloud(
         ));
     }
 
-    // 2. Get language from feed
+    // 2. Language of the transcript being uploaded. The cloud stores this verbatim
+    // (text_detected_language / source_language / language on its side), so it must
+    // be the transcript's OWN language — transcript_lang first, then the episode's
+    // cloud-detected language, then the feed's declared one, which is publisher-
+    // supplied and defaulted to 'en' when the RSS omits it. A French transcript
+    // synced under 'en' poisons the cloud record and the admin panel.
     let source_language = {
         let conn = lock_db(&state)?;
-        conn.query_row(
-            "SELECT COALESCE(language, 'en') FROM podcast_feeds WHERE id = ?1",
-            rusqlite::params![feed_id],
-            |row| row.get::<_, String>(0),
-        )
-        .unwrap_or_else(|_| "en".to_string())
+        episode_analysis_lang(&conn, &episode_id)
     };
 
     // 3. Read transcript segments (text + timing only, no word timestamps)
@@ -2079,3 +2722,398 @@ pub async fn podcast_sync_to_cloud(
 
     Ok(result)
 }
+
+// ── Cloud transcript (FlexiLingo) ──────────────────────
+//
+// Desk is local-first: Whisper on this machine is the default and the only path
+// that yields word-level timestamps. But when FlexiLingo has already transcribed
+// and analyzed an episode, the user can switch to that instead of spending a
+// download + several minutes of CPU. Both transcripts are cached side by side in
+// `podcast_transcript_segments.source`, so switching afterwards is instant and
+// works offline.
+
+/// What the UI needs to render the transcript-source dropdown.
+#[derive(serde::Serialize)]
+pub struct TranscriptSourceInfo {
+    /// Stamped so callers can tell whose info this is — the player switches
+    /// episodes faster than these round-trips resolve.
+    pub episode_id: String,
+    /// `local` | `cloud` — which transcript the player is showing.
+    pub active: String,
+    pub has_local: bool,
+    pub has_cloud: bool,
+    /// False when the episode has no `video_id`, i.e. it was never curated.
+    pub cloud_possible: bool,
+    /// `unknown` | `ready` | `unavailable`
+    pub cloud_status: String,
+}
+
+/// A segment as returned by `/get-content-status`. Times are SECONDS here, unlike
+/// desk's millisecond-based local segments.
+#[derive(serde::Deserialize)]
+struct CloudChunk {
+    chunk_index: i64,
+    start_time: f64,
+    end_time: f64,
+    text: String,
+    #[serde(default)]
+    language: Option<String>,
+}
+
+fn segment_count(conn: &rusqlite::Connection, episode_id: &str, source: &str) -> i64 {
+    conn.query_row(
+        "SELECT COUNT(*) FROM podcast_transcript_segments WHERE episode_id = ?1 AND source = ?2",
+        rusqlite::params![episode_id, source],
+        |r| r.get(0),
+    )
+    .unwrap_or(0)
+}
+
+#[tauri::command]
+pub fn podcast_transcript_source_info(
+    state: State<'_, AppState>,
+    episode_id: String,
+) -> Result<TranscriptSourceInfo, String> {
+    let conn = lock_db(&state)?;
+
+    let (active, cloud_status, video_id): (String, String, Option<String>) = conn
+        .query_row(
+            "SELECT transcript_source, cloud_transcript_status, video_id
+             FROM podcast_episodes WHERE id = ?1",
+            rusqlite::params![episode_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .map_err(|e| format!("Episode not found: {e}"))?;
+
+    Ok(TranscriptSourceInfo {
+        has_local: segment_count(&conn, &episode_id, "local") > 0,
+        has_cloud: segment_count(&conn, &episode_id, "cloud") > 0,
+        cloud_possible: video_id.filter(|v| !v.is_empty()).is_some(),
+        active,
+        cloud_status,
+        episode_id,
+    })
+}
+
+/// Switch the player between the cached `local` and `cloud` transcripts.
+/// Refuses to select a source that has no segments, so the UI can never land on
+/// an empty transcript.
+#[tauri::command]
+pub fn podcast_set_transcript_source(
+    state: State<'_, AppState>,
+    episode_id: String,
+    source: String,
+) -> Result<(), String> {
+    if source != "local" && source != "cloud" {
+        return Err(format!("Unknown transcript source: {source}"));
+    }
+    let conn = lock_db(&state)?;
+    if segment_count(&conn, &episode_id, &source) == 0 {
+        return Err(format!("NO_{}_TRANSCRIPT", source.to_uppercase()));
+    }
+    conn.execute(
+        "UPDATE podcast_episodes SET transcript_source = ?2 WHERE id = ?1",
+        rusqlite::params![episode_id, source],
+    )
+    .map_err(|e| format!("Failed to switch transcript source: {e}"))?;
+    Ok(())
+}
+
+/// Downloads FlexiLingo's transcript (and its NLP analysis) for an episode and
+/// makes it the active source. Idempotent: re-running replaces the cached cloud
+/// rows and never touches the local ones.
+#[tauri::command]
+pub async fn podcast_fetch_cloud_transcript(
+    state: State<'_, AppState>,
+    episode_id: String,
+) -> Result<Vec<PodcastTranscriptSegment>, String> {
+    // Phase 1: read what we need, then drop the guard before any `.await`.
+    let (video_id, access_token) = {
+        let conn = lock_db(&state)?;
+        let video_id: Option<String> = conn
+            .query_row(
+                "SELECT video_id FROM podcast_episodes WHERE id = ?1",
+                rusqlite::params![episode_id],
+                |row| row.get(0),
+            )
+            .map_err(|e| format!("Episode not found: {e}"))?;
+        let video_id = video_id
+            .filter(|v| !v.is_empty())
+            .ok_or("NO_CLOUD_TRANSCRIPT")?;
+        drop(conn);
+        (video_id, crate::auth::stored_access_token(&state))
+    };
+
+    // Phase 2: network. `get-content-status` accepts a plaintext video_id and
+    // grants transcript access to any curated episode with status='ready'.
+    let path = format!(
+        "/get-content-status?video_id={}",
+        urlencoding::encode(&video_id)
+    );
+    let json = crate::auth::call_edge_function(access_token, "GET", &path, None)
+        .await
+        .map_err(|e| format!("Cloud transcript request failed: {e}"))?;
+
+    let data = json.get("data").unwrap_or(&json);
+    let chunks: Vec<CloudChunk> = data
+        .get("chunks")
+        .cloned()
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(|e| format!("Malformed cloud transcript: {e}"))?
+        .unwrap_or_default();
+
+    if chunks.is_empty() {
+        let conn = lock_db(&state)?;
+        conn.execute(
+            "UPDATE podcast_episodes SET cloud_transcript_status = 'unavailable' WHERE id = ?1",
+            rusqlite::params![episode_id],
+        )
+        .ok();
+        return Err("NO_CLOUD_TRANSCRIPT".to_string());
+    }
+
+    let nlp = data.get("nlp_analysis").cloned();
+
+    // Phase 3: write.
+    let conn = lock_db(&state)?;
+    store_cloud_transcript(&conn, &episode_id, chunks, nlp.as_ref())?;
+    drop(conn);
+
+    podcast_get_transcript_segments(state, episode_id)
+}
+
+/// The cloud reports CEFR as `cefr_analysis.vocabulary.words_by_level`
+/// (level -> list of words). Desk's local NLP produces a flat `level -> count`
+/// map, and the UI reads only that shape — so collapse the cloud's into it
+/// rather than teaching the UI two formats.
+fn cloud_cefr_distribution(nlp: &serde_json::Value) -> std::collections::HashMap<String, i64> {
+    let mut out = std::collections::HashMap::new();
+    let by_level = nlp
+        .get("cefr_analysis")
+        .and_then(|c| c.get("vocabulary"))
+        .and_then(|v| v.get("words_by_level"))
+        .and_then(|w| w.as_object());
+
+    if let Some(map) = by_level {
+        for (level, words) in map {
+            let n = words.as_array().map(|a| a.len() as i64).unwrap_or(0);
+            out.insert(level.to_uppercase(), n);
+        }
+    }
+    out
+}
+
+/// Replaces the cached cloud transcript for an episode and activates it.
+/// Local segments and the local NLP analysis are left untouched.
+fn store_cloud_transcript(
+    conn: &rusqlite::Connection,
+    episode_id: &str,
+    mut chunks: Vec<CloudChunk>,
+    nlp: Option<&serde_json::Value>,
+) -> Result<(), String> {
+    chunks.sort_by_key(|c| c.chunk_index);
+
+    // The cloud stamps each chunk with the episode's detected language; the first
+    // chunk that carries one speaks for the transcript.
+    let cloud_lang: Option<String> = chunks.iter().find_map(|c| {
+        c.language
+            .as_deref()
+            .filter(|l| !l.is_empty())
+            .map(|l| l.to_lowercase())
+    });
+
+    conn.execute(
+        "DELETE FROM podcast_transcript_segments WHERE episode_id = ?1 AND source = 'cloud'",
+        rusqlite::params![episode_id],
+    )
+    .map_err(|e| format!("Failed clearing cloud transcript: {e}"))?;
+
+    let mut full_text = String::new();
+    for (i, c) in chunks.iter().enumerate() {
+        // Cloud times are seconds; desk stores milliseconds.
+        let start_ms = (c.start_time * 1000.0).round() as i64;
+        let end_ms = (c.end_time * 1000.0).round() as i64;
+        let seg_id = format!("cloud_{episode_id}_{i}");
+
+        conn.execute(
+            "INSERT INTO podcast_transcript_segments
+                (id, episode_id, text, start_ms, end_ms, confidence, language, source)
+             VALUES (?1, ?2, ?3, ?4, ?5, 1.0, ?6, 'cloud')",
+            rusqlite::params![
+                seg_id,
+                episode_id,
+                c.text,
+                start_ms,
+                end_ms,
+                c.language.clone(), // None stays NULL — a fabricated 'en' poisons the V034-style backfill
+            ],
+        )
+        .map_err(|e| format!("Cloud segment insert error: {e}"))?;
+
+        if !full_text.is_empty() {
+            full_text.push(' ');
+        }
+        full_text.push_str(&c.text);
+    }
+
+    // The cloud exposes no word-level timestamps, so `podcast_word_timestamps`
+    // stays empty for these segments — the UI falls back to splitting on spaces.
+
+    if let Some(nlp) = nlp {
+        let cefr_dist = serde_json::to_string(&cloud_cefr_distribution(nlp))
+            .unwrap_or_else(|_| "{}".into());
+        let top_words = nlp
+            .get("vocabulary_stats")
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "[]".into());
+
+        conn.execute(
+            "INSERT INTO podcast_nlp_analysis
+                (id, episode_id, source, total_words, unique_words, cefr_level,
+                 cefr_distribution, avg_sentence_length, vocabulary_richness, top_words)
+             VALUES (lower(hex(randomblob(16))), ?1, 'cloud', ?2, ?3, ?4, ?5, 0.0, 0.0, ?6)
+             ON CONFLICT(episode_id, source) DO UPDATE SET
+                total_words = ?2, unique_words = ?3, cefr_level = ?4,
+                cefr_distribution = ?5, top_words = ?6",
+            rusqlite::params![
+                episode_id,
+                nlp.get("total_words").and_then(|v| v.as_i64()).unwrap_or(0),
+                nlp.get("unique_words").and_then(|v| v.as_i64()).unwrap_or(0),
+                nlp.get("average_cefr_level").and_then(|v| v.as_str()),
+                cefr_dist,
+                top_words,
+            ],
+        )
+        .map_err(|e| format!("Cloud NLP insert error: {e}"))?;
+    }
+
+    conn.execute(
+        "UPDATE podcast_episodes
+            SET transcript = ?2,
+                transcript_status = 'completed',
+                transcript_source = 'cloud',
+                cloud_transcript_status = 'ready',
+                transcript_lang = COALESCE(?3, transcript_lang)
+          WHERE id = ?1",
+        rusqlite::params![episode_id, full_text, cloud_lang],
+    )
+    .map_err(|e| format!("Failed activating cloud transcript: {e}"))?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod nlp_language_tests {
+    use super::*;
+    use crate::db::schema::run_migrations;
+    use rusqlite::Connection;
+
+    fn db_with_episode(difficulty_lang: Option<&str>, feed_lang: &str) -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        run_migrations(&conn).unwrap();
+        conn.execute(
+            "INSERT INTO podcast_feeds (id, feed_url, title, language)
+             VALUES ('f1', 'https://example.com/rss', 'Feed', ?1)",
+            rusqlite::params![feed_lang],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO podcast_episodes (id, feed_id, title, audio_url, duration_seconds, difficulty_lang)
+             VALUES ('e1', 'f1', 'Ep', 'https://example.com/a.mp3', 60, ?1)",
+            rusqlite::params![difficulty_lang],
+        )
+        .unwrap();
+        conn
+    }
+
+    /// The cloud-detected episode language must beat the feed's declared one —
+    /// publishers mistag feeds (an English-tagged feed carrying French audio was
+    /// the original bug this chain exists for).
+    #[test]
+    fn episode_language_beats_feed_language() {
+        let conn = db_with_episode(Some("fr"), "en");
+        assert_eq!(episode_analysis_lang(&conn, "e1"), "fr");
+    }
+
+    #[test]
+    fn feed_language_is_the_fallback_and_empty_strings_are_skipped() {
+        let conn = db_with_episode(None, "es");
+        assert_eq!(episode_analysis_lang(&conn, "e1"), "es");
+        let conn = db_with_episode(Some(""), "es");
+        assert_eq!(episode_analysis_lang(&conn, "e1"), "es");
+    }
+
+    /// French episode → a FRENCH analysis lands in the DB. Before this change the
+    /// text was scored against English frequencies; "je suis très content" would
+    /// have come out as mid-level mush instead of skewing A1.
+    #[test]
+    fn french_episode_gets_a_french_analysis() {
+        let conn = db_with_episode(Some("fr"), "en");
+        run_nlp_analysis_with_conn(
+            &conn,
+            "e1",
+            "Je suis très content. Nous parlons ensemble et je mange une pomme.",
+        )
+        .unwrap();
+
+        let (cefr, dist): (String, String) = conn
+            .query_row(
+                "SELECT cefr_level, cefr_distribution FROM podcast_nlp_analysis WHERE episode_id = 'e1'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert!(matches!(cefr.as_str(), "A1" | "A2"), "simple French must score A1/A2, got {cefr}");
+        let dist: std::collections::HashMap<String, i64> = serde_json::from_str(&dist).unwrap();
+        assert!(dist["A1"] > 0, "distribution must have A1 mass: {dist:?}");
+    }
+
+    /// Unsupported language: analysis is a clean SKIP (transcription must not fail),
+    /// and nothing lands in the DB — no row is better than a wrong row.
+    #[test]
+    fn unsupported_language_skips_without_storing_garbage() {
+        let conn = db_with_episode(Some("zh"), "zh");
+        run_nlp_analysis_with_conn(&conn, "e1", "你好世界 这是一个测试")
+            .expect("unsupported language must not error the transcription flow");
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM podcast_nlp_analysis WHERE episode_id = 'e1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 0, "no analysis row may be stored for an unsupported language");
+    }
+
+    /// The language of the transcript on screen wins over everything: a cloud
+    /// analysis may say 'en' (or be absent) while the transcript the user is
+    /// actually reading was made in French.
+    #[test]
+    fn transcript_lang_beats_difficulty_and_feed() {
+        let conn = db_with_episode(Some("en"), "en");
+        conn.execute(
+            "UPDATE podcast_episodes SET transcript_lang = 'fr' WHERE id = 'e1'",
+            [],
+        )
+        .unwrap();
+        assert_eq!(episode_analysis_lang(&conn, "e1"), "fr");
+    }
+
+    /// Whisper prints its detection to stderr when it runs on auto — the only
+    /// place the language surfaces in streaming mode.
+    #[test]
+    fn whisper_stderr_detection_parses() {
+        let stderr = "whisper_init_state: compute buffer (cross) = 6.46 MB\n\
+                      whisper_full_with_state: auto-detected language: fr (p = 0.976211)\n\
+                      output_json: saving output to '/tmp/x.json'";
+        assert_eq!(whisper_detected_lang(stderr).as_deref(), Some("fr"));
+        assert_eq!(whisper_detected_lang("no detection line here"), None);
+        assert_eq!(
+            whisper_detected_lang("auto-detected language: ES (p = 0.9)").as_deref(),
+            Some("es"),
+        );
+    }
+}
+

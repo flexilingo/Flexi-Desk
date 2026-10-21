@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { LayoutDashboard, Podcast, BookOpen, Brain } from 'lucide-react';
+import { LayoutDashboard, Podcast, BookOpen, Brain, Dumbbell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/ui/button';
@@ -50,9 +50,7 @@ export function DashboardPage() {
       <ErrorBanner />
 
       {/* Welcome card for new users */}
-      {summary && summary.totalWords === 0 && summary.totalReviews === 0 && (
-        <WelcomeCard />
-      )}
+      {summary && summary.totalWords === 0 && summary.totalReviews === 0 && <WelcomeCard />}
 
       {/* Today's summary strip */}
       <TodaySummary data={analyticsSummary} />
@@ -77,12 +75,17 @@ function WelcomeCard() {
       <CardContent className="p-6">
         <h2 className="text-lg font-semibold text-foreground mb-2">Welcome to FlexiDesk!</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Start learning by adding a podcast. Listen to real content, click any word to get instant AI translation, and review your vocabulary with flashcards.
+          Start learning by adding a podcast. Listen to real content, click any word to get instant
+          AI translation, and review your vocabulary with flashcards.
         </p>
         <div className="flex flex-wrap gap-3">
           <Button onClick={() => navigate('/podcast')} className="gap-2">
             <Podcast className="h-4 w-4" />
             Add a Podcast
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/study')} className="gap-2">
+            <Dumbbell className="h-4 w-4" />
+            Start Studying
           </Button>
           <Button variant="outline" onClick={() => navigate('/review')} className="gap-2">
             <Brain className="h-4 w-4" />

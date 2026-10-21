@@ -10,7 +10,6 @@ import {
   Brain,
   Languages,
   Palette,
-
   Sun,
   Moon,
   Monitor,
@@ -25,13 +24,20 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import { WhisperSetup } from '@/pages/caption/components/WhisperSetup';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 
 import { SyncSettings } from '@/pages/settings/SyncSettings';
 import { OllamaModelManager } from '@/pages/settings/components/OllamaModelManager';
 import { ExportDialog } from '@/pages/settings/ExportDialog';
 import { ImportDialog } from '@/pages/settings/ImportDialog';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
+import { authErrorText } from '@/components/auth/authError';
 import { useTranslation } from 'react-i18next';
 
 type SettingsTab = 'general' | 'ai' | 'whisper' | 'sync' | 'data';
@@ -169,14 +175,17 @@ function AuthSection() {
           {error && (
             <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 text-destructive text-sm">
               <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
+              <span>{authErrorText(error)}</span>
             </div>
           )}
 
           {step === 'email' ? (
             <form onSubmit={handleSendOtp} className="space-y-3">
               <div>
-                <label htmlFor="auth-email" className="block text-sm font-medium text-foreground mb-1.5">
+                <label
+                  htmlFor="auth-email"
+                  className="block text-sm font-medium text-foreground mb-1.5"
+                >
                   Email
                 </label>
                 <input
@@ -190,7 +199,11 @@ function AuthSection() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={sending || !email}>
-                {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+                {sending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4 mr-2" />
+                )}
                 {sending ? 'Sending code...' : 'Send code'}
               </Button>
             </form>
@@ -200,7 +213,10 @@ function AuthSection() {
                 Code sent to <span className="font-medium text-foreground">{email}</span>
               </p>
               <div>
-                <label htmlFor="auth-otp" className="block text-sm font-medium text-foreground mb-1.5">
+                <label
+                  htmlFor="auth-otp"
+                  className="block text-sm font-medium text-foreground mb-1.5"
+                >
                   Verification code
                 </label>
                 <input
@@ -217,7 +233,11 @@ function AuthSection() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={verifying || otp.length !== 6}>
-                {verifying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                {verifying ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4 mr-2" />
+                )}
                 {verifying ? 'Verifying...' : 'Verify'}
               </Button>
               <div className="flex items-center justify-between">
@@ -277,7 +297,15 @@ function AIProviderSection() {
       await setSetting('ai_provider', provider);
       if (apiKey) await setSetting(`${provider}_api_key`, apiKey);
       await setSetting(`${provider}_base_url`, baseUrl);
-      await setSetting('ai_model', model || (provider === 'openai' ? 'gpt-4o-mini' : provider === 'anthropic' ? 'claude-sonnet-4-20250514' : 'llama3.2'));
+      await setSetting(
+        'ai_model',
+        model ||
+          (provider === 'openai'
+            ? 'gpt-4o-mini'
+            : provider === 'anthropic'
+              ? 'claude-sonnet-4-20250514'
+              : 'llama3.2'),
+      );
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally {
@@ -387,9 +415,7 @@ function AIProviderSection() {
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              placeholder={
-                provider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-20250514'
-              }
+              placeholder={provider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-20250514'}
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>

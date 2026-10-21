@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { NlpAnalysis } from '../../types';
+import { cefrSupported } from '../../utils/words';
 
 const CEFR_BAR_COLORS: Record<string, string> = {
   A1: 'bg-[#8BB7A3]',
@@ -32,6 +33,9 @@ interface CloudAnalysis {
 interface AnalysisTabProps {
   analysis: NlpAnalysis | null;
   cloudAnalysis?: CloudAnalysis | null;
+  /** Episode's language. A missing analysis in an unsupported language is a
+   *  permanent state, not a "transcribe first" prompt. */
+  sourceLang?: string;
 }
 
 const SUB_TABS: {
@@ -82,7 +86,7 @@ const SUB_TABS: {
   },
 ];
 
-export function AnalysisTab({ analysis, cloudAnalysis }: AnalysisTabProps) {
+export function AnalysisTab({ analysis, cloudAnalysis, sourceLang = 'en' }: AnalysisTabProps) {
   const [activeTab, setActiveTab] = useState<SubTab>('overview');
 
   const cefrDist = useMemo<Record<string, number>>(() => {
@@ -104,6 +108,15 @@ export function AnalysisTab({ analysis, cloudAnalysis }: AnalysisTabProps) {
   }, [analysis?.topWords]);
 
   if (!analysis) {
+    // An unsupported language never gets a local analysis, no matter how many
+    // times the user transcribes — say so instead of prompting a retry forever.
+    if (!cefrSupported(sourceLang)) {
+      return (
+        <div className="text-center py-8 text-sm text-muted-foreground">
+          Difficulty analysis isn't available for this language yet.
+        </div>
+      );
+    }
     return (
       <div className="text-center py-8 text-sm text-muted-foreground">
         Transcribe the episode to see NLP analysis.

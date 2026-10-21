@@ -1,4 +1,6 @@
-import type { NlpAnalysis } from '../types';
+import { CheckCircle2, X } from 'lucide-react';
+import { NextUpRow } from './NextUpRow';
+import type { CefrLevel, NlpAnalysis, PodcastEpisode } from '../types';
 
 function formatTime(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
@@ -16,6 +18,8 @@ interface EpisodeCompleteOverlayProps {
   onOpenVocab: () => void;
   onDismiss: () => void;
   onStartQuiz?: () => void;
+  /** Drives the "next up" recommendations at the same CEFR band. */
+  episode?: PodcastEpisode | null;
 }
 
 export function EpisodeCompleteOverlay({
@@ -27,8 +31,10 @@ export function EpisodeCompleteOverlay({
   onOpenVocab,
   onDismiss,
   onStartQuiz,
+  episode,
 }: EpisodeCompleteOverlayProps) {
-  const overallCefr = analysis?.cefrLevel;
+  const overallCefr = analysis?.cefrLevel ?? episode?.difficultyBand;
+  const recommendLevel = (episode?.difficultyBand ?? analysis?.cefrLevel) as CefrLevel | undefined;
 
   return (
     <div className="absolute inset-0 z-[105] flex items-center justify-center bg-background/90 backdrop-blur-sm">
@@ -37,14 +43,15 @@ export function EpisodeCompleteOverlay({
         <button
           type="button"
           onClick={onDismiss}
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted transition-colors text-lg"
+          aria-label="Dismiss"
+          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted transition-colors"
         >
-          ✕
+          <X className="h-4 w-4" />
         </button>
 
         {/* Header */}
         <div className="pt-7 pb-4 px-6 text-center border-b border-border bg-primary/5">
-          <div className="text-4xl mb-2">✅</div>
+          <CheckCircle2 className="mx-auto mb-2 h-10 w-10 text-success" />
           <h2 className="text-lg font-bold text-foreground">Episode Complete</h2>
           <p className="text-xs text-muted-foreground mt-1">Great listening session!</p>
         </div>
@@ -85,6 +92,9 @@ export function EpisodeCompleteOverlay({
             )}
           </div>
         )}
+
+        {/* Recommendations at the same level */}
+        {recommendLevel && <NextUpRow level={recommendLevel} excludeVideoId={episode?.videoId} />}
 
         {/* Actions */}
         <div className="p-4 flex flex-col gap-2">

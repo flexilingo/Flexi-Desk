@@ -1,4 +1,4 @@
-mod schema;
+pub(crate) mod schema;
 
 use std::path::Path;
 

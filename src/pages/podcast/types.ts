@@ -40,6 +40,11 @@ export interface CuratedPodcast {
   categories: Record<string, string> | null;
   is_explicit: boolean;
   episode_count_feed: number;
+  // v2 feed-level difficulty roll-up (from `curated-episodes`)
+  difficulty_band_low?: CefrLevel | null;
+  difficulty_band_high?: CefrLevel | null;
+  difficulty_score_median?: number | null;
+  difficulty_episodes_scored?: number | null;
 }
 
 export interface FlexiLingoInfo {
@@ -90,6 +95,55 @@ export interface FollowedPodcastsResponse {
   podcasts: (CuratedPodcast & { auto_transcribe: boolean; followed_at: string })[];
 }
 
+// ── Popular / Activity-driven Cloud Data ────────────────
+
+export interface CuratedEpisodeLite {
+  id: string;
+  episode_id: number;
+  feed_id: number;
+  title: string;
+  audio_url: string | null;
+  image_url: string | null;
+  publish_date: string | null;
+  duration_seconds: number | null;
+  learning_score: number | null;
+  cefr_level: CefrLevel | null;
+  speech_rate_wpm: number | null;
+  status: string;
+  video_id: string | null;
+  podcast_title?: string;
+  podcast_image?: string;
+  listener_count?: number;
+  description?: string | null;
+  // v2 per-episode difficulty — present on `curated-episodes`, absent on the
+  // lighter `popular-episodes` / `browse-episodes` rows.
+  difficulty_score?: number | null;
+  difficulty_band?: CefrLevel | null;
+  difficulty_range_low?: CefrLevel | null;
+  difficulty_range_high?: CefrLevel | null;
+  difficulty_confidence?: DifficultyConfidence | null;
+  difficulty_lang?: string | null;
+}
+
+export interface PopularPodcastsResponse {
+  podcasts: (CuratedPodcast & { listener_count: number; follow_count: number })[];
+  source: 'popular' | 'fallback';
+  days: number;
+}
+
+export interface PopularEpisodesResponse {
+  episodes: CuratedEpisodeLite[];
+  source: 'popular' | 'fallback';
+  days: number;
+}
+
+export interface AllEpisodesResponse {
+  episodes: CuratedEpisodeLite[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // ── Local Types ─────────────────────────────────────────
 
 export interface PodcastFeed {
@@ -128,6 +182,24 @@ export interface PodcastEpisode {
   cefrLevel?: string;
   wordCount?: number;
   createdAt: string;
+  videoId?: string;
+  /** `curated_episodes.id` UUID — required by the cloud progress heartbeat. */
+  curatedEpisodeId?: string;
+  difficultyBand?: CefrLevel;
+  difficultyScore?: number;
+  difficultyRangeLow?: CefrLevel;
+  difficultyRangeHigh?: CefrLevel;
+  difficultyConfidence?: DifficultyConfidence;
+  /** Spoken language of the audio — drives Whisper AND word translation. */
+  difficultyLang?: string;
+  speechRateWpm?: number;
+  transcriptSource: TranscriptSource;
+  cloudTranscriptStatus: CloudTranscriptStatus;
+  /** Language the CURRENT transcript was made in — authoritative for word lookups.
+   *  Stamped by local Whisper / the cloud fetch; difficultyLang is only a fallback. */
+  transcriptLang?: string;
+  /** Episode artwork; the feed's cover is the fallback. */
+  imageUrl?: string;
 }
 
 export interface PodcastBookmark {
@@ -166,6 +238,22 @@ export interface RawPodcastFeed {
   updated_at: string;
 }
 
+/** `local` = Whisper on this machine (word-level timing). `cloud` = FlexiLingo's. */
+export type TranscriptSource = 'local' | 'cloud';
+export type CloudTranscriptStatus = 'unknown' | 'ready' | 'unavailable';
+
+/** Drives the player's transcript-source dropdown. */
+export interface TranscriptSourceInfo {
+  /** Which episode this info describes — the player outruns these round-trips. */
+  episode_id: string;
+  active: TranscriptSource;
+  has_local: boolean;
+  has_cloud: boolean;
+  /** False when the episode has no `video_id` — it was never curated by FlexiLingo. */
+  cloud_possible: boolean;
+  cloud_status: CloudTranscriptStatus;
+}
+
 export interface RawPodcastEpisode {
   id: string;
   feed_id: string;
@@ -185,6 +273,20 @@ export interface RawPodcastEpisode {
   cefr_level: string | null;
   word_count: number | null;
   created_at: string;
+  // V028 — carried over from the cloud when an episode is imported
+  video_id: string | null;
+  curated_episode_id: string | null;
+  difficulty_band: string | null;
+  difficulty_score: number | null;
+  difficulty_range_low: string | null;
+  difficulty_range_high: string | null;
+  difficulty_confidence: string | null;
+  difficulty_lang: string | null;
+  speech_rate_wpm: number | null;
+  transcript_source: TranscriptSource;
+  cloud_transcript_status: CloudTranscriptStatus;
+  transcript_lang?: string | null;
+  image_url: string | null;
 }
 
 export interface RawPodcastBookmark {
@@ -245,6 +347,19 @@ export function mapEpisode(raw: RawPodcastEpisode): PodcastEpisode {
     cefrLevel: raw.cefr_level ?? undefined,
     wordCount: raw.word_count ?? undefined,
     createdAt: raw.created_at,
+    videoId: raw.video_id ?? undefined,
+    curatedEpisodeId: raw.curated_episode_id ?? undefined,
+    difficultyBand: (raw.difficulty_band as CefrLevel) ?? undefined,
+    difficultyScore: raw.difficulty_score ?? undefined,
+    difficultyRangeLow: (raw.difficulty_range_low as CefrLevel) ?? undefined,
+    difficultyRangeHigh: (raw.difficulty_range_high as CefrLevel) ?? undefined,
+    difficultyConfidence: (raw.difficulty_confidence as DifficultyConfidence) ?? undefined,
+    difficultyLang: raw.difficulty_lang ?? undefined,
+    speechRateWpm: raw.speech_rate_wpm ?? undefined,
+    transcriptSource: raw.transcript_source ?? 'local',
+    cloudTranscriptStatus: raw.cloud_transcript_status ?? 'unknown',
+    transcriptLang: raw.transcript_lang ?? undefined,
+    imageUrl: raw.image_url ?? undefined,
   };
 }
 
@@ -375,7 +490,8 @@ export interface TranslationResult {
   targetLang: string;
   alternatives: TranslationAlternative[];
   examples: string[];
-  cefrLevel: string;
+  /** null when the source language has no local CEFR table (e.g. zh). */
+  cefrLevel: string | null;
 }
 
 export interface RawTranslationResult {
@@ -385,7 +501,7 @@ export interface RawTranslationResult {
   target_lang: string;
   alternatives: { pos: string; words: string[] }[];
   examples: string[];
-  cefr_level: string;
+  cefr_level: string | null;
 }
 
 export function mapTranslationResult(raw: RawTranslationResult): TranslationResult {
@@ -503,4 +619,198 @@ export function getEffectiveOffset(currentTime: number, syncPoints: SyncPoint[])
   }
 
   return 0;
+}
+
+/**
+ * Insert a sync point, replacing any existing anchor within MERGE_THRESHOLD
+ * seconds of it (mirrors front's `mergeSyncPoint` in utils/subtitleSync.ts).
+ * Returns a new array sorted by audio time.
+ */
+const SYNC_MERGE_THRESHOLD_S = 5;
+
+export function mergeSyncPoint(points: SyncPoint[], newPoint: SyncPoint): SyncPoint[] {
+  const kept = points.filter(
+    (p) => Math.abs(p.audioTime - newPoint.audioTime) >= SYNC_MERGE_THRESHOLD_S,
+  );
+  return [...kept, newPoint].sort((a, b) => a.audioTime - b.audioTime);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v2 per-episode difficulty (mirrors flexi-lingo-front `src/types/podcast.types.ts`)
+// ─────────────────────────────────────────────────────────────────────────────
+// The web app scores each EPISODE individually — a podcast is not uniformly one
+// CEFR level. `difficulty_band` is the episode's level, `difficulty_score` a
+// 0-100 percentile, and range low/high the spread. Legacy `cefr_level` /
+// `learning_score` remain for back-compat on unscored content.
+
+export type DifficultyConfidence = 'high' | 'med' | 'low';
+
+export interface EpisodeByLevel {
+  id: string;
+  feed_id: number | null;
+  podcast_id: string | null;
+  video_id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  audio_url: string | null;
+  duration_seconds: number | null;
+  publish_date: string | null;
+  speech_rate_wpm: number | null;
+  difficulty_score: number | null;
+  difficulty_band: CefrLevel | null;
+  difficulty_range_low: CefrLevel | null;
+  difficulty_range_high: CefrLevel | null;
+  difficulty_confidence: DifficultyConfidence | null;
+  difficulty_lang: string | null;
+  podcast_title: string | null;
+  podcast_author: string | null;
+}
+
+export interface EpisodesByLevelResponse {
+  episodes: EpisodeByLevel[];
+  total: number;
+  page: number;
+  limit: number;
+  source?: string;
+}
+
+export interface EpisodesByLevelParams {
+  level?: CefrLevel;
+  maxScore?: number;
+  language?: string;
+  topic?: string;
+  search?: string;
+  sort?: 'easiest' | 'hardest' | 'newest';
+  page?: number;
+  limit?: number;
+}
+
+export interface BrowseEpisodesParams {
+  sort?: string;
+  difficulty?: string;
+  accent?: string;
+  page?: number;
+  limit?: number;
+}
+
+/** `?action=get-episode` — the only source of `podcast_language`. */
+export interface EpisodeMetadata {
+  video_id: string;
+  title: string;
+  description: string | null;
+  audio_url: string | null;
+  image_url: string | null;
+  duration_seconds: number | null;
+  publish_date: string | null;
+  feed_id: number | null;
+  podcast_title: string | null;
+  /** Drives BOTH the Whisper source language and word-translation source. */
+  podcast_language: string | null;
+  curated_episode_id?: string | null;
+  speech_rate_wpm: number | null;
+  difficulty_score: number | null;
+  difficulty_band: CefrLevel | null;
+  difficulty_range_low: CefrLevel | null;
+  difficulty_range_high: CefrLevel | null;
+  difficulty_confidence: DifficultyConfidence | null;
+  difficulty_lang: string | null;
+}
+
+/** Shape of `?action=public-stats` — aggregate counts only, no per-user data. */
+export interface PublicStats {
+  ready_episodes: number;
+  total_episodes: number;
+  active_podcasts: number;
+}
+
+export interface PodcastDetailResponse {
+  podcast: PodcastIndexFeed;
+}
+
+/**
+ * Raw PodcastIndex episode (the `episodes` action proxies PodcastIndex directly,
+ * so this is camelCase and `datePublished` is unix SECONDS, not an ISO string).
+ */
+export interface PodcastIndexEpisode {
+  id: number;
+  feedId: number;
+  title: string;
+  description: string;
+  enclosureUrl: string;
+  enclosureType: string;
+  enclosureLength: number;
+  duration: number;
+  datePublished: number;
+  image: string;
+  feedTitle: string;
+  feedImage: string;
+  feedLanguage: string;
+  transcriptUrl?: string;
+}
+
+export interface PodcastEpisodesResponse {
+  episodes: PodcastIndexEpisode[];
+  count: number;
+}
+
+export interface CuratedEpisodesResponse {
+  episodes: CuratedEpisodeLite[];
+  podcast: CuratedPodcast | null;
+  total: number;
+}
+
+export interface FollowedPodcast extends CuratedPodcast {
+  auto_transcribe: boolean;
+  followed_at: string;
+}
+
+export interface MyPodcastsResponse {
+  episodes: CuratedEpisodeLite[];
+  count: number;
+}
+
+export interface RefreshUserEpisodesResponse {
+  discovered: number;
+  totalFromRss: number;
+  auto_transcribed: number;
+  credit_exhausted?: boolean;
+}
+
+export interface PodcastRequest {
+  id: string;
+  feed_id: number;
+  title: string | null;
+  author: string | null;
+  image_url: string | null;
+  message: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  admin_notes: string | null;
+  created_at: string;
+}
+
+/** Payload for the Rust `podcast_import_cloud_episode` bridge command. */
+export interface CloudEpisodeInput {
+  remote_feed_id?: number | null;
+  feed_url?: string | null;
+  podcast_title?: string | null;
+  podcast_author?: string | null;
+  podcast_image_url?: string | null;
+  podcast_language?: string | null;
+  video_id?: string | null;
+  curated_episode_id?: string | null;
+  guid?: string | null;
+  title: string;
+  description?: string | null;
+  audio_url: string;
+  duration_seconds?: number | null;
+  published_at?: string | null;
+  image_url?: string | null;
+  difficulty_band?: string | null;
+  difficulty_score?: number | null;
+  difficulty_range_low?: string | null;
+  difficulty_range_high?: string | null;
+  difficulty_confidence?: string | null;
+  difficulty_lang?: string | null;
+  speech_rate_wpm?: number | null;
 }

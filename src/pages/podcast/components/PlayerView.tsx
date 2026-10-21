@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { usePodcastStore } from '../stores/podcastStore';
 import { usePlayerStore } from '../stores/playerStore';
+import { episodeSourceLang } from '../utils/difficulty';
 import { AudioPlayerArea } from './AudioPlayerArea';
 import { ControlBar } from './ControlBar';
 import { TopBar } from './TopBar';
 import { SubtitleBar } from './SubtitleBar';
 import { TranscriptPanel } from './TranscriptPanel';
 import { EpisodeCompleteOverlay } from './EpisodeCompleteOverlay';
-import { PlayerSidebar } from './sidebar/PlayerSidebar';
+import { PlayerSidebar, type SidebarTab } from './sidebar/PlayerSidebar';
 import { SubtitleSyncDialog } from './SubtitleSyncDialog';
 import { SentenceChatSheet } from './SentenceChatSheet';
 import { AddToDeckDialog } from './AddToDeckDialog';
@@ -18,7 +20,7 @@ import { QuickAddNoteDialog } from './QuickAddNoteDialog';
 import { FeedbackDialog } from './FeedbackDialog';
 import { XPToast } from './XPToast';
 import { SavedWordsIndicator } from './SavedWordsIndicator';
-import { DifficultyBadge } from './DifficultyBadge';
+import { TranscriptSourceButton } from './TranscriptSourceButton';
 import { KeyboardShortcuts } from './KeyboardShortcuts';
 import { LearningSession } from './quiz/LearningSession';
 import type { SyncPoint, RawSyncPoint, RawPodcastTranscriptSegment } from '../types';
@@ -38,7 +40,6 @@ export function PlayerView() {
     isLoadingTranscript,
     nlpAnalysis,
     bookmarks,
-    goBack,
     downloadEpisode,
     transcribeEpisode,
     fetchBookmarks,
@@ -46,7 +47,14 @@ export function PlayerView() {
     deleteBookmark,
     error: podcastError,
     clearError,
+    transcriptSourceInfo,
+    isFetchingCloudTranscript,
+    fetchTranscriptSourceInfo,
+    fetchCloudTranscript,
+    setTranscriptSource,
   } = usePodcastStore();
+  const navigate = useNavigate();
+  const handleBack = () => navigate(-1);
 
   // Derive transcription/download state from global job store
   const isTranscribing = useJobStore((s) =>
@@ -108,10 +116,15 @@ export function PlayerView() {
   const toggleAutoPauseOnBoundary = usePlayerStore((s) => s.toggleAutoPauseOnBoundary);
   const togglePauseOnHover = usePlayerStore((s) => s.togglePauseOnHover);
   const setSubtitleAlignment = usePlayerStore((s) => s.setSubtitleAlignment);
-  const showEstimatedOnSubtitles = usePlayerStore((s) => s.showEstimatedOnSubtitles);
-  const toggleShowEstimated = usePlayerStore((s) => s.toggleShowEstimated);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>('stats');
+
+  // The collapsed sidebar rail was removed; the panels open from the control bar.
+  const openSidebarTab = (tab: SidebarTab) => {
+    setSidebarTab(tab);
+    setSidebarOpen(true);
+  };
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncPoints, setSyncPoints] = useState<SyncPoint[]>([]);
 
@@ -137,6 +150,13 @@ export function PlayerView() {
   }, [activeEpisode?.id]);
 
   const syncOffset = getEffectiveOffset(currentTime, syncPoints);
+
+  // Refresh which transcripts exist after a local transcription finishes.
+  // The initial decision (including auto-loading FlexiLingo's transcript) is made
+  // by the store in `loadEpisode`, so switching episodes can't race it.
+  useEffect(() => {
+    if (activeEpisode) fetchTranscriptSourceInfo(activeEpisode.id);
+  }, [activeEpisode?.id, activeEpisode?.transcriptStatus, fetchTranscriptSourceInfo]);
 
   // Listen for streaming transcript segments (real-time subtitles while on player page)
   useEffect(() => {
@@ -227,7 +247,7 @@ export function PlayerView() {
     }
 
     // Check model compatibility with podcast language
-    const feedLang = activeFeed?.language ?? 'auto';
+    const feedLang = episodeSourceLang(activeEpisode, activeFeed);
     try {
       const compat = await invoke<RawModelCompatibility>('caption_check_model_for_language', {
         language: feedLang,
@@ -261,8 +281,10 @@ export function PlayerView() {
 
   const canTranscribe = activeEpisode.transcriptStatus !== 'completed';
   // Also treat DB 'processing' status as transcribing (job may have started before this page loaded)
-  const isTranscribingOrProcessing = isTranscribing || activeEpisode.transcriptStatus === 'processing';
-  const hasTranscript = transcriptSegments.length > 0 || isLoadingTranscript || isTranscribingOrProcessing;
+  const isTranscribingOrProcessing =
+    isTranscribing || activeEpisode.transcriptStatus === 'processing';
+  const hasTranscript =
+    transcriptSegments.length > 0 || isLoadingTranscript || isTranscribingOrProcessing;
 
   // Current segment for context
   const currentSegment = transcriptSegments.find((seg) => {
@@ -299,6 +321,7 @@ export function PlayerView() {
       {showCompleteOverlay && (
         <EpisodeCompleteOverlay
           analysis={nlpAnalysis}
+          episode={activeEpisode}
           wordsClicked={wordsClicked}
           wordsAddedToDeck={wordsAddedToDeck}
           activeTimeSpent={activeTimeSpent}
@@ -312,25 +335,45 @@ export function PlayerView() {
             setSidebarOpen(true);
           }}
           onDismiss={dismissCompleteOverlay}
-          onStartQuiz={ENABLED_MODULES.podcastQuiz ? () => {
-            dismissCompleteOverlay();
-            setShowQuiz(true);
-          } : undefined}
+          onStartQuiz={
+            ENABLED_MODULES.podcastQuiz
+              ? () => {
+                  dismissCompleteOverlay();
+                  setShowQuiz(true);
+                }
+              : undefined
+          }
         />
       )}
 
       {/* TopBar — full width */}
       {!focusMode && (
         <TopBar
-          onBack={goBack}
+          onBack={handleBack}
           onTranscribe={handleTranscribe}
           isTranscribing={isTranscribingOrProcessing}
           canTranscribe={canTranscribe}
           isDownloading={isDownloading}
           downloadProgress={downloadProgress}
-          onOpenWhisperSettings={canTranscribe && !isTranscribingOrProcessing ? () => setWhisperSettingsOpen(true) : undefined}
+          onOpenWhisperSettings={
+            canTranscribe && !isTranscribingOrProcessing
+              ? () => setWhisperSettingsOpen(true)
+              : undefined
+          }
           onSyncToCloud={() => setCloudSyncOpen(true)}
           hasTranscript={activeEpisode.transcriptStatus === 'completed'}
+          transcriptControl={
+            <TranscriptSourceButton
+              info={transcriptSourceInfo}
+              isTranscribing={isTranscribingOrProcessing}
+              isDownloading={isDownloading}
+              isFetchingCloud={isFetchingCloudTranscript}
+              isDownloaded={activeEpisode.isDownloaded}
+              onTranscribeLocally={handleTranscribe}
+              onUseCloud={() => fetchCloudTranscript(activeEpisode.id)}
+              onSwitchToSource={(source) => setTranscriptSource(activeEpisode.id, source)}
+            />
+          }
           episodeInfo={{
             title: activeEpisode.title,
             image: activeFeed?.artworkUrl ?? undefined,
@@ -388,7 +431,7 @@ export function PlayerView() {
                 onSeek={handleSeekTo}
                 isLoading={isLoadingTranscript}
                 episodeId={activeEpisode.id}
-                sourceLang={activeFeed?.language || 'en'}
+                sourceLang={episodeSourceLang(activeEpisode, activeFeed)}
                 syncOffset={syncOffset}
               />
             ) : (
@@ -398,7 +441,7 @@ export function PlayerView() {
                   <AudioPlayerArea
                     title={activeEpisode.title}
                     showName={activeFeed?.title}
-                    image={activeFeed?.artworkUrl}
+                    image={activeEpisode.imageUrl ?? activeFeed?.artworkUrl}
                     isPlaying={isCurrentlyPlaying && isPlaying}
                     currentTime={isCurrentlyPlaying ? currentTime : 0}
                     duration={isCurrentlyPlaying ? duration : activeEpisode.durationSeconds}
@@ -411,6 +454,7 @@ export function PlayerView() {
                     }}
                     onSeek={handleSeek}
                     analysis={nlpAnalysis}
+                    episode={activeEpisode}
                   />
                 </div>
 
@@ -437,24 +481,19 @@ export function PlayerView() {
                       subtitleBgOpacity={subtitleBgOpacity}
                       episodeId={activeEpisode.id}
                       subtitlesEnabled={subtitlesEnabled}
-                      sourceLang={activeFeed?.language || 'en'}
+                      sourceLang={episodeSourceLang(activeEpisode, activeFeed)}
                       syncOffset={syncOffset}
                       autoPauseOnBoundary={autoPauseOnBoundary}
                       pauseOnHover={pauseOnHover}
                       subtitleAlignment={subtitleAlignment}
-                      showEstimatedOnSubtitles={showEstimatedOnSubtitles}
                       onAddToDeck={(words) => {
                         setAddToDeckWords(words);
                         setAddToDeckOpen(true);
                       }}
                       onDialogOpenChange={setWordDialogOpen}
                     />
-                    <div className="flex justify-center py-1">
-                      <DifficultyBadge cefrLevel={nlpAnalysis?.cefrLevel} />
-                    </div>
                   </div>
                 )}
-
               </>
             )}
           </div>
@@ -465,12 +504,14 @@ export function PlayerView() {
         <PlayerSidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
-          onOpen={() => setSidebarOpen(true)}
+          activeTab={sidebarTab}
+          onTabChange={setSidebarTab}
           wordsClicked={wordsClicked}
           wordsAddedToDeck={wordsAddedToDeck}
           activeTimeSpent={activeTimeSpent}
           segmentCount={transcriptSegments.length}
           analysis={nlpAnalysis}
+          sourceLang={episodeSourceLang(activeEpisode, activeFeed)}
           bookmarks={bookmarks}
           episodeId={activeEpisode.id}
           onSeek={handleSeekTo}
@@ -499,6 +540,8 @@ export function PlayerView() {
 
       {/* ControlBar — always visible */}
       <ControlBar
+        onOpenVocab={() => openSidebarTab('vocab')}
+        onOpenAnalysis={() => openSidebarTab('analysis')}
         isPlaying={isCurrentlyPlaying && isPlaying}
         isBuffering={isBuffering}
         currentTime={isCurrentlyPlaying ? currentTime : 0}
@@ -522,7 +565,7 @@ export function PlayerView() {
         onTranslateSentence={() => handleOpenChat('translate')}
         onGrammarSentence={() => handleOpenChat('grammar')}
         onHelp={() => setFeedbackOpen(true)}
-        onExit={goBack}
+        onExit={handleBack}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
         subtitleBgOpacity={subtitleBgOpacity}
@@ -534,8 +577,6 @@ export function PlayerView() {
         onTogglePauseOnHover={togglePauseOnHover}
         translationAlignment={subtitleAlignment}
         onTranslationAlignmentChange={setSubtitleAlignment}
-        showEstimatedOnSubtitles={showEstimatedOnSubtitles}
-        onToggleShowEstimated={toggleShowEstimated}
       />
 
       {/* Quiz Overlay */}
@@ -565,10 +606,15 @@ export function PlayerView() {
       {/* Subtitle Sync Dialog */}
       <SubtitleSyncDialog
         open={syncDialogOpen}
-        onOpenChange={setSyncDialogOpen}
+        onClose={() => setSyncDialogOpen(false)}
         episodeId={activeEpisode.id}
-        currentTime={currentTime}
         segments={transcriptSegments}
+        currentTime={isCurrentlyPlaying ? currentTime : 0}
+        duration={isCurrentlyPlaying ? duration : activeEpisode.durationSeconds}
+        isPlaying={isCurrentlyPlaying && isPlaying}
+        onPlayPause={handlePlayPause}
+        onSeek={handleSeek}
+        onSeekTo={handleSeekTo}
         onSyncPointsChanged={setSyncPoints}
       />
 
@@ -580,7 +626,7 @@ export function PlayerView() {
         prevSentence={prevSentence}
         nextSentence={nextSentence}
         episodeId={activeEpisode.id}
-        sourceLang={activeFeed?.language || 'en'}
+        sourceLang={episodeSourceLang(activeEpisode, activeFeed)}
         autoAction={chatAutoAction}
       />
 
@@ -614,7 +660,7 @@ export function PlayerView() {
         open={showModelSuggestion}
         onClose={() => setShowModelSuggestion(false)}
         compatibility={modelCompatibility}
-        feedLanguage={activeFeed?.language ?? 'auto'}
+        feedLanguage={episodeSourceLang(activeEpisode, activeFeed)}
         onModelSwitched={() => {
           setShowModelSuggestion(false);
           transcribeEpisode(activeEpisode.id);
@@ -652,7 +698,14 @@ export function PlayerView() {
 
       {/* Keyboard Shortcuts */}
       <KeyboardShortcuts
-        enabled={!chatOpen && !noteDialogOpen && !feedbackOpen && !syncDialogOpen && !showQuiz && !wordDialogOpen}
+        enabled={
+          !chatOpen &&
+          !noteDialogOpen &&
+          !feedbackOpen &&
+          !syncDialogOpen &&
+          !showQuiz &&
+          !wordDialogOpen
+        }
         onToggleSubtitles={toggleSubtitles}
         onNote={handleOpenNote}
         onAnalyze={() => handleOpenChat(null)}
@@ -661,7 +714,7 @@ export function PlayerView() {
         onSync={hasTranscript ? () => setSyncDialogOpen(true) : undefined}
         onFocus={toggleFocusMode}
         onHelp={() => setFeedbackOpen(true)}
-        onExit={goBack}
+        onExit={handleBack}
       />
     </div>
   );

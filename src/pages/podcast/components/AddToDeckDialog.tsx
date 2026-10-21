@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Loader2, Zap, Sparkles, AlertCircle } from 'lucide-react';
+import { AlertCircle, Check, Loader2, PartyPopper, Plus, Sparkles, Zap } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -136,7 +136,8 @@ export function AddToDeckDialog({
     setError(null);
     setAiWarning(null);
 
-    let enriched: WordResult[] = [];
+    // Start from the plain-word fallback; AI enrichment overwrites it on success.
+    let enriched: WordResult[] = words.map((w) => ({ word: w }));
     let aiUsed = false;
 
     // Attempt AI enrichment
@@ -152,10 +153,9 @@ export function AddToDeckDialog({
       enriched = results;
       aiUsed = true;
     } catch (err) {
-      // AI unavailable — fall back to plain word insertion
+      // AI unavailable — keep the plain-word fallback we already built.
       const errMsg = String(err);
       setAiWarning(`AI error: ${errMsg}. Cards added without translation.`);
-      enriched = words.map((w) => ({ word: w }));
     }
 
     setProgressText('Saving cards...');
@@ -217,7 +217,7 @@ export function AddToDeckDialog({
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <div className="py-6 px-4 text-center">
-            <div className="text-4xl mb-3">🎉</div>
+            <PartyPopper className="mx-auto mb-3 h-10 w-10 text-success" />
             <div className="text-lg font-bold text-[#8BB7A3] mb-1">
               {cardsAdded} card{cardsAdded !== 1 ? 's' : ''} saved!
             </div>
@@ -334,7 +334,7 @@ export function AddToDeckDialog({
                 onClick={() => setIsCreatingDeck(true)}
                 disabled={processing}
               >
-                <span>➕</span>
+                <Plus className="h-4 w-4" />
                 <span>Create New Deck</span>
               </button>
             ) : (
@@ -387,7 +387,7 @@ export function AddToDeckDialog({
                       </span>
                     </div>
                     {selectedDeckId === deck.id && (
-                      <span className="text-sm text-[#8BB7A3] font-bold shrink-0 ml-2">✓</span>
+                      <Check className="h-4 w-4 shrink-0 ml-2 text-success" />
                     )}
                   </button>
                 ))}

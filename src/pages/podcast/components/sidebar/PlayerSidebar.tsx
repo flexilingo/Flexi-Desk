@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   BarChart3,
   BookOpen,
@@ -18,7 +17,8 @@ import { NotesTab } from './NotesTab';
 import { SettingsTab } from './SettingsTab';
 import type { NlpAnalysis, PodcastBookmark } from '../../types';
 
-type SidebarTab = 'stats' | 'vocab' | 'analysis' | 'notes' | 'settings';
+/** Tabs of the insights drawer. */
+export type SidebarTab = 'stats' | 'vocab' | 'analysis' | 'notes' | 'settings';
 
 const TABS: { id: SidebarTab; icon: typeof BarChart3; label: string }[] = [
   { id: 'stats', icon: BarChart3, label: 'Stats' },
@@ -30,7 +30,9 @@ const TABS: { id: SidebarTab; icon: typeof BarChart3; label: string }[] = [
 interface PlayerSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpen: () => void;
+  /** Which tab to show. Owned by the parent so the control bar can open one directly. */
+  activeTab: SidebarTab;
+  onTabChange: (tab: SidebarTab) => void;
   // Stats data
   wordsClicked: number;
   wordsAddedToDeck: number;
@@ -38,6 +40,8 @@ interface PlayerSidebarProps {
   segmentCount: number;
   // Analysis
   analysis: NlpAnalysis | null;
+  /** Episode's language — decides whether a missing analysis means "not yet" or "unsupported". */
+  sourceLang?: string;
   // Notes
   bookmarks: PodcastBookmark[];
   episodeId: string;
@@ -66,12 +70,14 @@ interface PlayerSidebarProps {
 export function PlayerSidebar({
   isOpen,
   onClose,
-  onOpen,
+  activeTab,
+  onTabChange,
   wordsClicked,
   wordsAddedToDeck,
   activeTimeSpent,
   segmentCount,
   analysis,
+  sourceLang = 'en',
   bookmarks,
   episodeId,
   onSeek,
@@ -92,56 +98,10 @@ export function PlayerSidebar({
   onStartQuiz,
   onAddToDeck,
 }: PlayerSidebarProps) {
-  const [activeTab, setActiveTab] = useState<SidebarTab>('stats');
+  // The collapsed icon rail was removed to match the web player — the panels are
+  // opened from the Vocab / Analysis buttons in the control bar instead.
+  if (!isOpen) return null;
 
-  // ── Closed: floating icon strip overlay on the right ──
-  if (!isOpen) {
-    return (
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-1 py-3 px-1 bg-card/95 backdrop-blur-sm border border-border rounded-l-xl shadow-lg">
-        {/* Expand arrow */}
-        <button
-          onClick={onOpen}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors mb-1"
-          title="Open sidebar"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-
-        {/* Tab icons */}
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                onOpen();
-              }}
-              className="flex flex-col items-center gap-0.5 py-2 px-2 rounded-md text-[10px] font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              title={tab.label}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-
-        {/* Quiz */}
-        {onStartQuiz && (
-          <button
-            onClick={onStartQuiz}
-            className="flex flex-col items-center gap-0.5 py-2 px-2 rounded-md text-[10px] font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            title="Quiz"
-          >
-            <GraduationCap className="h-4 w-4" />
-            <span>Quiz</span>
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // ── Open: full sidebar panel (no icon strip) ──
   return (
     <div className="w-80 border-l border-border bg-card flex flex-col h-full shrink-0">
       {/* Header with back button */}
@@ -158,7 +118,7 @@ export function PlayerSidebar({
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setActiveTab('settings')}
+            onClick={() => onTabChange('settings')}
             className={cn(
               'p-1.5 rounded-md transition-colors',
               activeTab === 'settings'
@@ -187,7 +147,7 @@ export function PlayerSidebar({
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => onTabChange(tab.id)}
               className={cn(
                 'flex-1 flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-md text-[10px] font-medium transition-colors',
                 isActive
@@ -229,12 +189,12 @@ export function PlayerSidebar({
               totalWords={analysis?.totalWords}
               notesCount={bookmarks.length}
               onStartQuiz={onStartQuiz}
-              onNavigateToVocab={() => setActiveTab('vocab')}
-              onNavigateToAnalysis={() => setActiveTab('analysis')}
+              onNavigateToVocab={() => onTabChange('vocab')}
+              onNavigateToAnalysis={() => onTabChange('analysis')}
             />
           )}
           {activeTab === 'vocab' && <VocabTab analysis={analysis} onAddToDeck={onAddToDeck} />}
-          {activeTab === 'analysis' && <AnalysisTab analysis={analysis} />}
+          {activeTab === 'analysis' && <AnalysisTab analysis={analysis} sourceLang={sourceLang} />}
           {activeTab === 'notes' && (
             <NotesTab
               bookmarks={bookmarks}

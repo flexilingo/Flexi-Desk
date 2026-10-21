@@ -16,6 +16,13 @@ pub struct PodcastFeed {
     pub is_subscribed: bool,
     pub created_at: String,
     pub updated_at: String,
+    // ── Cloud identity + v2 difficulty aggregate (V028) ──
+    /// PodcastIndex feed id, set when this feed came from the cloud catalog.
+    pub remote_feed_id: Option<i64>,
+    pub difficulty_band_low: Option<String>,
+    pub difficulty_band_high: Option<String>,
+    pub difficulty_score_median: Option<i64>,
+    pub difficulty_episodes_scored: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,9 +42,66 @@ pub struct PodcastEpisode {
     pub is_played: bool,
     pub transcript: Option<String>,
     pub transcript_status: String,
+    /// Legacy v1 per-feed level. Superseded by `difficulty_band` for scored episodes.
     pub cefr_level: Option<String>,
     pub word_count: Option<i64>,
     pub created_at: String,
+    // ── Cloud identity + v2 per-episode difficulty (V028) ──
+    /// `podcast_{feed}_ep_{ep}` — addresses this episode in `?action=get-episode`.
+    pub video_id: Option<String>,
+    /// `curated_episodes.id` UUID — required by `?action=update-episode-activity`.
+    /// NULL for PodcastIndex-only episodes, which skip the cloud heartbeat.
+    pub curated_episode_id: Option<String>,
+    pub difficulty_band: Option<String>,
+    pub difficulty_score: Option<i64>,
+    pub difficulty_range_low: Option<String>,
+    pub difficulty_range_high: Option<String>,
+    pub difficulty_confidence: Option<String>,
+    pub difficulty_lang: Option<String>,
+    pub speech_rate_wpm: Option<i64>,
+    /// Which transcript the player shows: `local` (Whisper on this machine, with
+    /// word-level timestamps) or `cloud` (FlexiLingo's, segment-level only).
+    pub transcript_source: String,
+    /// `unknown` until we've asked the cloud; then `ready` | `unavailable`.
+    pub cloud_transcript_status: String,
+    /// Episode artwork; falls back to the feed's cover in the UI.
+    pub image_url: Option<String>,
+    /// Language of the transcript this episode currently has — stamped when the
+    /// transcript is created (local Whisper or cloud fetch). Authoritative for
+    /// word-lookup source language; `difficulty_lang` and the feed's declared
+    /// language are only fallbacks.
+    pub transcript_lang: Option<String>,
+}
+
+/// Cloud episode metadata handed to `podcast_import_cloud_episode`, mirroring the
+/// shapes returned by `?action=episodes-by-level` / `browse-episodes` / `get-episode`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudEpisodeInput {
+    // Feed identity
+    pub remote_feed_id: Option<i64>,
+    pub feed_url: Option<String>,
+    pub podcast_title: Option<String>,
+    pub podcast_author: Option<String>,
+    pub podcast_image_url: Option<String>,
+    pub podcast_language: Option<String>,
+    // Episode identity
+    pub video_id: Option<String>,
+    pub curated_episode_id: Option<String>,
+    pub guid: Option<String>,
+    pub title: String,
+    pub description: Option<String>,
+    pub audio_url: String,
+    pub duration_seconds: Option<i64>,
+    pub published_at: Option<String>,
+    pub image_url: Option<String>,
+    // v2 difficulty
+    pub difficulty_band: Option<String>,
+    pub difficulty_score: Option<i64>,
+    pub difficulty_range_low: Option<String>,
+    pub difficulty_range_high: Option<String>,
+    pub difficulty_confidence: Option<String>,
+    pub difficulty_lang: Option<String>,
+    pub speech_rate_wpm: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -128,7 +192,9 @@ pub struct TranslationResult {
     pub target_lang: String,
     pub alternatives: Vec<TranslationAlternative>,
     pub examples: Vec<String>,
-    pub cefr_level: String,
+    /// `None` when the source language has no local frequency table — the UI hides
+    /// the badge rather than showing a level computed against the wrong language.
+    pub cefr_level: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

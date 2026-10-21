@@ -4,6 +4,11 @@ type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
 interface CefrBadgeProps {
   level: CefrLevel;
+  /**
+   * Overrides the displayed text while colors stay keyed off `level`.
+   * Used for band ranges ("A2–B1") when difficulty confidence is low.
+   */
+  label?: string;
   className?: string;
 }
 
@@ -16,7 +21,7 @@ const cefrColors: Record<CefrLevel, string> = {
   C2: 'bg-primary-dark/30 text-primary-dark border-primary-dark/40',
 };
 
-export function CefrBadge({ level, className }: CefrBadgeProps) {
+export function CefrBadge({ level, label, className }: CefrBadgeProps) {
   return (
     <span
       className={cn(
@@ -25,7 +30,7 @@ export function CefrBadge({ level, className }: CefrBadgeProps) {
         className,
       )}
     >
-      {level}
+      {label ?? level}
     </span>
   );
 }

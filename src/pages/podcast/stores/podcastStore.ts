@@ -10,6 +10,8 @@ import type {
   PodcastIndexFeed,
   PodcastTranscriptSegment,
   NlpAnalysis,
+  TranscriptSource,
+  TranscriptSourceInfo,
   EpisodeDownloadProgress,
   RawPodcastFeed,
   RawPodcastEpisode,
@@ -18,19 +20,9 @@ import type {
   RawNlpAnalysis,
   SearchResponse,
 } from '../types';
-import {
-  mapFeed,
-  mapEpisode,
-  mapBookmark,
-  mapTranscriptSegment,
-  mapNlpAnalysis,
-} from '../types';
-
-export type PodcastView = 'feeds' | 'episodes' | 'player';
+import { mapFeed, mapEpisode, mapBookmark, mapTranscriptSegment, mapNlpAnalysis } from '../types';
 
 interface PodcastState {
-  view: PodcastView;
-
   // Feeds
   feeds: PodcastFeed[];
   isLoadingFeeds: boolean;
@@ -58,6 +50,9 @@ interface PodcastState {
 
   // NLP
   nlpAnalysis: NlpAnalysis | null;
+  /** Which transcripts exist for the active episode, and which is showing. */
+  transcriptSourceInfo: TranscriptSourceInfo | null;
+  isFetchingCloudTranscript: boolean;
 
   // Download
   downloadProgress: EpisodeDownloadProgress | null;
@@ -70,14 +65,15 @@ interface PodcastState {
   error: string | null;
 
   // Actions
-  setView: (view: PodcastView) => void;
-  goBack: () => void;
+  /** Loads a feed's episodes. Navigation is the router's job, not the store's. */
+  loadFeed: (feed: PodcastFeed) => void;
+  /** Clears per-episode session state when leaving the player. */
+  clearEpisode: () => void;
 
   fetchFeeds: () => Promise<void>;
   addFeed: (feedUrl: string, language?: string) => Promise<void>;
   deleteFeed: (id: string) => Promise<void>;
   refreshFeed: (id: string) => Promise<void>;
-  openFeed: (feed: PodcastFeed) => void;
 
   fetchEpisodes: (feedId: string) => Promise<void>;
   updateProgress: (episodeId: string, position: number, isPlayed?: boolean) => Promise<void>;
@@ -104,19 +100,29 @@ interface PodcastState {
   // Transcript
   transcribeEpisode: (episodeId: string) => Promise<void>;
   fetchTranscriptSegments: (episodeId: string) => Promise<void>;
+  fetchTranscriptSourceInfo: (episodeId: string) => Promise<void>;
+  /** Loads whatever transcript this episode should show, fetching the cloud one if needed. */
+  ensureTranscript: (episodeId: string) => Promise<void>;
+  fetchCloudTranscript: (episodeId: string) => Promise<void>;
+  setTranscriptSource: (episodeId: string, source: TranscriptSource) => Promise<void>;
 
   // NLP
   fetchAnalysis: (episodeId: string) => Promise<void>;
 
   // Player view
-  openPlayer: (episode: PodcastEpisode, feed?: PodcastFeed) => void;
+  loadEpisode: (episode: PodcastEpisode, feed?: PodcastFeed) => void;
+  /** Deep-link support: hydrate an episode straight from its local id. */
+  loadEpisodeById: (episodeId: string) => Promise<PodcastEpisode | null>;
+  /** Re-read the episode row after anything that mutates it server-side
+   *  (transcription stamps transcript_lang, cloud fetch, source switch) — the
+   *  in-memory object otherwise keeps answering with pre-transcription data. */
+  refreshActiveEpisode: (episodeId: string) => Promise<void>;
 
   clearError: () => void;
 }
 
 export const usePodcastStore = create<PodcastState>()(
   immer((set, get) => ({
-    view: 'feeds',
     feeds: [],
     isLoadingFeeds: false,
     isAddingFeed: false,
@@ -133,27 +139,18 @@ export const usePodcastStore = create<PodcastState>()(
     isTranscribing: false,
     isLoadingTranscript: false,
     nlpAnalysis: null,
+    transcriptSourceInfo: null,
+    isFetchingCloudTranscript: false,
     downloadProgress: null,
     isDownloading: false,
     activeEpisode: null,
     error: null,
 
-    setView: (view) =>
+    clearEpisode: () =>
       set((s) => {
-        s.view = view;
-        s.error = null;
-      }),
-    goBack: () =>
-      set((s) => {
-        if (s.view === 'episodes') {
-          s.view = 'feeds';
-          s.activeFeed = null;
-          s.episodes = [];
-        } else if (s.view === 'player') {
-          s.view = 'episodes';
-          s.transcriptSegments = [];
-          s.nlpAnalysis = null;
-        }
+        s.transcriptSegments = [];
+        s.nlpAnalysis = null;
+        s.transcriptSourceInfo = null;
         s.error = null;
       }),
 
@@ -207,7 +204,6 @@ export const usePodcastStore = create<PodcastState>()(
           if (s.activeFeed?.id === id) {
             s.activeFeed = null;
             s.episodes = [];
-            s.view = 'feeds';
           }
         });
       } catch (err) {
@@ -237,11 +233,10 @@ export const usePodcastStore = create<PodcastState>()(
       }
     },
 
-    openFeed: (feed) => {
+    loadFeed: (feed) => {
       set((s) => {
         s.activeFeed = feed;
         s.episodes = [];
-        s.view = 'episodes';
         s.error = null;
       });
       get().fetchEpisodes(feed.id);
@@ -461,9 +456,122 @@ export const usePodcastStore = create<PodcastState>()(
           s.transcriptSegments = raw.map(mapTranscriptSegment);
           s.isLoadingTranscript = false;
         });
+        // Whenever the transcript display refreshes, the episode row may have
+        // changed underneath it (transcript_lang stamp, status, word count).
+        await get().refreshActiveEpisode(episodeId);
       } catch {
         set((s) => {
           s.isLoadingTranscript = false;
+        });
+      }
+    },
+
+    refreshActiveEpisode: async (episodeId) => {
+      try {
+        const raw = await invoke<RawPodcastEpisode>('podcast_get_episode', { id: episodeId });
+        const episode = mapEpisode(raw);
+        // A malformed payload must never replace a working episode object —
+        // overwriting state with an unvalidated response is the exact bug class
+        // that white-screened the podcast hub twice.
+        if (episode.id !== episodeId) return;
+        set((s) => {
+          if (s.activeEpisode?.id === episodeId) s.activeEpisode = episode;
+          const i = s.episodes.findIndex((e) => e.id === episodeId);
+          if (i >= 0) s.episodes[i] = episode;
+        });
+      } catch {
+        // Keep the stale object — a failed refresh must not blank the player.
+      }
+    },
+
+    fetchTranscriptSourceInfo: async (episodeId) => {
+      try {
+        const info = await invoke<TranscriptSourceInfo>('podcast_transcript_source_info', {
+          episodeId,
+        });
+        // The user can switch episodes faster than this resolves; a late answer
+        // for the previous episode must never overwrite the current one's.
+        if (get().activeEpisode?.id !== episodeId) return;
+        set((s) => {
+          s.transcriptSourceInfo = info;
+        });
+      } catch {
+        if (get().activeEpisode?.id !== episodeId) return;
+        set((s) => {
+          s.transcriptSourceInfo = null;
+        });
+      }
+    },
+
+    /**
+     * Decides what the player shows for an episode.
+     *
+     * Local (Whisper on this machine) always wins when it exists. Otherwise, if
+     * FlexiLingo already analyzed the episode, load their transcript right away —
+     * the user shouldn't have to click anything to see subtitles that exist.
+     *
+     * Lives in the store rather than a component effect so switching episodes
+     * can't race a stale `transcriptSourceInfo` from the previous one.
+     */
+    ensureTranscript: async (episodeId) => {
+      await get().fetchTranscriptSourceInfo(episodeId);
+
+      const info = get().transcriptSourceInfo;
+      if (!info || info.episode_id !== episodeId) return;
+      if (get().activeEpisode?.id !== episodeId) return;
+
+      if (info.has_local || info.has_cloud) return;
+      if (!info.cloud_possible || info.cloud_status === 'unavailable') return;
+
+      await get().fetchCloudTranscript(episodeId);
+    },
+
+    /**
+     * Pulls FlexiLingo's transcript + analysis and makes it active. The local
+     * Whisper transcript, if any, stays cached and can be switched back to.
+     */
+    fetchCloudTranscript: async (episodeId) => {
+      set((s) => {
+        s.isFetchingCloudTranscript = true;
+        s.error = null;
+      });
+      try {
+        const raw = await invoke<RawPodcastTranscriptSegment[]>('podcast_fetch_cloud_transcript', {
+          episodeId,
+        });
+        // Segments are cached in SQLite regardless; only the *display* is stale.
+        if (get().activeEpisode?.id !== episodeId) {
+          set((s) => {
+            s.isFetchingCloudTranscript = false;
+          });
+          return;
+        }
+        set((s) => {
+          s.transcriptSegments = raw.map(mapTranscriptSegment);
+          s.isFetchingCloudTranscript = false;
+        });
+        await get().fetchTranscriptSourceInfo(episodeId);
+        await get().fetchAnalysis(episodeId);
+        await get().refreshActiveEpisode(episodeId);
+      } catch (err) {
+        set((s) => {
+          s.isFetchingCloudTranscript = false;
+          s.error = String(err);
+        });
+      }
+    },
+
+    /** Switch between the two cached transcripts. Instant, and works offline. */
+    setTranscriptSource: async (episodeId, source) => {
+      try {
+        await invoke('podcast_set_transcript_source', { episodeId, source });
+        await get().fetchTranscriptSegments(episodeId);
+        await get().fetchTranscriptSourceInfo(episodeId);
+        await get().fetchAnalysis(episodeId);
+        await get().refreshActiveEpisode(episodeId);
+      } catch (err) {
+        set((s) => {
+          s.error = String(err);
         });
       }
     },
@@ -485,20 +593,68 @@ export const usePodcastStore = create<PodcastState>()(
 
     // ── Player View ──────────────────────────────────
 
-    openPlayer: (episode, feed) => {
+    loadEpisode: (episode, feed) => {
       set((s) => {
         s.activeEpisode = episode;
-        if (feed) s.activeFeed = feed;
-        s.view = 'player';
+        // The active feed must be THIS episode's feed. Keeping a stale one from
+        // earlier browsing leaks the wrong feed's language into word lookups and
+        // transcription (a French episode inherited 'en' from the last-viewed feed).
+        if (feed) {
+          s.activeFeed = feed;
+        } else if (s.activeFeed?.id !== episode.feedId) {
+          s.activeFeed = s.feeds.find((f) => f.id === episode.feedId) ?? null;
+        }
         s.transcriptSegments = [];
         s.isLoadingTranscript = false;
         s.nlpAnalysis = null;
+        // Belongs to the previous episode — leaving it stale made the player
+        // skip auto-loading the new episode's cloud transcript.
+        s.transcriptSourceInfo = null;
         s.error = null;
       });
+      // The feeds list only holds SUBSCRIBED feeds; an episode played from
+      // discovery or a cloud import belongs to an unsubscribed feed row. Fetch
+      // that row directly so the language fallback chain has a real feed.
+      if (!get().activeFeed) {
+        invoke<RawPodcastFeed>('podcast_get_feed', { id: episode.feedId })
+          .then((raw) => {
+            if (get().activeEpisode?.id !== episode.id || get().activeFeed) return;
+            set((s) => {
+              s.activeFeed = mapFeed(raw);
+            });
+          })
+          .catch(() => {});
+      }
       // Always try to load transcript and analysis — segments may exist in DB
       // regardless of transcript_status value
       get().fetchTranscriptSegments(episode.id);
       get().fetchAnalysis(episode.id);
+      get().ensureTranscript(episode.id);
+    },
+
+    // Deep-link entry: /podcast/player/:episodeId can be opened cold (page reload,
+    // back/forward, mini-player expand) with nothing in the store yet.
+    loadEpisodeById: async (episodeId) => {
+      const existing = get().activeEpisode;
+      if (existing?.id === episodeId) return existing;
+
+      const cached = get().episodes.find((e) => e.id === episodeId);
+      if (cached) {
+        get().loadEpisode(cached);
+        return cached;
+      }
+
+      try {
+        const raw = await invoke<RawPodcastEpisode>('podcast_get_episode', { id: episodeId });
+        const episode = mapEpisode(raw);
+        get().loadEpisode(episode);
+        return episode;
+      } catch (err) {
+        set((s) => {
+          s.error = String(err);
+        });
+        return null;
+      }
     },
 
     clearError: () =>

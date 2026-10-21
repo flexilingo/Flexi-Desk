@@ -1,6 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, FileText, Loader2, Info, X, Calendar, Clock, HardDrive, Settings, Cloud } from 'lucide-react';
+import {
+  ArrowLeft,
+  FileText,
+  Loader2,
+  Info,
+  X,
+  Calendar,
+  Clock,
+  HardDrive,
+  Settings,
+  Cloud,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EpisodeInfo {
@@ -26,6 +37,12 @@ interface TopBarProps {
   hasTranscript?: boolean;
   episodeInfo?: EpisodeInfo;
   sidebarAction?: React.ReactNode;
+  /**
+   * Transcript source control. When provided it replaces the plain Transcribe
+   * button and stays visible after a transcript exists, so the user can switch
+   * between the local and FlexiLingo transcripts at any time.
+   */
+  transcriptControl?: React.ReactNode;
 }
 
 function formatDuration(seconds: number): string {
@@ -70,6 +87,7 @@ export function TopBar({
   hasTranscript,
   episodeInfo,
   sidebarAction,
+  transcriptControl,
 }: TopBarProps) {
   const { t } = useTranslation();
   const [showInfo, setShowInfo] = useState(false);
@@ -154,33 +172,36 @@ export function TopBar({
           </Button>
         )}
 
-        {canTranscribe && onTranscribe && (
-          <Button
-            onClick={onTranscribe}
-            disabled={isTranscribing || isDownloading}
-            size="sm"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground border-0"
-          >
-            {isDownloading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                {downloadProgress && downloadProgress.percent > 0
-                  ? `Downloading ${Math.round(downloadProgress.percent)}%`
-                  : 'Downloading...'}
-              </>
-            ) : isTranscribing ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                Transcribing...
-              </>
-            ) : (
-              <>
-                <FileText className="w-4 h-4 mr-1" />
-                Transcribe
-              </>
-            )}
-          </Button>
-        )}
+        {transcriptControl ??
+          (canTranscribe && onTranscribe && (
+            <Button
+              onClick={onTranscribe}
+              disabled={isTranscribing || isDownloading}
+              size="sm"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                  {downloadProgress && downloadProgress.percent > 0
+                    ? t('podcast.downloadingPercent', {
+                        percent: Math.round(downloadProgress.percent),
+                      })
+                    : t('podcast.downloading')}
+                </>
+              ) : isTranscribing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                  {t('podcast.transcribing')}
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4 mr-1" />
+                  {t('podcast.transcribe')}
+                </>
+              )}
+            </Button>
+          ))}
 
         {/* Info Panel */}
         {showInfo && episodeInfo && (

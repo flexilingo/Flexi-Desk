@@ -5,8 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import type { PodcastTranscriptSegment, PodcastWordTimestamp } from '../types';
 import { formatTimeMs } from '../types';
 import { WordDialog } from './WordDialog';
+import { cleanWord, cefrCacheKey } from '../utils/words';
 import { usePlayerStore } from '../stores/playerStore';
-import { useLanguageSettings } from '@/hooks/useLanguageSettings';
 
 interface TranscriptPanelProps {
   segments: PodcastTranscriptSegment[];
@@ -15,7 +15,6 @@ interface TranscriptPanelProps {
   isLoading?: boolean;
   episodeId?: string;
   sourceLang?: string;
-  targetLang?: string;
   syncOffset?: number;
 }
 
@@ -39,11 +38,8 @@ export function TranscriptPanel({
   isLoading,
   episodeId,
   sourceLang = 'en',
-  targetLang: targetLangProp,
   syncOffset = 0,
 }: TranscriptPanelProps) {
-  const { nativeLang } = useLanguageSettings();
-  const targetLang = targetLangProp || nativeLang;
   const effectiveTime = currentTime - syncOffset;
   const currentTimeMs = effectiveTime * 1000;
 
@@ -65,44 +61,55 @@ export function TranscriptPanel({
     return active?.id ?? null;
   }, [segments, currentTimeMs]);
 
-  // Batch-fetch CEFR for all words (once on mount / segments change)
+  // Batch-fetch CEFR for all words, in the EPISODE's language (once per segments change)
   useEffect(() => {
     if (!segments.length) return;
+
+    // The map handed to the renderer holds only the current language's entries;
+    // the cache itself is lang-prefixed so switching episodes can't cross-read.
+    const rebuildMap = () => {
+      const prefix = `${sourceLang}:`;
+      const map: Record<string, string> = {};
+      cefrCache.forEach((v, k) => {
+        // '' marks "language has no CEFR table" — cached to avoid refetching.
+        if (v && k.startsWith(prefix)) {
+          map[k.slice(prefix.length)] = v;
+        }
+      });
+      setCefrMap(map);
+    };
 
     const allWords = new Set<string>();
     for (const seg of segments) {
       const words = seg.words?.length ? seg.words.map((w) => w.word) : seg.text.split(/\s+/);
       for (const w of words) {
-        const clean = w.toLowerCase().replace(/[^a-z']/g, '');
-        if (clean.length > 1 && !cefrCache.has(clean)) {
+        const clean = cleanWord(w);
+        if (clean.length > 1 && !cefrCache.has(cefrCacheKey(sourceLang, clean))) {
           allWords.add(clean);
         }
       }
     }
 
     if (allWords.size === 0) {
-      const map: Record<string, string> = {};
-      cefrCache.forEach((v, k) => {
-        map[k] = v;
-      });
-      setCefrMap(map);
+      rebuildMap();
       return;
     }
 
     const unique = [...allWords];
-    invoke<[string, string][]>('podcast_get_words_cefr', { words: unique })
+    invoke<[string, string][]>('podcast_get_words_cefr', { words: unique, lang: sourceLang })
       .then((result) => {
+        const returned = new Set<string>();
         for (const [w, cefr] of result) {
-          cefrCache.set(w.toLowerCase(), cefr);
+          cefrCache.set(cefrCacheKey(sourceLang, w.toLowerCase()), cefr);
+          returned.add(w.toLowerCase());
         }
-        const map: Record<string, string> = {};
-        cefrCache.forEach((v, k) => {
-          map[k] = v;
-        });
-        setCefrMap(map);
+        for (const w of unique) {
+          if (!returned.has(w)) cefrCache.set(cefrCacheKey(sourceLang, w), '');
+        }
+        rebuildMap();
       })
       .catch(() => {});
-  }, [segments]);
+  }, [segments, sourceLang]);
 
   const handleWordClick = useCallback(
     (e: React.MouseEvent, word: string, startMs: number) => {
@@ -160,7 +167,6 @@ export function TranscriptPanel({
         episodeId={episodeId}
         positionMs={selectedPositionMs}
         sourceLang={sourceLang}
-        targetLang={targetLang}
         sentenceContext={selectedSentence}
       />
     </>
@@ -226,8 +232,8 @@ function TranscriptSegmentRow({
 
       <span className="text-sm leading-relaxed flex-1 flex flex-wrap gap-x-0.5">
         {words.map((w, wIdx) => {
-          const cleanWord = w.word.toLowerCase().replace(/[^a-z']/g, '');
-          const cefrLevel = cefrMap[cleanWord];
+          const clean = cleanWord(w.word);
+          const cefrLevel = cefrMap[clean];
           const underlineColor = cefrLevel ? CEFR_UNDERLINE[cefrLevel] : undefined;
 
           return (

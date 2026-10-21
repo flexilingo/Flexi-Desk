@@ -1267,6 +1267,7 @@ dependencies = [
  "cpal",
  "csv",
  "dirs 5.0.1",
+ "flate2",
  "futures-util",
  "hound",
  "regex",

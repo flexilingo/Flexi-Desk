@@ -1,30 +1,6 @@
 export type Algorithm = 'leitner' | 'sm2' | 'fsrs';
 export type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 export type CardState = 'new' | 'learning' | 'review' | 'relearning';
-export type Rating = 'again' | 'hard' | 'good' | 'easy';
-export type SessionStatus = 'in_progress' | 'completed' | 'abandoned';
-export type ReviewMode = 'flip' | 'typing' | 'audio';
-export type CardType = 'new' | 'review' | 'learning';
-
-export interface ReviewSettings {
-  autoTtsEnabled: boolean;
-  autoTtsDelaySeconds: number;
-  autoPronounceEnabled: boolean;
-  ttsVoice: 'us' | 'uk';
-  reverseCardDirection: boolean;
-  alwaysShowTranslation: boolean;
-  editModeEnabled: boolean;
-}
-
-export const DEFAULT_REVIEW_SETTINGS: ReviewSettings = {
-  autoTtsEnabled: false,
-  autoTtsDelaySeconds: 2,
-  autoPronounceEnabled: false,
-  ttsVoice: 'us',
-  reverseCardDirection: false,
-  alwaysShowTranslation: false,
-  editModeEnabled: false,
-};
 
 export interface CardNotes {
   generated_by?: string;
@@ -42,14 +18,9 @@ export interface CardNotes {
   pronunciation_tips?: string;
   cultural_note?: string;
   etymology?: string;
-}
-
-export interface SRSSessionStats {
-  boxPromotions: number;
-  boxDemotions: number;
-  newlyMastered: number;
-  newCardsLearned: number;
-  dueCardsReviewed: number;
+  part_of_speech?: string;
+  difficulty?: string;
+  cefr_level?: string;
 }
 
 export interface Deck {
@@ -90,42 +61,6 @@ export interface CardFull {
   easinessFactor?: number;
   stability?: number;
   difficulty?: number;
-}
-
-export interface ScheduleResult {
-  intervalDays: number;
-  dueDate: string;
-  state: CardState;
-  algorithmState: Record<string, unknown>;
-  shouldRequeue: boolean;
-  wasCorrect: boolean;
-}
-
-export interface ReviewSession {
-  id: string;
-  deckId?: string;
-  algorithm: Algorithm;
-  status: SessionStatus;
-  totalCards: number;
-  reviewedCards: number;
-  correctCount: number;
-  cardIds: string[];
-  currentIndex: number;
-  startedAt: string;
-  completedAt?: string;
-  durationSeconds: number;
-}
-
-export interface SessionSummary {
-  totalCards: number;
-  reviewedCards: number;
-  correctCount: number;
-  againCount: number;
-  hardCount: number;
-  goodCount: number;
-  easyCount: number;
-  accuracy: number;
-  durationSeconds: number;
 }
 
 export interface CardCreateInput {
@@ -178,33 +113,6 @@ export interface RawCardFull {
   difficulty: number | null;
 }
 
-export interface RawReviewSession {
-  id: string;
-  deck_id: string | null;
-  algorithm: string;
-  status: string;
-  total_cards: number;
-  reviewed_cards: number;
-  correct_count: number;
-  card_ids: string[];
-  current_index: number;
-  started_at: string;
-  completed_at: string | null;
-  duration_seconds: number;
-}
-
-export interface RawSessionSummary {
-  total_cards: number;
-  reviewed_cards: number;
-  correct_count: number;
-  again_count: number;
-  hard_count: number;
-  good_count: number;
-  easy_count: number;
-  accuracy: number;
-  duration_seconds: number;
-}
-
 // ── Mappers ────────────────────────────────────────────────
 
 export function mapDeck(raw: RawDeckWithStats): DeckWithStats {
@@ -245,37 +153,6 @@ export function mapCard(raw: RawCardFull): CardFull {
     easinessFactor: raw.easiness_factor ?? undefined,
     stability: raw.stability ?? undefined,
     difficulty: raw.difficulty ?? undefined,
-  };
-}
-
-export function mapSession(raw: RawReviewSession): ReviewSession {
-  return {
-    id: raw.id,
-    deckId: raw.deck_id ?? undefined,
-    algorithm: raw.algorithm as Algorithm,
-    status: raw.status as SessionStatus,
-    totalCards: raw.total_cards,
-    reviewedCards: raw.reviewed_cards,
-    correctCount: raw.correct_count,
-    cardIds: raw.card_ids,
-    currentIndex: raw.current_index,
-    startedAt: raw.started_at,
-    completedAt: raw.completed_at ?? undefined,
-    durationSeconds: raw.duration_seconds,
-  };
-}
-
-export function mapSummary(raw: RawSessionSummary): SessionSummary {
-  return {
-    totalCards: raw.total_cards,
-    reviewedCards: raw.reviewed_cards,
-    correctCount: raw.correct_count,
-    againCount: raw.again_count,
-    hardCount: raw.hard_count,
-    goodCount: raw.good_count,
-    easyCount: raw.easy_count,
-    accuracy: raw.accuracy,
-    durationSeconds: raw.duration_seconds,
   };
 }
 

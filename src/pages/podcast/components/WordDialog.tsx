@@ -1,14 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
+  BookOpen,
   BookmarkPlus,
-  Plus,
-  Loader2,
-  Volume2,
+  Bot,
+  Check,
   ChevronDown,
   ChevronUp,
-  Check,
+  Globe,
   Library,
+  Loader2,
+  Plus,
+  Volume2,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +33,7 @@ import { AITab } from './WordDialog/AITab';
 import { DictionaryTab } from './WordDialog/DictionaryTab';
 import { MerriamWebsterTab } from './WordDialog/MerriamWebsterTab';
 import { useLanguageSettings } from '@/hooks/useLanguageSettings';
+import { TranslationLanguagePicker } from '@/components/common/TranslationLanguagePicker';
 
 // ── CEFR badge colors ────────────────────────────────────
 
@@ -47,11 +52,11 @@ function getCefrBadgeClass(level: string): string {
 
 // ── Tab config ───────────────────────────────────────────
 
-const TABS: { id: WordDialogTab; label: string; icon: string }[] = [
-  { id: 'google', label: 'Google', icon: '🌐' },
-  { id: 'ai', label: 'AI', icon: '🤖' },
-  { id: 'dictionary', label: 'Dictionary', icon: '📖' },
-  { id: 'merriam-webster', label: 'M-W', icon: '📚' },
+const TABS: { id: WordDialogTab; label: string; icon: LucideIcon }[] = [
+  { id: 'google', label: 'Google', icon: Globe },
+  { id: 'ai', label: 'AI', icon: Bot },
+  { id: 'dictionary', label: 'Dictionary', icon: BookOpen },
+  { id: 'merriam-webster', label: 'M-W', icon: Library },
 ];
 
 // ── Deck type (from srs commands) ────────────────────────
@@ -226,7 +231,7 @@ export function WordDialog({
         <DialogHeader className="p-4 pb-3 shrink-0">
           <div className="flex items-center gap-3">
             <DialogTitle className="text-xl font-bold capitalize">{word}</DialogTitle>
-            {translation && (
+            {translation?.cefrLevel && (
               <Badge
                 variant="outline"
                 className={`text-[10px] font-semibold border ${getCefrBadgeClass(translation.cefrLevel)}`}
@@ -234,6 +239,11 @@ export function WordDialog({
                 {translation.cefrLevel}
               </Badge>
             )}
+
+            {/* Hidden when the caller pins a target language — offering a choice
+                that gets overridden would be a lie. Changing it here re-runs the
+                translation below, because `targetLang` is in that effect's deps. */}
+            {!targetLangProp && <TranslationLanguagePicker className="ms-auto me-8" />}
           </div>
           <DialogDescription className="sr-only">
             Translation and details for &ldquo;{word}&rdquo;
@@ -274,7 +284,7 @@ export function WordDialog({
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span>{tab.icon}</span>
+              <tab.icon className="h-4 w-4" />
               {tab.label}
             </button>
           ))}

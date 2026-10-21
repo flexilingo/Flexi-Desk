@@ -1,14 +1,7 @@
 import { useState } from 'react';
-import {
-  Headphones,
-  Plus,
-  Search,
-  RefreshCw,
-  Trash2,
-  ChevronRight,
-  Loader2,
-  Rss,
-} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Headphones, Plus, RefreshCw, Trash2, ChevronRight, Loader2, Rss } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -17,16 +10,10 @@ import { usePodcastStore } from '../stores/podcastStore';
 import type { PodcastFeed } from '../types';
 
 export function FeedListView() {
-  const {
-    feeds,
-    isLoadingFeeds,
-    isAddingFeed,
-    addFeed,
-    openFeed,
-    deleteFeed,
-    refreshFeed,
-    setView,
-  } = usePodcastStore();
+  const { t } = useTranslation('common');
+  const { feeds, isLoadingFeeds, isAddingFeed, addFeed, loadFeed, deleteFeed, refreshFeed } =
+    usePodcastStore();
+  const navigate = useNavigate();
 
   const [feedUrl, setFeedUrl] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -55,20 +42,14 @@ export function FeedListView() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Headphones className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle>Podcasts</CardTitle>
-              <CardDescription>Subscribe to RSS feeds and learn from episodes</CardDescription>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Headphones className="h-5 w-5 text-primary" />
           </div>
-          <Button variant="outline" size="sm" onClick={() => setView('search')}>
-            <Search className="h-4 w-4" />
-            Discover
-          </Button>
+          <div>
+            <CardTitle>{t('podcast.localSubscriptions')}</CardTitle>
+            <CardDescription>{t('podcast.localSubscriptionsHint')}</CardDescription>
+          </div>
         </div>
       </CardHeader>
 
@@ -78,7 +59,7 @@ export function FeedListView() {
           <Input
             value={feedUrl}
             onChange={(e) => setFeedUrl(e.target.value)}
-            placeholder="Paste RSS feed URL…"
+            placeholder={t('podcast.rssFeedUrl')}
             onKeyDown={(e) => e.key === 'Enter' && handleAddFeed()}
             className="flex-1 font-mono text-sm"
           />
@@ -88,7 +69,7 @@ export function FeedListView() {
             ) : (
               <Plus className="h-4 w-4" />
             )}
-            Add Feed
+            {t('podcast.addFeed')}
           </Button>
         </div>
 
@@ -103,10 +84,8 @@ export function FeedListView() {
               <Rss className="h-6 w-6 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">No podcasts yet</p>
-              <p className="text-sm text-muted-foreground">
-                Add an RSS feed URL above or discover podcasts with the search button
-              </p>
+              <p className="text-sm font-medium text-foreground">{t('podcast.noLocalFeeds')}</p>
+              <p className="text-sm text-muted-foreground">{t('podcast.noLocalFeedsHint')}</p>
             </div>
           </div>
         ) : (
@@ -117,7 +96,10 @@ export function FeedListView() {
                 feed={feed}
                 isDeleting={deletingId === feed.id}
                 isRefreshing={refreshingId === feed.id}
-                onClick={() => openFeed(feed)}
+                onClick={() => {
+                  loadFeed(feed);
+                  navigate(`/podcast/feed/${feed.id}`);
+                }}
                 onDelete={(e) => handleDelete(e, feed.id)}
                 onRefresh={(e) => handleRefresh(e, feed.id)}
               />
@@ -144,6 +126,7 @@ function FeedRow({
   onDelete: (e: React.MouseEvent) => void;
   onRefresh: (e: React.MouseEvent) => void;
 }) {
+  const { t } = useTranslation('common');
   return (
     <button
       onClick={onClick}
@@ -168,8 +151,8 @@ function FeedRow({
       <div className="flex-1 min-w-0 space-y-0.5">
         <p className="text-sm font-medium text-foreground truncate">{feed.title}</p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {feed.author && <span className="truncate max-w-[150px]">{feed.author}</span>}
-          <span>{feed.episodeCount} episodes</span>
+          {feed.author && <span className="truncate max-w-37.5">{feed.author}</span>}
+          <span>{t('podcast.levelEpisodeCount', { count: feed.episodeCount })}</span>
           <span>{feed.language.toUpperCase()}</span>
         </div>
       </div>
