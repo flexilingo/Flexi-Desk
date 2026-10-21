@@ -23,6 +23,8 @@ import {
   type OcrWords,
 } from '../lib/ocr-text-content';
 import { usePageOcrWords } from '../lib/use-page-ocr-words';
+import { paintsImage } from '../ocr/scan-detection';
+import { PdfPageWorkingDialog } from './PdfPageWorkingDialog';
 import type { TextBoxShape, TextBoxStore, WriteTool, MarkStore } from '../lib/write-types';
 // PHASE E: PdfTextBox and PdfMarksLayer (the written boxes, arrows and stamps) are
 // drawn on the page from here; their imports return with the write-mode port.
@@ -99,11 +101,14 @@ export interface PdfOcrLayer {
    */
   boilerplate: Promise<ReadonlySet<string>>;
   /**
-   * The extractor is reading the document's scanned pages right now. (Phase D
-   * shows the "analysing this page" dialog for it. The website's Pro gate —
-   * `locked` / `onLockedClick` — does not exist on desk: every scanned page is read.)
+   * The OCR is reading the document's scanned pages right now: a scanned page
+   * without words answers a click with the "analysing this page" dialog. (The
+   * website's Pro gate — `locked` / `onLockedClick` — does not exist on desk:
+   * every scanned page is read, free.)
    */
   waiting: boolean;
+  /** The reader asked for this page's words (clicked it): read it next. */
+  onPageWanted?: (pageNumber: number) => void;
 }
 
 /** A note's stored anchor, as percentages of the page box. */
@@ -228,20 +233,6 @@ function decorateWords(textDivs: HTMLElement[], strings: string[], lineOf?: numb
   }
 
   return tops;
-}
-
-/** The pdf.js operators that paint a raster image — what a scanned page is made of. */
-function paintsImage(ops: Record<string, number>, fnArray: number[]): boolean {
-  const images = new Set([
-    ops.paintImageXObject,
-    ops.paintInlineImageXObject,
-    ops.paintImageXObjectRepeat,
-    ops.paintInlineImageXObjectGroup,
-    ops.paintImageMaskXObject,
-    ops.paintImageMaskXObjectGroup,
-    ops.paintImageMaskXObjectRepeat,
-  ]);
-  return fnArray.some((fn) => images.has(fn));
 }
 
 let measuredAscent: number | null = null;
@@ -420,6 +411,8 @@ export function PdfPageView({
     pageNumber,
     Boolean(ocr?.active && scan && isNear),
   );
+  const pageWaiting = Boolean(scan && !ocrWords && ocr?.waiting);
+  const [waitingOpen, setWaitingOpen] = useState(false);
   const ocrWordsRef = useRef<OcrWords | null>(ocrWords);
   // Set by the render once this page is known to be a scan; rebuilds its text
   // layer from OCR words. Null whenever no rendered layer is there to rebuild.
@@ -914,10 +907,24 @@ export function PdfPageView({
           a phrase in a PDF did nothing at all. */}
       <div ref={textLayerRef} data-lookup-text="" className="flexi-pdf-textlayer" />
 
-      {/* PHASE D: a scanned page whose words are still on their way answers a click
-          with the "analysing this page" dialog (`PdfPageWorkingDialog`), and closes
-          it by itself when the words land. The website's Pro-locked overlay has no
-          desk counterpart — there is no Pro gate here. */}
+      {/* A scanned page whose words are still on their way answers a click with the
+          "analysing this page" dialog, and the dialog closes by itself when the
+          words land. Asking also moves the page to the front of the OCR queue. */}
+      {pageWaiting && !writing && (
+        <div
+          aria-hidden
+          data-ocr-waiting=""
+          className="absolute inset-0 z-[2] cursor-progress"
+          onClick={() => {
+            ocrRef.current?.onPageWanted?.(pageNumber);
+            setWaitingOpen(true);
+          }}
+        />
+      )}
+      <PdfPageWorkingDialog
+        open={waitingOpen && pageWaiting}
+        onClose={() => setWaitingOpen(false)}
+      />
 
       {/* Offered, never fired. The cursor RESTING on a word puts a speaker
           under it; the sound still waits to be asked for. Audio that started

@@ -27,7 +27,9 @@
     "DOCUMENTS_FETCH_FAILED": "Your documents could not be loaded.",
     "DOCUMENT_FETCH_FAILED": "This document could not be found.",
     "DOCUMENT_CREATE_FAILED": "The file could not be saved on this computer.",
-    "INVALID_FILE": "This photo could not be read."
+    "INVALID_FILE": "This photo could not be read.",
+    "OCR_ENGINE_FAILED": "The reading engine could not start on this computer.",
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "The reading data for this language could not be downloaded. Check the connection and try again."
   },
   "upload": {
     "hint": "PDF, JPG, PNG or WebP. No size limit.",
@@ -49,5 +51,9 @@
     },
     "body": "Reading library books on the desktop arrives in a later update. Your own documents work now.",
     "back": "Back to your reading"
+  },
+  "ocr": {
+    "downloading": "Downloading the reading data for {{language}}… {{percent}}%",
+    "languageFallback": "Reading this document as English"
   }
 }

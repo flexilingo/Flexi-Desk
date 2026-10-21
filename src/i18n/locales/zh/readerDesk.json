@@ -27,7 +27,9 @@
     "DOCUMENTS_FETCH_FAILED": "无法加载你的文档。",
     "DOCUMENT_FETCH_FAILED": "找不到此文档。",
     "DOCUMENT_CREATE_FAILED": "无法将文件保存到这台电脑。",
-    "INVALID_FILE": "无法读取这张照片。"
+    "INVALID_FILE": "无法读取这张照片。",
+    "OCR_ENGINE_FAILED": "识别引擎无法在此电脑上启动。",
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "无法下载此语言的识别数据。请检查网络连接后重试。"
   },
   "upload": {
     "hint": "PDF、JPG、PNG 或 WebP。不限大小。",
@@ -49,5 +51,9 @@
     },
     "body": "在桌面端阅读图书馆的书将在之后的更新中推出。你自己的文档现在就能使用。",
     "back": "返回你的阅读"
+  },
+  "ocr": {
+    "downloading": "正在下载{{language}}的识别数据… {{percent}}%",
+    "languageFallback": "此文档将按英语识别"
   }
 }

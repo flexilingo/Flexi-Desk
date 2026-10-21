@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "sync:pdf": "node scripts/sync-pdf-worker.mjs",
-    "dev": "node scripts/sync-pdf-worker.mjs && vite",
-    "build": "node scripts/sync-pdf-worker.mjs && vite build",
+    "sync:tesseract": "node scripts/sync-tesseract.mjs",
+    "sync": "pnpm sync:pdf && pnpm sync:tesseract",
+    "dev": "pnpm sync && vite",
+    "build": "pnpm sync && vite build",
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
@@ -58,6 +60,7 @@
     "react-router-dom": "^7.13.1",
     "recharts": "^3.8.0",
     "tailwind-merge": "^3.5.0",
+    "tesseract.js": "^7.0.0",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

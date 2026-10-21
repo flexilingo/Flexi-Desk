@@ -16,11 +16,12 @@ import { PDF_ASSET_OPTIONS, destroyDocument, loadPdfjs } from '../lib/pdfjs';
 import { ReaderToolbar } from '../text/ReaderToolbar';
 import { PdfLoading } from './PdfLoading';
 import { PdfDocumentView, type PdfDocumentViewHandle } from './PdfDocumentView';
-import type { PdfNoteMark, PdfWordSpeech } from './PdfPageView';
+import type { PdfNoteMark, PdfOcrLayer, PdfWordSpeech } from './PdfPageView';
+import { PdfTextLayerStatus } from './PdfTextLayerStatus';
+import { documentBoilerplate } from '../lib/document-boilerplate';
+import { useDocumentOcr } from '../lib/use-document-ocr';
 import { PdfViewControls, type PdfPointerTool } from './PdfViewControls';
 
-// PHASE D: `documentBoilerplate`, `PdfTextLayerStatus` and the OCR layer object (`PdfOcrLayer`)
-// are wired in here; until the local extractor exists the viewer feeds `ocr={undefined}`.
 // PHASE E: notes dialog + panel, words panel, write mode (`PdfEditorBar`, `PdfWritingPanel`,
 // the box and mark stores). PHASE F: audio, video, cheatsheet, edition picker and the
 // `useAudioHold` / `usePlayerKeys` hooks (ported in `../lib`, wired with the audio panel).
@@ -327,6 +328,37 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
     [notesData],
   );
 
+  /*
+   * THE SCANNED PAGES' WORDS, read on this computer.
+   *
+   * Free for everyone, no page caps: the engine (`../ocr`) reads the page in front
+   * of the reader first, then the other scanned pages, and keeps going in the
+   * background. The OCR language is the DOCUMENT's — the toolbar's picker changes how
+   * words are looked up, not how the print was set.
+   */
+  const boilerplate = useMemo<Promise<ReadonlySet<string>>>(
+    () => (pdf ? documentBoilerplate(pdf) : Promise.resolve(new Set<string>())),
+    [pdf],
+  );
+  const { state: ocrState, controller: ocrController } = useDocumentOcr(
+    pdf,
+    documentId,
+    file?.language,
+    boilerplate,
+    currentPage,
+  );
+  const ocrLayer = useMemo<PdfOcrLayer>(
+    () => ({
+      documentId,
+      active: true,
+      onScanPage: (page) => ocrController?.reportScan(page),
+      onPageWanted: (page) => ocrController?.prioritize(page),
+      boilerplate,
+      waiting: ocrState.status === 'running' || ocrState.status === 'pending',
+    }),
+    [documentId, ocrController, boilerplate, ocrState.status],
+  );
+
   const errorCode = loadError ?? fileError;
   if (errorCode) {
     const key = `errors.${errorCode}`;
@@ -374,8 +406,8 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
       />
 
       <div className="relative flex min-h-0 flex-1">
-        {/* PHASE D: <PdfTextLayerStatus /> pill sits here while the scanned pages are read. */}
         <div className="relative flex min-h-0 min-w-0 flex-1">
+          <PdfTextLayerStatus state={ocrState} onRetry={() => ocrController?.retry()} />
           <PdfDocumentView
             pdf={pdf}
             zoom={zoom}
@@ -389,7 +421,8 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
             onSpeakWord={tapToSpeak ? speakWord : undefined}
             speech={speech}
             onStopSpeaking={stopSpeaking}
-            // PHASE E: boxStore / markStore / writing. PHASE D: ocr.
+            ocr={ocrLayer}
+            // PHASE E: boxStore / markStore / writing.
             tool={tool}
             onZoomChange={changeZoom}
           />

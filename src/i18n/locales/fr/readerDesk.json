@@ -27,7 +27,9 @@
     "DOCUMENTS_FETCH_FAILED": "Vos documents n'ont pas pu être chargés.",
     "DOCUMENT_FETCH_FAILED": "Ce document est introuvable.",
     "DOCUMENT_CREATE_FAILED": "Le fichier n'a pas pu être enregistré sur cet ordinateur.",
-    "INVALID_FILE": "Cette photo n'a pas pu être lue."
+    "INVALID_FILE": "Cette photo n'a pas pu être lue.",
+    "OCR_ENGINE_FAILED": "Le moteur de lecture n'a pas pu démarrer sur cet ordinateur.",
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "Les données de lecture de cette langue n'ont pas pu être téléchargées. Vérifiez la connexion et réessayez."
   },
   "upload": {
     "hint": "PDF, JPG, PNG ou WebP. Aucune limite de taille.",
@@ -49,5 +51,9 @@
     },
     "body": "La lecture des livres de la bibliothèque sur le bureau arrive dans une prochaine mise à jour. Vos propres documents fonctionnent déjà.",
     "back": "Retour à vos lectures"
+  },
+  "ocr": {
+    "downloading": "Téléchargement des données de lecture pour {{language}}… {{percent}} %",
+    "languageFallback": "Lecture de ce document en anglais"
   }
 }
