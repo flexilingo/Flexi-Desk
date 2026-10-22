@@ -126,31 +126,31 @@ function getCefrColor(cefr: string, isEstimated?: boolean): string {
   return isEstimated ? `${base}99` : base;
 }
 
-function getCefrLabel(cefr: string): { label: string; labelFa: string } {
-  const labels: Record<string, { label: string; labelFa: string }> = {
-    A1: { label: 'Beginner', labelFa: 'مبتدی' },
-    A2: { label: 'Elementary', labelFa: 'مقدماتی' },
-    B1: { label: 'Intermediate', labelFa: 'متوسط' },
-    B2: { label: 'Upper-Int', labelFa: 'بالای متوسط' },
-    C1: { label: 'Advanced', labelFa: 'پیشرفته' },
-    C2: { label: 'Proficiency', labelFa: 'حرفه‌ای' },
-    phrase: { label: 'Phrase', labelFa: 'عبارت' },
+function getCefrLabel(cefr: string): { labelFa: string } {
+  const labels: Record<string, { labelFa: string }> = {
+    A1: { labelFa: 'مبتدی' },
+    A2: { labelFa: 'مقدماتی' },
+    B1: { labelFa: 'متوسط' },
+    B2: { labelFa: 'بالای متوسط' },
+    C1: { labelFa: 'پیشرفته' },
+    C2: { labelFa: 'حرفه‌ای' },
+    phrase: { labelFa: 'عبارت' },
   };
-  return labels[cefr] ?? { label: cefr, labelFa: '' };
+  return labels[cefr] ?? { labelFa: '' };
 }
 
-function getPhraseTypeLabel(phraseType?: string): { icon: LucideIcon; label: string } {
+function getPhraseTypeLabel(phraseType?: string): { icon: LucideIcon; labelKey: string } {
   switch (phraseType) {
     case 'phrasal_verb':
-      return { icon: Link2, label: 'Phrasal Verb' };
+      return { icon: Link2, labelKey: 'phraseType.phrasalVerb' };
     case 'idiom':
-      return { icon: MessageSquare, label: 'Idiom' };
+      return { icon: MessageSquare, labelKey: 'phraseType.idiom' };
     case 'collocation':
-      return { icon: Type, label: 'Collocation' };
+      return { icon: Type, labelKey: 'phraseType.collocation' };
     case 'fixed_expression':
-      return { icon: Pencil, label: 'Expression' };
+      return { icon: Pencil, labelKey: 'phraseType.expression' };
     default:
-      return { icon: BookOpen, label: 'Phrase' };
+      return { icon: BookOpen, labelKey: 'phraseType.phrase' };
   }
 }
 
@@ -206,6 +206,7 @@ function ClickableWord({
   onResumeOnLeave,
 }: ClickableWordProps) {
   const { t } = useTranslation();
+  const { t: tp } = useTranslation('podcastUi');
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -318,7 +319,7 @@ function ClickableWord({
                   return <PhraseIcon className="h-3 w-3" />;
                 })()}
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">
-                  {getPhraseTypeLabel(word.phraseType).label}
+                  {tp(getPhraseTypeLabel(word.phraseType).labelKey)}
                 </span>
               </div>
               <div className="text-[15px] font-medium text-foreground mb-1">
@@ -349,7 +350,7 @@ function ClickableWord({
               </div>
               {word.confidence != null && word.confidence < 100 && (
                 <span className="text-[11px] text-warning bg-warning/15 px-2 py-0.5 rounded">
-                  {word.confidence}%{word.isEstimated && ' estimated'}
+                  {word.confidence}%{word.isEstimated && ` ${tp('subtitle.estimated')}`}
                 </span>
               )}
             </div>
@@ -399,6 +400,8 @@ function PhraseGroup({
   onPauseOnHover,
   onResumeOnLeave,
 }: PhraseGroupProps) {
+  const { t } = useTranslation();
+  const { t: tp } = useTranslation('podcastUi');
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -438,15 +441,17 @@ function PhraseGroup({
         ? 'rgba(249, 115, 22, 0.5)'
         : 'rgba(59, 130, 246, 0.5)';
 
-  const typeLabel = isPhrasalVerb
-    ? 'Phrasal Verb'
-    : isIdiom
-      ? 'Idiom'
-      : isCollocation
-        ? 'Collocation'
-        : group.phraseType === 'fixed_expression'
-          ? 'Expression'
-          : 'Phrase';
+  const typeLabel = tp(
+    isPhrasalVerb
+      ? 'phraseType.phrasalVerb'
+      : isIdiom
+        ? 'phraseType.idiom'
+        : isCollocation
+          ? 'phraseType.collocation'
+          : group.phraseType === 'fixed_expression'
+            ? 'phraseType.expression'
+            : 'phraseType.phrase',
+  );
 
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -513,7 +518,7 @@ function PhraseGroup({
           className="absolute -top-2.5 -left-2.5 w-5 h-5 p-0 border-0 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center cursor-pointer z-10"
           onClick={handleAddClick}
           onMouseEnter={() => setIsHovered(true)}
-          title="Add to Deck"
+          title={t('podcast.addToDeck')}
         >
           +
         </button>

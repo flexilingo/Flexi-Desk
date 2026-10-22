@@ -30,48 +30,7 @@ import type {
 import { mapAvailableModel, mapDownloadProgress } from '@/pages/caption/types';
 import { useCaptionStore } from '@/pages/caption';
 import { listen } from '@tauri-apps/api/event';
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: 'English',
-  fa: 'Persian',
-  ar: 'Arabic',
-  tr: 'Turkish',
-  es: 'Spanish',
-  fr: 'French',
-  de: 'German',
-  zh: 'Chinese',
-  hi: 'Hindi',
-  ru: 'Russian',
-  ja: 'Japanese',
-  ko: 'Korean',
-  pt: 'Portuguese',
-  it: 'Italian',
-  nl: 'Dutch',
-  pl: 'Polish',
-  sv: 'Swedish',
-  da: 'Danish',
-  no: 'Norwegian',
-  fi: 'Finnish',
-  el: 'Greek',
-  cs: 'Czech',
-  ro: 'Romanian',
-  hu: 'Hungarian',
-  th: 'Thai',
-  vi: 'Vietnamese',
-  id: 'Indonesian',
-  ms: 'Malay',
-  he: 'Hebrew',
-  uk: 'Ukrainian',
-  bg: 'Bulgarian',
-  hr: 'Croatian',
-  sk: 'Slovak',
-  sl: 'Slovenian',
-  sr: 'Serbian',
-  lt: 'Lithuanian',
-  lv: 'Latvian',
-  et: 'Estonian',
-  auto: 'Auto-detect',
-};
+import { Trans, useTranslation } from 'react-i18next';
 
 interface ModelSuggestionDialogProps {
   open: boolean;
@@ -88,6 +47,7 @@ export function ModelSuggestionDialog({
   feedLanguage,
   onModelSwitched,
 }: ModelSuggestionDialogProps) {
+  const { t, i18n } = useTranslation('podcastUi');
   const navigate = useNavigate();
   const [isSwitching, setSwitching] = useState(false);
   const [isDownloading, setDownloading] = useState(false);
@@ -99,7 +59,14 @@ export function ModelSuggestionDialog({
   const models = compatibility.suggested_models.map(mapAvailableModel);
   const downloadedModels = models.filter((m) => m.isDownloaded);
   const normalizedLang = feedLanguage.split(/[-_]/)[0].toLowerCase();
-  const langName = LANGUAGE_NAMES[normalizedLang] ?? feedLanguage;
+  let langName = feedLanguage;
+  try {
+    langName =
+      new Intl.DisplayNames([i18n.language], { type: 'language' }).of(normalizedLang) ??
+      feedLanguage;
+  } catch {
+    // unknown code: show it as-is
+  }
 
   // Find the recommended model (prefer turbo, then by downloaded status)
   const recommendedModel =
@@ -115,7 +82,7 @@ export function ModelSuggestionDialog({
       // Get current binary path
       const whisperInfo = useCaptionStore.getState().whisperInfo;
       if (!whisperInfo?.binaryPath) {
-        setError('Whisper binary not configured.');
+        setError(t('modelSuggestion.notConfigured'));
         setSwitching(false);
         return;
       }
@@ -181,14 +148,21 @@ export function ModelSuggestionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-warning" />
-            Incompatible Whisper Model
+            {t('modelSuggestion.title')}
           </DialogTitle>
           <DialogDescription>
-            Your current model{' '}
-            <strong className="text-foreground">{compatibility.current_model ?? 'unknown'}</strong>{' '}
-            only supports English, but this podcast is in{' '}
-            <strong className="text-foreground">{langName}</strong>. Switch to a multilingual model
-            to transcribe it.
+            <Trans
+              i18nKey="modelSuggestion.description"
+              ns="podcastUi"
+              values={{
+                model: compatibility.current_model ?? t('modelSuggestion.unknownModel'),
+                language: langName,
+              }}
+              components={{
+                m: <strong className="text-foreground" />,
+                l: <strong className="text-foreground" />,
+              }}
+            />
           </DialogDescription>
         </DialogHeader>
 
@@ -202,7 +176,7 @@ export function ModelSuggestionDialog({
           {downloadedModels.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground">
-                Available multilingual models on your device:
+                {t('modelSuggestion.availableOnDevice')}
               </p>
               {downloadedModels.map((model) => (
                 <div
@@ -239,7 +213,7 @@ export function ModelSuggestionDialog({
                     ) : (
                       <>
                         <Monitor className="h-3 w-3 mr-1" />
-                        Switch & Transcribe
+                        {t('modelSuggestion.switchAndTranscribe')}
                       </>
                     )}
                   </Button>
@@ -252,7 +226,7 @@ export function ModelSuggestionDialog({
           {downloadedModels.length === 0 && recommendedModel && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground">
-                No multilingual model downloaded. We recommend:
+                {t('modelSuggestion.noneDownloaded')}
               </p>
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
                 <div className="flex items-center gap-3">
@@ -263,7 +237,7 @@ export function ModelSuggestionDialog({
                         {formatSize(recommendedModel.sizeMb)}
                       </span>
                       <Badge className="text-[10px] px-1.5 py-0 bg-primary text-primary-foreground">
-                        Recommended
+                        {t('modelSuggestion.recommended')}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -308,12 +282,12 @@ export function ModelSuggestionDialog({
                   {isDownloading ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                      Downloading…
+                      {t('modelSuggestion.downloading')}
                     </>
                   ) : (
                     <>
                       <Download className="h-3.5 w-3.5 mr-1" />
-                      Download & Use
+                      {t('modelSuggestion.downloadAndUse')}
                     </>
                   )}
                 </Button>
@@ -325,10 +299,10 @@ export function ModelSuggestionDialog({
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" size="sm" onClick={handleGoToSettings} disabled={isDownloading}>
             <Settings className="h-3.5 w-3.5 mr-1" />
-            All Models
+            {t('modelSuggestion.allModels')}
           </Button>
           <Button variant="outline" size="sm" onClick={onClose} disabled={isDownloading}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

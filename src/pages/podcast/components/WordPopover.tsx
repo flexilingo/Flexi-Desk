@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useTranslation } from 'react-i18next';
 
 interface WordPopoverProps {
   word: string;
@@ -13,6 +14,7 @@ interface WordPopoverProps {
 }
 
 export function WordPopover({ word, children, episodeId, positionMs }: WordPopoverProps) {
+  const { t } = useTranslation('podcastUi');
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
@@ -75,7 +77,7 @@ export function WordPopover({ word, children, episodeId, positionMs }: WordPopov
               ) : (
                 <Plus className="h-3 w-3 mr-1.5" />
               )}
-              {added ? 'Added to SRS' : 'Add to SRS'}
+              {added ? t('wordPopover.addedToSrs') : t('wordPopover.addToSrs')}
             </Button>
 
             {episodeId && positionMs !== undefined && (
@@ -91,7 +93,7 @@ export function WordPopover({ word, children, episodeId, positionMs }: WordPopov
                 ) : (
                   <BookmarkPlus className="h-3 w-3 mr-1.5" />
                 )}
-                Bookmark at this time
+                {t('wordPopover.bookmark')}
               </Button>
             )}
           </div>

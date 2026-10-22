@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CefrLevel } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Small badge atoms used across the podcast hub.
@@ -33,9 +34,12 @@ export function CefrChip({ level }: { level: CefrLevel | null | undefined }) {
 }
 
 export function WpmChip({ wpm }: { wpm: number | null | undefined }) {
+  const { t } = useTranslation('podcastUi');
   if (!wpm) return null;
   return (
-    <BaseChip className="border border-border bg-card text-muted-foreground">{wpm} WPM</BaseChip>
+    <BaseChip className="border border-border bg-card text-muted-foreground">
+      {t('chips.wpm', { wpm })}
+    </BaseChip>
   );
 }
 
@@ -44,11 +48,12 @@ export function ScoreChip({ score }: { score: number | null | undefined }) {
   return <BaseChip className="border border-accent/40 bg-accent/12 text-accent">{score}</BaseChip>;
 }
 
-export function ReadyChip({ label = 'Ready' }: { label?: string }) {
+export function ReadyChip({ label }: { label?: string }) {
+  const { t } = useTranslation('podcastUi');
   return (
     <BaseChip className="border border-success/45 bg-success/18 text-success">
       <Check className="h-3 w-3" />
-      {label}
+      {label ?? t('shared.ready')}
     </BaseChip>
   );
 }

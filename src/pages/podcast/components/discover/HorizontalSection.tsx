@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface HorizontalSectionProps {
   title: string;
@@ -33,6 +34,7 @@ export function HorizontalSection({
   onMoreClick,
   children,
 }: HorizontalSectionProps) {
+  const { t } = useTranslation('podcastUi');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -89,7 +91,7 @@ export function HorizontalSection({
               onClick={onMoreClick}
               className="text-sm text-accent hover:text-accent/80 font-medium transition-colors"
             >
-              More →
+              {t('section.more')}
             </button>
           )}
           {(canScrollLeft || canScrollRight) && (
@@ -120,9 +122,7 @@ export function HorizontalSection({
         className="w-full min-w-0 scrollbar-hide snap-x snap-mandatory pb-2"
       >
         <div className="flex gap-4 w-fit">
-          {isLoading
-            ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-            : children}
+          {isLoading ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />) : children}
         </div>
       </div>
     </div>

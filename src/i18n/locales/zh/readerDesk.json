@@ -107,5 +107,18 @@
     "change": "更改",
     "dismiss": "关闭",
     "detected": "根据文本识别：{{language}}"
+  },
+  "audio": {
+    "hostedNeedsAccount": "这本书的录音保存在你的账户里，只对你在线书库中的副本开放。这个副本在本机上，所以暂时无法在这里播放。",
+    "hostedFailed": "暂时无法加载录音。请检查网络和登录状态，然后重新打开此面板。",
+    "signInForEditions": "登录后告诉阅读器这是哪一本出版物。它的录音、视频和字幕会一并开放。"
+  },
+  "book": {
+    "backToBook": "返回书本",
+    "playFailed": "这段录音无法播放。",
+    "lockedTitle": "字幕：已完整听 {{n}} / {{required}} 遍",
+    "lockedHeading": "先听，再读",
+    "lockedRule": "这一条录音从头到尾完整听满 {{required}} 遍（不快进）后，字幕才会打开。可以往回拖。快于 1× 不计入。",
+    "lockedProgress": "已完整听：{{n}} / {{required}}"
   }
 }

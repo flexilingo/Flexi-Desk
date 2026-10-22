@@ -116,12 +116,12 @@ describe('local insight provider', () => {
 
   it('hydrates a stored fragment into the shared ExamInsight shape', async () => {
     invoke.mockResolvedValue([
-      { skill: 'listening', status: 'ready', result: '{"wrong_count":1}', error: null },
+      { skill: 'listening', status: 'ready', result: '{"wrong_count":1,"_v":2}', error: null },
     ]);
     const status = await localInsightProvider('s1', results()).fetchStatus();
 
     expect(status.skills.listening).toBe('ready');
-    expect(status.insight.listening).toEqual({ wrong_count: 1 });
+    expect(status.insight.listening).toEqual({ wrong_count: 1, _v: 2 });
   });
 
   it('a corrupt cached row degrades to "not generated" rather than throwing', async () => {
@@ -130,7 +130,8 @@ describe('local insight provider', () => {
     ]);
     const status = await localInsightProvider('s1', results()).fetchStatus();
 
-    expect(status.skills.listening).toBe('ready');
+    // unreadable (or from before answers were keyed by position): made again, never shown
+    expect(status.skills.listening).toBe('pending');
     expect(status.insight.listening).toBeUndefined();
   });
 

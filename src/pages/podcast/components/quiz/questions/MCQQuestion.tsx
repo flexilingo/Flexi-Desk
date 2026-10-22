@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
 import type { QuizQuestion } from '../types';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface MCQQuestionProps {
   question: QuizQuestion;
@@ -21,6 +22,7 @@ export function MCQQuestion({
   isCorrect,
   disabled = false,
 }: MCQQuestionProps) {
+  const { t } = useTranslation('podcastUi');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
@@ -46,12 +48,14 @@ export function MCQQuestion({
   const getQuestionTitle = () => {
     switch (question.type) {
       case 'mcq_synonym':
-        return 'Choose the Synonym';
+        return t('quiz.q.chooseSynonym');
       case 'mcq_grammar':
-        return `Grammar: ${question.grammar_point || 'Verb Form'}`;
+        return t('quiz.q.grammarPoint', {
+          point: question.grammar_point || t('quiz.q.verbForm'),
+        });
       case 'mcq_meaning':
       default:
-        return 'Choose the Correct Answer';
+        return t('quiz.q.chooseCorrect');
     }
   };
 
@@ -118,7 +122,7 @@ export function MCQQuestion({
 
         {question.type === 'mcq_synonym' && question.context_sentence && (
           <div className="text-sm text-muted-foreground italic px-2">
-            Context: &quot;{question.context_sentence}&quot;
+            {t('quiz.q.context', { sentence: question.context_sentence })}
           </div>
         )}
 
@@ -174,7 +178,7 @@ export function MCQQuestion({
                 className="text-muted-foreground"
               >
                 <Lightbulb className="h-4 w-4 mr-1" />
-                Show Hint
+                {t('quiz.q.showHint')}
               </Button>
             ) : (
               <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 px-3 py-1.5 rounded-md">
@@ -195,13 +199,18 @@ export function MCQQuestion({
             {isCorrect ? (
               <>
                 <CheckCircle2 className="h-5 w-5" />
-                <span className="font-medium">Correct!</span>
+                <span className="font-medium">{t('quiz.q.correct')}</span>
               </>
             ) : (
               <>
                 <XCircle className="h-5 w-5" />
                 <span>
-                  Correct answer: <strong>{question.answer}</strong>
+                  <Trans
+                    i18nKey="quiz.q.correctAnswer"
+                    ns="podcastUi"
+                    values={{ answer: question.answer }}
+                    components={{ b: <strong /> }}
+                  />
                 </span>
               </>
             )}
@@ -210,7 +219,7 @@ export function MCQQuestion({
 
         {!showFeedback && (
           <Button onClick={handleSubmit} disabled={!selectedOption || disabled} className="w-full">
-            Submit Answer
+            {t('quiz.q.submitAnswer')}
           </Button>
         )}
       </CardContent>

@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { NlpAnalysis } from '../../types';
 import { cefrSupported } from '../../utils/words';
+import { useTranslation } from 'react-i18next';
 
 const CEFR_BAR_COLORS: Record<string, string> = {
   A1: 'bg-success',
@@ -40,14 +41,14 @@ interface AnalysisTabProps {
 
 const SUB_TABS: {
   key: SubTab;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   getBadge?: (analysis: NlpAnalysis | null, cloud?: CloudAnalysis | null) => string | null;
 }[] = [
-  { key: 'overview', label: 'Overview', icon: BarChart3 },
+  { key: 'overview', labelKey: 'analysisTab.subOverview', icon: BarChart3 },
   {
     key: 'grammar',
-    label: 'Grammar',
+    labelKey: 'analysisTab.subGrammar',
     icon: BookOpen,
     getBadge: (_a, cloud) => {
       const count = cloud?.grammar_patterns?.length ?? 0;
@@ -56,7 +57,7 @@ const SUB_TABS: {
   },
   {
     key: 'phrases',
-    label: 'Phrases',
+    labelKey: 'analysisTab.subPhrases',
     icon: MessageSquare,
     getBadge: (_a, cloud) => {
       const count = cloud?.phrases?.length ?? 0;
@@ -65,7 +66,7 @@ const SUB_TABS: {
   },
   {
     key: 'collocations',
-    label: 'Collocations',
+    labelKey: 'analysisTab.subCollocations',
     icon: Library,
     getBadge: (_a, cloud) => {
       const count = cloud?.collocations?.length ?? 0;
@@ -74,19 +75,20 @@ const SUB_TABS: {
   },
   {
     key: 'cefr',
-    label: 'CEFR Level',
+    labelKey: 'analysisTab.subCefr',
     icon: Layers,
     getBadge: (a) => a?.cefrLevel ?? null,
   },
   {
     key: 'vocabulary',
-    label: 'Vocabulary',
+    labelKey: 'analysisTab.subVocabulary',
     icon: FileText,
     getBadge: (a) => (a?.totalWords ? a.totalWords.toLocaleString() : null),
   },
 ];
 
 export function AnalysisTab({ analysis, cloudAnalysis, sourceLang = 'en' }: AnalysisTabProps) {
+  const { t } = useTranslation('podcastUi');
   const [activeTab, setActiveTab] = useState<SubTab>('overview');
 
   const cefrDist = useMemo<Record<string, number>>(() => {
@@ -113,13 +115,13 @@ export function AnalysisTab({ analysis, cloudAnalysis, sourceLang = 'en' }: Anal
     if (!cefrSupported(sourceLang)) {
       return (
         <div className="text-center py-8 text-sm text-muted-foreground">
-          Difficulty analysis isn't available for this language yet.
+          {t('analysisTab.noLanguage')}
         </div>
       );
     }
     return (
       <div className="text-center py-8 text-sm text-muted-foreground">
-        Transcribe the episode to see NLP analysis.
+        {t('analysisTab.transcribeFirst')}
       </div>
     );
   }
@@ -129,12 +131,12 @@ export function AnalysisTab({ analysis, cloudAnalysis, sourceLang = 'en' }: Anal
       {/* Status badge */}
       <div className="flex items-center gap-1.5 text-xs text-success font-medium">
         <CheckCircle className="h-3.5 w-3.5" />
-        Analysis complete
+        {t('analysisTab.complete')}
       </div>
 
       {/* Sub-tab buttons */}
       <div className="grid grid-cols-3 gap-1.5">
-        {SUB_TABS.map(({ key, label, icon: Icon, getBadge }) => {
+        {SUB_TABS.map(({ key, labelKey, icon: Icon, getBadge }) => {
           const badge = getBadge?.(analysis, cloudAnalysis);
           const isActive = activeTab === key;
           return (
@@ -148,7 +150,7 @@ export function AnalysisTab({ analysis, cloudAnalysis, sourceLang = 'en' }: Anal
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
-              <span className="truncate w-full text-center">{label}</span>
+              <span className="truncate w-full text-center">{t(labelKey)}</span>
               {badge && (
                 <span className="text-[9px] font-bold bg-muted/50 rounded-full px-1.5 py-0.5 leading-none">
                   {badge}
@@ -185,6 +187,7 @@ function OverviewContent({
   analysis: NlpAnalysis;
   cloudAnalysis?: CloudAnalysis | null;
 }) {
+  const { t } = useTranslation('podcastUi');
   const sentencesCount =
     cloudAnalysis?.sentences_count ?? Math.round(analysis.totalWords / analysis.avgSentenceLength);
 
@@ -192,19 +195,29 @@ function OverviewContent({
     <div className="space-y-4">
       {/* Video Statistics */}
       <div>
-        <h4 className="text-xs font-medium text-muted-foreground mb-2">Statistics</h4>
+        <h4 className="text-xs font-medium text-muted-foreground mb-2">
+          {t('analysisTab.statistics')}
+        </h4>
         <div className="grid grid-cols-2 gap-2">
-          <MetricCard label="Sentences" value={sentencesCount.toLocaleString()} />
-          <MetricCard label="Words" value={analysis.totalWords.toLocaleString()} />
-          <MetricCard label="Unique Words" value={analysis.uniqueWords.toLocaleString()} />
-          <MetricCard label="CEFR Level" value={analysis.cefrLevel ?? 'N/A'} />
+          <MetricCard label={t('analysisTab.sentences')} value={sentencesCount.toLocaleString()} />
+          <MetricCard label={t('analysisTab.words')} value={analysis.totalWords.toLocaleString()} />
+          <MetricCard
+            label={t('analysisTab.uniqueWords')}
+            value={analysis.uniqueWords.toLocaleString()}
+          />
+          <MetricCard
+            label={t('analysisTab.subCefr')}
+            value={analysis.cefrLevel ?? t('analysisTab.notAvailable')}
+          />
         </div>
       </div>
 
       {/* Grammar Patterns chips */}
       {cloudAnalysis?.grammar_patterns && cloudAnalysis.grammar_patterns.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">Grammar Patterns</h4>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2">
+            {t('analysisTab.grammarPatterns')}
+          </h4>
           <div className="flex flex-wrap gap-1.5">
             {cloudAnalysis.grammar_patterns.slice(0, 12).map((gp) => (
               <span
@@ -225,10 +238,11 @@ function OverviewContent({
 /* ── Grammar ───────────────────────────────────────────── */
 
 function GrammarContent({ cloudAnalysis }: { cloudAnalysis?: CloudAnalysis | null }) {
+  const { t } = useTranslation('podcastUi');
   const patterns = cloudAnalysis?.grammar_patterns;
 
   if (!patterns || patterns.length === 0) {
-    return <EmptyState text="No grammar patterns available." />;
+    return <EmptyState text={t('analysisTab.noGrammar')} />;
   }
 
   return (
@@ -256,10 +270,11 @@ function GrammarContent({ cloudAnalysis }: { cloudAnalysis?: CloudAnalysis | nul
 /* ── Phrases ───────────────────────────────────────────── */
 
 function PhrasesContent({ cloudAnalysis }: { cloudAnalysis?: CloudAnalysis | null }) {
+  const { t } = useTranslation('podcastUi');
   const phrases = cloudAnalysis?.phrases;
 
   if (!phrases || phrases.length === 0) {
-    return <EmptyState text="No phrases available." />;
+    return <EmptyState text={t('analysisTab.noPhrases')} />;
   }
 
   return (
@@ -279,10 +294,11 @@ function PhrasesContent({ cloudAnalysis }: { cloudAnalysis?: CloudAnalysis | nul
 /* ── Collocations ──────────────────────────────────────── */
 
 function CollocationsContent({ cloudAnalysis }: { cloudAnalysis?: CloudAnalysis | null }) {
+  const { t } = useTranslation('podcastUi');
   const collocations = cloudAnalysis?.collocations;
 
   if (!collocations || collocations.length === 0) {
-    return <EmptyState text="No collocations available." />;
+    return <EmptyState text={t('analysisTab.noCollocations')} />;
   }
 
   return (
@@ -313,17 +329,18 @@ function CefrContent({
   cefrDist: Record<string, number>;
   cefrLevel?: string;
 }) {
+  const { t } = useTranslation('podcastUi');
   const totalForDist = Object.values(cefrDist).reduce((a, b) => a + b, 0) || 1;
 
   if (Object.keys(cefrDist).length === 0) {
-    return <EmptyState text="No CEFR distribution data available." />;
+    return <EmptyState text={t('analysisTab.noCefr')} />;
   }
 
   return (
     <div className="space-y-3">
       {cefrLevel && (
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Overall Level:</span>
+          <span className="text-xs text-muted-foreground">{t('analysisTab.overallLevel')}</span>
           <Badge variant="outline" className="text-xs font-bold">
             {cefrLevel}
           </Badge>
@@ -363,6 +380,7 @@ function VocabularyContent({
   topWords: { word: string; count: number; level?: string }[];
   cefrDist: Record<string, number>;
 }) {
+  const { t } = useTranslation('podcastUi');
   const grouped = useMemo(() => {
     const groups: Record<string, { word: string; count: number }[]> = {};
     for (const w of topWords) {
@@ -374,7 +392,7 @@ function VocabularyContent({
   }, [topWords]);
 
   if (topWords.length === 0 && Object.keys(cefrDist).length === 0) {
-    return <EmptyState text="No vocabulary data available." />;
+    return <EmptyState text={t('analysisTab.noVocabulary')} />;
   }
 
   // If we have topWords with levels, show grouped
@@ -389,9 +407,11 @@ function VocabularyContent({
             <div key={level}>
               <div className="flex items-center gap-2 mb-1.5">
                 <Badge variant="outline" className="text-[10px] font-bold">
-                  {level}
+                  {level === 'Unknown' ? t('analysisTab.unknown') : level}
                 </Badge>
-                <span className="text-[10px] text-muted-foreground">{words.length} words</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {t('shared.wordsCount', { count: words.length })}
+                </span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {words.slice(0, 20).map((w) => (
@@ -404,7 +424,7 @@ function VocabularyContent({
                 ))}
                 {words.length > 20 && (
                   <span className="text-[10px] text-muted-foreground self-center">
-                    +{words.length - 20} more
+                    {t('analysisTab.more', { count: words.length - 20 })}
                   </span>
                 )}
               </div>
@@ -426,7 +446,9 @@ function VocabularyContent({
             <Badge variant="outline" className="text-[10px] font-bold">
               {level}
             </Badge>
-            <span className="text-xs text-muted-foreground">{count} words</span>
+            <span className="text-xs text-muted-foreground">
+              {t('shared.wordsCount', { count })}
+            </span>
           </div>
         );
       })}

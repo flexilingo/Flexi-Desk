@@ -104,6 +104,7 @@ export function ReaderToolbar({
   editionId,
   editions,
   onEditionChange,
+  editionsNote,
   noteCount,
   notesOpen,
   onToggleNotes,
@@ -152,6 +153,8 @@ export function ReaderToolbar({
   editionId?: string;
   editions?: BookEdition[];
   onEditionChange?: (id: string) => void;
+  /** DESK: said in place of the edition picker when the catalogue cannot be reached (signed out). */
+  editionsNote?: string;
   noteCount?: number;
   notesOpen?: boolean;
   onToggleNotes?: () => void;
@@ -562,6 +565,15 @@ export function ReaderToolbar({
                   ))}
                 </select>
               </div>
+            )}
+
+            {onEditionChange && !editions?.length && editionsNote && (
+              <p
+                role="status"
+                className="mt-3 border-t border-border pt-3 text-xs leading-snug text-muted-foreground"
+              >
+                {editionsNote}
+              </p>
             )}
 
             {onEditionChange && !!editions?.length && (

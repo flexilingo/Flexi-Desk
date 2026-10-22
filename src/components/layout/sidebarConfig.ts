@@ -19,6 +19,9 @@ import {
   Mic,
   PenLine,
   Puzzle,
+  Users,
+  Crown,
+  Sparkles,
 } from 'lucide-react';
 import { ENABLED_MODULES, type ModuleKey } from '@/config/features';
 
@@ -217,6 +220,28 @@ export const NAV_GROUPS: NavGroup[] = [
         module: 'vocabulary',
         matchPrefix: true,
       },
+      {
+        to: '/account/community',
+        labelKey: 'account:desk.nav.community',
+        icon: Users,
+        module: 'account',
+        matchPrefix: true,
+        activePaths: ['/account/friends'],
+      },
+      {
+        to: '/subscription',
+        labelKey: 'account:desk.nav.pro',
+        icon: Crown,
+        module: 'subscription',
+        matchPrefix: true,
+      },
+      {
+        to: '/whats-new',
+        labelKey: 'account:desk.nav.whatsNew',
+        icon: Sparkles,
+        module: 'whatsNew',
+        matchPrefix: true,
+      },
       // Last, right above the foot of the sidebar.
       {
         to: '/settings',
@@ -224,6 +249,9 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Settings,
         module: 'settings',
         matchPrefix: true,
+        // Profile, XP log, stats, payments... are Settings' account tabs.
+        activePaths: ['/account'],
+        exceptPaths: ['/account/community', '/account/friends'],
       },
     ],
   },

@@ -1,0 +1,1023 @@
+{
+  "telegram-podcast-bot": {
+    "title": "Trouvez un podcast en disant à un bot ce que vous voulez",
+    "tagline": "Décrivez avec vos mots ce que vous avez envie d'écouter, et recevez un épisode que vous pouvez vraiment suivre.",
+    "subtitle": "Aucun filtre à régler, aucun catalogue à faire défiler. Écrivez une phrase dans Telegram et recevez quelque chose à votre niveau, transcription comprise.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Choisir quoi écouter est une petite tâche à part entière, et c'est celle qui met discrètement fin aux habitudes d'écoute. Vous ouvrez une bibliothèque, vous voyez des milliers d'émissions, vous ne pouvez pas deviner lesquelles vous comprendrez, et vous refermez."
+      },
+      {
+        "type": "paragraph",
+        "text": "Le bot vous enlève le choix. Vous écrivez ce dont vous avez envie et il répond par quelque chose de précis : une émission, un épisode, un niveau, et la raison de ce choix."
+      },
+      { "type": "heading", "text": "Il suffit d'écrire" },
+      {
+        "type": "paragraph",
+        "text": "Il n'y a pas de syntaxe. Tout ce que vous diriez à une personne fonctionne, et le bot vous montre comment il a lu votre message avant de répondre, pour que vous puissiez le corriger."
+      },
+      {
+        "type": "list",
+        "variant": "dot",
+        "items": [
+          "Une émission que vous connaissez déjà par son nom — vous l'obtenez, avec un épisode prêt à lancer.",
+          "Un thème comme l'histoire, l'actualité, l'humour ou les sciences — vous obtenez des émissions là-dessus.",
+          "Un niveau comme A2 ou B1 — vous obtenez ce qui vaut la peine d'être écouté à ce niveau.",
+          "Une durée — dites que vous avez vingt minutes et vous obtenez des épisodes qui tiennent dedans.",
+          "Une idée dont aucune émission ne porte le nom — le bot cherche dans ce que les épisodes disent réellement et trouve ceux qui en parlent."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "La dernière est la plus intéressante",
+        "text": "Si rien ne s'appelle comme ce que vous avez écrit, le bot n'abandonne pas et ne renvoie pas le vide. Il cherche dans les transcriptions elles-mêmes, à travers les langues, et revient avec des épisodes qui traitent du sujet — puis il le dit, pour que vous sachiez pourquoi les résultats ont cette tête-là."
+      },
+      { "type": "heading", "text": "Rien n'est filtré tant que vous ne le demandez pas" },
+      {
+        "type": "paragraph",
+        "text": "Le bot démarre sans aucun filtre. Si un résultat ne convient pas, appuyez sur plus facile ou plus difficile sur la suggestion elle-même, ou ouvrez le panneau de filtres et changez la langue, le niveau, le thème ou le tri un par un. Chaque filtre part de « Peu importe », et « Peu importe » signifie vraiment aucun filtre — pas un réglage par défaut caché."
+      },
+      { "type": "heading", "text": "Ce qui se passe quand vous touchez un épisode" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Le lecteur s'ouvre",
+            "text": "Audio et transcription ensemble, la ligne en cours surlignée au moment où elle est dite."
+          },
+          {
+            "title": "Touchez un mot",
+            "text": "Le sens, la prononciation et son niveau CECR, sans mettre l'épisode en pause."
+          },
+          {
+            "title": "Gardez ce qui compte",
+            "text": "Les mots enregistrés deviennent des cartes, et reviennent en révision selon un calendrier."
+          }
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Le bot apprend de ce qu'on lui demande",
+        "text": "Quand assez de gens cherchent une chose à laquelle le catalogue répond mal, cette formulation est enregistrée et rattachée à ce qu'elle aurait dû renvoyer. La correspondance vit dans la base de données, pas dans le code : la recherche s'améliore sans attendre une mise en production."
+      },
+      { "type": "heading", "text": "Pourquoi deux bots et non un seul" },
+      {
+        "type": "paragraph",
+        "text": "Un bot qui s'ouvre en vous demandant laquelle de neuf choses vous voulez est un bot que la plupart des gens referment. Chacun de ceux-ci s'ouvre directement sur son sujet et suppose que c'est pour cela que vous êtes venu. Si vous voulez tout au même endroit, le bot d'origine contient toujours l'ensemble."
+      },
+      {
+        "type": "where",
+        "text": "Telegram → @flexilingo_podcast_bot → écrivez ce que vous voulez écouter.",
+        "href": "https://t.me/flexilingo_podcast_bot"
+      }
+    ],
+    "specs": [
+      { "label": "Où", "value": "Telegram" },
+      { "label": "Compte", "value": "Requis pour enregistrer et réviser" },
+      { "label": "Langues", "value": "Anglais, français, arabe, persan, hindi, chinois" },
+      { "label": "Prix", "value": "Gratuit" }
+    ],
+    "faq": [
+      {
+        "q": "Ai-je besoin d'un compte FlexiLingo ?",
+        "a": "Non pour chercher et écouter. Oui pour enregistrer des mots, les réviser plus tard et conserver votre niveau afin que les résultats restent ajustés à vous. La liaison demande une adresse e-mail et un code à six chiffres."
+      },
+      {
+        "q": "Dans quelles langues puis-je écouter ?",
+        "a": "Le catalogue couvre l'anglais et le français, et s'étend. Le bot, lui, vous parle en anglais, français, arabe, persan, hindi ou chinois — réglé une fois, il ne bouge plus."
+      },
+      {
+        "q": "Et s'il comprend mal ma demande ?",
+        "a": "Il vous montre comment il a lu votre message avant de répondre. Si cette lecture est fausse, changez un mot et redemandez, ou ouvrez le panneau de filtres et réglez à la main la partie qu'il a ratée."
+      },
+      {
+        "q": "Est-ce un produit différent du site ?",
+        "a": "Non. C'est le même catalogue, les mêmes niveaux et les mêmes mots enregistrés. Le bot est une porte d'entrée de plus, pour ceux qui vivent dans Telegram et n'installeront rien."
+      }
+    ]
+  },
+  "telegram-exam-bot": {
+    "title": "S'entraîner au CELPIP dans Telegram",
+    "tagline": "Une vraie section de lecture, chronométrée et notée, sans compte — puis l'examen complet quand vous voulez.",
+    "subtitle": "Commencez par une vraie section de compréhension écrite, chronométrée comme le vrai test et notée sur l'échelle CLB. Sans compte, sans installation, sans paiement.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "La plupart des candidats au CELPIP travaillent à l'estime. Ils se savent autour de CLB 8 et ignorent laquelle des quatre compétences retient le chiffre — alors ils travaillent les quatre à parts égales, ce qui est la façon la plus lente possible d'avancer."
+      },
+      {
+        "type": "paragraph",
+        "text": "Ce bot met un vrai chiffre là-dessus. Le premier test ne coûte rien et ne demande rien."
+      },
+      { "type": "heading", "text": "Le test gratuit, avant tout le reste" },
+      {
+        "type": "paragraph",
+        "text": "Une section de lecture complète — 38 questions, chronométrée comme le vrai test — se déroule dans la fenêtre de conversation. À la fin : une note CLB, une explication pour chaque question ratée, et le vocabulaire apparu dans les textes."
+      },
+      {
+        "type": "note",
+        "title": "Rien n'est retenu derrière un paiement",
+        "text": "Sur FlexiLingo les examens sont gratuits, autant de fois que vous les passez. Un compte gratuit débloque les trois autres compétences et conserve votre historique ; il ne débloque pas l'examen."
+      },
+      { "type": "heading", "text": "Trois façons de le passer" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Examen complet",
+            "text": "Les quatre sections — écoute, lecture, écrit, oral — chronométrées comme le vrai test, environ trois heures, notées par compétence et au total."
+          },
+          {
+            "title": "Entraînement",
+            "text": "Choisissez seulement les sections voulues et avancez à votre rythme. Utile une fois que vous savez quelle compétence est la faible."
+          },
+          {
+            "title": "Apprentissage",
+            "text": "Les mêmes vraies questions sans la pression : pas de chrono, touchez un mot pour son sens, et un lecteur audio complet que vous mettez en pause et rembobinez en lisant la transcription."
+          }
+        ]
+      },
+      { "type": "heading", "text": "Un examen neuf à chaque fois" },
+      {
+        "type": "paragraph",
+        "text": "L'examen est assemblé à neuf à chaque tentative : les questions ne se répètent pas et une deuxième session vous mesure vous, pas votre mémoire. Si vous partez en cours de route, le bot reprend la session inachevée au lieu de tout recommencer."
+      },
+      { "type": "heading", "text": "L'écrit est corrigé, pas seulement compté" },
+      {
+        "type": "paragraph",
+        "text": "Envoyez une tâche écrite et elle revient corrigée selon les quatre critères du CELPIP, avec ce qui a marché, ce qui n'a pas marché, les points précis à reprendre, et une réécriture facultative à comparer à la vôtre."
+      },
+      { "type": "heading", "text": "Vous pouvez rapporter ce que vous avez vraiment vu" },
+      {
+        "type": "paragraph",
+        "text": "Si vous venez de passer le vrai test, vous pouvez dire au bot quelle partie est tombée et ce qu'elle contenait. Ces rapports deviennent du matériel d'entraînement : la personne suivante entre mieux préparée que vous."
+      },
+      {
+        "type": "where",
+        "text": "Telegram → @flexilingo_celpip_bot → Start.",
+        "href": "https://t.me/flexilingo_celpip_bot"
+      }
+    ],
+    "specs": [
+      { "label": "Où", "value": "Telegram" },
+      { "label": "Test gratuit", "value": "Sans compte" },
+      { "label": "Notation", "value": "Échelle CLB, par compétence" },
+      { "label": "Examens", "value": "Toujours gratuits" }
+    ],
+    "faq": [
+      {
+        "q": "Le test gratuit est-il vraiment gratuit ?",
+        "a": "Oui, et il ne demande aucun compte. Une section de lecture complète, chronométrée, avec une note CLB et une explication par question à la fin."
+      },
+      {
+        "q": "Qu'apporte un compte ?",
+        "a": "Les trois autres sections, un examen assemblé à neuf à chaque tentative pour que les questions ne se répètent jamais, l'écrit corrigé selon les quatre critères du CELPIP, et vos notes conservées pour voir si vous progressez. Le compte lui-même est gratuit."
+      },
+      {
+        "q": "La notation est-elle la notation officielle du CELPIP ?",
+        "a": "Elle est sur l'échelle CLB, par compétence et au total, avec les critères que le test publie pour l'écrit. C'est de l'entraînement — seul Paragon délivre un résultat officiel."
+      },
+      {
+        "q": "Puis-je l'utiliser sur mon téléphone sans rien installer ?",
+        "a": "C'est précisément pourquoi c'est un bot Telegram. Si vous avez Telegram, vous avez l'examen."
+      }
+    ]
+  },
+  "tcf-canada-practice": {
+    "title": "Sujets d'entraînement TCF Canada",
+    "tagline": "Des sujets d'expression orale originaux en français, chacun avec le vocabulaire et les structures que la tâche exige vraiment.",
+    "subtitle": "Rédigés en français, bâtis autour des thèmes qui reviennent, et expliqués dans la langue dans laquelle vous réfléchissez.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Le difficile, dans la tâche 2 de l'expression orale, ce n'est pas le français. C'est qu'on vous remet un document court et qu'il faut poser les bonnes questions dessus, vite, dans un registre qui sonne comme une vraie demande de renseignements et non comme un exercice de langue."
+      },
+      {
+        "type": "paragraph",
+        "text": "Chaque sujet ici est un document complet du type que la tâche utilise — les informations de visite d'un musée, le programme d'un festival avec ses tarifs, l'inscription aux ateliers d'une maison de la culture — suivi de ce que l'examinateur écoute."
+      },
+      { "type": "heading", "text": "Deux couches sur chaque page" },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Le document lui-même, en français. C'est l'examen ; il n'est pas traduit, parce que le jour J il ne le sera pas.",
+          "La couche d'explication, dans votre langue d'apprentissage — le vocabulaire que le document suppose acquis, les structures que la tâche attend, et pourquoi telle formulation fonctionne."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Ce que veut dire une date sur une page",
+        "text": "Quand une page indique qu'un thème circule depuis telle date, c'est exactement ce que cela veut dire : le thème revient, à travers des sources indépendantes. Ce n'est pas une affirmation qu'un sujet précis est tombé à une session précise — les témoignages de candidats ne permettent pas de l'affirmer, et les sites qui prétendent le contraire republient en général les exemples publiés par les organismes eux-mêmes."
+      },
+      { "type": "heading", "text": "Les pages de référence" },
+      {
+        "type": "paragraph",
+        "text": "À côté des sujets, deux pages répondent aux questions que tout le monde pose en premier : comment le test est structuré et noté, et comment un résultat TCF se traduit en niveaux NCLC, ceux avec lesquels les dossiers d'immigration sont réellement lus."
+      },
+      { "type": "heading", "text": "Cette section s'écrit en ce moment" },
+      {
+        "type": "paragraph",
+        "text": "Les sujets publiés à ce jour couvrent l'expression orale tâche 2 sur des thèmes culturels, à Montréal, Québec, Ottawa et Toronto. De nouveaux thèmes s'ajoutent au fil de leur rédaction, et rien n'est publié avant d'avoir été vérifié face à la tâche qu'il prétend faire travailler."
+      },
+      { "type": "where", "text": "flexilingo.com → TCF Canada.", "href": "/tcf-canada" }
+    ],
+    "specs": [
+      { "label": "Examen", "value": "TCF / TEF Canada" },
+      { "label": "Compétence", "value": "Expression orale" },
+      { "label": "Support", "value": "Français" },
+      { "label": "Prix", "value": "Gratuit, sans compte" }
+    ],
+    "faq": [
+      {
+        "q": "Sont-ce de vraies questions d'examen ?",
+        "a": "Non, et aucun site ne peut honnêtement le prétendre. Ce sont des sujets originaux écrits selon le format publié de la tâche, bâtis autour des thèmes qui circulent."
+      },
+      {
+        "q": "Pourquoi le document est-il en français alors que je lis en français ?",
+        "a": "Parce que l'examen est en français. Le document reste en français ; ce qui est écrit dans votre langue, c'est l'explication de ce qu'il attend de vous."
+      },
+      {
+        "q": "L'expression écrite est-elle couverte aussi ?",
+        "a": "Pas encore. Ce qui est publié aujourd'hui, c'est l'expression orale plus les deux pages de référence. L'écrite est en cours de rédaction."
+      },
+      { "q": "Faut-il un compte ?", "a": "Non. Toutes les pages de cette section sont publiques." }
+    ]
+  },
+  "french-cheatsheet": {
+    "title": "L'antisèche de français",
+    "tagline": "165 pages de grammaire qui répondent à la question que vous avez vraiment posée, dans la langue où vous réfléchissez.",
+    "subtitle": "165 pages de grammaire française, chacune écrite pour répondre à une seule question — et pour y répondre avant que vous ayez fini de faire défiler.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "La plupart des ouvrages de grammaire sont écrits pour quelqu'un qui sait déjà ce qu'il regarde. Vous arrivez parce qu'une phrase vous a dérouté, et la page s'ouvre sur une terminologie qui suppose que vous savez nommer ce qui vous a dérouté."
+      },
+      {
+        "type": "paragraph",
+        "text": "Ici chaque page s'ouvre dans l'autre sens : la forme elle-même, ce qu'elle veut dire, et comment elle se prononce. La règle seulement ensuite. Vous pouvez repartir au bout de deux lignes avec ce que vous étiez venu chercher."
+      },
+      { "type": "heading", "text": "Chaque règle vient avec des phrases" },
+      {
+        "type": "paragraph",
+        "text": "Une règle que vous ne pouvez pas vous représenter dans une phrase est une règle que vous n'emploierez pas. Chaque page porte de vrais exemples, et chaque exemple porte sa prononciation — générée, jamais saisie à la main, donc cohérente de la première page à la 165e."
+      },
+      { "type": "heading", "text": "Expliquée dans la langue où vous réfléchissez" },
+      {
+        "type": "paragraph",
+        "text": "Le français reste du français. L'explication autour est rédigée en anglais, en arabe ou en persan — séparément, et non traduite automatiquement de l'une vers les autres, pour que chaque version se lise comme écrite pour son lecteur."
+      },
+      { "type": "heading", "text": "Les verbes, conjugués en entier" },
+      {
+        "type": "paragraph",
+        "text": "Cherchez un verbe sous n'importe quelle forme et vous tombez sur le verbe, pas sur une page à propos des verbes. Ses conjugaisons sont déployées à travers les temps, et celles qu'il vaut mieux apprendre d'abord sont signalées comme telles."
+      },
+      { "type": "heading", "text": "Carte de construction — ce qu'il faut retenir" },
+      { "type": "heading", "text": "La recherche comprend ce que vous vouliez dire" },
+      {
+        "type": "paragraph",
+        "text": "Vous pouvez chercher une forme conjuguée, une expression, une graphie sans accents, ou le nom grammatical d'une chose. Ce que les gens cherchent sans le trouver est enregistré — et c'est cette liste qui décide de la prochaine page à écrire."
+      },
+      {
+        "type": "where",
+        "text": "flexilingo.com → Produits → Antisèche de français.",
+        "href": "/cheatsheet/fr"
+      }
+    ],
+    "specs": [
+      { "label": "Pages", "value": "165" },
+      { "label": "Expliquée en", "value": "Anglais, arabe, persan" },
+      { "label": "Verbes", "value": "Conjugaisons complètes" },
+      { "label": "Prix", "value": "Gratuit, sans compte" }
+    ],
+    "faq": [
+      {
+        "q": "Faut-il un compte ?",
+        "a": "Non. Toutes les pages sont publiques et gratuites à lire."
+      },
+      {
+        "q": "Dans quelles langues est-elle expliquée ?",
+        "a": "En anglais, en arabe et en persan, chacune avec les 165 pages rédigées. D'autres s'ajoutent quand la demande existe."
+      },
+      {
+        "q": "Est-ce réservé aux candidats aux examens ?",
+        "a": "Non. C'est écrit pour quiconque bute sur une phrase française. La section TCF Canada se trouve à côté, pour ceux qui préparent cet examen précis."
+      }
+    ]
+  },
+  "podcast-player": {
+    "title": "Le lecteur de podcasts",
+    "tagline": "Écoutez n'importe quel épisode avec une transcription qui suit, mot à mot.",
+    "subtitle": "Écoutez n'importe quel épisode avec une transcription qui suit, mot à mot.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Vous connaissez la sensation : l'animateur dit quelque chose, vous en saisissez 80 %, et le temps de retrouver le mot manquant, il a deux phrases d'avance."
+      },
+      {
+        "type": "paragraph",
+        "text": "Le lecteur fait avancer la transcription avec l'audio et surligne la ligne prononcée. Touchez n'importe quel mot pour voir son sens, l'entendre et l'ajouter à un paquet — sans mettre en pause. Ralentissez à 0,5× quand un passage va trop vite, ou montez à 2× quand c'est trop facile."
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → Podcasts → choisissez une émission → choisissez un épisode.",
+        "href": "/podcasts"
+      },
+      { "type": "heading", "text": "Réglages de FlexiPlayer" }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "word-lookup": {
+    "title": "Touchez n'importe quel mot",
+    "tagline": "Le sens, la prononciation et une carte — sans arrêter l'épisode.",
+    "subtitle": "Le sens, la prononciation et une carte — sans arrêter l'épisode.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "À l'instant où vous tombez sur un mot inconnu, vous avez environ deux secondes avant de perdre la phrase. Ouvrir un dictionnaire coûte plus que ça, alors la plupart des gens laissent filer — et laissent filer encore la fois suivante."
+      },
+      {
+        "type": "paragraph",
+        "text": "Chaque mot de la transcription est touchable. Touchez-le et vous obtenez le sens, la prononciation, son niveau CECR et un bouton qui en fait une carte. Chaque mot est déjà souligné à la couleur de son niveau : vous voyez lesquels méritent votre attention avant même de toucher."
+      },
+      {
+        "type": "where",
+        "text": "Dans le lecteur de podcasts, touchez n'importe quel mot de la barre de sous-titres.",
+        "href": "/podcasts"
+      },
+      { "type": "heading", "text": "Touchez n'importe quel mot — vidéos" }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "cefr-filter": {
+    "title": "Trouvez des podcasts à votre niveau",
+    "tagline": "Réduisez 35 000 épisodes à ceux que vous pouvez vraiment suivre.",
+    "subtitle": "Réduisez 35 000 épisodes à ceux que vous pouvez vraiment suivre.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Le moyen le plus rapide de renoncer aux podcasts, c'est de commencer par un qui a deux niveaux de trop. On croit avoir échoué ; c'est simplement le mauvais épisode."
+      },
+      {
+        "type": "paragraph",
+        "text": "Chaque épisode de la bibliothèque est classé de A1 à C2. Touchez votre niveau et les 35 000 épisodes deviennent ceux que vous pouvez suivre. Affinez encore par thème ou par langue, et triez par analyse la plus récente si vous voulez le nouveau matériel d'abord."
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → Podcasts, la rangée de niveaux au-dessus de la bibliothèque.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "sentence-chat": {
+    "title": "Posez une question sur n'importe quelle phrase",
+    "tagline": "Touchez une ligne que vous ne comprenez pas et demandez pourquoi elle est écrite ainsi.",
+    "subtitle": "Touchez une ligne que vous ne comprenez pas et demandez pourquoi elle est écrite ainsi.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Les dictionnaires disent ce que veulent dire les mots. Ils ne disent pas pourquoi la phrase est construite ainsi — et passé le B1, c'est précisément ce qui bloque."
+      },
+      {
+        "type": "paragraph",
+        "text": "Touchez une ligne de la transcription et elle se démonte : sa difficulté, son temps, sa voix et sa structure, les tournures qui méritent l'attention, son vocabulaire clé, et une traduction. Puis continuez à demander. « Pourquoi pas le passé simple ici ? » obtient une vraie réponse, sur cette phrase-là."
+      },
+      {
+        "type": "where",
+        "text": "Dans le lecteur de podcasts, touchez une ligne de sous-titre.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "podcast-preview": {
+    "title": "Écoutez avant de vous engager",
+    "tagline": "Entendez quelques épisodes avant d'ajouter une émission à votre bibliothèque.",
+    "subtitle": "Entendez quelques épisodes avant d'ajouter une émission à votre bibliothèque.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Un podcast peut sembler parfait et être inutilisable : l'animateur parle trop vite, l'enregistrement est mauvais, l'accent n'est pas celui que vous apprenez."
+      },
+      {
+        "type": "paragraph",
+        "text": "Appuyez sur Aperçu sur n'importe quel résultat et les épisodes récents se lancent sur place. Vous voyez aussi combien d'épisodes existent et quand l'émission a publié pour la dernière fois : de quoi repérer un flux mort depuis trois ans avant de le suivre."
+      },
+      {
+        "type": "where",
+        "text": "Cherchez un podcast, puis appuyez sur Aperçu sur un résultat.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "subtitle-sync": {
+    "title": "Recalez une transcription décalée",
+    "tagline": "Quand les mots prennent de l'avance sur l'audio, ramenez-les à leur place.",
+    "subtitle": "Quand les mots prennent de l'avance sur l'audio, ramenez-les à leur place.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Beaucoup de podcasts insèrent la publicité au moment de la lecture, ce qui rend l'audio plus long que la transcription qui en a été tirée. Tout ce qui suit la première coupure arrive en retard."
+      },
+      {
+        "type": "paragraph",
+        "text": "Ouvrez l'outil de synchronisation, trouvez la ligne qui correspond à ce que vous entendez, et toute la transcription se décale pour coller. Un champ de recherche permet de sauter à une ligne en tapant un fragment, et une remise à zéro si vous allez trop loin."
+      },
+      {
+        "type": "where",
+        "text": "Dans le lecteur, ouvrez la fenêtre de synchronisation — une bannière y renvoie quand un décalage est détecté.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "celpip-exam": {
+    "title": "Simulation CELPIP complète",
+    "tagline": "Les quatre compétences, le vrai minutage, une note sur l'échelle CLB. Gratuit, à chaque fois.",
+    "subtitle": "Les quatre compétences, le vrai minutage, une note sur l'échelle CLB. Gratuit, à chaque fois.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Savoir qu'on est « autour de CLB 8 » n'est pas la même chose que savoir. Trois heures en conditions réelles vous disent quelle compétence retient vraiment votre note."
+      },
+      {
+        "type": "paragraph",
+        "text": "Compréhension orale, compréhension écrite, expression écrite et expression orale, minutées comme le vrai test, notées par compétence et au total. Vous obtenez un détail par compétence, un rapport de vocabulaire, et l'option d'une analyse IA détaillée de ce qui n'a pas marché et pourquoi."
+      },
+      {
+        "type": "note",
+        "title": "L'examen est toujours gratuit",
+        "text": "Autant de fois que vous le passez."
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → CELPIP → Démarrer → Examen complet.",
+        "href": "/products/celpip"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "learning-mode": {
+    "title": "Mode apprentissage",
+    "tagline": "Les mêmes questions d'examen, sans chrono, traduction et réécoute autorisées.",
+    "subtitle": "Les mêmes questions d'examen, sans chrono, traduction et réécoute autorisées.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Passer un examen sous pression vous donne votre note. Cela ne vous apprend rien — aucune place pour s'arrêter et comprendre."
+      },
+      {
+        "type": "paragraph",
+        "text": "Le mode apprentissage donne les vraies questions sans la pression : pas de chrono, traduction disponible, et vous pouvez réécouter l'audio autant que nécessaire. Servez-vous-en pour apprendre les types de questions, puis passez en mode chronométré pour vous évaluer."
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → CELPIP → Démarrer → Entraînement → activez « Sans chrono, avec traduction ».",
+        "href": "/products/celpip"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "studio-subtitles": {
+    "title": "Des sous-titres touchables, sur n'importe quel site",
+    "tagline": "Transformez YouTube, BBC Audio, CBC Listen ou Spotlight English en leçon sans quitter la page.",
+    "subtitle": "Transformez YouTube, BBC Audio, CBC Listen ou Spotlight English en leçon sans quitter la page.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Un sous-titre ordinaire est une image de texte. Vous pouvez le lire, mais vous ne pouvez rien en faire."
+      },
+      {
+        "type": "paragraph",
+        "text": "FlexiLingo dessine sa propre barre de sous-titres par-dessus la vidéo : la ligne d'origine et sa traduction ensemble, chaque mot touchable. Le sens, la prononciation, et directement dans un paquet — pendant que la vidéo tourne encore. Les mots que vous connaissez déjà s'estompent pour que les nouveaux ressortent."
+      },
+      {
+        "type": "paragraph",
+        "text": "Fonctionne sur YouTube, BBC Audio, CBC Listen et Spotlight English."
+      },
+      {
+        "type": "where",
+        "text": "Installez l'extension, ouvrez une vidéo et appuyez sur le bouton Studio dans le lecteur.",
+        "href": "/products/extension"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "translation-delay": {
+    "title": "Traduction différée",
+    "tagline": "La traduction arrive un instant plus tard — juste assez pour essayer d'abord.",
+    "subtitle": "La traduction arrive un instant plus tard — juste assez pour essayer d'abord.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Si la traduction est déjà à l'écran, vous la lisez. À chaque fois. Vous ne saurez jamais si vous auriez compris."
+      },
+      {
+        "type": "paragraph",
+        "text": "Réglez un délai et la ligne d'origine apparaît seule d'abord. Vous avez une seconde pour la déchiffrer, puis la traduction se fond à l'écran et vous dit si vous aviez raison. Un petit réglage qui change ce que regarder vous apporte réellement."
+      },
+      {
+        "type": "where",
+        "text": "Réglages Studio → Délai de traduction.",
+        "href": "/products/extension"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "explore-decks": {
+    "title": "Explorer les paquets publics",
+    "tagline": "Prenez le paquet déjà fini de quelqu'un d'autre plutôt que d'en bâtir un depuis rien.",
+    "subtitle": "Prenez le paquet déjà fini de quelqu'un d'autre plutôt que d'en bâtir un depuis rien.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Construire un paquet de vocabulaire depuis zéro, c'est l'étape où la plupart des gens s'arrêtent. C'est lent, et vous ne savez pas encore quels mots valent l'effort."
+      },
+      {
+        "type": "paragraph",
+        "text": "Explorer est une bibliothèque de paquets tout faits — tâches d'expression écrite CELPIP, listes de vocabulaire TOEFL et IELTS, et des ensembles concrets comme Entretien d'embauche, Voyage et aéroport, Réunion de travail, Santé et médecin. Chacun indique son nombre de cartes et combien de personnes l'ont pris. Copiez-en un et il est à vous : étudiez-le, modifiez-le, complétez-le."
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → Parcourir → Explorer les paquets publics.",
+        "href": "/decks"
+      },
+      { "type": "heading", "text": "Copier un deck tout prêt" }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "srs-review": {
+    "title": "Une révision qui choisit son propre calendrier",
+    "tagline": "Leitner, SM-2 ou FSRS — choisissez comment vos cartes reviennent.",
+    "subtitle": "Leitner, SM-2 ou FSRS — choisissez comment vos cartes reviennent.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Le but de la répétition espacée est de vous montrer un mot juste avant que vous l'oubliiez. Toutes les applications sont d'accord là-dessus, puis cachent leur planification derrière un seul algorithme figé."
+      },
+      {
+        "type": "paragraph",
+        "text": "C'est vous qui choisissez : Leitner si vous voulez quelque chose de simple à se représenter, SM-2 pour le classique, FSRS pour le moderne, celui qui s'adapte le plus finement à votre propre oubli. Changez quand vous voulez — vos cartes vous suivent."
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → Étude → Réglages → Algorithme de révision.",
+        "href": "/dashboard/study"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "community": {
+    "title": "Demandez ce dont vous avez vraiment besoin",
+    "tagline": "Publiez une demande, les autres votent, et celles qui remontent sont construites. Vingt ont été livrées.",
+    "subtitle": "Ce tableau n'est pas une boîte à idées que personne ne lit. Vingt demandes qui y ont été écrites sont aujourd'hui des fonctionnalités en service.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "L'essentiel de ce qui a été construit ici a d'abord été la plainte de quelqu'un. Pas une feuille de route, pas un sondage — une personne écrivant la chose qui l'agaçait, et assez d'autres s'y reconnaissant."
+      },
+      { "type": "heading", "text": "Comment en publier une" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Appuyez sur « Create New Topic »",
+            "text": "Il faut un compte gratuit — c'est la seule barrière, et elle existe pour qu'un vote corresponde à une personne."
+          },
+          {
+            "title": "Écrivez le problème, pas la solution",
+            "text": "Un titre de quelques mots et une description d'au moins une phrase. Vous pouvez mettre en forme : l'éditeur accepte titres, listes et gras."
+          },
+          {
+            "title": "Ajoutez une catégorie si l'une convient",
+            "text": "Facultatif. Cela aide la demande à trouver les gens qui ont buté sur la même chose."
+          }
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Dites ce qui casse, pas ce qu'il faut construire",
+        "text": "« Les mots que je rate ne reviennent jamais en révision » a été construit. Une demande formulée comme un cahier des charges — « ajoutez un réglage pour X » — décrit une seule solution et cache le problème derrière, alors que ce problème a d'ordinaire une meilleure solution que celle que vous aviez en tête."
+      },
+      { "type": "heading", "text": "Ce qu'elle devient" },
+      {
+        "type": "paragraph",
+        "text": "Une nouvelle demande démarre en « En cours d'examen », visible de vous seul, jusqu'à son approbation sur le tableau. Elle passe alors en « Ouverte » et peut être votée et discutée. Si nous la prenons, elle devient « En cours », et une fois livrée elle est marquée « Terminée ». « Refusée » est utilisé honnêtement plutôt que de laisser une demande moisir en Ouverte — un non est plus utile que le silence."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Vous pouvez modifier ou supprimer votre demande tant qu'elle est En cours d'examen ou Ouverte.",
+          "Dès qu'elle passe En cours, le texte est gelé : l'équipe construit à partir de ce qui est écrit, et le réécrire en plein travail lui retire le sol sous les pieds. Votre canal devient alors les commentaires.",
+          "Les commentaires restent ouverts sur les demandes Ouvertes et En cours, pour que l'auteur puisse encore ajouter quelque chose à une demande gelée.",
+          "Seuls nous pouvons changer un statut. Personne ne peut faire monter discrètement sa propre demande."
+        ]
+      },
+      { "type": "heading", "text": "Le vote, c'est le classement" },
+      {
+        "type": "paragraph",
+        "text": "Tout apprenant connecté peut voter pour ou contre une demande, et le tableau trie par score. C'est réellement ainsi que l'ordre se décide — une demande avec neuf votes de neuf personnes différentes est un signal plus fort que l'avis de n'importe qui, le nôtre compris."
+      },
+      {
+        "type": "note",
+        "title": "Presque tout est possible — dites-le quand même",
+        "text": "Les bots Telegram, les examens CELPIP gratuits, une révision qui ramène les mots que vous ratez sans cesse : tout cela a commencé par quelqu'un écrivant une phrase sur ce tableau. Si vous hésitez à demander quelque chose, demandez-le."
+      },
+      {
+        "type": "where",
+        "text": "flexilingo.com → Communauté → Create New Topic.",
+        "href": "/community"
+      }
+    ],
+    "specs": [
+      { "label": "Où", "value": "flexilingo.com/community" },
+      { "label": "Pour publier", "value": "Un compte gratuit" },
+      { "label": "Pour lire", "value": "Rien — c'est public" },
+      { "label": "Livrées à ce jour", "value": "20 demandes" }
+    ],
+    "faq": [
+      {
+        "q": "Faut-il un compte pour lire le tableau ?",
+        "a": "Non. La lecture est publique. Le compte sert à publier, voter ou commenter, pour qu'un vote corresponde à une personne."
+      },
+      {
+        "q": "Pourquoi ma demande n'apparaît-elle pas ?",
+        "a": "Les nouvelles demandes démarrent En cours d'examen et ne sont visibles que de vous jusqu'à leur approbation. La vôtre est épinglée en haut de la première page entre-temps, pour que vous voyiez qu'elle est bien arrivée."
+      },
+      {
+        "q": "Puis-je la modifier après publication ?",
+        "a": "Oui, tant qu'elle est En cours d'examen ou Ouverte. Une fois passée En cours, le texte est gelé parce que nous construisons à partir de ce qui est écrit — les commentaires vous restent."
+      },
+      {
+        "q": "Et si la même chose a déjà été demandée ?",
+        "a": "Votez plutôt pour la demande existante. Ce sont les votes qui décident de l'ordre : ajouter le vôtre à une demande existante pèse plus qu'une seconde copie."
+      },
+      {
+        "q": "Est-ce que quelqu'un les lit vraiment ?",
+        "a": "Vingt demandes du tableau sont marquées Terminées, et c'est la seule réponse qui vaille."
+      }
+    ]
+  },
+  "reader": {
+    "title": "Lecture — apportez votre propre livre",
+    "tagline": "Ouvrez votre PDF exactement tel qu'il a été imprimé, touchez n'importe quel mot pour son sens, prenez des notes sur la page, et écoutez les enregistrements du livre lui-même.",
+    "subtitle": "L'essentiel de ce que vous voulez lire n'est pas sur notre étagère. Ouvrez-le ici : la page reste exactement telle qu'elle a été imprimée — sauf que chaque mot n'est plus qu'à une touche de son sens.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Vous avancez dans un manuel en langue cible. Vous tombez sur un mot que vous ne connaissez pas, alors vous vous arrêtez, vous le recopiez, vous le cherchez ailleurs — et le temps de revenir, vous avez perdu l'exercice où vous étiez. Vingt fois par page, et vous faites de moins en moins du livre."
+      },
+      {
+        "type": "paragraph",
+        "text": "Lecture prend le fichier que vous avez déjà. Ajoutez un PDF ou la photo d'une page, indiquez la langue du texte, et il s'ouvre ici — chaque mot touchable, exactement comme dans le lecteur de podcasts."
+      },
+      { "type": "heading", "text": "La page reste la page" },
+      {
+        "type": "paragraph",
+        "text": "Un manuel n'est pas un mur de texte. Ce sont des colonnes, des bulles de dialogue, des photos numérotées de 1 à 3, et un exercice dont toute la question est de savoir quelle image va avec quel mot. Extrayez le texte de tout cela et vous avez détruit l'exercice."
+      },
+      {
+        "type": "paragraph",
+        "text": "Le mode par défaut n'extrait donc rien. « Pages seulement » affiche le vrai PDF — même mise en page, mêmes images, mêmes polices — et pose les mots touchables par-dessus, invisibles. Rien n'est converti, et c'est aussi pour cela qu'il est prêt à la seconde où le fichier a fini de monter."
+      },
+      {
+        "type": "list",
+        "variant": "dot",
+        "items": [
+          "« Pages seulement » — le mode par défaut, et celui qu'il vous faut dès qu'il y a une mise en page : un manuel, un magazine, un article avec des figures. Le PDF tel quel, prêt tout de suite.",
+          "« Texte » — extrait les mots d'un PDF qui contient déjà du vrai texte et vous donne le lecteur refluant : caractères plus grands, page par page, et un bouton « Créer un paquet » qui classe le vocabulaire de la page pour vous. Idéal pour les romans et les articles.",
+          "« Texte + scans » — un scan ou une photographie ne contient aucun texte, chaque page est donc lue comme une image. Une photo passe toujours par là ; elle ne peut rien être d'autre."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Vous ne choisissez pas une fois pour toutes",
+        "text": "Pages et texte sont deux vues du même document, pas deux documents. Un livre ajouté en pages peut être envoyé plus tard à l'extraction de texte, et il garde ses notes et votre place quand vous le faites."
+      },
+      { "type": "heading", "text": "Un manuel de 300 Mo, sans l'attente" },
+      {
+        "type": "paragraph",
+        "text": "Le fichier monte par morceaux, directement vers le stockage, et l'envoi survit à une coupure au lieu de tout recommencer. C'est ce qui fait d'un manuel scanné de 190 Mo une chose qu'on ouvre normalement, et non un fichier qu'on abandonne."
+      },
+      {
+        "type": "paragraph",
+        "text": "Sa lecture n'attend pas non plus le livre entier. Les pages sont récupérées à mesure que vous les atteignez : un livre de 193 pages s'ouvre sur la première en une seconde environ, et les pages où vous n'allez jamais ne sont jamais téléchargées."
+      },
+      { "type": "heading", "text": "Touchez un mot, restez sur votre ligne" },
+      {
+        "type": "paragraph",
+        "text": "Une touche ouvre le sens sur place, par-dessus la page que vous lisez : la prononciation, le niveau du mot, des exemples que vous pouvez écouter, les synonymes, la famille de mots, et la conjugaison complète s'il s'agit d'un verbe. Rien ne vous déplace."
+      },
+      {
+        "type": "paragraph",
+        "text": "C'est tout le principe. Si chercher un mot casse votre lecture, c'est parce que cela vous emmène ailleurs, et qu'au retour il faut retrouver sa ligne."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Le sens est donné dans votre langue, et vous pouvez en changer dans la fenêtre : le choix vaut pour tous les mots suivants.",
+          "Ajoutez le mot à n'importe quel paquet qui vous appartient, depuis la fenêtre elle-même — un bouton, pas un détour.",
+          "Sélectionnez une expression et une petite barre apparaît : l'écouter, traduire l'expression entière, ou en faire une note.",
+          "Restez sur un mot sans cliquer et un petit bouton de lecture apparaît dessous : vous entendez le mot sans rien ouvrir du tout."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Pourquoi cela s'ouvre par-dessus la page et non à côté",
+        "text": "Un panneau latéral paraît plus propre, mais il rétrécit la page et refait couler ce que vous étiez en train de lire — vous perdez donc votre place quand même, juste plus doucement. La fenêtre se pose dessus et laisse la page exactement où elle était."
+      },
+      { "type": "heading", "text": "Des notes qui restent là où vous les avez laissées" },
+      {
+        "type": "paragraph",
+        "text": "Sélectionnez n'importe quel texte sur une page et choisissez « Note ». Ce que vous écrivez est rattaché à cette expression, sur cette page, et l'expression garde ensuite un discret soulignement — la prochaine fois que vous passerez dessus, vous verrez que c'est cette ligne-là qui vous avait arrêté."
+      },
+      {
+        "type": "paragraph",
+        "text": "La note elle-même est un vrai éditeur : gras, titres, listes et code, avec un onglet d'aperçu. Les notes qui portent sur la page plutôt que sur une expression s'ajoutent sans rien sélectionner, depuis le panneau."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Le panneau Notes liste chaque note du livre, avec la page à laquelle elle appartient.",
+          "Cherchez dans toutes — par ce que vous avez écrit, ou par l'expression que vous avez surlignée.",
+          "Cliquez sur une note et le livre défile jusqu'à l'endroit exact de la page exacte, et le marque.",
+          "Une expression soulignée ne bloque jamais le mot en dessous : vous pouvez toujours toucher n'importe quel mot à l'intérieur de votre propre note."
+        ]
+      },
+      {
+        "type": "heading",
+        "text": "Les enregistrements du livre, sur la page à laquelle ils appartiennent"
+      },
+      {
+        "type": "paragraph",
+        "text": "Un manuel imprime une icône de casque à côté d'un exercice et suppose que vous avez le CD, ou que vous photographierez la page avec l'application de l'éditeur. Dites à Lecture de quel livre il s'agit, et il lit le livre pour vous : chaque consigne d'écoute reçoit un bouton de lecture, posé pile sur l'icône imprimée là."
+      },
+      {
+        "type": "paragraph",
+        "text": "Appuyez, et la piste se lance dans la même barre en bas de l'écran que vos podcasts — même barre de progression, mêmes boutons de saut, même réglage de vitesse, et la lecture continue quand vous circulez dans l'application. Les enregistrements sont diffusés depuis le site de l'éditeur lui-même, les fichiers mêmes vers lesquels pointent ses codes imprimés ; nous n'en hébergeons aucun et n'en copions aucun."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Ouvrez un mot pendant qu'un enregistrement joue et il se met en pause, puis reprend quand vous fermez la fenêtre — vous ne ratez plus la phrase suivante parce que vous étiez en train de lire.",
+          "Le panneau Audio liste tous les enregistrements du livre ; cherchez par numéro de piste ou de page et il vous y emmène.",
+          "Pris en charge aujourd'hui : Édito A1, A2, B1 et B2, plus les cahiers A1 et A2. Les autres sont une ligne dans une table, pas une mise en production."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "D'où viennent les numéros de piste, honnêtement",
+        "text": "La deuxième édition n'imprime aucun numéro de piste — il n'y a rien à lire dans le fichier. Les exercices sont donc appariés aux enregistrements dans l'ordre, ce qui est exact tant qu'aucun exercice d'écoute n'est manqué. Quand il en trouve moins que le livre n'en compte, le panneau le dit, au lieu de vous remettre en silence des numéros qui ont glissé."
+      },
+      {
+        "type": "heading",
+        "text": "Il se souvient, vous pouvez donc vous arrêter en milieu de page"
+      },
+      {
+        "type": "paragraph",
+        "text": "Chaque ouverture d'un document devient une séance, et l'endroit où vous vous êtes arrêté s'écrit au fil de la lecture. Revenez demain : Lecture s'ouvre sur « Reprendre la lecture », avec le bon livre et la bonne page — fermer l'ordinateur au milieu d'un exercice ne vous coûte rien."
+      },
+      {
+        "type": "paragraph",
+        "text": "Les notes, les expressions surlignées et les mots que vous avez cherchés sont conservés avec le document eux aussi. Rien de ce que vous faites sur une page n'est vrai seulement jusqu'à la fermeture de l'onglet."
+      },
+      { "type": "heading", "text": "Le reste des commandes" },
+      {
+        "type": "list",
+        "variant": "dot",
+        "items": [
+          "Tapez un numéro de page pour y aller ; le reste du temps, le champ suit votre défilement.",
+          "Zoomez de 50 % à 300 %, par paliers — la page est redessinée à la nouvelle taille au lieu d'être agrandie, donc les petits caractères restent nets.",
+          "Changez la langue du texte à tout moment, sans réajouter le fichier.",
+          "Votre liste de lecture est une seule file, le livre en cours en tête, et notre propre bibliothèque graduée se trouve au même endroit si vous n'avez rien à vous à lire."
+        ]
+      },
+      { "type": "heading", "text": "Vos documents sont à vous" },
+      {
+        "type": "paragraph",
+        "text": "Personne d'autre ne peut ouvrir ce que vous ajoutez — ni les autres lecteurs, ni le catalogue. Un livre gardé en pages garde son fichier, parce que ce fichier EST le livre que vous lisez ; supprimez le document et il part avec."
+      },
+      {
+        "type": "note",
+        "title": "Un document mixte n'est pas refusé",
+        "text": "Beaucoup de PDF ont du vrai texte sur la plupart des pages et un schéma scanné sur quelques-unes. Nous lisons ce qui a du texte et passons ce qui n'en a pas, plutôt que de renvoyer le livre entier."
+      },
+      { "type": "heading", "text": "Comment commencer" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Ouvrez Lecture",
+            "text": "Dans la barre latérale, sous Accueil. Rien à activer."
+          },
+          {
+            "title": "Ajoutez un document",
+            "text": "Un PDF jusqu'à 300 Mo ou une photo jusqu'à 10 Mo. Indiquez la langue du texte — c'est sur elle que reposent les sens et la prononciation."
+          },
+          {
+            "title": "Laissez sur « Pages seulement »",
+            "text": "Sauf si vous ajoutez un roman : « Texte » vous donne alors le lecteur refluant et le bouton paquet."
+          },
+          {
+            "title": "Lisez, et touchez ce que vous ne savez pas",
+            "text": "Sélectionnez une expression pour la noter. Si c'est un manuel, nommez le livre dans la barre d'outils et ses enregistrements apparaissent sur les pages."
+          }
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Celle-ci vient d'une lectrice",
+        "text": "Lena l'a demandée sur notre forum communautaire : elle lisait des romans, s'arrêtait à chaque mot inconnu, et perdait sa place à chaque fois. Cela a été construit et mis en ligne le lendemain, et tout ce qui précède a été ajouté parce que les gens ont continué à dire ce qui manquait encore. Si ce dont vous avez besoin n'est pas là, c'est sur ce forum qu'il faut le dire."
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → Lecture → Ajouter un document → touchez n'importe quel mot."
+      }
+    ],
+    "specs": [
+      { "label": "Où", "value": "Tableau de bord → Lecture" },
+      { "label": "Accepte", "value": "Un PDF jusqu'à 300 Mo, ou la photo d'une page" },
+      { "label": "Affiche", "value": "La vraie page, prête tout de suite" },
+      { "label": "Conserve", "value": "Votre place, vos notes, vos mots" }
+    ],
+    "faq": [
+      {
+        "q": "Quels types de fichiers puis-je ajouter ?",
+        "a": "Un PDF jusqu'à 300 Mo, ou la photo d'une page jusqu'à 10 Mo."
+      },
+      {
+        "q": "Quelle différence entre « Pages seulement » et « Texte » ?",
+        "a": "« Pages seulement » affiche le vrai PDF, mise en page, images et exercices intacts, et il est prêt immédiatement. « Texte » extrait les mots et vous donne un lecteur refluant, caractères plus grands et bouton paquet, mais perd la mise en page. Les manuels veulent les pages ; les romans veulent le texte."
+      },
+      {
+        "q": "Comment savoir si mon PDF contient du vrai texte ?",
+        "a": "Si vous pouvez sélectionner le texte dans n'importe quel lecteur PDF, il a une couche de texte et « Texte » fonctionnera dessus. Si la sélection ne fait rien, c'est l'image d'une page, et chaque page doit alors être lue comme une image."
+      },
+      {
+        "q": "Quels manuels ont leur audio ?",
+        "a": "Édito A1, A2, B1 et B2, ainsi que les cahiers A1 et A2. Les enregistrements sont diffusés depuis le site de l'éditeur lui-même — nous ne les hébergeons ni ne les copions. Ajouter un autre livre est une ligne dans une table : demandez sur le forum communautaire si le vôtre manque."
+      },
+      {
+        "q": "Pourquoi un numéro de piste est-il faux vers la fin du livre ?",
+        "a": "La deuxième édition n'imprime pas les numéros de piste : exercices et enregistrements sont appariés dans l'ordre. Un seul exercice d'écoute qui ne dit pas « Écoutez » décale tout ce qui suit d'un cran. Quand moins d'enregistrements sont trouvés que le livre n'en compte, le panneau vous prévient au lieu de faire semblant."
+      },
+      {
+        "q": "Est-ce qu'il retient où je me suis arrêté ?",
+        "a": "Oui, document par document, et c'est écrit au fil de la lecture plutôt qu'au moment où vous partez — un ordinateur refermé ou une connexion perdue ne vous coûte pas votre place."
+      },
+      {
+        "q": "Quelqu'un d'autre peut-il voir ce que j'ajoute ?",
+        "a": "Non. Vos documents ne sont visibles que par vous."
+      },
+      {
+        "q": "Est-ce que ça marche sur mon téléphone ?",
+        "a": "Lire et toucher les mots fonctionne partout où vous pouvez ouvrir le site. Ajouter un fichier depuis l'application mobile elle-même n'existe pas encore — pour l'instant, ajoutez-le sur le web et lisez-le où vous voulez."
+      }
+    ]
+  },
+  "shadowing": {
+    "title": "Shadowing — entendre, puis redire",
+    "tagline": "La pause après chaque mot est le cœur de l'exercice : assez longue pour le dire à voix haute avant le suivant.",
+    "subtitle": "Un exercice mains libres sur n'importe quel paquet. Il lit un mot, attend pendant que vous le dites à voix haute, puis passe au suivant tout seul.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Lire un mot et savoir le dire sont deux compétences différentes, et les cartes n'entraînent jamais que la première. Vous reconnaissez un mot pendant des semaines, puis vous ouvrez la bouche et il ne sort pas."
+      },
+      {
+        "type": "paragraph",
+        "text": "Le shadowing comble cet écart en faisant du fait de dire toute l'activité. Le mot est lu à voix haute, puis il ne se passe rien pendant deux secondes — et ce silence n'est pas du temps mort, c'est l'exercice. C'est vous qui le remplissez."
+      },
+      { "type": "heading", "text": "La pause, c'est la fonctionnalité" },
+      {
+        "type": "paragraph",
+        "text": "La plupart des exercices d'écoute vous font courir. Celui-ci attend. L'intervalle après chaque mot va de zéro à huit secondes et démarre à deux et demie — assez pour redire le mot avant que le suivant arrive, assez court pour que la session avance."
+      },
+      {
+        "type": "note",
+        "title": "Pourquoi deux répétitions est le bon réglage par défaut",
+        "text": "L'entendre, le redire, l'entendre encore pour se corriger. Une seule ne vous laisse rien à quoi vous comparer ; trois traînent. La correction se joue à la deuxième."
+      },
+      { "type": "heading", "text": "Il tourne tout seul" },
+      {
+        "type": "paragraph",
+        "text": "Une fois Démarrer pressé, il n'y a plus rien à presser. Les mots avancent seuls : vous pouvez marcher, faire la vaisselle, regarder par la fenêtre — c'est la seule partie de l'étude qui ne demande ni vos yeux ni vos mains."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Pause pour répéter — de 0 à 8 secondes, par quarts de seconde.",
+          "Fois par mot — une, deux ou trois.",
+          "Tours — un, deux, trois, cinq, ou jusqu'à ce que vous arrêtiez.",
+          "Mots par session — 25, 50, 100, ou tout ce que la session contient.",
+          "Mélanger, pour que l'ordre lui-même ne devienne pas ce dont vous vous souvenez.",
+          "Lire aussi le sens à voix haute, quand vous voulez la paire et pas seulement le mot."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Cinquante mots par défaut, et ce n'est pas un hasard",
+        "text": "Un plan d'étude peut faire des centaines de mots, et un exercice dont personne n'atteint la fin ne donne jamais le sentiment d'en avoir terminé un. Cinquante, c'est une session que vous finissez."
+      },
+      { "type": "heading", "text": "Masquez le mot et cela devient du rappel" },
+      {
+        "type": "paragraph",
+        "text": "Le menu qui affiche le mot peut aussi le masquer. Mot masqué, vous l'entendez et devez le produire avant que le sens apparaisse — l'exercice passe de la répétition au rappel sans que rien d'autre change. Ces réglages appartiennent à votre compte : ils vous suivent d'un appareil à l'autre au lieu d'être une seconde série d'interrupteurs qui contredit discrètement celle du haut de l'écran."
+      },
+      { "type": "heading", "text": "Plein écran, quand le mot doit être la seule chose présente" },
+      {
+        "type": "paragraph",
+        "text": "Le mode focus met la carte à la taille de l'écran. Il n'y a rien d'autre à regarder, et cela compte plus qu'il n'y paraît quand l'exercice consiste à dire quelque chose à voix haute en le pensant."
+      },
+      {
+        "type": "note",
+        "title": "Il ne touche pas à votre calendrier de révision",
+        "text": "Le shadowing ne marque jamais une carte comme révisée et ne la déplace pas dans la file de répétition espacée. C'est délibéré : c'est un entraînement de la bouche, pas une évaluation de votre mémoire — et un exercice qui pousserait discrètement les cartes en avant corromprait le calendrier qui décide de ce que vous verrez demain. À la fin, vous obtenez les deux chiffres honnêtes : mots entendus, et temps réellement passé à jouer."
+      },
+      { "type": "heading", "text": "Comment l'activer" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Ouvrez n'importe quelle session d'étude",
+            "text": "N'importe quel paquet à vous fait l'affaire — copiez-en un depuis Explorer si vous n'avez pas encore construit le vôtre."
+          },
+          {
+            "title": "Ouvrez le menu de carte et activez le mode shadowing",
+            "text": "Il est désactivé tant que vous ne le demandez pas : un bouton d'en-tête pour un mode que personne n'utilise n'est que de l'encombrement."
+          },
+          {
+            "title": "Sa commande apparaît dans l'en-tête",
+            "text": "Appuyez, réglez la pause et les répétitions, puis Démarrer — et posez le téléphone."
+          }
+        ]
+      },
+      {
+        "type": "where",
+        "text": "Tableau de bord → Étude → démarrer une session → menu de carte → mode shadowing."
+      }
+    ],
+    "specs": [
+      { "label": "Où", "value": "Tableau de bord → Étude" },
+      { "label": "Désactivé par défaut", "value": "C'est vous qui l'activez" },
+      { "label": "Les mains", "value": "Libres — il avance seul" },
+      { "label": "Prix", "value": "Gratuit" }
+    ],
+    "faq": [
+      {
+        "q": "Ai-je besoin d'un micro ?",
+        "a": "Non. Rien n'est enregistré et rien n'est noté. Il joue le mot et vous laisse la pause ; ce que vous en faites reste entre vous et la pièce."
+      },
+      {
+        "q": "Est-ce que cela compte dans mes révisions ?",
+        "a": "Non, et c'est voulu. Le shadowing ne marque jamais une carte comme révisée et ne la déplace pas dans la file de répétition espacée : il ne peut donc pas fausser le calendrier qui décide de ce que vous étudierez demain."
+      },
+      {
+        "q": "Puis-je l'utiliser écran éteint ?",
+        "a": "Il avance seul, vous pouvez donc le lancer et regarder ailleurs. Gardez l'onglet ouvert — c'est la page qui joue le son."
+      },
+      {
+        "q": "Quels paquets fonctionnent ?",
+        "a": "N'importe quel paquet dans une session d'étude, y compris celui que vous avez copié depuis Explorer une minute plus tôt."
+      }
+    ]
+  },
+  "image-scan": {
+    "title": "Scannez n'importe quoi",
+    "tagline": "Pointez l'appareil photo sur un panneau, un menu, une page — et obtenez l'analyse.",
+    "subtitle": "Pointez l'appareil photo sur un panneau, un menu, une page — et obtenez l'analyse.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Le vocabulaire le plus utile est celui qui est devant vous en ce moment, et il n'est presque jamais dans un manuel."
+      },
+      {
+        "type": "paragraph",
+        "text": "Photographiez n'importe quel texte et obtenez-le lu, traduit et découpé en mots que vous pouvez enregistrer. Menus, emballages, panneaux de rue, un paragraphe de livre sur lequel vous butez."
+      },
+      { "type": "where", "text": "Application mobile → Scanner." }
+    ],
+    "specs": [],
+    "faq": []
+  }
+}

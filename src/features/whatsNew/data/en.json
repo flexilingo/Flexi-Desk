@@ -1,0 +1,1007 @@
+{
+  "telegram-podcast-bot": {
+    "title": "Find a Podcast by Telling a Bot What You Want",
+    "tagline": "Describe what you feel like listening to, in your own words, and get an episode you can actually follow.",
+    "subtitle": "No filters to set, no catalogue to scroll. Type a sentence in Telegram and get back something at your level, with a transcript attached.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Choosing what to listen to is its own small task, and it is the one that quietly ends most listening habits. You open a library, see thousands of shows, cannot tell which of them you will understand, and close it again."
+      },
+      {
+        "type": "paragraph",
+        "text": "The bot removes the choosing. You write what you are in the mood for and it answers with something specific: a show, an episode, a level, and a reason it picked that one."
+      },
+      { "type": "heading", "text": "You can just type" },
+      {
+        "type": "paragraph",
+        "text": "There is no query syntax. Anything you would say to a person works, and the bot tells you how it read your message before it answers, so you can correct it."
+      },
+      {
+        "type": "list",
+        "variant": "dot",
+        "items": [
+          "A show you already know by name — you get that show, with an episode ready to play.",
+          "A topic like history, news, comedy or science — you get shows about it.",
+          "A level like A2 or B1 — you get what is worth listening to at that level.",
+          "A length — say you have twenty minutes and you get episodes that fit.",
+          "An idea nobody named a show after — the bot searches inside what the episodes actually say and finds the ones that talk about it."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "That last one is the interesting one",
+        "text": "If no show is called what you typed, the bot does not give up and return nothing. It searches the transcripts themselves, across languages, and comes back with episodes that discuss the subject — then says so, so you know why the results look different."
+      },
+      { "type": "heading", "text": "Nothing is filtered until you say so" },
+      {
+        "type": "paragraph",
+        "text": "The bot starts with no filters at all. If a result is not right you tap easier or harder on the suggestion itself, or open the filter panel and change language, level, topic or ordering one at a time. Every filter starts at Any, and Any means genuinely no filter — not a hidden default."
+      },
+      { "type": "heading", "text": "What happens when you tap an episode" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "The player opens",
+            "text": "Audio and transcript together, the current line highlighted as it is spoken."
+          },
+          {
+            "title": "Tap any word",
+            "text": "Meaning, pronunciation and its CEFR level, without pausing the episode."
+          },
+          {
+            "title": "Save what is worth keeping",
+            "text": "Saved words become flashcards, and they come back for review on a schedule."
+          }
+        ]
+      },
+      {
+        "type": "note",
+        "title": "The bot learns from what people ask for",
+        "text": "When enough people search for something the catalogue does not answer well, that phrase is recorded and mapped to what it should have returned. The mapping lives in the database, not in the code, so the search improves without waiting for a release."
+      },
+      { "type": "heading", "text": "Why two bots and not one" },
+      {
+        "type": "paragraph",
+        "text": "A bot that opens by asking which of nine things you want is a bot most people close. Each of these opens directly on its subject and assumes that is what you came for. If you want everything in one place, [the original bot](https://t.me/flexilingo_bot) still has all of it."
+      },
+      {
+        "type": "where",
+        "text": "Telegram → @flexilingo_podcast_bot → type what you want to hear.",
+        "href": "https://t.me/flexilingo_podcast_bot"
+      }
+    ],
+    "specs": [
+      { "label": "Where", "value": "Telegram" },
+      { "label": "Account", "value": "Needed to save and review" },
+      { "label": "Languages", "value": "English, French, Arabic, Persian, Hindi, Chinese" },
+      { "label": "Price", "value": "Free" }
+    ],
+    "faq": [
+      {
+        "q": "Do I need a FlexiLingo account?",
+        "a": "Not to search and listen. You need one to save words, review them later, and keep your level so results stay tuned to you. Linking takes an email address and a six-digit code."
+      },
+      {
+        "q": "Which languages can I listen in?",
+        "a": "The catalogue covers English and French, with more being added. The bot itself talks to you in English, French, Arabic, Persian, Hindi or Chinese — set it once and it stays."
+      },
+      {
+        "q": "What if it gets my question wrong?",
+        "a": "It shows you how it read your message before answering. If that reading is wrong, change one word and ask again, or open the filter panel and set the part it got wrong by hand."
+      },
+      {
+        "q": "Is this a different product from the website?",
+        "a": "No. It is the same catalogue, the same levels and the same saved words. The bot is one more way in, for people who live in Telegram and will not install anything."
+      }
+    ]
+  },
+  "telegram-exam-bot": {
+    "title": "CELPIP Practice Inside Telegram",
+    "tagline": "A real Reading section, timed and scored, without an account — then the full exam when you want it.",
+    "subtitle": "Start with a real Reading section, timed the way the test is timed and scored on the CLB scale. No account, no install, no payment.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Most people preparing for CELPIP are working from a guess. They know they are somewhere around CLB 8 and they do not know which of the four skills is the one holding the number down — so they study all four evenly, which is the slowest possible way to move."
+      },
+      {
+        "type": "paragraph",
+        "text": "This bot puts a real number on it. The first test costs nothing and asks for nothing."
+      },
+      { "type": "heading", "text": "The free test, before anything else" },
+      {
+        "type": "paragraph",
+        "text": "A full Reading section — 38 questions, timed the way the real test is timed — runs inside the chat window. At the end you get a CLB score, an explanation for every question you answered wrong, and the vocabulary that appeared in the passages."
+      },
+      {
+        "type": "note",
+        "title": "Nothing is held back for a payment",
+        "text": "Exams on FlexiLingo are free however many times you take them. A free account unlocks the other three skills and keeps your history; it does not unlock the exam."
+      },
+      { "type": "heading", "text": "Three ways to sit it" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Full exam",
+            "text": "All four sections — Listening, Reading, Writing, Speaking — timed like the real thing, about three hours, scored per skill and overall."
+          },
+          {
+            "title": "Practice",
+            "text": "Pick only the sections you want and go at your own pace. Useful once you know which skill is the weak one."
+          },
+          {
+            "title": "Learning",
+            "text": "The same real questions with the pressure removed: no timers, tap any word for its meaning, and a full audio player you can pause and rewind while you read the transcript."
+          }
+        ]
+      },
+      { "type": "heading", "text": "A new exam every time" },
+      {
+        "type": "paragraph",
+        "text": "The exam is assembled fresh on each attempt, so the questions do not repeat and a second sitting measures you rather than your memory. If you leave halfway through, the bot picks the unfinished session back up instead of starting you over."
+      },
+      { "type": "heading", "text": "Writing gets marked, not just counted" },
+      {
+        "type": "paragraph",
+        "text": "Send a written task and it comes back graded against the four CELPIP criteria, with what worked, what did not, the specific things to fix, and an optional rewrite you can compare against your own."
+      },
+      { "type": "heading", "text": "You can report what you actually saw" },
+      {
+        "type": "paragraph",
+        "text": "If you have just sat the real test, you can tell the bot which part came up and what was on it. Those reports become practice material, so the next person walks in better prepared than you did."
+      },
+      {
+        "type": "where",
+        "text": "Telegram → @flexilingo_celpip_bot → Start.",
+        "href": "https://t.me/flexilingo_celpip_bot"
+      }
+    ],
+    "specs": [
+      { "label": "Where", "value": "Telegram" },
+      { "label": "Free test", "value": "No account needed" },
+      { "label": "Scoring", "value": "CLB scale, per skill" },
+      { "label": "Exams", "value": "Always free" }
+    ],
+    "faq": [
+      {
+        "q": "Is the free test really free?",
+        "a": "Yes, and it needs no account. A full Reading section, timed, with a CLB score and per-question explanations at the end."
+      },
+      {
+        "q": "What does an account add?",
+        "a": "The other three sections, a new exam assembled on every attempt, writing graded against the four CELPIP criteria, and your scores kept so you can see whether you are improving. The account itself is free."
+      },
+      {
+        "q": "Is the scoring the official CELPIP scoring?",
+        "a": "It is scored on the CLB scale, per skill and overall, using the same criteria the test publishes for writing. It is practice — only Paragon issues an official result."
+      },
+      {
+        "q": "Can I use it on my phone without installing anything?",
+        "a": "That is the point of it being a Telegram bot. If you have Telegram, you have the exam."
+      }
+    ]
+  },
+  "tcf-canada-practice": {
+    "title": "TCF Canada Practice Sujets",
+    "tagline": "Original Expression Orale prompts in French, each with the vocabulary and structures the task actually needs.",
+    "subtitle": "Written in French, built around the themes that keep coming back, and explained in the language you think in.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "The hard part of Expression Orale Tâche 2 is not the French. It is that you get a short document and have to ask the right questions about it, quickly, in a register that sounds like a real request for information rather than a language exercise."
+      },
+      {
+        "type": "paragraph",
+        "text": "Each sujet here is a complete document of the kind the task uses — a museum's visitor information, a festival programme with prices, a cultural centre's workshop registration — followed by what the examiner is listening for."
+      },
+      { "type": "heading", "text": "Two layers on every page" },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "The material itself, in French. This is the exam; it is not translated, because on the day it will not be.",
+          "The explanation layer, in the language you learn in — the vocabulary the document assumes, the structures the task expects, and why a given phrasing works."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "What the dates on a page mean",
+        "text": "Where a page says a theme has been in circulation since a date, it means exactly that: the theme keeps appearing, across independent sources. It is not a claim that a specific prompt appeared in a specific exam — candidate reports cannot support that, and pages that say otherwise are usually republishing the exam boards' own published samples."
+      },
+      { "type": "heading", "text": "The reference pages" },
+      {
+        "type": "paragraph",
+        "text": "Alongside the sujets there are two pages that answer the questions everyone asks first: how the test is structured and marked, and how a TCF result maps onto the NCLC levels that immigration files are actually read against."
+      },
+      { "type": "heading", "text": "This section is being written now" },
+      {
+        "type": "paragraph",
+        "text": "The sujets published so far cover Expression Orale Tâche 2 on cultural themes, set in Montreal, Quebec, Ottawa and Toronto. New themes are added as they are written, and nothing is published before it has been checked against the task it claims to practise."
+      },
+      { "type": "where", "text": "flexilingo.com → TCF Canada.", "href": "/tcf-canada" }
+    ],
+    "specs": [
+      { "label": "Exam", "value": "TCF / TEF Canada" },
+      { "label": "Skill", "value": "Expression Orale" },
+      { "label": "Material", "value": "French" },
+      { "label": "Price", "value": "Free, no account" }
+    ],
+    "faq": [
+      {
+        "q": "Are these real exam questions?",
+        "a": "No, and no site can honestly claim to have them. They are original sujets written to the published format of the task, built around the themes that keep circulating."
+      },
+      {
+        "q": "Why is the material in French when I am reading in English?",
+        "a": "Because the exam is in French. The document stays French; the explanation of what it wants from you is written in your language."
+      },
+      {
+        "q": "Does it cover Expression Écrite too?",
+        "a": "Not yet. What is published today is Expression Orale plus the two reference pages. Écrite is being written."
+      },
+      { "q": "Do I need an account?", "a": "No. Every page in this section is public." }
+    ]
+  },
+  "french-cheatsheet": {
+    "title": "The French Cheatsheet",
+    "tagline": "165 grammar pages that answer the question you actually asked, in the language you think in.",
+    "subtitle": "165 pages of French grammar, each one written to answer a single question — and to answer it before you have finished scrolling.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Most grammar references are written for someone who already knows what they are looking at. You arrive because a sentence confused you, and the page opens with terminology that assumes you can already name the thing that confused you."
+      },
+      {
+        "type": "paragraph",
+        "text": "Every page here opens the other way round: the form itself, what it means, and how it is pronounced. Only then the rule. You can leave after two lines with what you came for."
+      },
+      { "type": "heading", "text": "Every rule comes with sentences" },
+      {
+        "type": "paragraph",
+        "text": "A rule you cannot picture in a sentence is a rule you will not use. Each page carries real examples, and each example carries its pronunciation — generated, never typed by hand, so it is consistent from page one to page 165."
+      },
+      { "type": "heading", "text": "Explained in the language you think in" },
+      {
+        "type": "paragraph",
+        "text": "The French stays French. The explanation around it is written in English, Arabic or Persian — separately, not machine-translated from one into the others, so each version reads like it was written for its reader."
+      },
+      { "type": "heading", "text": "Verbs, conjugated in full" },
+      {
+        "type": "paragraph",
+        "text": "Search a verb in any form and you land on the verb, not on a page about verbs. Its conjugations are laid out across tenses, with the ones worth learning first marked as such."
+      },
+      { "type": "heading", "text": "Build map — what to memorise" },
+      { "type": "heading", "text": "Search knows what you meant" },
+      {
+        "type": "paragraph",
+        "text": "You can search a conjugated form, a phrase, an accent-less spelling, or the grammatical name of a thing. What people search for and do not find is recorded — and that list is what decides which page gets written next."
+      },
+      {
+        "type": "where",
+        "text": "flexilingo.com → Products → French cheatsheet.",
+        "href": "/cheatsheet/fr"
+      }
+    ],
+    "specs": [
+      { "label": "Pages", "value": "165" },
+      { "label": "Explained in", "value": "English, Arabic, Persian" },
+      { "label": "Verbs", "value": "Full conjugations" },
+      { "label": "Price", "value": "Free, no account" }
+    ],
+    "faq": [
+      { "q": "Do I need an account?", "a": "No. Every page is public and free to read." },
+      {
+        "q": "Which languages is it explained in?",
+        "a": "English, Arabic and Persian, each with all 165 pages written. More are added when there is demand for them."
+      },
+      {
+        "q": "Is this only for exam candidates?",
+        "a": "No. It is written for anyone stuck on a French sentence. The TCF Canada section sits next to it for people preparing for that specific test."
+      }
+    ]
+  },
+  "podcast-player": {
+    "title": "Podcast Player",
+    "tagline": "Listen to any episode with a transcript that follows along, word by word.",
+    "subtitle": "Listen to any episode with a transcript that follows along, word by word.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "You know the feeling: the host says something, you catch about 80% of it, and by the time you've worked out the missing word they're two sentences ahead."
+      },
+      {
+        "type": "paragraph",
+        "text": "The player keeps the transcript moving with the audio and highlights the line being spoken. Tap any word to see what it means, hear it pronounced, and add it to a deck — without pausing. Slow the audio to 0.5× when a stretch is too fast, or push it to 2× when it's too easy."
+      },
+      {
+        "type": "where",
+        "text": "Dashboard → Podcasts → pick a show → pick an episode.",
+        "href": "/podcasts"
+      },
+      { "type": "heading", "text": "FlexiPlayer settings" }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "word-lookup": {
+    "title": "Tap Any Word",
+    "tagline": "Meaning, pronunciation and a flashcard — without stopping the episode.",
+    "subtitle": "Meaning, pronunciation and a flashcard — without stopping the episode.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "The moment you hit a word you don't know, you have about two seconds before you lose the sentence. Reaching for a dictionary costs more than that, so most people just let it go — and let it go again the next time."
+      },
+      {
+        "type": "paragraph",
+        "text": "Every word in the transcript is tappable. Tap it and you get the meaning, how it's pronounced, its CEFR level, and a button that turns it into a flashcard. Each word is already underlined in its level's colour, so you can see which ones are worth your attention before you even tap."
+      },
+      {
+        "type": "where",
+        "text": "In the podcast player, tap any word in the subtitle bar.",
+        "href": "/podcasts"
+      },
+      { "type": "heading", "text": "Tap any word — videos" }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "cefr-filter": {
+    "title": "Find Podcasts at Your Level",
+    "tagline": "Filter 35,000 episodes down to the ones you can actually follow.",
+    "subtitle": "Filter 35,000 episodes down to the ones you can actually follow.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "The fastest way to give up on learning through podcasts is to start with one that's two levels too hard. It feels like failure, but it's just the wrong episode."
+      },
+      {
+        "type": "paragraph",
+        "text": "Every episode in the library is levelled A1 to C2. Tap your level and 35,000 episodes become the ones you can follow. Narrow further by topic or by language, and sort by what was just analysed if you want the newest material first."
+      },
+      {
+        "type": "where",
+        "text": "Dashboard → Podcasts, the row of level pills above the library.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "sentence-chat": {
+    "title": "Ask About Any Sentence",
+    "tagline": "Tap a line you don't understand and ask why it's written that way.",
+    "subtitle": "Tap a line you don't understand and ask why it's written that way.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Dictionaries tell you what words mean. They don't tell you why the sentence is built the way it is — and past B1, that's what actually stops you."
+      },
+      {
+        "type": "paragraph",
+        "text": "Tap any line in a transcript and it gets taken apart: how difficult it is, its tense, voice and structure, the grammar patterns worth noticing, its key vocabulary, and a translation. Then keep asking. \"Why not the past simple here?\" gets a real answer, about that exact sentence."
+      },
+      {
+        "type": "where",
+        "text": "In the podcast player, tap a subtitle line.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "podcast-preview": {
+    "title": "Preview Before You Commit",
+    "tagline": "Hear a few episodes before adding a show to your library.",
+    "subtitle": "Hear a few episodes before adding a show to your library.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "A podcast can look perfect and be unusable — the host talks too fast, the recording is rough, the accent isn't the one you're learning."
+      },
+      {
+        "type": "paragraph",
+        "text": "Press Preview on any search result and recent episodes play right there. You also see how many episodes exist and when the show last published, so you can spot a feed that's been dead for three years before you follow it."
+      },
+      {
+        "type": "where",
+        "text": "Search for a podcast, then press Preview on any result.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "subtitle-sync": {
+    "title": "Fix an Out-of-Step Transcript",
+    "tagline": "When the words run ahead of the audio, drag them back into place.",
+    "subtitle": "When the words run ahead of the audio, drag them back into place.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Many podcasts insert ads at playback time, which makes the audio longer than the transcript that was made from it. Everything after the first break arrives late."
+      },
+      {
+        "type": "paragraph",
+        "text": "Open the sync tool, find the line that matches what you're hearing, and the whole transcript shifts to match. There's a search box so you can jump to a line by typing part of it, and a reset if you overshoot."
+      },
+      {
+        "type": "where",
+        "text": "In the player, open the sync dialog — a banner links to it when drift is detected.",
+        "href": "/podcasts"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "celpip-exam": {
+    "title": "Full CELPIP Simulation",
+    "tagline": "All four skills, real timing, scored on the CLB scale. Free, every time.",
+    "subtitle": "All four skills, real timing, scored on the CLB scale. Free, every time.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Knowing you're \"around CLB 8\" is not the same as knowing. Three hours under real conditions tells you which skill is actually holding your score down."
+      },
+      {
+        "type": "paragraph",
+        "text": "Listening, Reading, Writing and Speaking, timed the way the real test is timed, scored per skill and overall. You get a breakdown by skill, a vocabulary report, and the option of a detailed AI analysis of what went wrong and why."
+      },
+      {
+        "type": "note",
+        "title": "The exam is always free",
+        "text": "However many times you take it."
+      },
+      {
+        "type": "where",
+        "text": "Dashboard → CELPIP → Start → Full exam.",
+        "href": "/products/celpip"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "learning-mode": {
+    "title": "Learning Mode",
+    "tagline": "The same exam questions, untimed, with translation and replay allowed.",
+    "subtitle": "The same exam questions, untimed, with translation and replay allowed.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Doing an exam under pressure tells you your score. It doesn't teach you anything — there's no room to stop and understand."
+      },
+      {
+        "type": "paragraph",
+        "text": "Learning Mode gives you the real questions with the pressure removed: no timer, translation available, and you can replay the audio as often as you need. Use it to learn the question types, then switch to a timed run to test yourself."
+      },
+      {
+        "type": "where",
+        "text": "Dashboard → CELPIP → Start → Practice → turn on “Untimed, with translation”.",
+        "href": "/products/celpip"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "studio-subtitles": {
+    "title": "Subtitles You Can Tap, On Any Site",
+    "tagline": "Turn YouTube, BBC Audio, CBC Listen or Spotlight English into a lesson without leaving the page.",
+    "subtitle": "Turn YouTube, BBC Audio, CBC Listen or Spotlight English into a lesson without leaving the page.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Ordinary subtitles are a picture of text. You can read them, but you can't do anything with them."
+      },
+      {
+        "type": "paragraph",
+        "text": "FlexiLingo draws its own subtitle bar over the video: the original line and its translation together, with every word tappable. Meaning, pronunciation, and straight into a deck — while the video is still playing. Words you already know fade back so the new ones stand out."
+      },
+      {
+        "type": "paragraph",
+        "text": "Works on YouTube, BBC Audio, CBC Listen and Spotlight English."
+      },
+      {
+        "type": "where",
+        "text": "Install the extension, open a video, and press the Studio button in the player.",
+        "href": "/products/extension"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "translation-delay": {
+    "title": "Delayed Translation",
+    "tagline": "The translation appears a moment later — just long enough to try first.",
+    "subtitle": "The translation appears a moment later — just long enough to try first.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "If the translation is already on screen, you read it. Every time. You never find out whether you would have understood."
+      },
+      {
+        "type": "paragraph",
+        "text": "Set a delay and the original line appears alone first. You get a second to work it out, then the translation fades in and tells you whether you were right. It's a small setting that changes what watching actually does for you."
+      },
+      {
+        "type": "where",
+        "text": "Studio settings → Translation delay.",
+        "href": "/products/extension"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "explore-decks": {
+    "title": "Explore Public Decks",
+    "tagline": "Take someone else's finished deck instead of building your own from nothing.",
+    "subtitle": "Take someone else's finished deck instead of building your own from nothing.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Building a vocabulary deck from scratch is the step where most people stop. It's slow, and you don't yet know which words are worth the effort."
+      },
+      {
+        "type": "paragraph",
+        "text": "Explore is a library of ready-made decks — CELPIP writing tasks, TOEFL and IELTS word lists, and practical sets like Job Interview, Travel & Airport, Business Meeting, Health & Doctor. Each shows how many cards it holds and how many people have taken it. Clone one and it's yours: study it, edit it, add to it."
+      },
+      { "type": "where", "text": "Dashboard → Browse → Explore Public Decks.", "href": "/decks" },
+      { "type": "heading", "text": "Clone a ready-made deck" }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "srs-review": {
+    "title": "Review That Picks Its Own Schedule",
+    "tagline": "Leitner, SM-2 or FSRS — choose how your cards come back.",
+    "subtitle": "Leitner, SM-2 or FSRS — choose how your cards come back.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "The point of spaced repetition is to show you a word just before you'd forget it. Every app agrees on that and then hides its scheduling behind one fixed algorithm."
+      },
+      {
+        "type": "paragraph",
+        "text": "You pick: Leitner if you want something simple you can picture, SM-2 if you want the classic, FSRS if you want the modern one that adapts hardest to your own forgetting. Change it whenever — your cards come with you."
+      },
+      {
+        "type": "where",
+        "text": "Dashboard → Study → Settings → Review algorithm.",
+        "href": "/dashboard/study"
+      }
+    ],
+    "specs": [],
+    "faq": []
+  },
+  "community": {
+    "title": "Ask for the thing you actually need",
+    "tagline": "Post a request, other learners vote, and the ones that rise get built. Twenty have shipped so far.",
+    "subtitle": "The board is not a suggestion box that nobody reads. Twenty requests posted there are now live features.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Most of what gets built here was somebody's complaint first. Not a roadmap, not a survey — one person writing down the thing that was annoying them, and enough other people recognising it."
+      },
+      { "type": "heading", "text": "How to post one" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Press Create New Topic",
+            "text": "You need a free account — that is the only gate, and it exists so votes mean one person each."
+          },
+          {
+            "title": "Write the problem, not the solution",
+            "text": "A title of at least a few words and a description of at least a sentence. You can format it; the editor takes headings, lists and bold."
+          },
+          {
+            "title": "Add a category if one fits",
+            "text": "Optional. It helps the request find the people who have hit the same thing."
+          }
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Say what broke, not what to build",
+        "text": "«Words I get wrong never come back in review» got built. A request phrased as a spec — «add a setting for X» — describes one solution and hides the problem behind it, and the problem is usually solvable in a better way than the one you had in mind."
+      },
+      { "type": "heading", "text": "What happens to it" },
+      {
+        "type": "paragraph",
+        "text": "A new request starts as Under review, visible only to you, until it is approved onto the board. From there it is Open and can be voted on and discussed. If we pick it up it becomes In progress, and when it ships it is marked Completed. Rejected is used honestly rather than left to rot in Open — a no is more useful than silence."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "You can edit or delete your own request while it is Under review or Open.",
+          "Once it is In progress the text freezes — the team is building from what it says, and rewriting it mid-build pulls the ground out from under that. Your channel from then on is the comments.",
+          "Comments stay open on Open and In progress topics, so the author can keep adding to a frozen request.",
+          "Only we can change a status. Nobody can quietly promote their own request."
+        ]
+      },
+      { "type": "heading", "text": "Voting is the ranking" },
+      {
+        "type": "paragraph",
+        "text": "Any signed-in learner can vote a request up or down, and the board sorts by score. That is genuinely how the order is decided — a request with nine votes from nine different people is a stronger signal than any one person's opinion, including ours."
+      },
+      {
+        "type": "note",
+        "title": "Nearly anything is possible — say it anyway",
+        "text": "The Telegram bots, free CELPIP exams, review that brings back the words you keep missing: all of them started as somebody writing a sentence on this board. If you are unsure whether something is reasonable to ask for, ask for it."
+      },
+      {
+        "type": "where",
+        "text": "flexilingo.com → Community → Create New Topic.",
+        "href": "/community"
+      }
+    ],
+    "specs": [
+      { "label": "Where", "value": "flexilingo.com/community" },
+      { "label": "To post", "value": "A free account" },
+      { "label": "To read", "value": "Nothing — it is public" },
+      { "label": "Shipped so far", "value": "20 requests" }
+    ],
+    "faq": [
+      {
+        "q": "Do I need an account to read the board?",
+        "a": "No. Reading is public. An account is needed to post, vote or comment, so that a vote means one person."
+      },
+      {
+        "q": "Why is my request not showing up?",
+        "a": "New requests start as Under review and are visible only to you until they are approved onto the board. Yours is pinned to the top of the first page in the meantime, so you can see it landed."
+      },
+      {
+        "q": "Can I edit it after posting?",
+        "a": "Yes, while it is Under review or Open. Once it moves to In progress the text is frozen, because we are building from what it says — from that point you can still add comments."
+      },
+      {
+        "q": "What if the same thing has already been asked?",
+        "a": "Vote on the existing one instead. Votes are what decide the order, so adding yours to an existing request does more than a second copy of it would."
+      },
+      {
+        "q": "Does anyone actually read these?",
+        "a": "Twenty requests on the board are marked Completed, which is the only answer worth giving."
+      }
+    ]
+  },
+  "reader": {
+    "title": "Reader — bring your own book",
+    "tagline": "Open your own PDF exactly as it was printed, tap any word for its meaning, take notes on the page, and play the book's own recordings.",
+    "subtitle": "Most of what you want to read is not on our shelf. Open it here and the page stays exactly as it was printed — only now every word on it is one tap from its meaning.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "You are working through a coursebook in your target language. You hit a word you don't know, so you stop, copy it out, look it up somewhere else — and by the time you come back you have lost the exercise you were in. Twenty times a page, and you do less and less of the book."
+      },
+      {
+        "type": "paragraph",
+        "text": "Reader takes the file you already have. Add a PDF or a photo of a page, say which language the text is in, and it opens here — with every word tappable, the same way words work in the podcast player."
+      },
+      { "type": "heading", "text": "The page stays the page" },
+      {
+        "type": "paragraph",
+        "text": "A coursebook is not a wall of text. It is columns, speech bubbles, photos numbered 1 to 3, and an exercise whose whole question is which picture goes with which word. Pull the text out of that and you have destroyed the exercise."
+      },
+      {
+        "type": "paragraph",
+        "text": "So the default does not pull anything out. \"Pages only\" shows the real PDF — same layout, same pictures, same fonts — and lays the tappable words invisibly on top of it. Nothing is converted, which is also why it is ready the moment the file has finished uploading."
+      },
+      {
+        "type": "list",
+        "variant": "dot",
+        "items": [
+          "\"Pages only\" — the default, and what you want for anything with a layout: a coursebook, a magazine, a paper with figures. The PDF exactly as it is, ready at once.",
+          "\"Text\" — pulls the words out of a PDF that already has real text and gives you the reflowing reader: bigger type, page by page, and a \"Make a deck\" button that ranks the page's vocabulary for you. Best for novels and articles.",
+          "\"Text + scans\" — a scan or a photograph has no text in it at all, so each page is read as an image instead. A photo always goes this way; there is nothing else it could be."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "You are not choosing once and for all",
+        "text": "Pages and text are two views of the same document, not two documents. A book added as pages can be sent for text extraction later, and it keeps its notes and its position when you do."
+      },
+      { "type": "heading", "text": "A 300MB textbook, without the wait" },
+      {
+        "type": "paragraph",
+        "text": "The file goes up in pieces, straight to storage, and the upload survives a dropped connection instead of starting over. That is what makes a 190MB scanned coursebook a normal thing to open rather than a file you give up on."
+      },
+      {
+        "type": "paragraph",
+        "text": "Reading it does not wait for the whole book either. Pages are fetched as you reach them, so a 193-page book opens on page one in about a second, and the pages you never turn to are never downloaded."
+      },
+      { "type": "heading", "text": "Tap a word, stay on the line" },
+      {
+        "type": "paragraph",
+        "text": "A tap opens the meaning in place, over the page you are reading: pronunciation, the level the word sits at, examples you can hear, synonyms, the word family, and the full conjugation if it is a verb. Nothing navigates."
+      },
+      {
+        "type": "paragraph",
+        "text": "That is the whole design. The reason looking words up breaks your reading is that it takes you somewhere else, and by the time you are back you have to find your line again."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "The meaning is given in your own language, and you can switch language inside the dialog for every word after it.",
+          "Add the word to any deck you own, from the lookup itself — one button, not a detour.",
+          "Drag across a phrase and a small bar appears: hear it, translate the whole phrase, or turn it into a note.",
+          "Rest on a word without clicking and a small play button appears under it, so you can hear a word without opening anything at all."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Why it opens over the page and not beside it",
+        "text": "A side panel sounds tidier, but it shrinks the page and reflows what you were in the middle of — so you lose your place anyway, just more gently. The dialog sits on top and leaves the page exactly where it was."
+      },
+      { "type": "heading", "text": "Notes that stay where you left them" },
+      {
+        "type": "paragraph",
+        "text": "Select any text on a page and choose Note. What you write is attached to that phrase, on that page, and the phrase keeps a soft underline afterwards — so next time you come past it, you can see that this is the line that gave you trouble."
+      },
+      {
+        "type": "paragraph",
+        "text": "The note itself is a proper editor with bold, headings, lists and code, and a preview tab. Notes about the page rather than about a phrase go in without selecting anything, from the panel."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "The Notes panel lists every note in the book, with the page it belongs to.",
+          "Search across all of them — by what you wrote, or by the phrase you highlighted.",
+          "Click a note and the book scrolls to the exact spot on the exact page, and marks it.",
+          "An underlined phrase never blocks the word under it: you can still tap any word inside your own note."
+        ]
+      },
+      { "type": "heading", "text": "The book's own recordings, on the page they belong to" },
+      {
+        "type": "paragraph",
+        "text": "A coursebook prints a headphone icon beside an exercise and expects you to have the CD, or to photograph the page with the publisher's app. Tell the Reader which book this is, and it reads the book for you: every listening instruction gets a play button, sitting right on the icon that was printed there."
+      },
+      {
+        "type": "paragraph",
+        "text": "Press it and the track plays in the same bar at the bottom of the screen that holds your podcasts — same scrubber, same skip buttons, same speed control, and it keeps playing while you move around the app. The recordings are streamed from the publisher's own site, the same files their printed codes point at; we host none of it and copy none of it."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Open a word while a recording is playing and it pauses, then picks up again when you close the dialog — you never miss the next sentence because you were reading.",
+          "The Audio panel lists every recording in the book; search by track or by page number and it takes you there.",
+          "Supported today: Édito A1, A2, B1 and B2, plus the A1 and A2 workbooks. More are rows in a table, not a release."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Where the track numbers come from, honestly",
+        "text": "The second edition prints no track numbers anywhere — there is nothing in the file to read. So the exercises are matched to the recordings in order, which is exact for as long as no listening exercise is missed. When fewer are found than the book actually has, the panel says so rather than quietly handing you numbers that have drifted."
+      },
+      { "type": "heading", "text": "It remembers, so you can stop mid-page" },
+      {
+        "type": "paragraph",
+        "text": "Every time you open a document it becomes a sitting, and where you stopped is written down as you read. Come back tomorrow and Reader opens on \"Continue reading\" with the right book and the right page — closing the laptop in the middle of an exercise costs you nothing."
+      },
+      {
+        "type": "paragraph",
+        "text": "The notes, the highlighted phrases and the words you looked up are kept with the document too. Nothing you do on a page is only true until you close the tab."
+      },
+      { "type": "heading", "text": "The rest of the controls" },
+      {
+        "type": "list",
+        "variant": "dot",
+        "items": [
+          "Type a page number to jump there; the field follows your scrolling the rest of the time.",
+          "Zoom from 50% to 300%, in steps — the page is re-rendered at the new size rather than scaled up, so small print stays sharp.",
+          "Change which language the text is in at any time, without re-adding the file.",
+          "Your reading list is one queue with the book you are currently in on top, and our own graded library sits in the same place if you have nothing of your own to read."
+        ]
+      },
+      { "type": "heading", "text": "Your documents are yours" },
+      {
+        "type": "paragraph",
+        "text": "Nobody else can open what you add — not other readers, and not the catalogue. A book kept as pages keeps its file, because that file IS the book you are reading; delete the document and it goes with it."
+      },
+      {
+        "type": "note",
+        "title": "A mixed document is not refused",
+        "text": "Plenty of PDFs have real text on most pages and a scanned diagram on a few. We read what has text and skip what doesn't, rather than turning the whole book away."
+      },
+      { "type": "heading", "text": "How to start" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Open Reader",
+            "text": "It is in the sidebar under Home. Nothing to switch on."
+          },
+          {
+            "title": "Add a document",
+            "text": "A PDF up to 300MB or a photo up to 10MB. Say which language the text is in — that is what the meanings and pronunciation are based on."
+          },
+          {
+            "title": "Leave it on \"Pages only\"",
+            "text": "Unless you are adding a novel, in which case \"Text\" gives you the reflowing reader and the deck button."
+          },
+          {
+            "title": "Read, and tap what you don't know",
+            "text": "Select a phrase to note it. If it is a coursebook, name the book in the toolbar and its recordings appear on the pages."
+          }
+        ]
+      },
+      {
+        "type": "note",
+        "title": "This one came from a reader",
+        "text": "Lena asked for it on our community board: she was reading novels, stopping at every unknown word, and losing her place each time. It was built and shipped the next day, and everything above was added because people kept saying what was still missing. If something you need is not here, that board is where to say so."
+      },
+      { "type": "where", "text": "Dashboard → Reader → Add a document → tap any word." }
+    ],
+    "specs": [
+      { "label": "Where", "value": "Dashboard → Reader" },
+      { "label": "Takes", "value": "A PDF up to 300MB, or a photo of a page" },
+      { "label": "Shows", "value": "The real page, ready at once" },
+      { "label": "Keeps", "value": "Your place, your notes, your words" }
+    ],
+    "faq": [
+      {
+        "q": "What kinds of files can I add?",
+        "a": "A PDF up to 300MB, or a photo of a page up to 10MB."
+      },
+      {
+        "q": "What is the difference between \"Pages only\" and \"Text\"?",
+        "a": "Pages only shows the real PDF, with its layout, pictures and exercises intact, and is ready immediately. Text pulls the words out and gives you a reflowing reader with bigger type and a deck button, but loses the layout. Coursebooks want pages; novels want text."
+      },
+      {
+        "q": "How do I know whether my PDF has real text?",
+        "a": "If you can select the text in any PDF viewer, it has a text layer and \"Text\" will work on it. If selecting does nothing, it is a picture of a page, and each page has to be read as an image instead."
+      },
+      {
+        "q": "Which coursebooks have their audio?",
+        "a": "Édito A1, A2, B1 and B2, and the A1 and A2 workbooks. The recordings are streamed from the publisher's own site — we neither host nor copy them. Adding another book is a row in a table, so ask on the community board if yours is missing."
+      },
+      {
+        "q": "Why is a track number wrong near the end of the book?",
+        "a": "The second edition prints no track numbers, so exercises and recordings are matched in order. One listening exercise that does not say \"Écoutez\" shifts everything after it by one. When fewer recordings are found than the book has, the panel warns you instead of pretending."
+      },
+      {
+        "q": "Does it remember where I stopped?",
+        "a": "Yes, per document, and it is written as you read rather than when you leave — so a closed laptop or a lost connection does not cost you your place."
+      },
+      {
+        "q": "Can anyone else see what I add?",
+        "a": "No. Your documents are only visible to you."
+      },
+      {
+        "q": "Does it work on my phone?",
+        "a": "Reading and tapping work anywhere you can open the site. Adding a file from the phone app itself is not there yet — for now, add it on the web and read it wherever you like."
+      }
+    ]
+  },
+  "shadowing": {
+    "title": "Shadowing — hear it, say it back",
+    "tagline": "The pause after each word is the point: long enough to say it out loud before the next one arrives.",
+    "subtitle": "A hands-free drill over any deck you own. It plays a word, waits while you say it out loud, then moves on by itself.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "Reading a word and being able to say it are different skills, and flashcards only ever train the first one. You recognise a word on a card for weeks, then open your mouth and it will not come out."
+      },
+      {
+        "type": "paragraph",
+        "text": "Shadowing closes that gap by making saying it the whole activity. The word is read aloud, then nothing happens for a couple of seconds — and that silence is not dead time, it is the exercise. You fill it."
+      },
+      { "type": "heading", "text": "The pause is the feature" },
+      {
+        "type": "paragraph",
+        "text": "Most listening drills race you. This one waits. The gap after each word runs from nothing at all up to eight seconds and starts at two and a half — long enough to actually say the word back before the next one arrives, short enough that a run keeps moving."
+      },
+      {
+        "type": "note",
+        "title": "Why two repeats is the useful default",
+        "text": "Hear it, say it back, hear it again to correct yourself. One repeat gives you nothing to check against; three starts to drag. Two is where the correction happens."
+      },
+      { "type": "heading", "text": "It runs itself" },
+      {
+        "type": "paragraph",
+        "text": "Once you press Start there is nothing to press again. Words advance on their own, so you can be walking, washing up, or looking out of a window — this is the one part of studying that does not need your eyes or your hands."
+      },
+      {
+        "type": "list",
+        "variant": "check",
+        "items": [
+          "Pause to repeat — 0 to 8 seconds, in quarter-second steps.",
+          "Times per word — once, twice, or three times.",
+          "Rounds — one, two, three, five, or keep going until you stop it.",
+          "Words per run — 25, 50, 100, or everything the session has.",
+          "Shuffle, so the order itself never becomes the thing you remember.",
+          "Read the meaning aloud too, when you want the pair and not just the word."
+        ]
+      },
+      {
+        "type": "note",
+        "title": "Fifty words is the default on purpose",
+        "text": "A study plan can be hundreds of words long, and a drill nobody reaches the end of never gives you the feeling of having finished one. Fifty is a run you complete."
+      },
+      { "type": "heading", "text": "Hide the word and it becomes recall" },
+      {
+        "type": "paragraph",
+        "text": "The same menu that shows the word can hide it. With the word hidden you hear it and have to produce it before the meaning appears — the drill turns from repetition into retrieval without changing anything else. Those switches belong to your account, so they follow you between devices instead of being a second set of toggles that quietly disagrees with the ones at the top of the screen."
+      },
+      { "type": "heading", "text": "Fullscreen, when the word should be the only thing there" },
+      {
+        "type": "paragraph",
+        "text": "Focus mode sizes the card to the screen. There is nothing else to look at, which matters more than it sounds when the exercise is to say something out loud and mean it."
+      },
+      {
+        "type": "note",
+        "title": "It does not touch your review schedule",
+        "text": "Shadowing never marks a card as reviewed and never moves it in the spaced-repetition queue. It is deliberate: this is mouth practice, not a grading of whether you remembered — and a drill that silently pushed cards forward would corrupt the schedule that decides what you see tomorrow. At the end you get the two honest numbers: words heard, and time actually spent playing."
+      },
+      { "type": "heading", "text": "How to switch it on" },
+      {
+        "type": "steps",
+        "items": [
+          {
+            "title": "Open any study session",
+            "text": "Any deck you own works — clone one from Explore if you have not built your own yet."
+          },
+          {
+            "title": "Open the card menu and turn on Shadowing mode",
+            "text": "It is off until you ask for it, because a header button for a mode nobody uses is just clutter."
+          },
+          {
+            "title": "Its control appears in the header",
+            "text": "Press it, set the pause and the repeats, then Start — and put the phone down."
+          }
+        ]
+      },
+      {
+        "type": "where",
+        "text": "Dashboard → Study → start a session → card menu → Shadowing mode."
+      }
+    ],
+    "specs": [
+      { "label": "Where", "value": "Dashboard → Study" },
+      { "label": "Off by default", "value": "You switch it on" },
+      { "label": "Hands", "value": "Free — it advances itself" },
+      { "label": "Price", "value": "Free" }
+    ],
+    "faq": [
+      {
+        "q": "Do I need a microphone?",
+        "a": "No. Nothing is recorded and nothing is scored. It plays the word and leaves you the pause; whether you use it is between you and the room."
+      },
+      {
+        "q": "Does it count towards my reviews?",
+        "a": "No, and that is on purpose. Shadowing never marks a card reviewed or moves it in the spaced-repetition queue, so it cannot distort the schedule that decides what you study tomorrow."
+      },
+      {
+        "q": "Can I use it with the screen off?",
+        "a": "It advances by itself, so you can set it going and look away. Keep the tab open — the audio is played by the page."
+      },
+      {
+        "q": "Which decks work?",
+        "a": "Any deck in a study session, including one you cloned from Explore a minute earlier."
+      }
+    ]
+  },
+  "image-scan": {
+    "title": "Scan Anything",
+    "tagline": "Point your camera at a sign, a menu, a page — get it broken down.",
+    "subtitle": "Point your camera at a sign, a menu, a page — get it broken down.",
+    "blocks": [
+      {
+        "type": "paragraph",
+        "text": "The most useful vocabulary is whatever is in front of you right now, and it's almost never in a textbook."
+      },
+      {
+        "type": "paragraph",
+        "text": "Photograph any text and get it read out, translated, and split into words you can save. Menus, packaging, street signs, a paragraph of a book you're stuck on."
+      },
+      { "type": "where", "text": "Mobile app → Scan." }
+    ],
+    "specs": [],
+    "faq": []
+  }
+}

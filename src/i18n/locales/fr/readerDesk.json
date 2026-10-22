@@ -107,5 +107,19 @@
     "change": "Modifier",
     "dismiss": "Fermer",
     "detected": "Détectée d'après le texte : {{language}}"
+  },
+  "audio": {
+    "hostedNeedsAccount": "Les enregistrements de ce livre sont conservés sur votre compte et ne sont ouverts que pour un exemplaire de votre bibliothèque en ligne. Cet exemplaire est sur cet ordinateur : ils ne peuvent pas encore être lus ici.",
+    "hostedFailed": "Les enregistrements n’ont pas pu être chargés pour le moment. Vérifiez votre connexion et votre compte, puis rouvrez ce panneau.",
+    "signInForEditions": "Connectez-vous pour indiquer quel livre publié est celui-ci. Ses enregistrements, vidéos et sous-titres viennent avec."
+  },
+  "book": {
+    "backToBook": "Retour au livre",
+    "playFailed": "Cet enregistrement n’a pas pu être lu.",
+    "lockedTitle": "Sous-titres : {{n}} écoute(s) complète(s) sur {{required}}",
+    "lockedHeading": "Écoutez d’abord, lisez ensuite",
+    "lockedRule_one": "Les sous-titres s’ouvrent quand vous avez écouté cette piste en entier une fois, du début à la fin, sans avancer. Revenir en arrière est permis. Plus vite que 1× ne compte pas.",
+    "lockedRule_other": "Les sous-titres s’ouvrent quand vous avez écouté cette piste en entier {{required}} fois, du début à la fin, sans avancer. Revenir en arrière est permis. Plus vite que 1× ne compte pas.",
+    "lockedProgress": "Écoutes complètes : {{n}} sur {{required}}"
   }
 }

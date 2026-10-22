@@ -1,6 +1,7 @@
 import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
+import { useTranslation } from 'react-i18next';
 
 interface SettingsTabProps {
   fontSize: number;
@@ -48,13 +49,14 @@ export function SettingsTab({
   subtitleAlignment = 'center',
   onSubtitleAlignmentChange,
 }: SettingsTabProps) {
+  const { t } = useTranslation('podcastUi');
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold">Player Settings</h3>
+      <h3 className="text-sm font-semibold">{t('settingsTab.title')}</h3>
 
       {/* Subtitles toggle */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium">Show Subtitles</span>
+        <span className="text-xs font-medium">{t('settingsTab.showSubtitles')}</span>
         <ToggleSwitch enabled={subtitlesEnabled} onToggle={onToggleSubtitles} />
       </div>
 
@@ -63,8 +65,10 @@ export function SettingsTab({
       {/* Font size */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium">Font Size</span>
-          <span className="text-xs text-muted-foreground tabular-nums">{fontSize}px</span>
+          <span className="text-xs font-medium">{t('settingsTab.fontSize')}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {t('settingsTab.pixels', { value: fontSize })}
+          </span>
         </div>
         <Slider
           value={[fontSize]}
@@ -79,7 +83,7 @@ export function SettingsTab({
       {/* Subtitle background opacity */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium">Background Opacity</span>
+          <span className="text-xs font-medium">{t('settingsTab.backgroundOpacity')}</span>
           <span className="text-xs text-muted-foreground tabular-nums">{subtitleBgOpacity}%</span>
         </div>
         <Slider
@@ -97,7 +101,7 @@ export function SettingsTab({
         <>
           <Separator />
           <div className="space-y-2">
-            <span className="text-xs font-medium">Text Alignment</span>
+            <span className="text-xs font-medium">{t('settingsTab.textAlignment')}</span>
             <div className="flex gap-1">
               {(
                 [
@@ -127,14 +131,14 @@ export function SettingsTab({
       {(onToggleAutoPause || onTogglePauseOnHover) && (
         <>
           <Separator />
-          <h3 className="text-sm font-semibold">Behavior</h3>
+          <h3 className="text-sm font-semibold">{t('settingsTab.behavior')}</h3>
 
           {onToggleAutoPause && (
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <span className="text-xs font-medium">Auto-pause on boundary</span>
+                <span className="text-xs font-medium">{t('settingsTab.autoPause')}</span>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Pause when each subtitle segment ends
+                  {t('settingsTab.autoPauseHint')}
                 </p>
               </div>
               <ToggleSwitch enabled={autoPauseOnBoundary} onToggle={onToggleAutoPause} />
@@ -144,9 +148,9 @@ export function SettingsTab({
           {onTogglePauseOnHover && (
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <span className="text-xs font-medium">Pause on word hover</span>
+                <span className="text-xs font-medium">{t('settingsTab.pauseOnHover')}</span>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Pause when hovering over subtitle words
+                  {t('settingsTab.pauseOnHoverHint')}
                 </p>
               </div>
               <ToggleSwitch enabled={pauseOnHover} onToggle={onTogglePauseOnHover} />

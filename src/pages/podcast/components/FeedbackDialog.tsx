@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Bug, HelpCircle, Lightbulb, Loader2, MessageSquare, PartyPopper, X } from 'lucide-react';
 import { supabaseCall } from '../../../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 interface FeedbackDialogProps {
   open: boolean;
@@ -10,13 +11,14 @@ interface FeedbackDialogProps {
 }
 
 const FEEDBACK_TYPES = [
-  { key: 'feedback', label: 'Feedback', icon: MessageSquare },
-  { key: 'bug', label: 'Bug', icon: Bug },
-  { key: 'feature', label: 'Feature', icon: Lightbulb },
-  { key: 'other', label: 'Other', icon: HelpCircle },
+  { key: 'feedback', label: 'feedback.typeFeedback', icon: MessageSquare },
+  { key: 'bug', label: 'feedback.typeBug', icon: Bug },
+  { key: 'feature', label: 'feedback.typeFeature', icon: Lightbulb },
+  { key: 'other', label: 'feedback.typeOther', icon: HelpCircle },
 ] as const;
 
 export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps) {
+  const { t } = useTranslation('podcastUi');
   const [feedbackType, setFeedbackType] = useState<string>('feedback');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
@@ -75,7 +77,7 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
         <div className="flex items-center justify-between p-4 border-b border-border bg-primary/5">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Feedback</h2>
+            <h2 className="font-semibold text-foreground">{t('feedback.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -89,15 +91,13 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
           {success ? (
             <div className="text-center py-8">
               <PartyPopper className="mx-auto mb-3 h-10 w-10 text-success" />
-              <p className="font-semibold text-foreground">Thank you!</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Your feedback has been submitted.
-              </p>
+              <p className="font-semibold text-foreground">{t('feedback.thanks')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('feedback.submitted')}</p>
               <button
                 onClick={onClose}
                 className="mt-4 px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm"
               >
-                Close
+                {t('shared.close')}
               </button>
             </div>
           ) : (
@@ -106,7 +106,7 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email (optional)"
+                placeholder={t('feedback.emailPlaceholder')}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
               />
 
@@ -122,7 +122,7 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    {label}
+                    {t(label)}
                   </button>
                 ))}
               </div>
@@ -131,7 +131,7 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="Subject"
+                placeholder={t('feedback.subjectPlaceholder')}
                 maxLength={200}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
               />
@@ -139,7 +139,7 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Describe your feedback..."
+                placeholder={t('feedback.messagePlaceholder')}
                 maxLength={5000}
                 className="w-full h-32 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm resize-none"
               />
@@ -156,7 +156,7 @@ export function FeedbackDialog({ open, onClose, episodeId }: FeedbackDialogProps
                 className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
                 {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {submitting ? 'Submitting...' : 'Submit Feedback'}
+                {submitting ? t('feedback.submitting') : t('feedback.submit')}
               </button>
             </>
           )}

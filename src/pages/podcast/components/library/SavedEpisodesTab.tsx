@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Bookmark, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useAuthStore } from '@/stores/authStore';
@@ -13,10 +14,12 @@ import {
 } from '../../services/podcastAccount';
 import { mergeFavourites, type SavedEntry } from '../../utils/accountMerge';
 
-function formatDuration(seconds: number): string | null {
+function formatDuration(seconds: number, t: TFunction): string | null {
   if (!seconds) return null;
   const m = Math.round(seconds / 60);
-  return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
+  return m >= 60
+    ? t('shared.durHM', { h: Math.floor(m / 60), m: m % 60 })
+    : t('shared.minShort', { m });
 }
 
 /**
@@ -110,7 +113,7 @@ export function SavedEpisodesTab() {
       )}
       {entries.map((e) => {
         const busy = importingId === (e.localEpisodeId ?? e.cloud?.id);
-        const duration = formatDuration(e.durationSeconds);
+        const duration = formatDuration(e.durationSeconds, t);
         return (
           <div
             key={e.key}

@@ -1,12 +1,14 @@
 import { CheckCircle2, X } from 'lucide-react';
 import { NextUpRow } from './NextUpRow';
 import type { CefrLevel, NlpAnalysis, PodcastEpisode } from '../types';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
-function formatTime(ms: number): string {
+function formatTime(ms: number, tf: TFunction): string {
   const totalSec = Math.floor(ms / 1000);
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  return m > 0 ? tf('complete.minSecFmt', { m, s }) : tf('complete.secFmt', { s });
 }
 
 interface EpisodeCompleteOverlayProps {
@@ -33,6 +35,7 @@ export function EpisodeCompleteOverlay({
   onStartQuiz,
   episode,
 }: EpisodeCompleteOverlayProps) {
+  const { t } = useTranslation('podcastUi');
   const overallCefr = analysis?.cefrLevel ?? episode?.difficultyBand;
   const recommendLevel = (episode?.difficultyBand ?? analysis?.cefrLevel) as CefrLevel | undefined;
 
@@ -43,7 +46,7 @@ export function EpisodeCompleteOverlay({
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Dismiss"
+          aria-label={t('shared.dismiss')}
           className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted transition-colors"
         >
           <X className="h-4 w-4" />
@@ -52,8 +55,8 @@ export function EpisodeCompleteOverlay({
         {/* Header */}
         <div className="pt-7 pb-4 px-6 text-center border-b border-border bg-primary/5">
           <CheckCircle2 className="mx-auto mb-2 h-10 w-10 text-success" />
-          <h2 className="text-lg font-bold text-foreground">Episode Complete</h2>
-          <p className="text-xs text-muted-foreground mt-1">Great listening session!</p>
+          <h2 className="text-lg font-bold text-foreground">{t('complete.title')}</h2>
+          <p className="text-xs text-muted-foreground mt-1">{t('complete.subtitle')}</p>
         </div>
 
         {/* Stats grid */}
@@ -61,19 +64,21 @@ export function EpisodeCompleteOverlay({
           <div className="flex flex-col items-center py-4 px-2 gap-0.5">
             <span className="text-xl font-bold text-foreground">{wordsClicked}</span>
             <span className="text-[10px] text-muted-foreground text-center leading-tight">
-              Words Explored
+              {t('complete.wordsExplored')}
             </span>
           </div>
           <div className="flex flex-col items-center py-4 px-2 gap-0.5">
             <span className="text-xl font-bold text-primary">{wordsAddedToDeck}</span>
             <span className="text-[10px] text-muted-foreground text-center leading-tight">
-              Added to Deck
+              {t('complete.addedToDeck')}
             </span>
           </div>
           <div className="flex flex-col items-center py-4 px-2 gap-0.5">
-            <span className="text-xl font-bold text-foreground">{formatTime(activeTimeSpent)}</span>
+            <span className="text-xl font-bold text-foreground">
+              {formatTime(activeTimeSpent, t)}
+            </span>
             <span className="text-[10px] text-muted-foreground text-center leading-tight">
-              Study Time
+              {t('complete.studyTime')}
             </span>
           </div>
         </div>
@@ -81,13 +86,13 @@ export function EpisodeCompleteOverlay({
         {/* Episode info */}
         {overallCefr && (
           <div className="px-6 py-3 border-b border-border bg-muted/30 flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground">This episode</span>
+            <span className="text-xs text-muted-foreground">{t('complete.thisEpisode')}</span>
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
-              {overallCefr} Level
+              {t('complete.levelBadge', { level: overallCefr })}
             </span>
             {analysis?.totalWords && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                {analysis.totalWords} words
+                {t('complete.wordsBadge', { count: analysis.totalWords })}
               </span>
             )}
           </div>
@@ -104,7 +109,7 @@ export function EpisodeCompleteOverlay({
               onClick={onStartQuiz}
               className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
             >
-              Take Quiz
+              {t('complete.takeQuiz')}
             </button>
           )}
           {wordsAddedToDeck > 0 && (
@@ -113,7 +118,7 @@ export function EpisodeCompleteOverlay({
               onClick={onOpenVocab}
               className="w-full py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-colors"
             >
-              Review Saved Words
+              {t('complete.reviewSaved')}
             </button>
           )}
           <button
@@ -121,7 +126,7 @@ export function EpisodeCompleteOverlay({
             onClick={onReplay}
             className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            Replay Episode
+            {t('complete.replay')}
           </button>
         </div>
       </div>

@@ -355,12 +355,16 @@
     "NO_ACTIVE_RECORDING": "没有可停止的录音。",
     "RECORDING_NOT_FOUND": "找不到该录音。",
     "EMPTY_RECORDING": "未录到任何内容。请检查麦克风后重试。",
-    "MIC_PERMISSION_DENIED": "麦克风权限被拒绝。您可以改为输入答案。",
-    "UPLOAD_FAILED": "上传录音失败。请重试，或仅使用转写文本继续。"
+    "MIC_PERMISSION_DENIED": "麦克风权限被拒绝。请在系统设置中允许，然后重试。",
+    "UPLOAD_FAILED": "上传录音失败。请重试，或仅使用转写文本继续。",
+    "NETWORK_ERROR": "无法连接服务器。请检查网络后重试。",
+    "COACH_REPORT_NOT_ON_THIS_ACCOUNT": "此报告属于另一个账号。"
   },
   "examSettingsTitle": "考试设置",
   "examSettingsTextSize": "文字大小",
   "examSettingsPreview": "敏捷的棕色狐狸跳过了那只懒狗。",
   "examSettingsTranslate": "点按即可翻译",
-  "examSettingsTranslateHint": "点按任意词语查看其含义"
+  "examSettingsTranslateHint": "点按任意词语查看其含义",
+  "sectionSubmitOffline": "你处于离线状态 - 答案已保存在这台电脑上。恢复联网后我们会发送。",
+  "sectionSubmitUnreachable": "无法连接服务器 - 答案已保存在这台电脑上。我们会继续尝试发送。"
 }

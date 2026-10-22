@@ -1,5 +1,6 @@
 import { Loader2, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { EpisodeMomentChip } from './EpisodeMomentChip';
 import { MOMENT_ROWS } from '../../utils/semantic';
 import type { SemanticHit } from '../../services/podcastSearch';
@@ -13,10 +14,12 @@ interface Props {
   onOpen: (hit: SemanticHit, startAt?: number) => void;
 }
 
-function formatDuration(seconds: number | null | undefined): string | null {
+function formatDuration(seconds: number | null | undefined, t: TFunction): string | null {
   if (!seconds) return null;
   const m = Math.round(seconds / 60);
-  return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
+  return m >= 60
+    ? t('shared.durHM', { h: Math.floor(m / 60), m: m % 60 })
+    : t('shared.minShort', { m });
 }
 
 /**
@@ -50,7 +53,7 @@ export function SemanticEpisodeResults({ hits, isLoading, query, openingId, onOp
       <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
         {episodes.map((hit, i) => {
           const ep = hit.episode!;
-          const duration = formatDuration(ep.duration_seconds);
+          const duration = formatDuration(ep.duration_seconds, t);
           return (
             <div
               key={`${hit.content_id}-${hit.passage_index}`}

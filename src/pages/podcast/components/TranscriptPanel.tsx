@@ -7,6 +7,7 @@ import { formatTimeMs } from '../types';
 import { WordDialog } from '@/components/WordDialog';
 import { cleanWord, cefrCacheKey } from '../utils/words';
 import { usePlayerStore } from '../stores/playerStore';
+import { useTranslation } from 'react-i18next';
 
 interface TranscriptPanelProps {
   segments: PodcastTranscriptSegment[];
@@ -40,6 +41,7 @@ export function TranscriptPanel({
   sourceLang = 'en',
   syncOffset = 0,
 }: TranscriptPanelProps) {
+  const { t } = useTranslation('podcastUi');
   const effectiveTime = currentTime - syncOffset;
   const currentTimeMs = effectiveTime * 1000;
 
@@ -129,7 +131,7 @@ export function TranscriptPanel({
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Loading transcript...</p>
+        <p className="text-sm text-muted-foreground">{t('transcript.loading')}</p>
       </div>
     );
   }
@@ -138,9 +140,7 @@ export function TranscriptPanel({
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
         <FileText className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          No transcript available. Download the episode and transcribe it.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('transcript.empty')}</p>
       </div>
     );
   }

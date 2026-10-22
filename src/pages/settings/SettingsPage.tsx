@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Settings,
   LogOut,
@@ -39,9 +39,13 @@ import { ExportDialog } from '@/pages/settings/ExportDialog';
 import { ImportDialog } from '@/pages/settings/ImportDialog';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import { authErrorText } from '@/components/auth/authError';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { useTranslation } from 'react-i18next';
 
 type SettingsTab = 'general' | 'ai' | 'whisper' | 'sync' | 'data';
+
+/** Opens the account area (languages, profile, XP, plan, community, friends) - the website's settings tabs. */
+const ACCOUNT_PATH = '/account/learning';
 
 const TABS: { id: SettingsTab; icon: typeof User; label: string }[] = [
   { id: 'general', icon: Settings, label: 'General' },
@@ -179,6 +183,8 @@ function AuthSection() {
               <span>{authErrorText(error)}</span>
             </div>
           )}
+
+          {step === 'email' && <GoogleSignInButton />}
 
           {step === 'email' ? (
             <form onSubmit={handleSendOtp} className="space-y-3">
@@ -510,6 +516,8 @@ function GeneralSection() {
 
 export function SettingsPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { t: ta } = useTranslation('account');
   const [activeTab, setActiveTab] = useState<SettingsTab>(
     (searchParams.get('tab') as SettingsTab) || 'general',
   );
@@ -556,6 +564,13 @@ export function SettingsPage() {
                 </button>
               );
             })}
+            <button
+              onClick={() => navigate(ACCOUNT_PATH)}
+              className="flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap text-muted-foreground hover:text-foreground"
+            >
+              <User className="h-4 w-4" />
+              {ta('desk.nav.account')}
+            </button>
           </div>
         </CardContent>
       </Card>

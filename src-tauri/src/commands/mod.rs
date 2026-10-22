@@ -22,6 +22,7 @@ pub mod export;
 pub mod plugins;
 pub mod shortcuts;
 pub mod ai;
+pub mod sentences;
 pub mod sync;
 pub mod overview;
 pub mod cheatsheet;

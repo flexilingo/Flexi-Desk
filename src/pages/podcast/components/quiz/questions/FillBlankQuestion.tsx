@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Lightbulb, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import type { QuizQuestion } from '../types';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface FillBlankQuestionProps {
   question: QuizQuestion;
@@ -22,6 +23,7 @@ export function FillBlankQuestion({
   isCorrect,
   disabled = false,
 }: FillBlankQuestionProps) {
+  const { t } = useTranslation('podcastUi');
   const [userAnswer, setUserAnswer] = useState('');
   const [showHint, setShowHint] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
@@ -81,7 +83,7 @@ export function FillBlankQuestion({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium text-muted-foreground">
-            Fill in the Blank
+            {t('quiz.q.fillTitle')}
           </CardTitle>
           <Badge variant="outline">{question.difficulty}</Badge>
         </div>
@@ -100,7 +102,7 @@ export function FillBlankQuestion({
                 className="text-muted-foreground"
               >
                 <Lightbulb className="h-4 w-4 mr-1" />
-                Show Hint
+                {t('quiz.q.showHint')}
               </Button>
             ) : (
               <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 px-3 py-1.5 rounded-md">
@@ -121,13 +123,18 @@ export function FillBlankQuestion({
             {isCorrect ? (
               <>
                 <CheckCircle2 className="h-5 w-5" />
-                <span className="font-medium">Correct!</span>
+                <span className="font-medium">{t('quiz.q.correct')}</span>
               </>
             ) : (
               <>
                 <XCircle className="h-5 w-5" />
                 <span>
-                  Correct answer: <strong>{question.answer}</strong>
+                  <Trans
+                    i18nKey="quiz.q.correctAnswer"
+                    ns="podcastUi"
+                    values={{ answer: question.answer }}
+                    components={{ b: <strong /> }}
+                  />
                 </span>
               </>
             )}
@@ -140,14 +147,14 @@ export function FillBlankQuestion({
               ref={inputRef}
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Type your answer..."
+              placeholder={t('quiz.q.typeAnswer')}
               disabled={disabled}
               className="flex-1"
               autoComplete="off"
               autoCapitalize="off"
             />
             <Button type="submit" disabled={!userAnswer.trim() || disabled}>
-              Check
+              {t('quiz.q.check')}
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </form>

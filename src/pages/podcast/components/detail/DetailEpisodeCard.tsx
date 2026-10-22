@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Headphones, Play, Loader2, Clock, Gauge } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import { relativeDays } from '../../utils/relativeDate';
 import { CefrChip, ScoreChip, ReadyChip } from '../hub/PodcastAnalysisChips';
 import { episodeDifficulty } from '../../utils/difficulty';
 import { isUnsupportedLanguage } from '../../utils/levelFit';
@@ -13,14 +15,10 @@ function formatDuration(seconds: number | null): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-function formatRelativeDate(iso: string | null): string {
+function formatRelativeDate(iso: string | null, tp: TFunction, locale: string): string {
   if (!iso) return '';
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return 'today';
-  if (days === 1) return '1d ago';
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return new Date(iso).toLocaleDateString();
+  return relativeDays(tp, days, 'week') ?? new Date(iso).toLocaleDateString(locale);
 }
 
 interface Props {
@@ -31,7 +29,7 @@ interface Props {
 }
 
 export function DetailEpisodeCard({ episode, podcastImage, isOpening, onOpen }: Props) {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
   const { t: tp } = useTranslation('podcastUi');
   const [imgError, setImgError] = useState(false);
 
@@ -87,7 +85,7 @@ export function DetailEpisodeCard({ episode, podcastImage, isOpening, onOpen }: 
         </p>
 
         <div className="mt-1 flex items-center gap-1.5 text-[10px] tabular-nums text-muted-foreground">
-          <span>{formatRelativeDate(episode.publish_date)}</span>
+          <span>{formatRelativeDate(episode.publish_date, tp, i18n.language)}</span>
           <span aria-hidden className="h-0.75 w-0.75 rounded-full bg-muted-foreground/50" />
           <span className="inline-flex items-center gap-0.5">
             <Clock className="h-2.5 w-2.5" />

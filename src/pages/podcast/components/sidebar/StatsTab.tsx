@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { BookPlus, StickyNote, Eye, FileText, Brain, BookOpen, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface StatsTabProps {
   wordsClicked: number;
@@ -59,6 +60,7 @@ export function StatsTab({
   onNavigateToVocab,
   onNavigateToAnalysis,
 }: StatsTabProps) {
+  const { t } = useTranslation('podcastUi');
   const cefrData = useMemo<Record<string, number>>(() => {
     if (!cefrDistribution) return {};
     try {
@@ -80,7 +82,7 @@ export function StatsTab({
       {/* THIS SESSION block */}
       <div className="space-y-3">
         <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          This Session
+          {t('statsTab.thisSession')}
         </h3>
 
         {/* Study time */}
@@ -88,14 +90,14 @@ export function StatsTab({
           <p className="text-3xl font-bold tabular-nums text-foreground">
             {formatTimeMMSS(activeTimeSpent)}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">study time</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t('statsTab.studyTime')}</p>
         </div>
 
         {/* Words recognized progress */}
         {totalWords != null && totalWords > 0 && (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Words recognized</span>
+              <span className="text-muted-foreground">{t('statsTab.wordsRecognized')}</span>
               <span className="font-semibold tabular-nums">
                 {wordsRecognized} / {totalWords}
               </span>
@@ -107,8 +109,8 @@ export function StatsTab({
               />
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-              <span>{knownPercent}% known</span>
-              <span>{wordsClicked} looked up</span>
+              <span>{t('statsTab.knownPercent', { percent: knownPercent })}</span>
+              <span>{t('statsTab.lookedUpCount', { count: wordsClicked })}</span>
             </div>
           </div>
         )}
@@ -120,21 +122,21 @@ export function StatsTab({
               <Eye className="h-3 w-3 text-muted-foreground" />
             </div>
             <p className="text-lg font-bold tabular-nums">{wordsClicked}</p>
-            <p className="text-[9px] text-muted-foreground">words seen</p>
+            <p className="text-[9px] text-muted-foreground">{t('statsTab.wordsSeen')}</p>
           </div>
           <div className="rounded-lg border border-border bg-background/50 p-2 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <BookPlus className="h-3 w-3 text-warning" />
             </div>
             <p className="text-lg font-bold tabular-nums">{wordsAddedToDeck}</p>
-            <p className="text-[9px] text-muted-foreground">looked up</p>
+            <p className="text-[9px] text-muted-foreground">{t('statsTab.lookedUp')}</p>
           </div>
           <div className="rounded-lg border border-border bg-background/50 p-2 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <StickyNote className="h-3 w-3 text-muted-foreground" />
             </div>
             <p className="text-lg font-bold tabular-nums">{notesCount}</p>
-            <p className="text-[9px] text-muted-foreground">notes</p>
+            <p className="text-[9px] text-muted-foreground">{t('statsTab.notes')}</p>
           </div>
         </div>
       </div>
@@ -143,12 +145,12 @@ export function StatsTab({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            Episode
+            {t('statsTab.episode')}
           </h3>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-muted-foreground">
               <FileText className="h-3 w-3 inline mr-0.5" />
-              {segmentCount} segments
+              {t('statsTab.segments', { count: segmentCount })}
             </span>
             {cefrLevel && (
               <Badge
@@ -202,13 +204,13 @@ export function StatsTab({
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg border border-border bg-background/50 p-3 text-center">
             <p className="text-lg font-bold tabular-nums">{uniqueWords ?? '-'}</p>
-            <p className="text-[10px] text-muted-foreground">unique words</p>
+            <p className="text-[10px] text-muted-foreground">{t('statsTab.uniqueWords')}</p>
           </div>
           <div className="rounded-lg border border-border bg-background/50 p-3 text-center">
             <p className="text-lg font-bold tabular-nums">
               {uniqueWords != null && totalWords != null ? totalWords - uniqueWords : '-'}
             </p>
-            <p className="text-[10px] text-muted-foreground">new for you</p>
+            <p className="text-[10px] text-muted-foreground">{t('statsTab.newForYou')}</p>
           </div>
         </div>
       </div>
@@ -222,7 +224,7 @@ export function StatsTab({
             size="sm"
           >
             <Brain className="h-4 w-4 mr-1.5" />
-            Start Quiz
+            {t('statsTab.startQuiz')}
           </Button>
         )}
 
@@ -232,9 +234,11 @@ export function StatsTab({
             className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
           >
             <BookOpen className="h-4 w-4 text-warning" />
-            Vocabulary
+            {t('statsTab.vocabulary')}
             {uniqueWords != null && (
-              <span className="text-[10px] text-muted-foreground ml-1">({uniqueWords} words)</span>
+              <span className="text-[10px] text-muted-foreground ml-1">
+                {t('statsTab.wordsInParens', { count: uniqueWords })}
+              </span>
             )}
           </button>
         )}
@@ -245,7 +249,7 @@ export function StatsTab({
             className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
           >
             <Search className="h-4 w-4 text-muted-foreground" />
-            Full Analysis
+            {t('statsTab.fullAnalysis')}
           </button>
         )}
       </div>

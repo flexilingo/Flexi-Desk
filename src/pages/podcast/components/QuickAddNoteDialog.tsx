@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, NotebookPen, Loader2 } from 'lucide-react';
 import { usePodcastStore } from '../stores/podcastStore';
+import { useTranslation } from 'react-i18next';
 
 interface QuickAddNoteDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function QuickAddNoteDialog({
   subtitleText,
 }: QuickAddNoteDialogProps) {
   const [note, setNote] = useState('');
+  const { t } = useTranslation('podcastUi');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +79,7 @@ export function QuickAddNoteDialog({
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <NotebookPen className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Add Note</h2>
+            <h2 className="font-semibold text-foreground">{t('quickNote.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -100,7 +102,7 @@ export function QuickAddNoteDialog({
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Add a note about this moment..."
+            placeholder={t('quickNote.placeholder')}
             className="w-full h-24 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary"
             autoFocus
           />
@@ -115,7 +117,7 @@ export function QuickAddNoteDialog({
           {/* Success */}
           {success && (
             <div className="p-2 rounded-lg bg-success/10 border border-success/30 text-success text-xs">
-              Note saved!
+              {t('quickNote.saved')}
             </div>
           )}
 
@@ -125,7 +127,7 @@ export function QuickAddNoteDialog({
               onClick={onClose}
               className="px-4 py-2 rounded-lg border border-border text-foreground text-sm hover:bg-muted"
             >
-              Cancel
+              {t('shared.cancel')}
             </button>
             <button
               onClick={handleSave}
@@ -133,7 +135,7 @@ export function QuickAddNoteDialog({
               className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5"
             >
               {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {saving ? 'Saving...' : 'Save Note'}
+              {saving ? t('shared.saving') : t('quickNote.save')}
             </button>
           </div>
         </div>

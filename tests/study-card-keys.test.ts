@@ -32,6 +32,14 @@ describe('the flashcard keyboard (focus mode and out of it)', () => {
     expect(resolveCardKey(press('0'), ctx({ isAnswer: true }))).toBeNull();
   });
 
+  it('Space / Enter on a focused button leave it to the button (no double flip)', () => {
+    expect(resolveCardKey(press(' ', { target: { tagName: 'BUTTON' } }), ctx())).toBeNull();
+    expect(resolveCardKey(press('Enter', { target: { tagName: 'button' } }), ctx())).toBeNull();
+    expect(resolveCardKey(press(' ', { target: { tagName: 'DIV' } }), ctx())).toEqual({ type: 'flip' });
+    // the letter and grade keys still work from a focused button
+    expect(resolveCardKey(press('e', { target: { tagName: 'BUTTON' } }), ctx())).toEqual({ type: 'nextExample' });
+  });
+
   it('never hijacks typing, shortcuts with a modifier, or auto-repeat', () => {
     expect(resolveCardKey(press('e', { target: { tagName: 'INPUT' } }), ctx())).toBeNull();
     expect(resolveCardKey(press('e', { target: { tagName: 'textarea' } }), ctx())).toBeNull();

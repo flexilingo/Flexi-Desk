@@ -1,0 +1,465 @@
+{
+  "title": "Pratique de phrases",
+  "tagline": "Lisez la phrase et dites ce qu'elle veut dire, ou lisez le sens et écrivez la phrase. Après votre réponse, toute la phrase s'ouvre : le rôle de chaque mot, d'où vient le verbe et quelles règles la construisent.",
+  "empty": "Aucune phrase à pratiquer.",
+  "direction": {
+    "recognize": "Phrase → sens",
+    "produce": "Sens → phrase",
+    "listen": "Audio seul"
+  },
+  "prompt": {
+    "recognize": "Que veut dire cette phrase ?",
+    "produce": "Écrivez ceci en français :",
+    "listen": "Écoutez — savez-vous ce que ça veut dire ?"
+  },
+  "progress": "Carte {{index}} sur {{total}}",
+  "next": "Suivant",
+  "nextRound": "Série suivante",
+  "knewIt": "Je savais",
+  "showMeaning": "Afficher le sens",
+  "literal": "Mot à mot",
+  "typeHere": "Écrivez la phrase ici…",
+  "check": "Vérifier",
+  "hint": "Indice",
+  "chunk": "un seul bloc",
+  "readMore": "La page complète de cette règle dans l'aide-mémoire",
+  "verdict": {
+    "exact": "Correct",
+    "accents": "Correct — mais vérifiez l'orthographe",
+    "variant": "C'est aussi du français correct",
+    "wrong": "Ce n'est pas la phrase de cette carte",
+    "alternative": "Correct — du français que la carte n'avait pas"
+  },
+  "verdictVariantDetail": "Ce que vous avez écrit est correct, mais c'est le registre « {{register}} ». Cette carte attendait une autre forme — connaissez les deux, elles s'emploient dans des situations différentes.",
+  "sections": {
+    "verb": "Le verbe — d'où il vient",
+    "agreement": "Pourquoi cette forme",
+    "mechanics": "Changements d'orthographe et de son",
+    "notes": "Remarques sur cette phrase",
+    "rules": "Les règles de cette phrase",
+    "rulesHint": "Touchez une règle pour ouvrir son explication complète ici.",
+    "registers": "La même phrase dans trois registres",
+    "registersHint": "Un même sens, trois situations sociales. Ils ne sont pas interchangeables.",
+    "breakdown": "La phrase, mot à mot",
+    "pattern": "Structure"
+  },
+  "verb": {
+    "noStem": "Ce verbe est irrégulier — il ne se construit à partir de rien et doit être appris. Sa table complète est plus bas, dans l'explication de la règle.",
+    "mood": "Mode",
+    "tense": "Temps",
+    "person": "Personne",
+    "agreesWith": "Avec",
+    "auxiliary": "Auxiliaire",
+    "conjugationTable": "Conjugaison complète de « {{verb}} »"
+  },
+  "families": {
+    "group-1-er": "1er groupe · verbes en -er",
+    "group-2-ir": "2e groupe · verbes en -ir",
+    "group-3-irregular": "3e groupe · irréguliers"
+  },
+  "moods": {
+    "indicatif": "Indicatif",
+    "conditionnel": "Conditionnel",
+    "infinitif": "Infinitif",
+    "imperatif": "Impératif",
+    "subjonctif": "Subjonctif"
+  },
+  "tenses": {
+    "present": "Présent",
+    "passe-compose": "Passé composé",
+    "imperatif": "—",
+    "imparfait": "Imparfait",
+    "futur-simple": "Futur simple"
+  },
+  "persons": {
+    "1sg": "1re personne du singulier (je)",
+    "2sg": "2e personne du singulier (tu)",
+    "3sg": "3e personne du singulier (il/elle/on)",
+    "1pl": "1re personne du pluriel (nous)",
+    "2pl": "2e personne du pluriel (vous)",
+    "3pl": "3e personne du pluriel (ils/elles)"
+  },
+  "verbNotes": {
+    "doubled-l": "Dans cette forme, le l double. Règle : là où la terminaison ne se prononce pas, le l double pour garder le son è — j'appelle mais nous appelons.",
+    "memorised": "Irrégulier. Pas de radical ni de terminaison : toute la table s'apprend par cœur.",
+    "silent-ending": "La terminaison ne se prononce pas. -e, -es et -ent ont le même son : à l'oral, seul le pronom dit qui fait l'action.",
+    "fixed-expression": "Fait partie d'une expression figée et ne se conjugue pas seul. il y a a une seule forme au singulier et au pluriel.",
+    "politeness-form": "C'est le conditionnel, qui adoucit la demande. je veux est correct mais direct ; je voudrais dit la même chose poliment.",
+    "stays-infinitive": "C'est le deuxième verbe, il reste à l'infinitif. Quand deux verbes se suivent, seul le premier se conjugue.",
+    "on-takes-3sg": "on veut dire « nous », mais son verbe est à la 3e personne du singulier, comme il. « on allons » est faux.",
+    "impersonal-subject": "Le sujet ne désigne personne ; il est là parce que le français ne construit pas de phrase sans sujet.",
+    "noun-subject-is-3sg": "Le sujet est un nom, pas un pronom — mais le verbe prend la même 3e personne du singulier.",
+    "participle-irregular": "Le participe passé est irrégulier et doit être appris — il ne se forme pas à partir de l'infinitif.",
+    "etre-verb": "Ce verbe se conjugue avec être, pas avoir : le participe s'accorde avec le sujet, comme un adjectif.",
+    "agreement-with-etre": "L'auxiliaire est être, donc le participe s'accorde avec le sujet. On ne l'entend pas, mais il est obligatoire à l'écrit.",
+    "imperative-drops-s": "À la forme tu, les verbes en -er perdent leur s : tu parles, mais « Parle ! ».",
+    "imperative-no-subject": "À l'impératif, le pronom sujet disparaît — le seul cas où le français le permet.",
+    "impersonal-invariable": "Ne se conjugue jamais. Une seule forme, et son sujet ne désigne personne.",
+    "imparfait-from-nous": "Le radical vient de nous au présent (nous parl-ons → parl-) et les terminaisons sont les mêmes pour tous les verbes : ais · ais · ait · ions · iez · aient. Seule exception : être, ét-.",
+    "futur-from-infinitive": "Le radical est l'infinitif lui-même (sans le e des verbes en -re) et les terminaisons sont celles d'avoir : ai · as · a · ons · ez · ont.",
+    "futur-stem-irregular": "Le radical du futur est irrégulier et doit être appris ; les terminaisons restent les mêmes : ai · as · a · ons · ez · ont.",
+    "subjonctif-from-ils": "Le radical vient de ils au présent (ils partent → part-) et les terminaisons sont : e · es · e · ions · iez · ent.",
+    "pronominal-etre": "Un verbe pronominal se conjugue toujours avec être au passé, et le participe s'accorde avec le sujet.",
+    "advice-form": "Le conditionnel pour conseiller : tu dois = obligation, tu devrais = conseil. Le radical est celui du futur (devr-) et les terminaisons celles de l'imparfait.",
+    "recent-past": "venir est au présent, mais le sens est un passé récent : venir de + infinitif = je viens juste de…"
+  },
+  "genders": {
+    "m": "masculin singulier",
+    "f": "féminin singulier",
+    "m_pl": "masculin pluriel",
+    "f_pl": "féminin pluriel"
+  },
+  "agreementBecause": "Devenu {{form}} parce qu'il se rapporte à « {{because}} »",
+  "agreementAudible": "ça s'entend",
+  "agreementSilent": "seulement à l'écrit",
+  "roles": {
+    "subject": "sujet",
+    "subject_dummy": "sujet apparent — ne désigne personne",
+    "subject_existential": "ce dont on dit que ça existe",
+    "predicate": "verbe",
+    "copula": "verbe d'état (être)",
+    "object": "complément d'objet",
+    "object_interrogative": "complément interrogatif",
+    "attribute": "attribut — ce qu'on dit du sujet",
+    "modifier": "adverbe — précise le verbe",
+    "determiner": "déterminant — article, nombre ou possessif",
+    "reflexive": "pronom réfléchi — renvoie au sujet",
+    "negation": "négation",
+    "question-marker": "marque de question — sans sens propre",
+    "existential": "« il y a / exister »",
+    "existential_negative": "« il n'y a pas »",
+    "presentative": "présentatif — « c'est »",
+    "future-marker": "marque du futur",
+    "politeness": "formule de politesse",
+    "quantity": "quantité / nombre",
+    "unit": "unité",
+    "complement": "complément",
+    "complement_place": "complément de lieu — où",
+    "complement_time": "complément de temps — quand",
+    "complement_manner": "complément de manière — comment",
+    "complement_frequency": "fréquence — à quelle fréquence",
+    "complement_language": "langue",
+    "complement_origin": "origine — d'où",
+    "preposition_place": "préposition de lieu",
+    "preposition_origin": "préposition d'origine",
+    "predicate_subject": "verbe + sujet inversé",
+    "interjection": "interjection"
+  },
+  "mechanics": {
+    "elision": "élision — la voyelle tombe",
+    "contraction": "contraction",
+    "liaison": "liaison"
+  },
+  "kinds": {
+    "structure": "structure",
+    "question": "question",
+    "word-order": "ordre des mots",
+    "verb": "verbe",
+    "article": "article",
+    "negation": "négation",
+    "pronoun": "pronom",
+    "agreement": "accord",
+    "preposition": "préposition",
+    "spelling": "orthographe et son",
+    "vocabulary": "emploi du mot"
+  },
+  "registers": {
+    "familiar": "familier",
+    "standard": "courant",
+    "formal": "soutenu"
+  },
+  "channels": {
+    "spoken": "oral",
+    "written": "écrit"
+  },
+  "errors": {
+    "RATE_LIMITED": "Vous allez un peu vite — patientez un instant.",
+    "UNKNOWN_ERROR": "La série suivante ne s'est pas chargée. Réessayez.",
+    "QUOTA_USER": "Vous avez atteint la limite de pratique du jour. Reprenez demain.",
+    "QUOTA_IP": "Trop de pratique depuis ce réseau aujourd'hui. Réessayez plus tard.",
+    "TOO_FAST": "Un peu plus lentement — répondez d'abord à chaque carte.",
+    "NOT_DEALT": "Cette carte n'est plus valable ; commencez une nouvelle série.",
+    "AUTH_REQUIRED": "Connectez-vous pour continuer.",
+    "AUDIO_UNAVAILABLE": "Le son n'a pas pu être chargé. Réessayez.",
+    "NOT_REVEALED": "Ouvrez la carte avant d'y répondre.",
+    "ANSWER_FIRST": "Écrivez d'abord votre réponse.",
+    "PENDING_LOCALE": "Les explications de cette langue ne sont pas encore prêtes.",
+    "NETWORK": "Impossible de joindre FlexiLingo. Vérifiez votre connexion."
+  },
+  "facts": {
+    "subject-masculine": "Sujet : masculin (il)",
+    "subject-feminine": "Sujet : féminin (elle)",
+    "subject-on": "Sujet : on (oral)",
+    "subject-nous": "Sujet : nous",
+    "address-tu": "On dit : tu",
+    "address-vous": "On dit : vous",
+    "register-familiar": "Registre : familier",
+    "register-standard": "Registre : courant",
+    "register-formal": "Registre : soutenu"
+  },
+  "verdictWrongDetail": "Ce n'est pas la phrase attendue par cette carte. Si ce que vous avez écrit est du français correct, ce n'est pas faux — la carte cherchait simplement la forme ci-dessous. Voyez les différences :",
+  "toolbar": {
+    "language": "Langue",
+    "level": "Niveau",
+    "direction": "Sens",
+    "order": "Ordre",
+    "unit": "Unité",
+    "topic": "Thème",
+    "path": "Parcours",
+    "task": "Épreuve"
+  },
+  "langs": {
+    "fr": "Français",
+    "en": "Anglais"
+  },
+  "finished": {
+    "title": "Niveau {{level}} terminé",
+    "body": "Vous avez vu toutes les phrases de ce niveau. Refaites un tour — rien n'est effacé, tout recommence simplement.",
+    "unitTitle": "Unité {{unit}} terminée",
+    "unitBody": "Vous avez vu toutes les phrases de cette unité. Le niveau continue — le cours reprend à l'unité suivante.",
+    "nextUnit": "Aller à l'unité {{unit}}",
+    "againUnit": "Refaire l'unité {{unit}}",
+    "topicTitle": "Ce thème est terminé",
+    "topicBody": "Vous avez vu toutes les phrases de ce thème à ce niveau. Retirez le filtre et le reste du niveau est là.",
+    "again": "Un autre tour"
+  },
+  "orders": {
+    "course": "Ordre du cours",
+    "random": "Aléatoire",
+    "easy": "Du facile au difficile",
+    "hard": "Difficiles seulement",
+    "review": "Revoir mes erreurs"
+  },
+  "unitLabel": "Unité {{unit}}",
+  "allUnits": "Toutes les unités",
+  "allTopics": "Tous les thèmes",
+  "topics": {
+    "identity": "Identité et présentations",
+    "place": "Lieux",
+    "time": "Temps",
+    "food": "Nourriture",
+    "politeness": "Politesse",
+    "routine": "Quotidien",
+    "shopping": "Achats",
+    "opinion": "Opinion",
+    "work": "Travail",
+    "leisure": "Loisirs",
+    "class": "En classe",
+    "language": "Langues",
+    "family": "Famille",
+    "greeting": "Salutations",
+    "money": "Argent",
+    "directions": "Itinéraire",
+    "health": "Santé",
+    "transport": "Transports",
+    "weather": "Météo",
+    "description": "Description",
+    "travel": "Voyage",
+    "clothes": "Vêtements",
+    "phone": "Téléphone",
+    "home": "Maison",
+    "restaurant": "Restaurant",
+    "rules": "Règles et panneaux",
+    "school": "École et études",
+    "technology": "Technologie"
+  },
+  "listen": {
+    "play": "Écouter la phrase",
+    "again": "Encore",
+    "slow": "Plus lentement",
+    "reveal": "Voir le sens",
+    "seeText": "Voir le texte",
+    "textStep": "Lisez-la maintenant — que veut-elle dire ?",
+    "askHeard": "Avant de voir le texte, aviez-vous saisi les mots ?",
+    "heardIt": "Oui, je les avais saisis",
+    "missedIt": "Non, j'ai compris grâce au texte",
+    "earAgain": "Vous ne l'avez pas saisie à l'oreille — elle revient bientôt pour l'écoute.",
+    "askHeardHint": "Comprendre maintenant avec le texte ne compte pas ; ce qui compte, c'est le moment de l'écoute.",
+    "count_one": "Écoutée {{count}} fois",
+    "count_other": "Écoutée {{count}} fois",
+    "count": "Écoutée {{count}} fois"
+  },
+  "settings": {
+    "title": "Réglages",
+    "autoPlay": "Lecture audio automatique",
+    "autoPlayHint": "La phrase est lue dès qu'elle apparaît ; en mode écriture, après avoir vu la réponse.",
+    "autoPlayShort": "audio auto",
+    "mix": "Révision automatique",
+    "mixHint": "Toutes les quelques cartes, une phrase à réviser remplace une nouvelle. Désactivée, la série suit exactement vos réglages.",
+    "mixShort": "Révision auto"
+  },
+  "stats": {
+    "line": "{{practiced}} pratiquées · {{learned}} sues",
+    "streak_one": "{{days}} jour de suite",
+    "streak_other": "{{days}} jours de suite",
+    "streak": "{{days}} jours de suite"
+  },
+  "review": {
+    "link": "Réviser ({{count}})",
+    "start": "Réviser {{count}} phrases",
+    "empty": "Rien à réviser pour l'instant. Chaque phrase ratée revient ici quelques minutes plus tard.",
+    "back": "Nouvelle pratique"
+  },
+  "schedule": {
+    "again": "Celle-ci revient dans quelques minutes, et reviendra jusqu'à ce que vous la réussissiez.",
+    "later": "Correct — vous la reverrez dans {{days}} jours.",
+    "learned": "Vous la savez maintenant. On vous la redemandera dans {{days}} jours pour qu'elle reste.",
+    "later_one": "Correct — vous la reverrez dans {{days}} jour.",
+    "later_other": "Correct — vous la reverrez dans {{days}} jours.",
+    "learned_one": "Vous la savez maintenant. On vous la redemandera dans {{days}} jour pour qu'elle reste.",
+    "learned_other": "Vous la savez maintenant. On vous la redemandera dans {{days}} jours pour qu'elle reste."
+  },
+  "history": {
+    "link": "Bilan",
+    "title": "Bilan de la pratique de phrases",
+    "subtitle": "Les phrases auxquelles vous avez répondu — celles que vous savez et celles qui reviendront.",
+    "tabs": {
+      "weak": "Erreurs",
+      "learned": "Sues",
+      "all": "Toutes",
+      "misheard": "Mal entendues"
+    },
+    "empty": {
+      "weak": "Plus d'erreurs pour l'instant.",
+      "learned": "Vous n'avez encore réussi aucune phrase deux fois de suite — la deuxième bonne réponse la marque « sue ».",
+      "all": "Vous n'avez encore répondu à aucune phrase.",
+      "misheard": "Aucune phrase que votre oreille aurait manquée."
+    },
+    "counts": "{{correct}} justes · {{wrong}} fausses",
+    "yourAnswer": "Votre réponse",
+    "status": {
+      "learned": "Sue",
+      "weak": "Reviendra",
+      "seen": "En cours"
+    },
+    "dueNow": "À réviser",
+    "dueMinutes": "Révision : dans quelques minutes",
+    "dueDays": "Révision : dans {{days}} jours",
+    "reviewAll": "Réviser {{count}} phrases",
+    "back": "Retour à la pratique",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "heard": "À l'oreille",
+    "heardTimes": "À l'oreille, {{count}} fois",
+    "misheard": "Pas entendue"
+  },
+  "revealMeaning": "Voir le sens",
+  "didntKnow": "Je ne savais pas",
+  "askKnew": "Vous la saviez ?",
+  "askKnewHint": "Soyez votre propre juge : avant de voir le sens, l'aviez-vous en tête ?",
+  "liaisonHint": "Ces deux mots se lient et se prononcent d'un seul souffle (liaison).",
+  "paths": {
+    "general": "Général"
+  },
+  "allTasks": "Toutes les épreuves",
+  "ui": {
+    "playOnce": "Écouter la phrase",
+    "playSlow": "Plus lentement",
+    "repeat3": "3 fois de suite",
+    "repeat5": "5 fois de suite",
+    "repeatLoop": "En boucle jusqu'à l'arrêt",
+    "stop": "Arrêter",
+    "playOptions": "Options de lecture"
+  },
+  "qa": {
+    "prompt": "Écoutez — que répondez-vous ?",
+    "step": "Lisez la question et écrivez votre réponse",
+    "heard": "Aviez-vous compris la question à l'oreille ?",
+    "write": "Écrivez votre réponse en français",
+    "placeholder": "Votre réponse…",
+    "slotsHint": "Mettez votre nom, vos nombres et votre ville.",
+    "answers": "Réponses possibles",
+    "yours": "la vôtre",
+    "yourAnswer": "Votre réponse",
+    "grade": {
+      "exact": "Correct",
+      "accents": "Correct — vérifiez les accents",
+      "unmatched": "Ne correspond pas aux modèles — comparez et jugez vous-même"
+    },
+    "askRight": "Votre réponse était-elle juste ?",
+    "askRightHint": "Comparez-la aux réponses ci-dessus. Si le sens est bon et le français correct, elle est juste — même si elle n'est pas identique.",
+    "kinds": {
+      "affirmative": "Oui",
+      "negative": "Non",
+      "short": "Court"
+    },
+    "details": "Détails",
+    "matchedModel": "Correspond à :",
+    "wasRight": "C'était juste",
+    "wasWrong": "C'était faux",
+    "questionAnalysis": "Grammaire de la question",
+    "open": "Ouvrir"
+  },
+  "scorecard": {
+    "title": "Vérification IA",
+    "criteria": {
+      "meaning": "Sens",
+      "grammar": "Grammaire",
+      "spelling": "Orthographe",
+      "elision": "Élision"
+    },
+    "why": {
+      "meaning": {
+        "pass": "Elle dit ce que la carte demandait.",
+        "fail": "Elle ne dit pas ce que la carte demandait."
+      },
+      "grammar": {
+        "pass": "La grammaire est correcte.",
+        "fail": "Il y a une faute de grammaire."
+      },
+      "spelling": {
+        "pass": "Bien orthographié.",
+        "near": "Bon mot — vérifiez un accent.",
+        "fail": "Une faute d'orthographe."
+      },
+      "elision": {
+        "pass": "Les élisions sont faites.",
+        "fail": "Il manque une élision — un mot qui doit se contracter a été écrit en entier (par exemple me aider au lieu de m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Registre soutenu — pour une lettre ou un inconnu.",
+      "neutral": "Registre courant — convient presque partout.",
+      "informal": "Registre familier — parfait pour un texto à un ami."
+    },
+    "natural": {
+      "yes": "Naturel — un francophone le dirait ainsi.",
+      "no": "Correct, mais un francophone le dirait autrement."
+    },
+    "error": {
+      "gender_agreement": "Sans doute un accord en genre ou en nombre.",
+      "verb_conjugation": "Vérifiez la forme ou le temps du verbe.",
+      "word_order": "Vérifiez l'ordre des mots.",
+      "preposition_or_article": "Vérifiez la préposition ou l'article.",
+      "spelling_or_accent": "Vérifiez l'orthographe.",
+      "negation": "Vérifiez la négation.",
+      "wrong_word": "Un mot ne correspond pas au sens.",
+      "avoir_expression": "Ici le français dit avoir, pas être : j'ai faim, quel âge avez-vous ?"
+    }
+  },
+  "retry": {
+    "title": "Cette phrase était fausse — réécris-la",
+    "hint": "Elle revient parce qu'elle était fausse. Écris-la correctement une fois pour continuer. Tu peux la passer pour l'instant — mais la prochaine fois, ce ne sera plus possible.",
+    "skip": "Passer pour l'instant",
+    "lockedTitle": "Tu as écrit cette phrase faux {{count}} fois",
+    "lockedHint": "Tu l'as passée la dernière fois. Cette fois, écris-la correctement pour continuer."
+  },
+  "desk": {
+    "comingTitle": "Disponible avec la prochaine mise à jour du serveur",
+    "comingBody": "L'entraînement aux phrases sur cet ordinateur demande une petite mise à jour du serveur FlexiLingo. Il s'ouvrira ici dès qu'elle sera en ligne. Rien n'est perdu et vous n'avez rien à faire.",
+    "checkAgain": "Vérifier à nouveau",
+    "signInTitle": "Connectez-vous pour vous entraîner aux phrases",
+    "signInBody": "Votre historique de phrases est gardé dans votre compte : il vous suit sur chaque appareil.",
+    "loadingRound": "Chargement…",
+    "tryAgain": "Réessayer",
+    "aiChecking": "Votre IA vérifie votre phrase…",
+    "aiSetup": "Configurez votre propre IA pour faire vérifier le sens, la grammaire et l'orthographe des phrases écrites. D'ici là, seule la phrase de la carte compte.",
+    "aiFallback": "Votre IA n'a pas pu vérifier celle-ci : c'est la vérification de la carte qui a tranché.",
+    "notSaved": "Cette réponse n'a pas pu être enregistrée dans votre historique.",
+    "pendingBody": "Les explications de cette langue ne sont pas encore prêtes.",
+    "historyBack": "Retour à l'entraînement",
+    "close": "Fermer",
+    "signIn": "Se connecter",
+    "loadMore": "Chargement de la liste…"
+  }
+}

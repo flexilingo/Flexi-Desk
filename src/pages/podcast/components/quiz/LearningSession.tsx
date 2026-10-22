@@ -25,6 +25,7 @@ import type {
   CompleteSessionResponse,
   ActiveSessionResponse,
 } from './types';
+import { useTranslation } from 'react-i18next';
 
 type SessionPhase = 'setup' | 'quiz' | 'summary';
 
@@ -36,35 +37,36 @@ interface LearningSessionProps {
 
 const MODE_OPTIONS: {
   id: LearningModeType;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   icon: typeof BookOpen;
   cefrRange: string;
 }[] = [
   {
     id: 'general',
-    name: 'General English',
-    description: 'Practice vocabulary, grammar, and comprehension',
+    nameKey: 'quiz.session.modeGeneral',
+    descriptionKey: 'quiz.session.modeGeneralHint',
     icon: BookOpen,
     cefrRange: 'A1 - C2',
   },
   {
     id: 'ielts',
-    name: 'IELTS Prep',
-    description: 'Academic English for IELTS exam',
+    nameKey: 'quiz.session.modeIelts',
+    descriptionKey: 'quiz.session.modeIeltsHint',
     icon: GraduationCap,
     cefrRange: 'B1 - C2',
   },
   {
     id: 'celpip',
-    name: 'CELPIP Prep',
-    description: 'Canadian English proficiency test',
+    nameKey: 'quiz.session.modeCelpip',
+    descriptionKey: 'quiz.session.modeCelpipHint',
     icon: Award,
     cefrRange: 'B1 - C1',
   },
 ];
 
 export function LearningSession({ contentId, contentTitle, onClose }: LearningSessionProps) {
+  const { t } = useTranslation('podcastUi');
   const [phase, setPhase] = useState<SessionPhase>('setup');
   const [selectedMode, setSelectedMode] = useState<LearningModeType>('general');
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -186,14 +188,14 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
         errMsg.includes('Failed to fetch') ||
         errMsg.includes('Network')
       ) {
-        setSessionError('This feature requires an internet connection and a FlexiLingo account.');
+        setSessionError(t('quiz.session.errorOffline'));
       } else {
-        setSessionError(errMsg || 'Failed to start session. The content may not be analyzed yet.');
+        setSessionError(errMsg || t('quiz.session.errorStart'));
       }
     } finally {
       setIsCreating(false);
     }
-  }, [contentId, contentTitle, selectedMode]);
+  }, [contentId, contentTitle, selectedMode, t]);
 
   const handleSubmitAnswer = useCallback(
     async (questionId: string, answer: string, timeSpentMs: number, hintUsed: boolean) => {
@@ -292,23 +294,26 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
           <RotateCcw className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold mb-2">Resume Previous Quiz?</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('quiz.session.resumeTitle')}</h2>
           <p className="text-muted-foreground">
-            You have an active session with{' '}
-            <span className="font-semibold">{s.questions_answered}</span> of{' '}
-            <span className="font-semibold">{s.total_questions}</span> questions answered
+            {t('quiz.session.resumeBody', {
+              answered: s.questions_answered,
+              total: s.total_questions,
+            })}
           </p>
           {s.questions_answered > 0 && (
-            <p className="text-sm text-muted-foreground mt-1">Score so far: {scorePct}%</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('quiz.session.scoreSoFar', { percent: scorePct })}
+            </p>
           )}
         </div>
         <div className="flex gap-3 max-w-sm mx-auto">
           <Button onClick={handleResumeSession} className="flex-1" size="lg">
             <RotateCcw className="h-4 w-4 mr-2" />
-            Resume Quiz
+            {t('quiz.session.resumeQuiz')}
           </Button>
           <Button onClick={handleAbandonAndStartNew} variant="outline" className="flex-1" size="lg">
-            Start New
+            {t('quiz.session.startNew')}
           </Button>
         </div>
       </div>
@@ -320,8 +325,10 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
     return (
       <div className="space-y-6 max-w-2xl mx-auto p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Start a Learning Session</h2>
-          <p className="text-muted-foreground">{contentTitle || 'Selected content'}</p>
+          <h2 className="text-2xl font-bold mb-2">{t('quiz.session.startTitle')}</h2>
+          <p className="text-muted-foreground">
+            {contentTitle || t('quiz.session.selectedContent')}
+          </p>
         </div>
 
         {/* Mode selector */}
@@ -346,11 +353,11 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <div className="font-semibold">{mode.name}</div>
+                    <div className="font-semibold">{t(mode.nameKey)}</div>
                     <span className="text-xs text-muted-foreground">{mode.cefrRange}</span>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{mode.description}</p>
+                <p className="text-sm text-muted-foreground">{t(mode.descriptionKey)}</p>
               </button>
             );
           })}
@@ -360,10 +367,10 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
           <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/30">
             <Clock className="h-6 w-6 text-warning shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-warning mb-1">Daily Limit Reached</h4>
-              <p className="text-sm text-warning">
-                You&apos;ve used all your quiz sessions for today. Come back tomorrow!
-              </p>
+              <h4 className="font-semibold text-warning mb-1">
+                {t('quiz.session.dailyLimitTitle')}
+              </h4>
+              <p className="text-sm text-warning">{t('quiz.session.dailyLimitBody')}</p>
             </div>
           </div>
         )}
@@ -384,12 +391,12 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
           {isCreating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Preparing session...
+              {t('quiz.session.preparing')}
             </>
           ) : (
             <>
               <Brain className="h-4 w-4 mr-2" />
-              Start Learning
+              {t('quiz.session.startLearning')}
             </>
           )}
         </Button>
@@ -404,7 +411,7 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Brain className="h-5 w-5" />
-            Quiz
+            {t('quiz.session.quiz')}
           </h2>
         </div>
 
@@ -412,8 +419,8 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
           <div className="flex items-center justify-center p-8 rounded-lg bg-warning/10 border border-warning/30">
             <div className="text-center">
               <AlertCircle className="h-8 w-8 text-warning mx-auto mb-2" />
-              <p className="text-warning font-medium">No questions available</p>
-              <p className="text-warning text-sm mt-1">The content may not have quiz data yet.</p>
+              <p className="text-warning font-medium">{t('quiz.session.noQuestions')}</p>
+              <p className="text-warning text-sm mt-1">{t('quiz.session.noQuizData')}</p>
             </div>
           </div>
         ) : (
@@ -437,7 +444,7 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
         {isCompleting && (
           <div className="flex items-center justify-center gap-2 p-4">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="text-muted-foreground">Calculating results...</span>
+            <span className="text-muted-foreground">{t('quiz.session.calculating')}</span>
           </div>
         )}
       </div>

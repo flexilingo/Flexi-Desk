@@ -206,6 +206,23 @@ export interface PodcastEpisode {
   youtubeId?: string;
   /** The catalogue's id for that video — the watch page's route param. */
   catalogueVideoId?: string;
+  /**
+   * Set for a book TRACK — a recording of a published textbook (Reader editions). It plays through the
+   * audio element, but is no library episode: nothing is saved or reported for it as one.
+   */
+  bookTrack?: BookTrackRef;
+}
+
+/** Which recording of which book an episode stands for, and where the book is. */
+export interface BookTrackRef {
+  edition: string;
+  track: number;
+  /** The language the book teaches — its recordings are in it. */
+  language: string;
+  /** The book's name, shown under the track's title in the player. */
+  showName: string;
+  /** The reader route to go back to when the player is expanded. */
+  returnTo: string;
 }
 
 export interface PodcastBookmark {

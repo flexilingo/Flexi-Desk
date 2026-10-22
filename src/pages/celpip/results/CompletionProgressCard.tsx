@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, Sparkles, RefreshCw, Check, Clock, RotateCcw, Lightbulb } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { SECTION_META } from './_shared';
+import { SECTION_META } from './shared';
 import type { SectionResult } from '../types';
 import type { CompletionSkill, SectionScoringState } from '../hooks/useExamCompletionPoll';
 

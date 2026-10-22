@@ -389,6 +389,8 @@ pub fn run() {
             commands::ai::ai_sentence_chat_clear,
             commands::ai::ai_evaluate_writing,
             commands::ai::ai_test,
+            // Sentence practice: the answer judge, on the learner's own AI
+            commands::sentences::sentences_judge,
             // Deck Hub
             commands::deck_hub::deck_hub_analyze_text,
             commands::deck_hub::deck_hub_batch_create,

@@ -1,0 +1,461 @@
+{
+  "title": "句子练习",
+  "tagline": "看句子说出意思，或者看意思写出句子。回答之后，整个句子会展开：每个词的作用、动词从哪里来、哪些规则构成了它。",
+  "empty": "没有可练习的句子。",
+  "direction": {
+    "recognize": "句子 → 意思",
+    "produce": "意思 → 句子",
+    "listen": "只听声音"
+  },
+  "prompt": {
+    "recognize": "这句话是什么意思？",
+    "produce": "用法语写出来：",
+    "listen": "听一听 — 你知道意思吗？"
+  },
+  "progress": "第 {{index}} 张，共 {{total}} 张",
+  "next": "下一个",
+  "nextRound": "下一轮",
+  "knewIt": "我会",
+  "showMeaning": "显示意思",
+  "literal": "逐词直译",
+  "typeHere": "在这里写句子…",
+  "check": "检查",
+  "hint": "提示",
+  "chunk": "一个整体",
+  "readMore": "速查表中这条规则的完整页面",
+  "verdict": {
+    "exact": "正确",
+    "accents": "正确 — 但注意拼写",
+    "variant": "这也是正确的法语",
+    "wrong": "这不是这张卡片的句子",
+    "alternative": "正确 — 卡片上没有列出的法语说法"
+  },
+  "verdictVariantDetail": "你写的是对的，但属于「{{register}}」语体。这张卡片要的是另一种形式 — 两种都要认识，因为它们用在不同的场合。",
+  "sections": {
+    "verb": "动词 — 从哪里来",
+    "agreement": "为什么是这个形式",
+    "mechanics": "拼写和读音的变化",
+    "notes": "本句要点",
+    "rules": "本句中的规则",
+    "rulesHint": "点任意一条，完整讲解会在这里展开。",
+    "registers": "同一句话的三种语体",
+    "registersHint": "一个意思，三种社交场合。彼此不能互换。",
+    "breakdown": "逐词拆解",
+    "pattern": "句型"
+  },
+  "verb": {
+    "noStem": "这是不规则动词 — 不是由什么构成的，需要记住。完整变位表在下面的规则讲解里。",
+    "mood": "语式",
+    "tense": "时态",
+    "person": "人称",
+    "agreesWith": "配合",
+    "auxiliary": "助动词",
+    "conjugationTable": "「{{verb}}」的完整变位"
+  },
+  "families": {
+    "group-1-er": "第一组 · -er 动词",
+    "group-2-ir": "第二组 · -ir 动词",
+    "group-3-irregular": "第三组 · 不规则"
+  },
+  "moods": {
+    "indicatif": "直陈式",
+    "conditionnel": "条件式",
+    "infinitif": "不定式",
+    "imperatif": "命令式",
+    "subjonctif": "虚拟式（subjonctif）"
+  },
+  "tenses": {
+    "present": "现在时",
+    "passe-compose": "复合过去时（passé composé）",
+    "imperatif": "—",
+    "imparfait": "未完成过去时（imparfait）",
+    "futur-simple": "简单将来时（futur simple）"
+  },
+  "persons": {
+    "1sg": "第一人称单数（je）",
+    "2sg": "第二人称单数（tu）",
+    "3sg": "第三人称单数（il/elle/on）",
+    "1pl": "第一人称复数（nous）",
+    "2pl": "第二人称复数（vous）",
+    "3pl": "第三人称复数（ils/elles）"
+  },
+  "verbNotes": {
+    "doubled-l": "这个形式里 l 要双写。规则：词尾不发音的地方，l 双写以保留 è 的音 — j'appelle，但 nous appelons。",
+    "memorised": "不规则。没有词根和词尾之分，整张表都要记住。",
+    "silent-ending": "词尾不发音。-e、-es 和 -ent 读音相同，所以说话时只有代词能表明是谁在做。",
+    "fixed-expression": "属于固定表达，不单独变位。il y a 单复数都只有一种形式。",
+    "politeness-form": "这是条件式，用来让请求更委婉。je veux 没错但生硬；je voudrais 意思相同但礼貌。",
+    "stays-infinitive": "这是第二个动词，保持原形。两个动词连用时，只变位第一个。",
+    "on-takes-3sg": "on 意思是「我们」，但动词用第三人称单数，和 il 一样。「on allons」是错的。",
+    "impersonal-subject": "主语不指任何人；它存在只是因为法语不能造没有主语的句子。",
+    "noun-subject-is-3sg": "主语是名词而不是代词 — 但动词同样用第三人称单数。",
+    "participle-irregular": "过去分词不规则，需要记住 — 不能由不定式推出。",
+    "etre-verb": "这个动词用 être 而不是 avoir 做助动词。也就是说，分词要像形容词一样和主语配合。",
+    "agreement-with-etre": "助动词是 être，所以分词和主语配合。听不出来，但书写时必须体现。",
+    "imperative-drops-s": "tu 的命令式里，-er 动词去掉 s：tu parles，但「Parle !」。",
+    "imperative-no-subject": "命令式省略主语代词 — 这是法语唯一允许省略的地方。",
+    "impersonal-invariable": "从不变位。只有一种形式，主语不指任何人。",
+    "imparfait-from-nous": "词根来自现在时 nous 的形式（nous parl-ons → parl-），所有动词词尾相同：ais · ais · ait · ions · iez · aient。唯一例外是 être：ét-。",
+    "futur-from-infinitive": "词根就是不定式本身（-re 动词去掉 e），词尾是 avoir 的变位：ai · as · a · ons · ez · ont。",
+    "futur-stem-irregular": "将来时词根不规则，需要记住；词尾照常：ai · as · a · ons · ez · ont。",
+    "subjonctif-from-ils": "词根来自现在时 ils 的形式（ils partent → part-），词尾是：e · es · e · ions · iez · ent。",
+    "pronominal-etre": "代词式动词的过去时总是用 être，分词和主语配合。",
+    "advice-form": "用条件式给建议：tu dois = 你必须（命令），tu devrais = 你最好（建议）。词根同将来时（devr-），词尾同 imparfait。",
+    "recent-past": "venir 是现在时，但意思是刚刚过去：venir de + 不定式 = 刚刚……了。"
+  },
+  "genders": {
+    "m": "阳性单数",
+    "f": "阴性单数",
+    "m_pl": "阳性复数",
+    "f_pl": "阴性复数"
+  },
+  "agreementBecause": "变成 {{form}}，因为它指的是「{{because}}」",
+  "agreementAudible": "听得出来",
+  "agreementSilent": "只体现在书写上",
+  "roles": {
+    "subject": "主语",
+    "subject_dummy": "形式主语 — 不指任何人",
+    "subject_existential": "被说明存在的事物",
+    "predicate": "动词",
+    "copula": "系动词（是）",
+    "object": "宾语",
+    "object_interrogative": "疑问宾语",
+    "attribute": "表语 — 对主语的说明",
+    "modifier": "副词 — 修饰动词",
+    "determiner": "限定词 — 冠词、数词或物主词",
+    "reflexive": "自反代词 — 指回主语本身",
+    "negation": "否定",
+    "question-marker": "疑问标记 — 本身无意义",
+    "existential": "「有 / 存在」",
+    "existential_negative": "「没有」",
+    "presentative": "引介词 — 「这是」",
+    "future-marker": "将来标记",
+    "politeness": "礼貌用语",
+    "quantity": "数量",
+    "unit": "单位",
+    "complement": "补语",
+    "complement_place": "地点 — 在哪里",
+    "complement_time": "时间 — 什么时候",
+    "complement_manner": "方式 — 怎样",
+    "complement_frequency": "频率 — 多久一次",
+    "complement_language": "语言",
+    "complement_origin": "来源 — 从哪里",
+    "preposition_place": "地点介词",
+    "preposition_origin": "来源介词",
+    "predicate_subject": "动词 + 倒装主语",
+    "interjection": "感叹词"
+  },
+  "mechanics": {
+    "elision": "élision — 元音省略",
+    "contraction": "缩合",
+    "liaison": "liaison — 联诵"
+  },
+  "kinds": {
+    "structure": "结构",
+    "question": "疑问",
+    "word-order": "语序",
+    "verb": "动词",
+    "article": "冠词",
+    "negation": "否定",
+    "pronoun": "代词",
+    "agreement": "配合",
+    "preposition": "介词",
+    "spelling": "拼写与读音",
+    "vocabulary": "词语用法"
+  },
+  "registers": {
+    "familiar": "口语随意",
+    "standard": "一般",
+    "formal": "正式"
+  },
+  "channels": {
+    "spoken": "口语",
+    "written": "书面"
+  },
+  "errors": {
+    "RATE_LIMITED": "有点太快了 — 请稍等一下。",
+    "UNKNOWN_ERROR": "下一轮没有加载出来。请重试。",
+    "QUOTA_USER": "今天的练习已达上限。明天继续吧。",
+    "QUOTA_IP": "今天这个网络的练习次数过多。请稍后再试。",
+    "TOO_FAST": "慢一点 — 先回答每张卡片。",
+    "NOT_DEALT": "这张卡片已失效；请开始新的一轮。",
+    "AUTH_REQUIRED": "请登录后继续。",
+    "AUDIO_UNAVAILABLE": "音频没能加载,请重试。",
+    "NOT_REVEALED": "回答前请先翻开卡片。",
+    "ANSWER_FIRST": "请先写下你的答案。",
+    "PENDING_LOCALE": "这种语言的讲解还没有准备好。",
+    "NETWORK": "无法连接 FlexiLingo,请检查网络。"
+  },
+  "facts": {
+    "subject-masculine": "主语：阳性（il）",
+    "subject-feminine": "主语：阴性（elle）",
+    "subject-on": "主语：on（口语）",
+    "subject-nous": "主语：nous",
+    "address-tu": "称呼：tu",
+    "address-vous": "称呼：vous",
+    "register-familiar": "语体：口语随意",
+    "register-standard": "语体：一般",
+    "register-formal": "语体：正式"
+  },
+  "verdictWrongDetail": "这不是这张卡片要的句子。如果你写的是正确的法语，那就不算错 — 卡片只是在找下面这个形式。看看区别：",
+  "toolbar": {
+    "language": "语言",
+    "level": "级别",
+    "direction": "方向",
+    "order": "顺序",
+    "unit": "单元",
+    "topic": "主题",
+    "path": "路径",
+    "task": "考试部分"
+  },
+  "langs": {
+    "fr": "法语",
+    "en": "英语"
+  },
+  "finished": {
+    "title": "{{level}} 级别已完成",
+    "body": "你已经看完本级别的所有句子。可以再来一轮 — 什么都不会删除，只是从头开始。",
+    "unitTitle": "第 {{unit}} 单元已完成",
+    "unitBody": "本单元的句子你都看过了。这个级别还没结束——课程从下一单元继续。",
+    "nextUnit": "前往第 {{unit}} 单元",
+    "againUnit": "再练第 {{unit}} 单元",
+    "topicTitle": "这个主题已完成",
+    "topicBody": "本级别中这个主题的句子你都看过了。取消筛选，级别的其余部分还在那里。",
+    "again": "再来一轮"
+  },
+  "orders": {
+    "course": "课程顺序",
+    "random": "随机",
+    "easy": "由易到难",
+    "hard": "只练难的",
+    "review": "复习错题"
+  },
+  "unitLabel": "第 {{unit}} 单元",
+  "allUnits": "所有单元",
+  "allTopics": "所有主题",
+  "topics": {
+    "identity": "身份与介绍",
+    "place": "地点",
+    "time": "时间",
+    "food": "饮食",
+    "politeness": "礼貌",
+    "routine": "日常生活",
+    "shopping": "购物",
+    "opinion": "观点",
+    "work": "工作",
+    "leisure": "休闲",
+    "class": "课堂",
+    "language": "语言",
+    "family": "家庭",
+    "greeting": "问候",
+    "money": "钱",
+    "directions": "问路",
+    "health": "健康",
+    "transport": "交通",
+    "weather": "天气",
+    "description": "描述",
+    "travel": "旅行",
+    "clothes": "衣服",
+    "phone": "电话",
+    "home": "家",
+    "restaurant": "餐厅",
+    "rules": "规定与标志",
+    "school": "学校与学习",
+    "technology": "科技"
+  },
+  "listen": {
+    "play": "播放句子",
+    "again": "再听一遍",
+    "slow": "慢一点",
+    "count": "已听 {{count}} 遍",
+    "reveal": "看意思",
+    "seeText": "看文字",
+    "textStep": "现在读一读 — 是什么意思？",
+    "askHeard": "看到文字之前，你听出这些词了吗？",
+    "heardIt": "听出来了",
+    "missedIt": "没有，看了文字才懂",
+    "earAgain": "听的时候没听出来 — 它很快会回来做听力练习。",
+    "askHeardHint": "看到文字后才明白不算；关键是听到的那一刻。"
+  },
+  "settings": {
+    "title": "设置",
+    "autoPlay": "自动播放声音",
+    "autoPlayHint": "句子一出现就朗读；写作模式下在看到答案后朗读。",
+    "autoPlayShort": "自动发音",
+    "mix": "自动复习",
+    "mixHint": "每隔几张卡片，一个到期该复习的句子会代替一个新句子。关闭后，本轮完全按你的设置进行。",
+    "mixShort": "自动复习"
+  },
+  "stats": {
+    "line": "已练 {{practiced}} · 已会 {{learned}}",
+    "streak": "连续 {{days}} 天"
+  },
+  "review": {
+    "link": "复习（{{count}}）",
+    "start": "复习 {{count}} 个句子",
+    "empty": "现在没有要复习的。答错的句子几分钟后会回到这里。",
+    "back": "新的练习"
+  },
+  "schedule": {
+    "again": "这句几分钟后会再出现，直到你答对为止。",
+    "later": "正确 — {{days}} 天后会再见到它。",
+    "learned": "这句你已经学会了。{{days}} 天后我们再问一次，帮你记牢。",
+    "later_one": "正确 — {{days}} 天后会再见到它。",
+    "later_other": "正确 — {{days}} 天后会再见到它。",
+    "learned_one": "这句你已经学会了。{{days}} 天后我们再问一次，帮你记牢。",
+    "learned_other": "这句你已经学会了。{{days}} 天后我们再问一次，帮你记牢。"
+  },
+  "history": {
+    "link": "记录",
+    "title": "句子练习记录",
+    "subtitle": "你回答过的句子 — 哪些会了，哪些还会再出现。",
+    "tabs": {
+      "weak": "错题",
+      "learned": "已会",
+      "all": "全部",
+      "misheard": "没听出"
+    },
+    "empty": {
+      "weak": "目前没有错题。",
+      "learned": "你还没有连续两次答对任何句子 — 第二次答对就会标记为「已会」。",
+      "all": "你还没有回答过任何句子。",
+      "misheard": "没有你没听出来的句子。"
+    },
+    "counts": "对 {{correct}} · 错 {{wrong}}",
+    "yourAnswer": "你的回答",
+    "status": {
+      "learned": "已会",
+      "weak": "会再出现",
+      "seen": "学习中"
+    },
+    "dueNow": "可以复习",
+    "dueMinutes": "复习：几分钟后",
+    "dueDays": "复习：{{days}} 天后",
+    "reviewAll": "复习 {{count}} 个句子",
+    "back": "返回练习",
+    "prev": "上一页",
+    "next": "下一页",
+    "heard": "靠听",
+    "heardTimes": "靠听，{{count}} 遍",
+    "misheard": "没听出来"
+  },
+  "revealMeaning": "看意思",
+  "didntKnow": "我不会",
+  "askKnew": "你会吗？",
+  "askKnewHint": "自己判断：在看到意思之前，你心里已经有答案了吗？",
+  "liaisonHint": "也就是说这两个词连在一起，一口气读出来（liaison）。",
+  "paths": {
+    "general": "通用"
+  },
+  "allTasks": "所有部分",
+  "ui": {
+    "playOnce": "播放句子",
+    "playSlow": "慢一点",
+    "repeat3": "连续 3 遍",
+    "repeat5": "连续 5 遍",
+    "repeatLoop": "循环播放直到停止",
+    "stop": "停止播放",
+    "playOptions": "播放选项"
+  },
+  "qa": {
+    "prompt": "听一听 — 你怎么回答？",
+    "step": "读问题并写下你的回答",
+    "heard": "你听的时候听懂问题了吗？",
+    "write": "用法语写下你的回答",
+    "placeholder": "你的回答…",
+    "slotsHint": "填上你自己的名字、数字和城市。",
+    "answers": "可能的回答",
+    "yours": "你的",
+    "yourAnswer": "你的回答",
+    "grade": {
+      "exact": "正确",
+      "accents": "正确 — 注意字母符号",
+      "unmatched": "与示例回答不符 — 对照一下，自己判断"
+    },
+    "askRight": "你的回答对吗？",
+    "askRightHint": "和上面的回答对照一下。意思对、法语也没错，就算不是一字不差也算对。",
+    "kinds": {
+      "affirmative": "肯定",
+      "negative": "否定",
+      "short": "简短"
+    },
+    "details": "详情",
+    "matchedModel": "匹配：",
+    "wasRight": "答对了",
+    "wasWrong": "答错了",
+    "questionAnalysis": "问题的语法",
+    "open": "展开"
+  },
+  "scorecard": {
+    "title": "AI 检查",
+    "criteria": {
+      "meaning": "意思",
+      "grammar": "语法",
+      "spelling": "拼写",
+      "elision": "省音"
+    },
+    "why": {
+      "meaning": {
+        "pass": "表达了卡片要求的意思。",
+        "fail": "没有表达卡片要求的意思。"
+      },
+      "grammar": {
+        "pass": "语法正确。",
+        "fail": "有一个语法错误。"
+      },
+      "spelling": {
+        "pass": "拼写正确。",
+        "near": "词是对的——检查一下重音符号。",
+        "fail": "有一个拼写错误。"
+      },
+      "elision": {
+        "pass": "省音正确。",
+        "fail": "缺少一处省音——本该缩写的词被完整写出（例如写成 me aider 而不是 m'aider）。"
+      }
+    },
+    "register": {
+      "formal": "正式语体——适合信件或对陌生人。",
+      "neutral": "中性语体——几乎处处适用。",
+      "informal": "口语化——很适合发消息给朋友。"
+    },
+    "natural": {
+      "yes": "很自然——母语者就会这么说。",
+      "no": "正确，但母语者会换个说法。"
+    },
+    "error": {
+      "gender_agreement": "看起来是性或数的配合错误。",
+      "verb_conjugation": "检查动词的形式或时态。",
+      "word_order": "检查词序。",
+      "preposition_or_article": "检查介词或冠词。",
+      "spelling_or_accent": "检查拼写。",
+      "negation": "检查否定形式。",
+      "wrong_word": "有一个词与意思不符。",
+      "avoir_expression": "这里法语用 avoir，不用 être：j'ai faim，quel âge avez-vous ?"
+    }
+  },
+  "retry": {
+    "title": "这句写错了——再写一遍",
+    "hint": "因为写错了，这句又回来了。写对一次才能继续。你现在可以跳过——但下次它再出现时，就不能跳过了。",
+    "skip": "暂时跳过",
+    "lockedTitle": "这句你已经写错 {{count}} 次了",
+    "lockedHint": "上次你跳过了它。这一次必须写对才能继续。"
+  },
+  "desk": {
+    "comingTitle": "将随服务器的下一次更新推出",
+    "comingBody": "在这台电脑上练习句子,需要 FlexiLingo 服务器做一次小更新。更新上线后,这里会立即开放。不会丢失任何内容,你也无需做任何事。",
+    "checkAgain": "重新检查",
+    "signInTitle": "登录后练习句子",
+    "signInBody": "你的句子记录保存在账号里,会跟着你出现在每台设备上。",
+    "loadingRound": "加载中…",
+    "tryAgain": "重试",
+    "aiChecking": "你的 AI 正在检查你的句子…",
+    "aiSetup": "设置你自己的 AI,让它检查所写句子的含义、语法和拼写。在此之前,只以卡片本身的句子为准。",
+    "aiFallback": "你的 AI 没能检查这一句,因此由卡片自身的检查来判定。",
+    "notSaved": "这个答案没能保存到你的记录里。",
+    "pendingBody": "这种语言的讲解还没有准备好。",
+    "historyBack": "返回练习",
+    "close": "关闭",
+    "signIn": "登录",
+    "loadMore": "正在加载列表…"
+  }
+}

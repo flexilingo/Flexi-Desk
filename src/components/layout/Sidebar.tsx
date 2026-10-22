@@ -1,5 +1,5 @@
 import { useEffect, type ReactElement } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bug, ChevronsLeft, ChevronsRight, Crown, Sparkles } from 'lucide-react';
 import { openUrl } from '@tauri-apps/plugin-opener';
@@ -8,12 +8,7 @@ import { useAppStore } from '@/stores/appStore';
 import { useAuthStore } from '@/stores/authStore';
 import { isPaidTier, useSubscriptionStore } from '@/stores/subscriptionStore';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import {
-  isItemActive,
-  subscriptionUrl,
-  visibleGroups,
-  type NavItem,
-} from '@/components/layout/sidebarConfig';
+import { isItemActive, visibleGroups, type NavItem } from '@/components/layout/sidebarConfig';
 
 const BUG_URL = 'https://github.com/flexilingo/Flexi-Desk/issues/new';
 
@@ -116,10 +111,11 @@ function SidebarLink({
  * The PRO offer at the foot of the sidebar, as on the website: shown to a
  * signed-in learner who has not bought a plan (a trial is still offered the
  * purchase). A bought plan gets a quiet link to its page instead. Both open the
- * website's subscription page in the system browser.
+ * app's own Pro page (payments from there open in the system browser).
  */
 function ProOffer({ collapsed, side }: { collapsed: boolean; side: 'left' | 'right' }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const session = useAuthStore((s) => s.session);
   const subscription = useSubscriptionStore((s) => s.subscription);
   const hasResolved = useSubscriptionStore((s) => s.hasResolved);
@@ -134,7 +130,7 @@ function ProOffer({ collapsed, side }: { collapsed: boolean; side: 'left' | 'rig
 
   const tier = subscription?.tier ?? 'free';
   const bought = isPaidTier(tier) && tier !== 'trial' && subscription?.status !== 'trialing';
-  const open = () => void openUrl(subscriptionUrl(i18n.language));
+  const open = () => navigate('/subscription');
 
   if (bought) {
     const plan = tier === 'lifetime' ? 'Lifetime' : tier === 'pro_max' ? 'PRO MAX' : 'PRO';

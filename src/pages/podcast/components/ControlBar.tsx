@@ -234,7 +234,13 @@ export function ControlBar({
                 <Play className="w-full h-full" />
               )
             }
-            label={isBuffering ? 'Loading…' : isPlaying ? t('podcast.pause') : t('podcast.play')}
+            label={
+              isBuffering
+                ? tp('shared.loading')
+                : isPlaying
+                  ? t('podcast.pause')
+                  : t('podcast.play')
+            }
             onClick={onPlayPause}
             primary
           />

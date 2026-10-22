@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
 import { authErrorText } from './authError';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 interface SignInDialogProps {
   open: boolean;
@@ -112,6 +113,16 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
+          )}
+
+          {step === 'email' && (
+            <GoogleSignInButton
+              onSignedIn={() => {
+                onSignedIn?.();
+                onOpenChange(false);
+                setTimeout(reset, 200);
+              }}
+            />
           )}
 
           {step === 'email' ? (

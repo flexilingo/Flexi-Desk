@@ -8,7 +8,7 @@
  */
 
 const NETWORK_MESSAGES =
-  /failed to fetch|load failed|networkerror|network request failed|error sending request|dns error|connection (?:refused|reset|closed|error)|timed out|timeout|the internet connection appears to be offline|err_network|err_internet_disconnected|offline/i;
+  /failed to fetch|(?<![a-z])load failed|networkerror|network request failed|error sending request|dns error|connection (?:refused|reset|closed|error)|timed out|timeout|the internet connection appears to be offline|err_network|err_internet_disconnected|offline/i;
 
 /** True for a failure where the request most likely never got an answer. */
 export function isNetworkUploadError(err: unknown): boolean {

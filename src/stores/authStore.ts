@@ -17,6 +17,8 @@ interface AuthState {
   initialize: () => Promise<void>;
   sendOtp: (email: string) => Promise<void>;
   verifyOtp: (email: string, otp: string) => Promise<void>;
+  /** System-browser Google sign-in (loopback OAuth in Rust). */
+  signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -66,6 +68,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ session, isLoading: false });
     } catch (e) {
       set({ error: String(e), isLoading: false });
+      throw e;
+    }
+  },
+
+  signInWithGoogle: async () => {
+    set({ error: null });
+    try {
+      const session = await invoke<AuthSession>('auth_google_sign_in');
+      set({ session, isLoading: false });
+    } catch (e) {
+      set({ error: String(e) });
       throw e;
     }
   },

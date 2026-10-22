@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Headphones } from 'lucide-react';
 import { EpisodeInfoBadges } from './EpisodeInfoBadges';
 import type { NlpAnalysis, PodcastEpisode } from '../types';
+import { useTranslation } from 'react-i18next';
 
 function formatTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -37,6 +38,7 @@ export function AudioPlayerArea({
   analysis,
   episode,
 }: AudioPlayerAreaProps) {
+  const { t } = useTranslation('podcastUi');
   const [isHovered, setIsHovered] = useState(false);
 
   const handleSkip = (seconds: number, e: React.MouseEvent) => {
@@ -169,7 +171,7 @@ export function AudioPlayerArea({
             </div>
           )}
           <h1 className="text-base sm:text-xl md:text-2xl font-semibold text-foreground m-0 mb-1 md:mb-3 leading-tight line-clamp-2">
-            {title || 'Podcast Episode'}
+            {title || t('audioPlayer.fallbackTitle')}
           </h1>
           <div className="text-xs sm:text-sm md:text-base text-muted-foreground font-mono">
             <span>{formatTime(currentTime)}</span>

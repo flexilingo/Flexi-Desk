@@ -245,6 +245,33 @@ pub async fn celpip_fetch_recording(
     Ok(tauri::ipc::Response::new(bytes))
 }
 
+/// Version of the answer keys inside a stored Listening/Reading insight. v2 numbers
+/// questions by POSITION in the session (how answers are keyed and how the results
+/// screen matches an analysis back to its question); rows written before carried the
+/// content's own part/question numbers, which differ in a practice slice.
+const INSIGHT_KEYS_VERSION: u64 = 2;
+
+fn tag_answer_keys(skill: InsightSkill, mut value: serde_json::Value) -> serde_json::Value {
+    if skill.is_mcq() {
+        if let Some(obj) = value.as_object_mut() {
+            obj.insert("_v".into(), serde_json::json!(INSIGHT_KEYS_VERSION));
+        }
+    }
+    value
+}
+
+/// A stored insight is reused only if its answer keys are current; an old Listening or
+/// Reading row is ignored (and written again), never shown against the wrong questions.
+fn cache_is_current(skill: InsightSkill, stored: &str) -> bool {
+    if !skill.is_mcq() {
+        return true;
+    }
+    serde_json::from_str::<serde_json::Value>(stored)
+        .ok()
+        .and_then(|v| v.get("_v").and_then(|n| n.as_u64()))
+        == Some(INSIGHT_KEYS_VERSION)
+}
+
 /// A recording path is `{user_id}/{exam folder}/{session}/{file}`: only the
 /// signed-in user's own folder, with no way to climb out of it.
 fn is_own_recording_path(user_id: &str, path: &str) -> bool {
@@ -481,7 +508,7 @@ pub async fn celpip_generate_local_insight(
             .ok();
 
         if let Some((status, Some(result))) = cached {
-            if status == "ready" {
+            if status == "ready" && cache_is_current(skill_enum, &result) {
                 return Ok(result);
             }
         }
@@ -526,7 +553,7 @@ pub async fn celpip_generate_local_insight(
     // The model may wrap its JSON in prose or a code fence; `extract_json` digs it out.
     let parsed = raw.and_then(|r| extract_json(&r).map_err(|_| "MODEL_RETURNED_NO_JSON".to_string()));
 
-    match parsed.map(|v| v.to_string()) {
+    match parsed.map(|v| tag_answer_keys(skill_enum, v).to_string()) {
         Ok(json) => {
             let conn = lock_db(&state)?;
             conn.execute(
@@ -554,7 +581,22 @@ pub async fn celpip_generate_local_insight(
 
 #[cfg(test)]
 mod tests {
-    use super::is_own_recording_path;
+    use super::{cache_is_current, is_own_recording_path, tag_answer_keys};
+    use crate::celpip::InsightSkill;
+
+    #[test]
+    fn old_mcq_insights_are_ignored_and_new_ones_reused() {
+        let old = r#"{"wrong_count":1,"question_analyses":[]}"#;
+        assert!(!cache_is_current(InsightSkill::Listening, old));
+        assert!(!cache_is_current(InsightSkill::Reading, "not json"));
+        let tagged = tag_answer_keys(InsightSkill::Reading, serde_json::from_str(old).unwrap()).to_string();
+        assert!(cache_is_current(InsightSkill::Reading, &tagged));
+        // writing / speaking / summary have no answer keys: always reusable
+        assert!(cache_is_current(InsightSkill::Writing, "[]"));
+        assert!(cache_is_current(InsightSkill::Summary, old));
+        let w = tag_answer_keys(InsightSkill::Writing, serde_json::json!([{"task_index":0}]));
+        assert!(w.is_array());
+    }
 
     #[test]
     fn only_the_signed_in_users_own_folder_may_be_downloaded() {

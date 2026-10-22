@@ -23,6 +23,8 @@ export interface UserSubscription {
   periodStart: string;
   periodEnd: string;
   hasStripeSubscription: boolean;
+  /** Free trial already consumed: never offer "start free trial" again. */
+  trialUsed?: boolean;
 }
 
 /** Exactly the tiers front treats as paid — one list, shared with the AI policy. */

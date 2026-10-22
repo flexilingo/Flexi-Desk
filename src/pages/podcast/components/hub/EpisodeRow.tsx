@@ -1,25 +1,22 @@
 import { Headphones, Play, Clock, Flame, Users, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { relativeDays } from '../../utils/relativeDate';
+import type { TFunction } from 'i18next';
 import { CefrChip, ScoreChip } from './PodcastAnalysisChips';
 import type { CuratedEpisodeLite } from '../../types';
 
-function formatDuration(seconds: number | null): string {
+function formatDuration(seconds: number | null, tp: TFunction): string {
   if (!seconds) return '—';
   const m = Math.floor(seconds / 60);
-  if (m < 60) return `${m}m`;
+  if (m < 60) return tp('shared.minShort', { m });
   const h = Math.floor(m / 60);
-  return `${h}h ${m % 60}m`;
+  return tp('shared.durHM', { h, m: m % 60 });
 }
 
-function formatRelativeDate(date: string | null): string {
+function formatRelativeDate(date: string | null, tp: TFunction, locale: string): string {
   if (!date) return '';
-  const ms = Date.now() - new Date(date).getTime();
-  const days = Math.floor(ms / 86400000);
-  if (days === 0) return 'today';
-  if (days === 1) return '1d ago';
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return new Date(date).toLocaleDateString();
+  const days = Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
+  return relativeDays(tp, days, 'week') ?? new Date(date).toLocaleDateString(locale);
 }
 
 interface Props {
@@ -40,7 +37,8 @@ export function EpisodeRow({
   isOpening,
   onOpen,
 }: Props) {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
+  const { t: tp } = useTranslation('podcastUi');
   const thumbnail = episode.image_url || episode.podcast_image;
 
   let secondaryRight: React.ReactNode = null;
@@ -54,7 +52,7 @@ export function EpisodeRow({
   } else if (episode.publish_date) {
     secondaryRight = (
       <span className="text-[11px] text-muted-foreground">
-        {formatRelativeDate(episode.publish_date)}
+        {formatRelativeDate(episode.publish_date, tp, i18n.language)}
       </span>
     );
   }
@@ -118,7 +116,7 @@ export function EpisodeRow({
         </div>
         <span className="flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums">
           <Clock className="h-3 w-3" />
-          {formatDuration(episode.duration_seconds)}
+          {formatDuration(episode.duration_seconds, tp)}
         </span>
       </div>
     </button>

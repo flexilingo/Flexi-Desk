@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { PodcastBookmark } from '../../types';
 import { formatTimeMs } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 interface NotesTabProps {
   bookmarks: PodcastBookmark[];
@@ -28,6 +29,7 @@ export function NotesTab({
   onUpdateBookmark,
   onSync,
 }: NotesTabProps) {
+  const { t } = useTranslation('podcastUi');
   const [addExpanded, setAddExpanded] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export function NotesTab({
     <div className="space-y-3">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold flex items-center gap-1.5">Notes</h3>
+        <h3 className="text-sm font-semibold flex items-center gap-1.5">{t('notesTab.title')}</h3>
         <div className="flex items-center gap-1.5">
           {onSync && (
             <Button
@@ -74,7 +76,7 @@ export function NotesTab({
               size="sm"
               className="h-7 w-7 p-0"
               onClick={onSync}
-              title="Sync notes"
+              title={t('notesTab.sync')}
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
@@ -86,7 +88,7 @@ export function NotesTab({
             onClick={() => setAddExpanded(!addExpanded)}
           >
             <Plus className="h-3 w-3" />
-            Add
+            {t('notesTab.add')}
           </Button>
         </div>
       </div>
@@ -104,7 +106,7 @@ export function NotesTab({
               ) : (
                 <ChevronDown className="h-3 w-3" />
               )}
-              Add with note
+              {t('notesTab.addWithNote')}
             </button>
           </div>
 
@@ -118,7 +120,7 @@ export function NotesTab({
           <Input
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
-            placeholder="Add a note..."
+            placeholder={t('notesTab.addPlaceholder')}
             className="h-8 text-xs"
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleAddNote();
@@ -136,7 +138,7 @@ export function NotesTab({
                 setNewNote('');
               }}
             >
-              Cancel
+              {t('shared.cancel')}
             </Button>
             <Button
               variant="default"
@@ -144,7 +146,7 @@ export function NotesTab({
               className="h-7 px-3 text-xs"
               onClick={handleAddNote}
             >
-              Save
+              {t('shared.save')}
             </Button>
           </div>
         </div>
@@ -152,9 +154,7 @@ export function NotesTab({
 
       {/* Bookmark list */}
       {bookmarks.length === 0 ? (
-        <p className="text-xs text-muted-foreground text-center py-6">
-          No notes yet. Click "+ Add" to create one at the current timestamp.
-        </p>
+        <p className="text-xs text-muted-foreground text-center py-6">{t('notesTab.empty')}</p>
       ) : (
         <div className="space-y-0.5">
           {bookmarks.map((bm) => (
@@ -164,7 +164,7 @@ export function NotesTab({
                 <button
                   onClick={() => onSeek(bm.positionMs / 1000)}
                   className="flex items-center gap-1 text-[10px] text-success font-mono mt-0.5 shrink-0 hover:text-success/80 transition-colors"
-                  title="Seek to this position"
+                  title={t('notesTab.seek')}
                 >
                   <Play className="h-3 w-3 fill-current" />
                   {formatTimeMs(bm.positionMs)}
@@ -181,7 +181,7 @@ export function NotesTab({
                       <Input
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
-                        placeholder="Edit note..."
+                        placeholder={t('notesTab.editPlaceholder')}
                         className="h-7 text-xs"
                         autoFocus
                         onKeyDown={(e) => {
@@ -196,7 +196,7 @@ export function NotesTab({
                           className="h-6 px-2 text-[10px]"
                           onClick={handleCancelEdit}
                         >
-                          Cancel
+                          {t('shared.cancel')}
                         </Button>
                         <Button
                           variant="default"
@@ -204,7 +204,7 @@ export function NotesTab({
                           className="h-6 px-2 text-[10px]"
                           onClick={() => handleSaveEdit(bm.id)}
                         >
-                          Save
+                          {t('shared.save')}
                         </Button>
                       </div>
                     </div>
@@ -218,7 +218,7 @@ export function NotesTab({
                               className="text-[10px] text-success hover:underline mt-0.5"
                               onClick={() => handleStartEdit(bm)}
                             >
-                              Edit
+                              {t('notesTab.edit')}
                             </button>
                           )}
                         </div>
@@ -228,12 +228,14 @@ export function NotesTab({
                             className="text-[10px] text-success hover:underline mt-0.5"
                             onClick={() => handleStartEdit(bm)}
                           >
-                            + Add note
+                            {t('notesTab.addNote')}
                           </button>
                         )
                       )}
                       {!bm.label && !bm.note && (
-                        <p className="text-xs text-muted-foreground italic">Bookmark</p>
+                        <p className="text-xs text-muted-foreground italic">
+                          {t('notesTab.bookmark')}
+                        </p>
                       )}
                     </>
                   )}
@@ -261,7 +263,7 @@ export function NotesTab({
       {bookmarks.length > 0 && (
         <div className="pt-1 border-t border-border">
           <button className="flex items-center gap-1 text-xs text-success hover:underline w-full justify-center py-2">
-            View All Notes
+            {t('notesTab.viewAll')}
             <ExternalLink className="h-3 w-3" />
           </button>
         </div>

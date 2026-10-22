@@ -4,6 +4,8 @@ import { Maximize2, Mic, Pause, Play, Volume1, Volume2, VolumeX, X } from 'lucid
 import { usePlayerStore } from '../stores/playerStore';
 import { usePodcastStore } from '../stores/podcastStore';
 import { VideoHost } from '@/pages/videos/player/VideoHost';
+import { BookMiniPlayer } from '@/pages/reader/book/BookMiniPlayer';
+import { useTranslation } from 'react-i18next';
 
 function formatTime(s: number): string {
   if (!isFinite(s) || s < 0) return '0:00';
@@ -28,12 +30,15 @@ export function MiniPlayer() {
   const location = useLocation();
 
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const { t } = useTranslation('podcastUi');
   const progressRef = useRef<HTMLDivElement>(null);
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   if (!currentEpisode) return null;
   // A catalogue video: the Shell hosts its picture (docked on the watch page, floating elsewhere).
   if (currentEpisode.youtubeId) return <VideoHost />;
+  // A recording of a published textbook: its own bar (line steps, the book's subtitles, listen count).
+  if (currentEpisode.bookTrack) return <BookMiniPlayer />;
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current || duration <= 0) return;
@@ -57,7 +62,7 @@ export function MiniPlayer() {
       <div className="flex items-center gap-2 px-3 pt-3 pb-2">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-foreground truncate leading-tight">
-            {currentEpisode.title || 'Loading...'}
+            {currentEpisode.title || t('mini.loading')}
           </p>
           {currentFeed && (
             <p className="text-[10px] text-muted-foreground truncate mt-0.5">{currentFeed.title}</p>
@@ -67,7 +72,7 @@ export function MiniPlayer() {
           type="button"
           onClick={handleExpand}
           className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-          title="Expand Player"
+          title={t('mini.expand')}
         >
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
@@ -75,7 +80,7 @@ export function MiniPlayer() {
           type="button"
           onClick={stop}
           className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-          title="Close Player"
+          title={t('mini.close')}
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -124,7 +129,7 @@ export function MiniPlayer() {
             type="button"
             onClick={() => setShowVolumeSlider((v) => !v)}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Volume"
+            title={t('shared.volume')}
           >
             {isMuted ? (
               <VolumeX className="w-4 h-4" />
@@ -157,7 +162,7 @@ export function MiniPlayer() {
                 className="w-full py-1 px-1.5 rounded text-[10px] border border-border bg-muted text-foreground cursor-pointer hover:bg-muted/80"
                 onClick={() => setVolume(isMuted ? 1 : 0)}
               >
-                {isMuted ? 'Unmute' : 'Mute'}
+                {isMuted ? t('shared.unmute') : t('shared.mute')}
               </button>
             </div>
           )}

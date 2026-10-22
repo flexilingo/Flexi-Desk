@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { SyncPoint, RawSyncPoint, PodcastTranscriptSegment } from '../types';
 import { mapSyncPoint, formatTimeMs, getEffectiveOffset, mergeSyncPoint } from '../types';
+import { useTranslation } from 'react-i18next';
 
 const SAVE_DEBOUNCE_MS = 1500;
 
@@ -51,6 +52,7 @@ export function SubtitleSyncDialog({
   onSeekTo,
   onSyncPointsChanged,
 }: SubtitleSyncDialogProps) {
+  const { t } = useTranslation('podcastUi');
   const [syncPoints, setSyncPoints] = useState<SyncPoint[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -97,13 +99,13 @@ export function SubtitleSyncDialog({
             })),
           });
         } catch {
-          setSaveError('Could not save sync points. They still apply for this session.');
+          setSaveError(t('syncDialog.saveFailed'));
         } finally {
           setIsSaving(false);
         }
       }, SAVE_DEBOUNCE_MS);
     },
-    [episodeId],
+    [episodeId, t],
   );
 
   // Apply live (player offset updates instantly) + auto-save debounced
@@ -121,7 +123,7 @@ export function SubtitleSyncDialog({
     setSyncPoints([]);
     onSyncPointsChanged([]);
     invoke('podcast_clear_sync_points', { episodeId }).catch(() =>
-      setSaveError('Could not save sync points. They still apply for this session.'),
+      setSaveError(t('syncDialog.saveFailed')),
     );
   };
 
@@ -246,9 +248,11 @@ export function SubtitleSyncDialog({
             <Timer className="w-4 h-4" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold leading-none text-foreground">Sync subtitles</h2>
+            <h2 className="text-sm font-bold leading-none text-foreground">
+              {t('syncDialog.title')}
+            </h2>
             <p className="text-[11px] lg:text-xs text-muted-foreground mt-1 leading-snug line-clamp-2">
-              Play the audio, pause when you hear a line, then click that line below to sync.
+              {t('syncDialog.subtitleShort')}
             </p>
           </div>
         </div>
@@ -256,7 +260,7 @@ export function SubtitleSyncDialog({
           {isSaving && (
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
               <RotateCcw className="w-3 h-3 animate-spin" />
-              Saving…
+              {t('syncDialog.saving')}
             </span>
           )}
           {saveError && (
@@ -268,7 +272,7 @@ export function SubtitleSyncDialog({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('shared.close')}
             className="inline-flex w-9 h-9 items-center justify-center rounded-xl bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="w-4 h-4" />
@@ -308,7 +312,7 @@ export function SubtitleSyncDialog({
                 type="button"
                 onClick={() => onSeek(-5)}
                 className="inline-flex w-8 h-8 lg:w-9 lg:h-9 items-center justify-center rounded-lg bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border transition-colors"
-                title="-5s"
+                title={t('shared.secondsShort', { value: -5 })}
               >
                 <SkipBack className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
               </button>
@@ -321,12 +325,12 @@ export function SubtitleSyncDialog({
                 {isPlaying ? (
                   <>
                     <Pause className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                    Pause
+                    {t('shared.pause')}
                   </>
                 ) : (
                   <>
                     <Play className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                    Play
+                    {t('shared.play')}
                   </>
                 )}
               </Button>
@@ -334,7 +338,7 @@ export function SubtitleSyncDialog({
                 type="button"
                 onClick={() => onSeek(5)}
                 className="inline-flex w-8 h-8 lg:w-9 lg:h-9 items-center justify-center rounded-lg bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border transition-colors"
-                title="+5s"
+                title={t('shared.secondsShort', { value: '+5' })}
               >
                 <SkipForward className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
               </button>
@@ -345,19 +349,21 @@ export function SubtitleSyncDialog({
           <div className="flex flex-col gap-1.5 lg:gap-3">
             <div className="flex items-center justify-between gap-2">
               <div className="inline-flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] lg:text-xs text-muted-foreground">Offset:</span>
+                <span className="text-[11px] lg:text-xs text-muted-foreground">
+                  {t('syncDialog.offset')}
+                </span>
                 <span
                   className={`text-sm lg:text-base tabular-nums font-bold ${
                     effectiveOffset !== 0 ? 'text-accent' : 'text-muted-foreground'
                   }`}
                 >
                   {effectiveOffset > 0 ? '+' : ''}
-                  {effectiveOffset.toFixed(1)}s
+                  {t('shared.secondsShort', { value: effectiveOffset.toFixed(1) })}
                 </span>
                 {syncPoints.length > 0 && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-success/15 text-success border border-success/30 text-[10px] font-semibold tabular-nums">
                     <MapPin className="w-2.5 h-2.5" />
-                    {syncPoints.length} pt{syncPoints.length !== 1 ? 's' : ''}
+                    {t('syncDialog.pointsCount', { count: syncPoints.length })}
                   </span>
                 )}
               </div>
@@ -366,10 +372,10 @@ export function SubtitleSyncDialog({
                   type="button"
                   onClick={handleReset}
                   className="inline-flex items-center gap-1 px-2 py-1 lg:px-3 lg:py-2 rounded-lg text-[11px] lg:text-xs text-muted-foreground border border-border bg-card hover:bg-muted hover:text-foreground transition-colors shrink-0"
-                  title="Reset sync points"
+                  title={t('syncDialog.resetTitle')}
                 >
                   <RotateCcw className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
-                  <span className="hidden sm:inline">Reset</span>
+                  <span className="hidden sm:inline">{t('syncDialog.reset')}</span>
                 </button>
               )}
             </div>
@@ -384,7 +390,7 @@ export function SubtitleSyncDialog({
                     onClick={() => applyDelta(delta)}
                     className="flex-1 inline-flex items-center justify-center py-1 lg:py-1.5 rounded-md text-[11px] lg:text-xs tabular-nums bg-card text-muted-foreground hover:bg-accent/10 hover:text-accent border border-border cursor-pointer transition-colors"
                   >
-                    +{delta}s
+                    {t('shared.secondsShort', { value: `+${delta}` })}
                   </button>
                 ))}
               </div>
@@ -396,7 +402,7 @@ export function SubtitleSyncDialog({
                     onClick={() => applyDelta(delta)}
                     className="flex-1 inline-flex items-center justify-center py-1 lg:py-1.5 rounded-md text-[11px] lg:text-xs tabular-nums bg-card text-muted-foreground hover:bg-accent/10 hover:text-accent border border-border cursor-pointer transition-colors"
                   >
-                    {delta}s
+                    {t('shared.secondsShort', { value: delta })}
                   </button>
                 ))}
               </div>
@@ -414,8 +420,7 @@ export function SubtitleSyncDialog({
           {/* Instruction */}
           <div className="hidden lg:block lg:mt-auto p-3 rounded-2xl bg-accent/[0.08] border border-accent/25">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Play the audio, pause when you hear a subtitle line, then click that line on the right
-              to add a sync point.
+              {t('syncDialog.instruction')}
             </p>
           </div>
         </div>
@@ -431,7 +436,7 @@ export function SubtitleSyncDialog({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search subtitles..."
+                placeholder={t('syncDialog.searchPlaceholder')}
                 className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground"
               />
               {searchQuery && (
@@ -446,7 +451,7 @@ export function SubtitleSyncDialog({
             </div>
             {searchQuery && (
               <p className="text-xs text-muted-foreground mt-1.5 tabular-nums">
-                {displaySegments.length} result{displaySegments.length !== 1 ? 's' : ''}
+                {t('syncDialog.resultsCount', { count: displaySegments.length })}
               </p>
             )}
           </div>
@@ -458,10 +463,12 @@ export function SubtitleSyncDialog({
           >
             {segments.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-12">
-                No transcript. Transcribe the episode first.
+                {t('syncDialog.noTranscript')}
               </p>
             ) : displaySegments.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-12">No results found</p>
+              <p className="text-sm text-muted-foreground text-center py-12">
+                {t('syncDialog.noResults')}
+              </p>
             ) : (
               displaySegments.map((segment, idx) => {
                 const originalIndex = segments.indexOf(segment);

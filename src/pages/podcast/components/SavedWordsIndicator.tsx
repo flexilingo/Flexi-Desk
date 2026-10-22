@@ -1,10 +1,12 @@
 import { Target } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 interface SavedWordsIndicatorProps {
   count: number;
   onClick: () => void;
 }
 
 export function SavedWordsIndicator({ count, onClick }: SavedWordsIndicatorProps) {
+  const { t } = useTranslation('podcastUi');
   if (count <= 0) return null;
 
   return (
@@ -13,7 +15,7 @@ export function SavedWordsIndicator({ count, onClick }: SavedWordsIndicatorProps
       className="absolute bottom-20 left-4 z-[100] flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium shadow-lg hover:scale-105 transition-transform"
     >
       <Target className="h-4 w-4" />
-      {count} saved
+      {t('savedWords.count', { count })}
     </button>
   );
 }

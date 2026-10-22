@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "account": "Mon compte",
+    "community": "Communauté",
+    "pro": "Pro",
+    "whatsNew": "Nouveautés"
+  },
+  "signedOut": {
+    "title": "Connectez-vous pour voir votre compte ici",
+    "body": "Cette page affiche votre compte FlexiLingo. Connectez-vous avec votre e-mail ou Google.",
+    "button": "Se connecter"
+  },
+  "source": {
+    "account": "Chiffres du compte",
+    "local": "Sur cet ordinateur",
+    "localNote": "Vous n'êtes pas connecté : ces chiffres viennent de cet ordinateur seulement. Connectez-vous pour voir ceux de votre compte."
+  },
+  "learning": {
+    "search": "Rechercher une langue",
+    "noResults": "Aucune langue trouvée",
+    "mirrored": "Enregistré dans votre compte et conservé aussi sur cet ordinateur.",
+    "signedOutNote": "Vous n'êtes pas connecté : ces choix sont enregistrés sur cet ordinateur seulement.",
+    "notAppLanguage": "Cela définit ce que vous étudiez et la langue des traductions. La langue de l'application se choisit dans Paramètres, Général.",
+    "conflictTitle": "Cet ordinateur utilise une autre paire de langues",
+    "conflictBody": "Cet ordinateur : {{local}}. Votre compte : {{account}}. Rien n'a été modifié.",
+    "useAccount": "Utiliser les langues de mon compte",
+    "keepLocal": "Enregistrer les langues de cet ordinateur dans mon compte",
+    "offerPush": "Votre compte n'a pas encore de langues. Cet ordinateur utilise {{local}}.",
+    "pushLocal": "Enregistrer dans mon compte"
+  },
+  "voice": {
+    "deskNote": "Sur cet ordinateur, les voix naturelle, Google et FlexiLingo forment une seule voix en ligne (une fois connecté) ; la voix de l'appareil fonctionne hors ligne. Votre choix est enregistré dans votre compte pour le site et l'extension."
+  },
+  "profile": {
+    "tooBig": "Cette image dépasse 5 Mo. Choisissez-en une plus petite."
+  },
+  "subscription": {
+    "openedInBrowser": "Le paiement s'est ouvert dans votre navigateur. Revenez ici à la fin ; cette page se met à jour toute seule.",
+    "checkAgain": "Vérifier à nouveau",
+    "updated": "Votre formule est maintenant {{plan}}.",
+    "notYet": "Pas encore de changement. Si vous venez de payer, cela peut prendre une minute.",
+    "daysLeft": "{{count}} jours restants"
+  },
+  "redeem": {
+    "title": "Un code cadeau ?",
+    "hint": "Collez le code, ou le lien complet reçu par e-mail.",
+    "placeholder": "Code ou lien",
+    "invalid": "Ceci ne ressemble pas à un code cadeau ou à un lien.",
+    "until": "actif jusqu'au {{date}}"
+  },
+  "shared": {
+    "title": "Paquets partagés avec vous",
+    "body": "Quand un ami partage une révision avec vous, elle apparaît avec vos paquets. Suivez-vous d'abord mutuellement, puis partagez depuis un paquet."
+  },
+  "links": {
+    "title": "Liens de partage",
+    "body": "Créez un lien vers l'un de vos paquets depuis sa page et gérez-le là-bas."
+  },
+  "openDecks": "Ouvrir mes paquets",
+  "oauth": {
+    "google": "Continuer avec Google",
+    "waiting": "Terminez la connexion dans votre navigateur...",
+    "hint": "Une fenêtre de navigateur s'est ouverte. Choisissez-y votre compte Google ; cette fenêtre continue toute seule.",
+    "or": "ou utilisez votre e-mail ci-dessous",
+    "errors": {
+      "GOOGLE_TIMEOUT": "La connexion a pris trop de temps et a été arrêtée. Réessayez.",
+      "GOOGLE_STATE_MISMATCH": "La réponse du navigateur ne correspondait pas à cette connexion. Réessayez.",
+      "GOOGLE_NOT_CONFIGURED": "La connexion Google n'est pas configurée dans cette version. Utilisez votre e-mail.",
+      "GOOGLE_OPEN_FAILED": "Impossible d'ouvrir le navigateur. Utilisez plutôt votre e-mail.",
+      "GOOGLE_LISTEN_FAILED": "Cet ordinateur n'a pas pu attendre le navigateur. Utilisez plutôt votre e-mail.",
+      "GOOGLE_TOKEN_FAILED": "Google n'a pas accepté la connexion. Réessayez.",
+      "GOOGLE_SIGN_IN_FAILED": "La connexion Google n'a pas fonctionné. Réessayez ou utilisez votre e-mail.",
+      "GOOGLE_CANCELLED": "Connexion annulée."
+    }
+  },
+  "whatsNew": {
+    "title": "Nouveautés",
+    "subtitle": "Tout ce que FlexiLingo sait faire, les plus récentes d'abord.",
+    "all": "Tout",
+    "openOnWeb": "Ouvrir sur le site"
+  }
+}

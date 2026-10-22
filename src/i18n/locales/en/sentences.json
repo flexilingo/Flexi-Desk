@@ -1,0 +1,461 @@
+{
+  "title": "Sentence practice",
+  "tagline": "See the sentence and say what it means, or see the meaning and write the sentence. After you answer, the whole sentence opens up.",
+  "empty": "No sentences to practise.",
+  "direction": {
+    "recognize": "Sentence → meaning",
+    "produce": "Meaning → sentence",
+    "listen": "Audio only"
+  },
+  "prompt": {
+    "recognize": "What does this sentence mean?",
+    "produce": "Write this in French:",
+    "listen": "Listen — do you know what it means?"
+  },
+  "progress": "Card {{index}} of {{total}}",
+  "next": "Next",
+  "nextRound": "Next round",
+  "knewIt": "I knew it",
+  "showMeaning": "Show the meaning",
+  "literal": "Word for word",
+  "typeHere": "Type the sentence here…",
+  "check": "Check",
+  "hint": "Hint",
+  "chunk": "one unit",
+  "readMore": "The full page for this rule in the cheatsheet",
+  "verdict": {
+    "exact": "Correct",
+    "accents": "Correct — but check the spelling",
+    "variant": "That is correct French too",
+    "wrong": "That isn't this card's sentence",
+    "alternative": "Correct — French the card didn't list"
+  },
+  "verdictVariantDetail": "What you wrote is correct, but it is the «{{register}}» register. This card wanted another form — know both, because they are used in different situations.",
+  "sections": {
+    "verb": "The verb — where it comes from",
+    "agreement": "Why it takes this form",
+    "mechanics": "Spelling and sound changes",
+    "notes": "Notes on this sentence",
+    "rules": "The rules in this sentence",
+    "rulesHint": "Tap any of them to open its full explanation right here.",
+    "registers": "The same sentence in three registers",
+    "registersHint": "One meaning, three social situations. They are not interchangeable.",
+    "breakdown": "The sentence, word by word",
+    "pattern": "Pattern"
+  },
+  "verb": {
+    "noStem": "This verb is irregular — it isn't built from anything and has to be learned. Its full table is below, in the rule's explanation.",
+    "mood": "Mood",
+    "tense": "Tense",
+    "person": "Person",
+    "agreesWith": "With",
+    "auxiliary": "Auxiliary",
+    "conjugationTable": "Full conjugation of «{{verb}}»"
+  },
+  "families": {
+    "group-1-er": "Group 1 · -er verbs",
+    "group-2-ir": "Group 2 · -ir verbs",
+    "group-3-irregular": "Group 3 · irregular"
+  },
+  "moods": {
+    "indicatif": "indicative",
+    "conditionnel": "conditional",
+    "infinitif": "infinitive",
+    "imperatif": "imperative",
+    "subjonctif": "subjunctive (subjonctif)"
+  },
+  "tenses": {
+    "present": "present",
+    "passe-compose": "past (passé composé)",
+    "imperatif": "—",
+    "imparfait": "past continuous (imparfait)",
+    "futur-simple": "future (futur simple)"
+  },
+  "persons": {
+    "1sg": "first person singular (je)",
+    "2sg": "second person singular (tu)",
+    "3sg": "third person singular (il/elle/on)",
+    "1pl": "first person plural (nous)",
+    "2pl": "second person plural or polite (vous)",
+    "3pl": "third person plural (ils/elles)"
+  },
+  "verbNotes": {
+    "doubled-l": "The l doubles in this form. Rule: wherever the ending is silent, the l doubles to keep the è sound — j'appelle but nous appelons.",
+    "memorised": "Irregular. There is no stem-plus-ending pattern to follow; the whole table has to be learned, like English be: am, is, are.",
+    "silent-ending": "The ending is silent. -e, -es and -ent all sound the same, so in speech only the pronoun tells you who is doing it.",
+    "fixed-expression": "Part of a fixed expression, not conjugated on its own. il y a has one form for singular and plural, just like English there is / there are rolled into one.",
+    "politeness-form": "This is the conditional, used to soften a request. je veux (I want) is correct but blunt; je voudrais (I would like) says the same thing politely.",
+    "stays-infinitive": "This is the second verb, so it stays in the infinitive. When two verbs follow each other only the first is conjugated, like English I want to leave.",
+    "on-takes-3sg": "on means we in everyday speech, but its verb is third person singular, like il. « on allons » is wrong.",
+    "impersonal-subject": "The subject refers to nobody, like English it in « it is raining »; it is there only because French will not build a sentence without a subject.",
+    "noun-subject-is-3sg": "The subject is a noun, not a pronoun — but the verb takes the third person singular, just as with il or elle.",
+    "participle-irregular": "The past participle is irregular and has to be learned — it is not built from the infinitive, like English go → gone.",
+    "etre-verb": "This verb takes être, not avoir, in the past. So the past participle agrees with the subject, like an adjective.",
+    "agreement-with-etre": "Because the helper verb is être, the past participle agrees with the subject. You cannot hear it, but you must write it.",
+    "imperative-drops-s": "In the tu form, -er verbs lose their s: tu parles but « Parle ! ».",
+    "imperative-no-subject": "The imperative drops the subject pronoun, just as in English (Come!) — the only place French allows a verb without a subject.",
+    "impersonal-invariable": "Never conjugated. It has a single form and its subject does not refer to anyone.",
+    "imparfait-from-nous": "The stem comes from the present nous form (nous parl-ons → parl-) and the endings are the same for every verb: ais · ais · ait · ions · iez · aient. The only exception is être: ét-.",
+    "futur-from-infinitive": "The stem is the infinitive itself (-re verbs drop the final e) and the endings are the present of avoir: ai · as · a · ons · ez · ont.",
+    "futur-stem-irregular": "Its future stem is irregular and has to be learned; the endings are the usual ones: ai · as · a · ons · ez · ont.",
+    "subjonctif-from-ils": "The stem comes from the present ils form (ils partent → part-) and the endings are: e · es · e · ions · iez · ent.",
+    "pronominal-etre": "A reflexive verb always takes être in the past, and the past participle agrees with the subject.",
+    "advice-form": "Conditional used for advice: tu dois = you must (an order), tu devrais = you should (advice). The stem is the future stem (devr-) and the endings are those of the imparfait.",
+    "recent-past": "venir is in the present but the meaning is the recent past: venir de + infinitive = to have just done something."
+  },
+  "genders": {
+    "m": "masculine singular",
+    "f": "feminine singular",
+    "m_pl": "masculine plural",
+    "f_pl": "feminine plural"
+  },
+  "agreementBecause": "Became {{form}} because it refers to «{{because}}»",
+  "agreementAudible": "you can hear it",
+  "agreementSilent": "only in writing",
+  "roles": {
+    "subject": "subject",
+    "subject_dummy": "dummy subject — refers to no one",
+    "subject_existential": "what is said to exist",
+    "predicate": "verb",
+    "copula": "linking verb (to be)",
+    "object": "object",
+    "object_interrogative": "question object",
+    "attribute": "complement — what is said about the subject",
+    "modifier": "adverb — qualifies the verb",
+    "determiner": "determiner — article, number or possessive",
+    "reflexive": "reflexive pronoun — points back to the subject",
+    "negation": "negation",
+    "question-marker": "question marker — no meaning of its own",
+    "existential": "“there is / there are”",
+    "existential_negative": "\"there is no / there isn't\"",
+    "presentative": "presenter — “this is / it is”",
+    "future-marker": "future marker",
+    "politeness": "polite phrase",
+    "quantity": "quantity / number",
+    "unit": "unit",
+    "complement": "complement",
+    "complement_place": "place — where",
+    "complement_time": "time — when",
+    "complement_manner": "manner — how",
+    "complement_frequency": "frequency — how often",
+    "complement_language": "language",
+    "complement_origin": "origin — where from",
+    "preposition_place": "preposition of place",
+    "preposition_origin": "preposition of origin",
+    "predicate_subject": "verb + inverted subject",
+    "interjection": "interjection"
+  },
+  "mechanics": {
+    "elision": "élision — a vowel drops",
+    "contraction": "contraction",
+    "liaison": "liaison — a linked sound"
+  },
+  "kinds": {
+    "structure": "structure",
+    "question": "question",
+    "word-order": "word order",
+    "verb": "verb",
+    "article": "article",
+    "negation": "negation",
+    "pronoun": "pronoun",
+    "agreement": "agreement",
+    "preposition": "preposition",
+    "spelling": "spelling and sound",
+    "vocabulary": "word use"
+  },
+  "registers": {
+    "familiar": "casual",
+    "standard": "neutral",
+    "formal": "formal"
+  },
+  "channels": {
+    "spoken": "spoken",
+    "written": "written"
+  },
+  "errors": {
+    "QUOTA_USER": "You have reached today's practice limit. Continue tomorrow.",
+    "QUOTA_IP": "Too much practice from this network today. Try again later.",
+    "TOO_FAST": "A little slower — answer each card first.",
+    "NOT_DEALT": "This card has expired; start a new round.",
+    "AUTH_REQUIRED": "Sign in to continue.",
+    "RATE_LIMITED": "You're going a little fast — wait a moment.",
+    "UNKNOWN_ERROR": "The next round didn't load. Try again.",
+    "AUDIO_UNAVAILABLE": "The audio could not be loaded. Try again.",
+    "NOT_REVEALED": "Open the card before answering it.",
+    "ANSWER_FIRST": "Write your answer first.",
+    "PENDING_LOCALE": "The explanations for this language are not ready yet.",
+    "NETWORK": "Could not reach FlexiLingo. Check your connection."
+  },
+  "facts": {
+    "subject-masculine": "subject: masculine (il)",
+    "subject-feminine": "subject: feminine (elle)",
+    "subject-on": "subject: on (spoken)",
+    "subject-nous": "subject: nous",
+    "address-tu": "addressing: tu",
+    "address-vous": "addressing: vous",
+    "register-familiar": "register: casual",
+    "register-standard": "register: neutral",
+    "register-formal": "register: formal"
+  },
+  "verdictWrongDetail": "This isn't the sentence this card wanted. If what you wrote is correct French, it isn't wrong — this card was just looking for the form below. See the differences:",
+  "toolbar": {
+    "language": "Language",
+    "level": "Level",
+    "direction": "Direction",
+    "topic": "Topic",
+    "order": "Order",
+    "unit": "Unit",
+    "path": "Path",
+    "task": "Exam task"
+  },
+  "langs": {
+    "fr": "French",
+    "en": "English"
+  },
+  "finished": {
+    "title": "{{level}} complete",
+    "body": "You have seen every sentence at this level. Go round again — nothing is deleted, it just starts over.",
+    "unitTitle": "Unit {{unit}} complete",
+    "unitBody": "You have seen every sentence in this unit. The level goes on — the course picks up at the next one.",
+    "nextUnit": "Go to unit {{unit}}",
+    "againUnit": "Unit {{unit}} again",
+    "topicTitle": "This topic is complete",
+    "topicBody": "You have seen every sentence on this topic at this level. Lift the filter and the rest of the level is there.",
+    "again": "Go again"
+  },
+  "orders": {
+    "course": "Course order",
+    "random": "Random",
+    "easy": "Easy to hard",
+    "hard": "Hard only",
+    "review": "Review mistakes"
+  },
+  "unitLabel": "Unit {{unit}}",
+  "allUnits": "All units",
+  "allTopics": "All topics",
+  "topics": {
+    "identity": "introductions",
+    "place": "places",
+    "time": "time",
+    "food": "food",
+    "politeness": "politeness",
+    "routine": "daily routine",
+    "shopping": "shopping",
+    "opinion": "opinion",
+    "work": "work",
+    "leisure": "free time",
+    "class": "class",
+    "language": "languages",
+    "family": "family",
+    "greeting": "greetings",
+    "money": "money",
+    "directions": "directions",
+    "health": "health",
+    "transport": "transport",
+    "weather": "weather",
+    "description": "description",
+    "travel": "travel",
+    "clothes": "clothes",
+    "phone": "phone",
+    "home": "home",
+    "restaurant": "restaurant",
+    "rules": "rules and signs",
+    "school": "school and study",
+    "technology": "technology"
+  },
+  "listen": {
+    "play": "Play the sentence",
+    "again": "Again",
+    "slow": "Slower",
+    "count": "Listened {{count}} times",
+    "reveal": "See the meaning",
+    "seeText": "See the text",
+    "textStep": "Now read it — what does it mean?",
+    "askHeard": "Before you saw the text, had you caught the words?",
+    "heardIt": "Yes, I caught them",
+    "missedIt": "No, I only got it from the text",
+    "earAgain": "You didn't catch it by ear — it comes back soon for listening practice.",
+    "askHeardHint": "Getting it now that you see the text doesn't count; what matters is the moment you heard it."
+  },
+  "settings": {
+    "title": "Settings",
+    "autoPlay": "Play audio automatically",
+    "autoPlayHint": "The sentence is read aloud as it appears — in writing mode, once you have seen the answer.",
+    "autoPlayShort": "auto audio",
+    "mix": "Automatic review",
+    "mixHint": "Every few cards, a sentence that is due for review takes the place of a new one. With this off, the round runs exactly as you set it.",
+    "mixShort": "Auto review"
+  },
+  "stats": {
+    "line": "{{practiced}} practised · {{learned}} known",
+    "streak": "{{days}}-day streak"
+  },
+  "review": {
+    "link": "Review ({{count}})",
+    "start": "Review {{count}} sentences",
+    "empty": "Nothing to review right now. Any sentence you get wrong comes back here a few minutes later.",
+    "back": "New practice"
+  },
+  "schedule": {
+    "again": "This one comes back in a few minutes, and keeps coming back until you get it right.",
+    "later": "Correct — you'll see it again in {{days}} days.",
+    "learned": "You know this one now. We'll ask once more in {{days}} days so it sticks.",
+    "later_one": "Correct — you'll see it again in {{days}} day.",
+    "later_other": "Correct — you'll see it again in {{days}} days.",
+    "learned_one": "You know this one now. We'll ask once more in {{days}} day so it sticks.",
+    "learned_other": "You know this one now. We'll ask once more in {{days}} days so it sticks."
+  },
+  "history": {
+    "link": "Record",
+    "title": "Your sentence practice record",
+    "subtitle": "Sentences you've answered — which ones you know and which ones will come back.",
+    "tabs": {
+      "weak": "Mistakes",
+      "learned": "Known",
+      "all": "All",
+      "misheard": "Missed by ear"
+    },
+    "empty": {
+      "weak": "No mistakes left for now.",
+      "learned": "You haven't got a sentence right twice in a row yet — the second correct answer marks it «known».",
+      "all": "You haven't answered any sentences yet.",
+      "misheard": "No sentences left that your ear missed."
+    },
+    "counts": "{{correct}} right · {{wrong}} wrong",
+    "yourAnswer": "Your answer",
+    "status": {
+      "learned": "Known",
+      "weak": "Coming back",
+      "seen": "In progress"
+    },
+    "dueNow": "Ready for review",
+    "dueMinutes": "Review: in a few minutes",
+    "dueDays": "Review: in {{days}} days",
+    "reviewAll": "Review {{count}} sentences",
+    "back": "Back to practice",
+    "prev": "Previous",
+    "next": "Next",
+    "heard": "By ear",
+    "heardTimes": "By ear, {{count}} times",
+    "misheard": "Missed it"
+  },
+  "revealMeaning": "See the meaning",
+  "didntKnow": "I didn't know",
+  "askKnew": "Did you know it?",
+  "askKnewHint": "Be your own judge: before you saw the meaning, did you already have this in mind?",
+  "liaisonHint": "These two words run together and are said in one breath (liaison).",
+  "paths": {
+    "general": "General"
+  },
+  "allTasks": "All tasks",
+  "ui": {
+    "playOnce": "Play the sentence",
+    "playSlow": "Slower",
+    "repeat3": "3 times in a row",
+    "repeat5": "5 times in a row",
+    "repeatLoop": "Repeat until I stop it",
+    "stop": "Stop audio",
+    "playOptions": "Playback options"
+  },
+  "qa": {
+    "prompt": "Listen — what do you answer?",
+    "step": "Read the question and write your answer",
+    "heard": "Had you caught the question by ear?",
+    "write": "Write your answer in French",
+    "placeholder": "Your answer…",
+    "slotsHint": "Use your own name, numbers and city.",
+    "answers": "Possible answers",
+    "yours": "yours",
+    "yourAnswer": "Your answer",
+    "grade": {
+      "exact": "Correct",
+      "accents": "Correct — check the accents",
+      "unmatched": "Doesn't match the model answers — compare and judge for yourself"
+    },
+    "askRight": "Was your answer right?",
+    "askRightHint": "Compare it with the answers above. If it means the right thing and the French is sound, it's right — even if it isn't word for word.",
+    "kinds": {
+      "affirmative": "Yes",
+      "negative": "No",
+      "short": "Short"
+    },
+    "details": "Details",
+    "matchedModel": "Matched:",
+    "wasRight": "It was right",
+    "wasWrong": "It was wrong",
+    "questionAnalysis": "Grammar of the question",
+    "open": "Open"
+  },
+  "scorecard": {
+    "title": "AI check",
+    "criteria": {
+      "meaning": "Meaning",
+      "grammar": "Grammar",
+      "spelling": "Spelling",
+      "elision": "Elision"
+    },
+    "why": {
+      "meaning": {
+        "pass": "It says what the card asked for.",
+        "fail": "It doesn't say what the card asked for."
+      },
+      "grammar": {
+        "pass": "The grammar is correct.",
+        "fail": "There is a grammar mistake."
+      },
+      "spelling": {
+        "pass": "Spelled correctly.",
+        "near": "Right word — check an accent.",
+        "fail": "A spelling slip."
+      },
+      "elision": {
+        "pass": "Elisions are made.",
+        "fail": "An elision is missing — a word that must contract was written out in full (for example me aider instead of m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Formal register — right for a letter or a stranger.",
+      "neutral": "Neutral register — fits almost anywhere.",
+      "informal": "Informal register — perfect for a text to a friend."
+    },
+    "natural": {
+      "yes": "Sounds natural — a native speaker would say it this way.",
+      "no": "Correct, but a native speaker would put it differently."
+    },
+    "error": {
+      "gender_agreement": "Looks like a gender or number agreement slip.",
+      "verb_conjugation": "Check the verb's form or tense.",
+      "word_order": "Check the word order.",
+      "preposition_or_article": "Check the preposition or article.",
+      "spelling_or_accent": "Check the spelling.",
+      "negation": "Check the negation.",
+      "wrong_word": "One word doesn't fit the meaning.",
+      "avoir_expression": "French says avoir here, not être: j'ai faim, quel âge avez-vous ?"
+    }
+  },
+  "retry": {
+    "title": "You wrote this one wrong — write it again",
+    "hint": "It came back because it missed. Write it correctly once to move on. You can skip it for now — but the next time it comes back, skipping will not be on offer.",
+    "skip": "Skip for now",
+    "lockedTitle": "You have written this one wrong {{count}} times",
+    "lockedHint": "You skipped it last time. This time, write it correctly to move on."
+  },
+  "desk": {
+    "comingTitle": "Coming with the next server update",
+    "comingBody": "Sentence practice on this computer needs a small update on the FlexiLingo server. It will open here as soon as that update is live. Nothing is lost and nothing needs to be done.",
+    "checkAgain": "Check again",
+    "signInTitle": "Sign in to practise sentences",
+    "signInBody": "Your record of sentences is kept in your account, so it follows you to every device.",
+    "loadingRound": "Loading…",
+    "tryAgain": "Try again",
+    "aiChecking": "Your AI is checking your sentence…",
+    "aiSetup": "Set up your own AI to have written sentences checked for meaning, grammar and spelling. Until then, only the card's own sentence counts.",
+    "aiFallback": "Your AI could not check this one, so the card's own check decided.",
+    "notSaved": "This answer could not be saved to your record.",
+    "pendingBody": "The explanations for this language are not ready yet.",
+    "historyBack": "Back to practice",
+    "close": "Close",
+    "signIn": "Sign in",
+    "loadMore": "Loading the list…"
+  }
+}

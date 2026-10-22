@@ -3,11 +3,10 @@ import { Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { NlpAnalysis } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 // 'unknown' = words the backend couldn't level (cache-miss + no cefrpy fallback) → "Unrated".
 const CEFR_LEVELS = ['C1', 'C2', 'B2', 'B1', 'A2', 'A1', 'unknown'] as const;
-
-const LEVEL_LABEL: Record<string, string> = { unknown: 'Unrated' };
 
 const CEFR_CHIP_COLORS: Record<string, { active: string; badge: string }> = {
   A1: {
@@ -83,6 +82,7 @@ interface VocabTabProps {
 }
 
 export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
+  const { t } = useTranslation('podcastUi');
   const [selectedLevels, setSelectedLevels] = useState<Set<string>>(new Set(CEFR_LEVELS));
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
 
@@ -179,7 +179,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
   if (!analysis) {
     return (
       <div className="text-center py-8 text-sm text-muted-foreground">
-        Transcribe the episode to see vocabulary analysis.
+        {t('vocabTab.transcribeFirst')}
       </div>
     );
   }
@@ -187,7 +187,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-3 flex-1 pb-16">
-        <h3 className="text-sm font-semibold">Vocabulary</h3>
+        <h3 className="text-sm font-semibold">{t('vocabTab.title')}</h3>
 
         {/* CEFR filter chips with counts */}
         <div className="flex flex-wrap gap-1.5">
@@ -205,7 +205,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
                     : 'bg-transparent text-muted-foreground/50 border-border/50'
                 }`}
               >
-                {LEVEL_LABEL[level] ?? level}
+                {level === 'unknown' ? t('vocabTab.unrated') : level}
                 <span className="tabular-nums">{count}</span>
               </button>
             );
@@ -216,16 +216,18 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           {selectedWords.size > 0 ? (
             <>
-              <span className="font-medium text-foreground">{selectedWords.size} selected</span>
+              <span className="font-medium text-foreground">
+                {t('vocabTab.selected', { count: selectedWords.size })}
+              </span>
               <button
                 onClick={clearSelection}
                 className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Clear
+                {t('vocabTab.clear')}
               </button>
             </>
           ) : (
-            <span>{totalFilteredWords} words</span>
+            <span>{t('shared.wordsCount', { count: totalFilteredWords })}</span>
           )}
         </div>
 
@@ -233,7 +235,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
         <div className="space-y-4">
           {groupedWords.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-4">
-              No words match the selected levels.
+              {t('vocabTab.noMatch')}
             </p>
           ) : (
             groupedWords.map((group) => {
@@ -247,17 +249,17 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
                       <Badge
                         className={`text-[10px] px-1.5 py-0 font-semibold border-0 ${colors.badge}`}
                       >
-                        {LEVEL_LABEL[group.level] ?? group.level}
+                        {group.level === 'unknown' ? t('vocabTab.unrated') : group.level}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground tabular-nums">
-                        {group.words.length} words
+                        {t('shared.wordsCount', { count: group.words.length })}
                       </span>
                     </div>
                     <button
                       onClick={() => selectAllInLevel(group.words)}
                       className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {allSelected ? 'Deselect all' : 'Select all'}
+                      {allSelected ? t('vocabTab.deselectAll') : t('vocabTab.selectAll')}
                     </button>
                   </div>
 
@@ -292,7 +294,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
       <div className="sticky bottom-0 left-0 right-0 p-3 bg-card border-t border-border -mx-3 -mb-3">
         {selectedWords.size === 0 ? (
           <div className="border-2 border-dashed border-border rounded-lg py-3 text-center">
-            <p className="text-xs text-muted-foreground">Tap to select words</p>
+            <p className="text-xs text-muted-foreground">{t('vocabTab.tapToSelect')}</p>
           </div>
         ) : (
           <Button
@@ -301,7 +303,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
             size="sm"
           >
             <Plus className="h-4 w-4 mr-1.5" />
-            Add {selectedWords.size} word{selectedWords.size !== 1 ? 's' : ''} to Deck
+            {t('vocabTab.addToDeck', { count: selectedWords.size })}
           </Button>
         )}
       </div>

@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "account": "My account",
+    "community": "Community",
+    "pro": "Pro",
+    "whatsNew": "What's new"
+  },
+  "signedOut": {
+    "title": "Sign in to see your account here",
+    "body": "This page shows your FlexiLingo account. Sign in with your email or Google to see it.",
+    "button": "Sign in"
+  },
+  "source": {
+    "account": "Account numbers",
+    "local": "On this computer",
+    "localNote": "You are signed out, so these numbers come from this computer only. Sign in to see your account's numbers."
+  },
+  "learning": {
+    "search": "Search languages",
+    "noResults": "No language found",
+    "mirrored": "Saved to your account and kept on this computer too.",
+    "signedOutNote": "You are signed out: these choices are saved on this computer only.",
+    "notAppLanguage": "This sets what you study and the language of translations. The app's own language is chosen in Settings, General.",
+    "conflictTitle": "This computer uses a different language pair",
+    "conflictBody": "This computer: {{local}}. Your account: {{account}}. Nothing was changed.",
+    "useAccount": "Use my account's languages",
+    "keepLocal": "Save this computer's languages to my account",
+    "offerPush": "Your account has no languages yet. This computer uses {{local}}.",
+    "pushLocal": "Save to my account"
+  },
+  "voice": {
+    "deskNote": "On this computer the natural voice, Google and FlexiLingo voices play as one online voice (when you are signed in); your device's voice works offline. Your choice is saved to your account for the website and the extension."
+  },
+  "profile": {
+    "tooBig": "That picture is larger than 5 MB. Choose a smaller one."
+  },
+  "subscription": {
+    "openedInBrowser": "Payment opened in your browser. Come back here when you finish; this page updates by itself.",
+    "checkAgain": "Check again",
+    "updated": "Your plan is now {{plan}}.",
+    "notYet": "No change yet. If you just paid, it can take a minute.",
+    "daysLeft": "{{count}} days left"
+  },
+  "redeem": {
+    "title": "Have a gift code?",
+    "hint": "Paste the code, or the whole link from your email.",
+    "placeholder": "Code or link",
+    "invalid": "That does not look like a gift code or link.",
+    "until": "active until {{date}}"
+  },
+  "shared": {
+    "title": "Decks shared with you",
+    "body": "When a friend shares a review with you, it appears with your decks. Follow each other first, then share from a deck."
+  },
+  "links": {
+    "title": "Share links",
+    "body": "Create a link to one of your decks from the deck's page, and manage it there."
+  },
+  "openDecks": "Open my decks",
+  "oauth": {
+    "google": "Continue with Google",
+    "waiting": "Finish signing in in your browser...",
+    "hint": "A browser window opened. Choose your Google account there; this window continues by itself.",
+    "or": "or use your email below",
+    "errors": {
+      "GOOGLE_TIMEOUT": "Sign-in took too long and was stopped. Try again.",
+      "GOOGLE_STATE_MISMATCH": "The browser answer did not match this sign-in. Try again.",
+      "GOOGLE_NOT_CONFIGURED": "Google sign-in is not set up in this version. Use your email.",
+      "GOOGLE_OPEN_FAILED": "Could not open your browser. Use your email instead.",
+      "GOOGLE_LISTEN_FAILED": "Could not wait for the browser on this computer. Use your email instead.",
+      "GOOGLE_TOKEN_FAILED": "Google did not accept the sign-in. Try again.",
+      "GOOGLE_SIGN_IN_FAILED": "Google sign-in did not work. Try again or use your email.",
+      "GOOGLE_CANCELLED": "Sign-in was cancelled."
+    }
+  },
+  "whatsNew": {
+    "title": "What's new",
+    "subtitle": "Everything FlexiLingo can do, newest first.",
+    "all": "All",
+    "openOnWeb": "Open on the website"
+  }
+}

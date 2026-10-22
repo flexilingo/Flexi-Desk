@@ -39,7 +39,7 @@ const GATEWAY_STATUSES = new Set([502, 503, 504]);
 
 /** A request that never got an answer (reqwest's "API request failed", DNS, refused, timed out). */
 const NO_ANSWER =
-  /api request failed|error sending request|dns error|connection (?:refused|reset|closed|error)|timed out|timeout|network|offline|failed to fetch|load failed/i;
+  /api request failed|error sending request|dns error|connection (?:refused|reset|closed|error)|timed out|timeout|network|offline|failed to fetch|(?<![a-z])load failed/i;
 
 /**
  * What a `supabaseCall` rejection means for this submit. Desk's edge calls reject

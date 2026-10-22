@@ -217,8 +217,12 @@ export function localInsightProvider(
           skills[skill] = 'not_taken';
           continue;
         }
-        skills[skill] = stateOf(bySkill.get(skill));
-        hydrate(insight, skill, bySkill.get(skill));
+        const row = bySkill.get(skill);
+        // A Listening/Reading row from before answers were keyed by position is ignored
+        // (the analysis would point at the wrong questions) and made again.
+        const usable = !isStaleMcqRow(skill, row);
+        skills[skill] = usable ? stateOf(row) : 'pending';
+        if (usable) hydrate(insight, skill, row);
       }
 
       skills.summary = taken.length === 0 ? 'not_taken' : stateOf(bySkill.get('summary'));
@@ -254,6 +258,25 @@ export function localInsightProvider(
       }
     },
   };
+}
+
+/** True for a stored Listening/Reading insight written before answer keys were versioned. */
+export function isStaleMcqRow(
+  skill: InsightSkill,
+  row: { status: string; result: string | null } | undefined,
+): boolean {
+  if (
+    !row ||
+    (skill !== 'listening' && skill !== 'reading') ||
+    row.status !== 'ready' ||
+    !row.result
+  )
+    return false;
+  try {
+    return (JSON.parse(row.result) as { _v?: number })._v !== 2;
+  } catch {
+    return true;
+  }
 }
 
 function stateOf(row: LocalInsightRow | undefined): InsightSkillState {

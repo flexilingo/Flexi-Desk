@@ -8,6 +8,11 @@ import { usePodcastMediaSession } from '@/pages/podcast/hooks/usePodcastMediaSes
 
 import { useJobEvents } from '@/hooks/useJobEvents';
 import { JobToastStack } from '@/components/job/JobToastStack';
+import {
+  AnnouncementBanner,
+  LocaleSuggestion,
+  OfflineNotice,
+} from '@/components/layout/GlobalNotices';
 
 export function Shell() {
   useJobEvents();
@@ -25,6 +30,7 @@ export function Shell() {
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Header />
+        <AnnouncementBanner />
         {fillsPage ? (
           // The PDF reader owns its own scrolling (pages, side panels), so it gets the
           // whole area instead of a padded scroll column.
@@ -41,6 +47,8 @@ export function Shell() {
       </div>
       {showMiniPlayer && <MiniPlayer />}
       <JobToastStack />
+      <OfflineNotice />
+      <LocaleSuggestion />
     </div>
   );
 }

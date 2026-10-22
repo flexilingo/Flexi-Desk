@@ -76,11 +76,17 @@ describe('line stepping', () => {
   });
 
   it('the first line has nothing before it, so it restarts itself', () => {
-    expect(prevLineStep({ ...base, time: 0.5, activeIndex: 0 })).toEqual({ kind: 'line', index: 0 });
+    expect(prevLineStep({ ...base, time: 0.5, activeIndex: 0 })).toEqual({
+      kind: 'line',
+      index: 0,
+    });
   });
 
   it('between lines (no active line) falls back to 5 seconds', () => {
-    expect(prevLineStep({ ...base, time: 4.5, activeIndex: -1 })).toEqual({ kind: 'skip', seconds: -5 });
+    expect(prevLineStep({ ...base, time: 4.5, activeIndex: -1 })).toEqual({
+      kind: 'skip',
+      seconds: -5,
+    });
   });
 
   it('next: the first line that starts after now', () => {
@@ -88,13 +94,16 @@ describe('line stepping', () => {
   });
 
   it('next at the last line falls back to +5 s', () => {
-    expect(nextLineStep({ ...base, time: 11, activeIndex: 2 })).toEqual({ kind: 'skip', seconds: 5 });
+    expect(nextLineStep({ ...base, time: 11, activeIndex: 2 })).toEqual({
+      kind: 'skip',
+      seconds: 5,
+    });
   });
 
   it('a quick second press counts from the line stepped to, not the stale clock', () => {
-    // Pressed "previous" a moment ago and went to line 1; the audio clock still reads line 2.
+    // Pressed "previous" a moment ago and went to line 1; the clock has only just reached it.
     const last: LastStep = { index: 1, at: base.nowMs - 300, episodeId: 'ep' };
-    const again = prevLineStep({ ...base, last, time: 11, activeIndex: 2 });
+    const again = prevLineStep({ ...base, last, time: 5.2, activeIndex: 1 });
     expect(again).toEqual({ kind: 'line', index: 0 });
     // And a quick "next" never lands behind the line just stepped to.
     const fwd = nextLineStep({ ...base, last, time: 0.1, activeIndex: 0 });
@@ -103,9 +112,15 @@ describe('line stepping', () => {
 
   it('a step older than 1.5 s, or from another episode, is forgotten', () => {
     const old: LastStep = { index: 1, at: base.nowMs - 2000, episodeId: 'ep' };
-    expect(prevLineStep({ ...base, last: old, time: 11, activeIndex: 2 })).toEqual({ kind: 'line', index: 2 });
+    expect(prevLineStep({ ...base, last: old, time: 13, activeIndex: 2 })).toEqual({
+      kind: 'line',
+      index: 2,
+    });
     const other: LastStep = { index: 1, at: base.nowMs - 100, episodeId: 'other' };
-    expect(prevLineStep({ ...base, last: other, time: 11, activeIndex: 2 })).toEqual({ kind: 'line', index: 2 });
+    expect(prevLineStep({ ...base, last: other, time: 13, activeIndex: 2 })).toEqual({
+      kind: 'line',
+      index: 2,
+    });
   });
 });
 

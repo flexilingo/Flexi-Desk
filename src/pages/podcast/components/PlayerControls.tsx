@@ -3,6 +3,7 @@ import { usePlayerStore } from '../stores/playerStore';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Gauge } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function formatTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -30,6 +31,7 @@ export function PlayerControls() {
   } = usePlayerStore();
 
   const [showVolume, setShowVolume] = useState(false);
+  const { t } = useTranslation('podcastUi');
 
   const handleSeek = (value: number[]) => {
     seek(value[0]);
@@ -76,7 +78,7 @@ export function PlayerControls() {
           variant="ghost"
           size="sm"
           onClick={cycleSpeed}
-          title="Playback speed"
+          title={t('player.speed')}
           className="min-w-[3rem] tabular-nums text-xs"
         >
           <Gauge className="mr-1 h-3.5 w-3.5" />
@@ -84,7 +86,12 @@ export function PlayerControls() {
         </Button>
 
         {/* Skip back 15s */}
-        <Button variant="ghost" size="icon" onClick={() => skipBack(15)} title="Skip back 15s">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => skipBack(15)}
+          title={t('player.skipBack', { seconds: 15 })}
+        >
           <SkipBack className="h-4 w-4" />
         </Button>
 
@@ -93,7 +100,7 @@ export function PlayerControls() {
           variant="default"
           size="icon"
           onClick={togglePlayPause}
-          title={isPlaying ? 'Pause' : 'Play'}
+          title={isPlaying ? t('shared.pause') : t('shared.play')}
           className="h-10 w-10 rounded-full"
         >
           {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
@@ -104,7 +111,7 @@ export function PlayerControls() {
           variant="ghost"
           size="icon"
           onClick={() => skipForward(15)}
-          title="Skip forward 15s"
+          title={t('player.skipForward', { seconds: 15 })}
         >
           <SkipForward className="h-4 w-4" />
         </Button>
@@ -116,7 +123,7 @@ export function PlayerControls() {
             size="icon"
             onClick={toggleMute}
             onMouseEnter={() => setShowVolume(true)}
-            title={volume > 0 ? 'Mute' : 'Unmute'}
+            title={volume > 0 ? t('shared.mute') : t('shared.unmute')}
           >
             {volume > 0 ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </Button>

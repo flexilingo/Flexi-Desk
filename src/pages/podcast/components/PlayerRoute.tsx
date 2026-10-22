@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { PlayerView } from './PlayerView';
 
 import { usePodcastStore } from '../stores/podcastStore';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Route wrapper for `/podcast/player/:episodeId`.
@@ -21,6 +22,7 @@ export function PlayerRoute() {
   const clearEpisode = usePodcastStore((s) => s.clearEpisode);
 
   const [notFound, setNotFound] = useState(false);
+  const { t } = useTranslation('podcastUi');
   const hydratedFor = useRef<string | null>(null);
 
   useEffect(() => {
@@ -38,13 +40,13 @@ export function PlayerRoute() {
   if (notFound) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">This episode could not be loaded.</p>
+        <p className="text-sm text-muted-foreground">{t('playerRoute.loadFailed')}</p>
         <button
           type="button"
           onClick={() => navigate('/podcast')}
           className="text-sm font-semibold text-primary hover:underline"
         >
-          Back to podcasts
+          {t('playerRoute.backToPodcasts')}
         </button>
       </div>
     );

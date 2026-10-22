@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   ArrowLeft,
   FileText,
@@ -45,18 +46,18 @@ interface TopBarProps {
   transcriptControl?: React.ReactNode;
 }
 
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number, tf: TFunction): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
+  if (h > 0) return tf('shared.durHM', { h, m });
+  if (m > 0) return tf('shared.durMS', { m, s });
+  return tf('shared.secondsShort', { value: s });
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    return new Date(dateStr).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -89,7 +90,8 @@ export function TopBar({
   sidebarAction,
   transcriptControl,
 }: TopBarProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { t: tp } = useTranslation('podcastUi');
   const [showInfo, setShowInfo] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -113,7 +115,7 @@ export function TopBar({
         className="flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-muted text-foreground text-xs md:text-sm font-medium transition-colors hover:bg-muted/80 flex-shrink-0"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back
+        {t('podcast.back')}
       </button>
 
       {/* Center: Episode title */}
@@ -153,7 +155,7 @@ export function TopBar({
           <button
             type="button"
             onClick={onOpenWhisperSettings}
-            title="Whisper Settings"
+            title={tp('topBar.whisperSettings')}
             className="flex items-center justify-center w-8 h-8 rounded-lg border bg-muted text-muted-foreground border-border hover:bg-muted/80 hover:text-foreground transition-colors"
           >
             <Settings className="w-4 h-4" />
@@ -168,7 +170,7 @@ export function TopBar({
             className="border-accent text-accent hover:bg-accent/10"
           >
             <Cloud className="w-4 h-4 mr-1" />
-            Sync
+            {tp('topBar.sync')}
           </Button>
         )}
 
@@ -243,19 +245,19 @@ export function TopBar({
               {episodeInfo.publishDate && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5" />
-                  {formatDate(episodeInfo.publishDate)}
+                  {formatDate(episodeInfo.publishDate, i18n.language)}
                 </span>
               )}
               {episodeInfo.durationSeconds && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="w-3.5 h-3.5" />
-                  {formatDuration(episodeInfo.durationSeconds)}
+                  {formatDuration(episodeInfo.durationSeconds, tp)}
                 </span>
               )}
               {episodeInfo.isDownloaded && (
                 <span className="flex items-center gap-1 text-xs text-success">
                   <HardDrive className="w-3.5 h-3.5" />
-                  Downloaded
+                  {t('podcast.downloaded')}
                 </span>
               )}
               {episodeInfo.cefrLevel && (

@@ -21,6 +21,7 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { SignInDialog } from '@/components/auth/SignInDialog';
 import { parseCloudError, isAuthError, cloudErrorText } from '@/lib/cloudError';
+import { useTranslation } from 'react-i18next';
 
 interface CloudSyncDialogProps {
   open: boolean;
@@ -37,6 +38,7 @@ export function CloudSyncDialog({
   episodeId,
   episodeTitle,
 }: CloudSyncDialogProps) {
+  const { t } = useTranslation('podcastUi');
   const session = useAuthStore((s) => s.session);
   const [status, setStatus] = useState<SyncStatus>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +90,7 @@ export function CloudSyncDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Cloud className="w-5 h-5 text-primary" />
-              Sync to FlexiLingo Cloud
+              {t('cloudSync.title')}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-1">
               <span className="font-medium text-foreground line-clamp-1">{episodeTitle}</span>
@@ -103,20 +105,21 @@ export function CloudSyncDialog({
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  {status === 'auth_required' ? 'Your session has expired' : 'Sign in required'}
+                  {status === 'auth_required'
+                    ? t('cloudSync.sessionExpired')
+                    : t('cloudSync.signInRequired')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                  Cloud sync stores this episode's analysis on your FlexiLingo account so it appears
-                  on your other devices. Sign in with your email to continue.
+                  {t('cloudSync.signInExplain')}
                 </p>
               </div>
               <div className="flex gap-2 mt-2">
                 <Button variant="outline" onClick={handleClose}>
-                  Cancel
+                  {t('shared.cancel')}
                 </Button>
                 <Button onClick={() => setSignInOpen(true)} className="gap-1.5">
                   <LogIn className="w-4 h-4" />
-                  Sign in
+                  {t('cloudSync.signIn')}
                 </Button>
               </div>
             </div>
@@ -126,28 +129,28 @@ export function CloudSyncDialog({
           {!needsSignIn && status === 'idle' && (
             <div className="space-y-4 mt-2">
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Upload this episode's subtitles to the cloud. Our AI will then run a deep language
-                analysis (grammar patterns, vocabulary stats, CEFR levels, collocations, exercises)
-                and make everything available across your devices:
+                {t('cloudSync.intro')}
               </p>
 
               <div className="space-y-2.5">
                 <div className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50">
                   <Smartphone className="w-4.5 h-4.5 text-accent mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">Mobile App</p>
-                    <p className="text-xs text-muted-foreground">
-                      Study vocabulary and review flashcards on the go
+                    <p className="text-sm font-medium text-foreground">
+                      {t('cloudSync.mobileApp')}
                     </p>
+                    <p className="text-xs text-muted-foreground">{t('cloudSync.mobileAppHint')}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50">
                   <Globe className="w-4.5 h-4.5 text-accent mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">Web Dashboard</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {t('cloudSync.webDashboard')}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      View detailed analysis, track progress, manage your library
+                      {t('cloudSync.webDashboardHint')}
                     </p>
                   </div>
                 </div>
@@ -155,9 +158,11 @@ export function CloudSyncDialog({
                 <div className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50">
                   <MonitorPlay className="w-4.5 h-4.5 text-accent mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">Browser Extension</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {t('cloudSync.browserExtension')}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Access your learned words while browsing any website
+                      {t('cloudSync.browserExtensionHint')}
                     </p>
                   </div>
                 </div>
@@ -166,7 +171,7 @@ export function CloudSyncDialog({
               <div className="flex justify-end">
                 <Button onClick={handleSync} className="gap-1.5">
                   <Cloud className="w-4 h-4" />
-                  Sync Subtitles to Cloud
+                  {t('cloudSync.syncButton')}
                 </Button>
               </div>
             </div>
@@ -176,7 +181,7 @@ export function CloudSyncDialog({
           {status === 'syncing' && (
             <div className="flex flex-col items-center gap-3 py-8">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Uploading subtitles...</p>
+              <p className="text-sm text-muted-foreground">{t('cloudSync.uploading')}</p>
             </div>
           )}
 
@@ -187,14 +192,11 @@ export function CloudSyncDialog({
                 <CheckCircle2 className="w-6 h-6 text-success" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Synced Successfully!</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  NLP analysis will run automatically in the background. Results will appear on your
-                  other devices shortly.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t('cloudSync.successTitle')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('cloudSync.successHint')}</p>
               </div>
               <Button variant="outline" onClick={handleClose} className="mt-2">
-                Done
+                {t('shared.done')}
               </Button>
             </div>
           )}
@@ -206,13 +208,11 @@ export function CloudSyncDialog({
                 <CheckCircle2 className="w-6 h-6 text-primary" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Already Synced</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  This episode has already been synced to the cloud.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t('cloudSync.alreadyTitle')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('cloudSync.alreadyHint')}</p>
               </div>
               <Button variant="outline" onClick={handleClose} className="mt-2">
-                Got it
+                {t('cloudSync.gotIt')}
               </Button>
             </div>
           )}
@@ -224,14 +224,14 @@ export function CloudSyncDialog({
                 <AlertCircle className="w-6 h-6 text-destructive" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Sync Failed</p>
+                <p className="text-sm font-medium text-foreground">{t('cloudSync.failedTitle')}</p>
                 <p className="text-xs text-muted-foreground mt-1 max-w-xs">{error}</p>
               </div>
               <div className="flex gap-2 mt-2">
                 <Button variant="outline" onClick={handleClose}>
-                  Cancel
+                  {t('shared.cancel')}
                 </Button>
-                <Button onClick={handleSync}>Retry</Button>
+                <Button onClick={handleSync}>{t('shared.retry')}</Button>
               </div>
             </div>
           )}
@@ -241,7 +241,7 @@ export function CloudSyncDialog({
       <SignInDialog
         open={signInOpen}
         onOpenChange={setSignInOpen}
-        description="Sign in to sync this episode to your FlexiLingo account."
+        description={t('cloudSync.signInDescription')}
         onSignedIn={() => {
           // Back to the normal flow — the user can now hit Sync.
           setStatus('idle');

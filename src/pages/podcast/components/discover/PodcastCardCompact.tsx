@@ -1,6 +1,7 @@
 import { Headphones, Heart, Loader2, Mic } from 'lucide-react';
 import { LearningScoreBar } from './LearningScoreBar';
 import type { CuratedPodcast, PodcastIndexFeed } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 type PodcastData =
   | { type: 'curated'; podcast: CuratedPodcast }
@@ -24,6 +25,7 @@ const CEFR_COLORS: Record<string, string> = {
 };
 
 export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, onClick }: Props) {
+  const { t } = useTranslation('podcastUi');
   const isCurated = data.type === 'curated';
   const podcast = data.podcast;
 
@@ -44,10 +46,10 @@ export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, on
 
   const cefrLevel = isCurated
     ? (podcast as CuratedPodcast).cefr_level
-    : flexilingo?.cefr_level ?? null;
+    : (flexilingo?.cefr_level ?? null);
   const learningScore = isCurated
     ? (podcast as CuratedPodcast).learning_score
-    : flexilingo?.learning_score ?? null;
+    : (flexilingo?.learning_score ?? null);
   const episodeCount = isCurated
     ? `${(podcast as CuratedPodcast).transcribed_episodes}/${(podcast as CuratedPodcast).total_episodes}`
     : flexilingo
@@ -91,7 +93,7 @@ export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, on
         {isFollowed && (
           <span className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-success/90 text-white">
             <Heart className="w-2.5 h-2.5 fill-current" />
-            Following
+            {t('card.following')}
           </span>
         )}
 
@@ -120,7 +122,7 @@ export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, on
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <Mic className="w-3 h-3" />
-            <span>{episodeCount} episodes</span>
+            <span>{t('card.episodesLabel', { value: episodeCount })}</span>
           </div>
           {!isFollowed && onFollow && (
             <button
@@ -133,7 +135,7 @@ export function PodcastCardCompact({ data, isFollowed, isFollowing, onFollow, on
               ) : (
                 <Heart className="w-3 h-3" />
               )}
-              Follow
+              {t('card.follow')}
             </button>
           )}
         </div>

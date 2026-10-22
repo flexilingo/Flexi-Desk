@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { useTheme } from '@/hooks/useTheme';
 import { useDirection } from '@/hooks/useDirection';
@@ -16,11 +16,15 @@ import { WritingPage } from '@/pages/writing';
 import { CelpipPage } from '@/pages/celpip';
 import { ReaderPage } from '@/pages/reader';
 import { CheatsheetPage } from '@/pages/cheatsheet';
+import { SentencesPage } from '@/pages/sentences';
 import { PodcastPage } from '@/pages/podcast';
 import { VideosPage } from '@/pages/videos';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { VocabularyPage } from '@/pages/vocabulary';
 import { NotesPage } from '@/pages/notes';
+import { AccountLayout } from '@/pages/account/AccountLayout';
+import { SubscriptionPage } from '@/pages/subscription/SubscriptionPage';
+import { WhatsNewPage } from '@/pages/whatsnew/WhatsNewPage';
 import { PluginManagerPage } from '@/pages/plugins/PluginManagerPage';
 import { useAuthStore } from '@/stores/authStore';
 import { ENABLED_MODULES } from '@/config/features';
@@ -89,6 +93,7 @@ function App() {
           {ENABLED_MODULES.reading && <Route path="reading" element={<ReadingPage />} />}
           {ENABLED_MODULES.reader && <Route path="reader/*" element={<ReaderPage />} />}
           {ENABLED_MODULES.cheatsheet && <Route path="cheatsheet/*" element={<CheatsheetPage />} />}
+          {ENABLED_MODULES.sentences && <Route path="sentences/*" element={<SentencesPage />} />}
           {ENABLED_MODULES.tutor && <Route path="tutor" element={<TutorPage />} />}
           {ENABLED_MODULES.caption && <Route path="caption" element={<CaptionPage />} />}
           {ENABLED_MODULES.pronunciation && (
@@ -105,6 +110,22 @@ function App() {
           {ENABLED_MODULES.notes && <Route path="notes" element={<NotesPage />} />}
           {ENABLED_MODULES.plugins && <Route path="plugins" element={<PluginManagerPage />} />}
           {ENABLED_MODULES.settings && <Route path="settings" element={<SettingsPage />} />}
+          {ENABLED_MODULES.account && (
+            <>
+              <Route path="account/*" element={<AccountLayout />} />
+              <Route path="community" element={<Navigate to="/account/community" replace />} />
+              <Route path="friends" element={<Navigate to="/account/friends" replace />} />
+              <Route path="xp-history" element={<Navigate to="/account/xp" replace />} />
+              <Route path="analytics" element={<Navigate to="/account/stats" replace />} />
+            </>
+          )}
+          {ENABLED_MODULES.subscription && (
+            <>
+              <Route path="subscription" element={<SubscriptionPage />} />
+              <Route path="pro" element={<Navigate to="/subscription" replace />} />
+            </>
+          )}
+          {ENABLED_MODULES.whatsNew && <Route path="whats-new" element={<WhatsNewPage />} />}
         </Route>
       </Routes>
     </>

@@ -48,7 +48,12 @@ export function resolveCardKey(e: KeyLike, ctx: CardKeyContext): CardKeyAction |
   ) {
     return null;
   }
-  if (e.key === 'Enter' || e.key === ' ') return { type: 'flip' };
+  if (e.key === 'Enter' || e.key === ' ') {
+    // A focused button (Show answer, a rating, a menu item) is activated by these keys natively;
+    // flipping as well would flip twice and leave the card where it was.
+    if (['BUTTON', 'A'].includes((t?.tagName ?? '').toUpperCase())) return null;
+    return { type: 'flip' };
+  }
 
   const key = e.key.toLowerCase();
   if (key === 'r') return { type: 'replay' };

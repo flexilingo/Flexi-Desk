@@ -16,15 +16,16 @@ import { AnalysisTab } from './AnalysisTab';
 import { NotesTab } from './NotesTab';
 import { SettingsTab } from './SettingsTab';
 import type { NlpAnalysis, PodcastBookmark } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 /** Tabs of the insights drawer. */
 export type SidebarTab = 'stats' | 'vocab' | 'analysis' | 'notes' | 'settings';
 
-const TABS: { id: SidebarTab; icon: typeof BarChart3; label: string }[] = [
-  { id: 'stats', icon: BarChart3, label: 'Stats' },
-  { id: 'vocab', icon: BookOpen, label: 'Vocab' },
-  { id: 'analysis', icon: Brain, label: 'Analysis' },
-  { id: 'notes', icon: StickyNote, label: 'Notes' },
+const TABS: { id: SidebarTab; icon: typeof BarChart3; labelKey: string }[] = [
+  { id: 'stats', icon: BarChart3, labelKey: 'sidebar.tabStats' },
+  { id: 'vocab', icon: BookOpen, labelKey: 'sidebar.tabVocab' },
+  { id: 'analysis', icon: Brain, labelKey: 'sidebar.tabAnalysis' },
+  { id: 'notes', icon: StickyNote, labelKey: 'sidebar.tabNotes' },
 ];
 
 interface PlayerSidebarProps {
@@ -98,6 +99,7 @@ export function PlayerSidebar({
   onStartQuiz,
   onAddToDeck,
 }: PlayerSidebarProps) {
+  const { t } = useTranslation('podcastUi');
   // The collapsed icon rail was removed to match the web player — the panels are
   // opened from the Vocab / Analysis buttons in the control bar instead.
   if (!isOpen) return null;
@@ -110,11 +112,11 @@ export function PlayerSidebar({
           <button
             onClick={onClose}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Close sidebar"
+            title={t('player.closeSidebar')}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-sm font-semibold text-foreground">Studio FlexiLingo</span>
+          <span className="text-sm font-semibold text-foreground">{t('sidebar.studio')}</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -125,14 +127,14 @@ export function PlayerSidebar({
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted',
             )}
-            title="Settings"
+            title={t('sidebar.settings')}
           >
             <Settings className="h-4 w-4" />
           </button>
           <button
             onClick={onClose}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Close"
+            title={t('shared.close')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -156,7 +158,7 @@ export function PlayerSidebar({
               )}
             >
               <Icon className="h-4 w-4" />
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           );
         })}
@@ -169,7 +171,7 @@ export function PlayerSidebar({
             )}
           >
             <GraduationCap className="h-4 w-4" />
-            Quiz
+            {t('sidebar.tabQuiz')}
           </button>
         )}
       </div>

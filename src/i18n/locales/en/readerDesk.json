@@ -107,5 +107,19 @@
     "change": "Change",
     "dismiss": "Dismiss",
     "detected": "Detected from the text: {{language}}"
+  },
+  "audio": {
+    "hostedNeedsAccount": "This book's recordings are kept on your account and are only released for a copy in your online library. This copy lives on this computer, so they cannot be played here yet.",
+    "hostedFailed": "The recordings could not be loaded right now. Check your connection and your sign-in, then open this panel again.",
+    "signInForEditions": "Sign in to tell the reader which published book this is. Its recordings, videos and subtitles come with it."
+  },
+  "book": {
+    "backToBook": "Back to the book",
+    "playFailed": "This recording could not be played.",
+    "lockedTitle": "Subtitles: {{n}} of {{required}} full listens",
+    "lockedHeading": "Listen first, then read",
+    "lockedRule_one": "Subtitles open once you have heard this track all the way through once: from start to finish, without skipping ahead. Going back is fine. Faster than 1× does not count.",
+    "lockedRule_other": "Subtitles open once you have heard this track all the way through {{required}} times: from start to finish, without skipping ahead. Going back is fine. Faster than 1× does not count.",
+    "lockedProgress": "Heard in full: {{n}} of {{required}}"
   }
 }

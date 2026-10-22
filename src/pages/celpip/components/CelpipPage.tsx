@@ -6,6 +6,8 @@ import { isSupportedExamType } from '../examProfiles';
 import { CelpipLandingPage } from './CelpipLandingPage';
 import { CelpipResultsPage } from './CelpipResultsPage';
 import { ExamEngine } from './session/ExamEngine';
+import { CoachPage } from '../coach/CoachPage';
+import { CoachReportPage } from '../coach/CoachReportPage';
 
 /**
  * Exam routes — `/exam/:examType/*` for every exam (celpip, tcf, tcf_quebec,
@@ -50,6 +52,8 @@ export function CelpipPage() {
                 path="results/:sessionId"
                 element={<CelpipResultsPage examType={examType} />}
               />
+              <Route path="coach" element={<CoachPage />} />
+              <Route path="coach/:reportId" element={<CoachReportPage />} />
             </Routes>
           </div>
         }

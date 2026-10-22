@@ -1,0 +1,202 @@
+[
+  {
+    "slug": "telegram-podcast-bot",
+    "category": "telegram",
+    "icon": "Radio",
+    "platforms": ["telegram"],
+    "href": "https://t.me/flexilingo_podcast_bot",
+    "addedAt": "2026-09-07",
+    "featured": true,
+    "goal": "everywhere"
+  },
+  {
+    "slug": "telegram-exam-bot",
+    "category": "telegram",
+    "icon": "GraduationCap",
+    "platforms": ["telegram"],
+    "href": "https://t.me/flexilingo_celpip_bot",
+    "addedAt": "2026-09-07",
+    "featured": true,
+    "goal": "everywhere"
+  },
+  {
+    "slug": "tcf-canada-practice",
+    "category": "french",
+    "icon": "FileSearch",
+    "platforms": ["web"],
+    "href": "/tcf-canada",
+    "addedAt": "2026-09-07",
+    "featured": false,
+    "goal": "exams"
+  },
+  {
+    "slug": "french-cheatsheet",
+    "category": "french",
+    "icon": "BookOpen",
+    "platforms": ["web"],
+    "href": "/cheatsheet/fr",
+    "addedAt": "2026-08-20",
+    "featured": true,
+    "goal": "french"
+  },
+  {
+    "slug": "podcast-player",
+    "category": "podcasts",
+    "icon": "Headphones",
+    "platforms": ["web"],
+    "href": "/podcasts",
+    "addedAt": "2026-06-01",
+    "featured": true,
+    "goal": "listen"
+  },
+  {
+    "slug": "word-lookup",
+    "category": "podcasts",
+    "icon": "MousePointerClick",
+    "platforms": ["web"],
+    "href": "/podcasts",
+    "addedAt": "2026-06-01",
+    "featured": false,
+    "goal": "listen"
+  },
+  {
+    "slug": "cefr-filter",
+    "category": "podcasts",
+    "icon": "SlidersHorizontal",
+    "platforms": ["web"],
+    "href": "/podcasts",
+    "addedAt": "2026-08-08",
+    "featured": false,
+    "goal": "listen"
+  },
+  {
+    "slug": "sentence-chat",
+    "category": "podcasts",
+    "icon": "MessageCircleQuestion",
+    "platforms": ["web"],
+    "href": "/podcasts",
+    "addedAt": "2026-07-01",
+    "featured": false,
+    "goal": "read"
+  },
+  {
+    "slug": "podcast-preview",
+    "category": "podcasts",
+    "icon": "PlayCircle",
+    "platforms": ["web"],
+    "href": "/podcasts",
+    "addedAt": "2026-07-01",
+    "featured": false,
+    "goal": "listen"
+  },
+  {
+    "slug": "subtitle-sync",
+    "category": "podcasts",
+    "icon": "Timer",
+    "platforms": ["web"],
+    "href": "/podcasts",
+    "addedAt": "2026-07-01",
+    "featured": false,
+    "goal": "listen"
+  },
+  {
+    "slug": "celpip-exam",
+    "category": "celpip",
+    "icon": "GraduationCap",
+    "platforms": ["web", "ios"],
+    "href": "/products/celpip",
+    "addedAt": "2026-05-01",
+    "featured": true,
+    "goal": "exams"
+  },
+  {
+    "slug": "learning-mode",
+    "category": "celpip",
+    "icon": "BookOpen",
+    "platforms": ["web"],
+    "href": "/products/celpip",
+    "addedAt": "2026-05-01",
+    "featured": false,
+    "goal": "exams"
+  },
+  {
+    "slug": "studio-subtitles",
+    "category": "extension",
+    "icon": "Captions",
+    "platforms": ["extension"],
+    "href": "/products/extension",
+    "addedAt": "2026-04-01",
+    "featured": true,
+    "goal": "everywhere"
+  },
+  {
+    "slug": "translation-delay",
+    "category": "extension",
+    "icon": "Timer",
+    "platforms": ["extension"],
+    "href": "/products/extension",
+    "addedAt": "2026-04-01",
+    "featured": false,
+    "goal": "everywhere"
+  },
+  {
+    "slug": "explore-decks",
+    "category": "decks",
+    "icon": "Library",
+    "platforms": ["web", "ios"],
+    "href": "/decks",
+    "addedAt": "2026-08-08",
+    "featured": false,
+    "goal": "remember"
+  },
+  {
+    "slug": "srs-review",
+    "category": "decks",
+    "icon": "Brain",
+    "platforms": ["web", "ios", "desktop"],
+    "href": "/decks",
+    "addedAt": "2026-03-01",
+    "featured": false,
+    "goal": "remember"
+  },
+  {
+    "slug": "community",
+    "category": "community",
+    "icon": "MessageSquare",
+    "platforms": ["web"],
+    "href": "/community",
+    "addedAt": "2026-09-08",
+    "featured": true,
+    "goal": null
+  },
+  {
+    "slug": "reader",
+    "category": "study",
+    "icon": "BookText",
+    "platforms": ["web"],
+    "href": "/dashboard/reader",
+    "addedAt": "2026-09-09",
+    "featured": true,
+    "goal": "read"
+  },
+  {
+    "slug": "shadowing",
+    "category": "study",
+    "icon": "Mic",
+    "platforms": ["web", "ios"],
+    "href": "/dashboard/study",
+    "addedAt": "2026-09-07",
+    "featured": true,
+    "goal": "listen"
+  },
+  {
+    "slug": "image-scan",
+    "category": "study",
+    "icon": "ScanLine",
+    "platforms": ["ios"],
+    "href": null,
+    "addedAt": "2026-06-10",
+    "featured": false,
+    "goal": "read"
+  }
+]

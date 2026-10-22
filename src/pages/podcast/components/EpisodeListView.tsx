@@ -186,7 +186,7 @@ export function EpisodeListView() {
                   </span>
                 )}
                 <span className="text-[11px] text-muted-foreground">
-                  {activeFeed.episodeCount} episodes
+                  {t('podcast.levelEpisodeCount', { count: activeFeed.episodeCount })}
                 </span>
               </div>
             </div>
@@ -201,7 +201,7 @@ export function EpisodeListView() {
                   onClick={() => setDescExpanded(!descExpanded)}
                   className="ml-1 font-medium text-accent hover:underline focus:outline-none"
                 >
-                  {descExpanded ? 'Show less' : 'Show more'}
+                  {descExpanded ? t('podcast.showLess') : t('podcast.showMore')}
                 </button>
               )}
             </div>
@@ -213,7 +213,7 @@ export function EpisodeListView() {
       <div className="rounded-2xl border border-border bg-card">
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-bold text-foreground">
-            Episodes
+            {t('podcast.episodesTitle')}
             <span className="ml-1.5 font-normal text-muted-foreground">({episodes.length})</span>
           </h2>
         </div>
@@ -226,7 +226,7 @@ export function EpisodeListView() {
           ) : episodes.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <Headphones className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No episodes found</p>
+              <p className="text-sm text-muted-foreground">{t('podcast.noEpisodes')}</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -257,6 +257,7 @@ function EpisodeRow({
   isDownloading?: boolean;
   downloadPercent?: number;
 }) {
+  const { t, i18n } = useTranslation();
   const { loadEpisode, downloadEpisode, activeFeed } = usePodcastStore();
   const navigate = useNavigate();
   const play = usePlayerStore((s) => s.play);
@@ -270,7 +271,7 @@ function EpisodeRow({
       : 0;
 
   const dateStr = episode.publishedAt
-    ? new Date(episode.publishedAt).toLocaleDateString(undefined, {
+    ? new Date(episode.publishedAt).toLocaleDateString(i18n.language, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -304,7 +305,7 @@ function EpisodeRow({
       <button
         className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted transition-colors hover:bg-primary/20"
         onClick={handlePlay}
-        title="Play"
+        title={t('podcast.play')}
       >
         {isCurrentPlaying ? (
           <Play className="h-4 w-4 fill-primary text-primary" />
@@ -368,7 +369,7 @@ function EpisodeRow({
           <button
             className="rounded-md p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100"
             onClick={handleDownload}
-            title="Download episode"
+            title={t('podcast.downloadEpisode')}
           >
             <Download className="h-4 w-4" />
           </button>

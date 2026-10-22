@@ -45,6 +45,13 @@ function getMedia(): MediaLike {
 
 const isVideoEpisode = (ep: PodcastEpisode | null | undefined): boolean => !!ep?.youtubeId;
 
+/**
+ * A recording of a published textbook (Reader editions). It plays through the audio element like an
+ * episode, but is not one: no library row to keep a position on, no account heartbeat, no "episode
+ * complete" screen. Its listens are counted by the book listen tracker, not here.
+ */
+export const isBookEpisode = (ep: PodcastEpisode | null | undefined): boolean => !!ep?.bookTrack;
+
 // ── Timers ──────────────────────────────────────────────
 
 let progressSaveTimer: ReturnType<typeof setInterval> | null = null;
@@ -624,10 +631,13 @@ export const usePlayerStore = create<PlayerState>()(
         const state = get();
         saveProgress(state);
         // A video is not an episode: no listening report; the overlay offers "Up next" instead.
-        if (!isVideoEpisode(state.currentEpisode)) reportCloudCompletion(state.currentTime);
+        const isBook = isBookEpisode(state.currentEpisode);
+        if (!isVideoEpisode(state.currentEpisode) && !isBook)
+          reportCloudCompletion(state.currentTime);
         set((s) => {
           s.isPlaying = false;
-          s.showCompleteOverlay = true;
+          // A book track just stops; the next one is the reader's choice.
+          s.showCompleteOverlay = !isBook;
         });
         stopProgressSaving();
       },
@@ -676,7 +686,8 @@ usePlayerStore.subscribe((state, prev) => {
 
 function startProgressSaving(episodeId: string) {
   stopProgressSaving();
-  if (isVideoEpisode(usePlayerStore.getState().currentEpisode)) return;
+  const current = usePlayerStore.getState().currentEpisode;
+  if (isVideoEpisode(current) || isBookEpisode(current)) return;
   progressSaveTimer = setInterval(() => {
     const state = usePlayerStore.getState();
     if (!progressSuppressed && state.currentEpisode?.id === episodeId) {
@@ -699,7 +710,11 @@ function stopProgressSaving() {
 function saveProgress(state: PlayerState) {
   if (progressSuppressed) return;
   // A video has no listening position to keep (it is a catalogue row, not a library episode).
-  if (state.currentEpisode && !isVideoEpisode(state.currentEpisode)) {
+  if (
+    state.currentEpisode &&
+    !isVideoEpisode(state.currentEpisode) &&
+    !isBookEpisode(state.currentEpisode)
+  ) {
     const posMs = Math.round(state.currentTime * 1000);
     invoke('podcast_update_progress', {
       episodeId: state.currentEpisode.id,

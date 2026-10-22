@@ -16,6 +16,7 @@ import {
   saveReaderMark,
   saveReaderNote,
   saveReaderTextBox,
+  setReaderEdition,
   setReaderLanguage,
   setReaderPageCount,
   setReaderPosition,
@@ -49,9 +50,15 @@ import { MarkStore } from '../lib/mark-store';
 import { usePageText } from '../lib/use-page-text';
 import { useLanguageCorrection } from '../lib/use-language-correction';
 import { LanguageNote } from '../components/LanguageNote';
-
-// PHASE F: audio, video, cheatsheet, edition picker and the
-// `useAudioHold` / `usePlayerKeys` hooks (ported in `../lib`, wired with the audio panel).
+import { PdfAudioPanel } from './PdfAudioPanel';
+import { PdfVideoPanel } from './PdfVideoPanel';
+import { claimBookEdition, getBookEditions } from '../services/bookService';
+import { indexFromList, readTrackIndex, type TrackIndex } from '../lib/book-audio';
+import { useTrackPlayer } from '../lib/use-track-player';
+import { useAudioHold } from '../lib/use-audio-hold';
+import { usePlayerKeys } from '../lib/use-player-keys';
+import { useAuthStore } from '@/stores/authStore';
+import type { BookEdition } from '../types';
 
 /** How long the reader must sit still on a page before the bookmark is written. */
 export const POSITION_DEBOUNCE_MS = 1500;
@@ -196,7 +203,9 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
   );
 
   // One panel at a time: they sit in the same column.
-  const [panel, setPanel] = useState<'notes' | 'words' | 'written' | 'cheatsheet' | null>(null);
+  const [panel, setPanel] = useState<
+    'notes' | 'words' | 'audio' | 'video' | 'written' | 'cheatsheet' | null
+  >(null);
   // The cheatsheet remembers where the reader was (page, search) across close and reopen.
   const [cheatsheetState, setCheatsheetState] =
     useState<CheatsheetPanelState>(CHEATSHEET_PANEL_START);
@@ -583,6 +592,95 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
     [documentId, ocrController, boilerplate, ocrState.status],
   );
 
+  /*
+   * BOOK EDITIONS. Which published book this file is — it unlocks the book's recordings,
+   * videos and subtitles. The catalogue is the account's (`book-editions`), so it needs a
+   * signed-in account; the document itself is local, so naming the edition is a local write.
+   */
+  const signedIn = useAuthStore((s) => !!s.session);
+  const [editions, setEditions] = useState<BookEdition[]>([]);
+  useEffect(() => {
+    if (!signedIn) {
+      setEditions([]);
+      return;
+    }
+    let cancelled = false;
+    getBookEditions()
+      .then((answer) => !cancelled && setEditions(answer.items ?? []))
+      .catch(() => !cancelled && setEditions([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn]);
+
+  // Null until the reader changes it, so the document's own answer leads and a choice made
+  // here wins from then on — the same shape as the language picker.
+  const [pickedEdition, setPickedEdition] = useState<string | null>(null);
+  const editionId = pickedEdition ?? file?.book_edition ?? '';
+  const chooseEdition = useCallback(
+    (id: string) => {
+      setPickedEdition(id);
+      setReaderEdition({ document_id: documentId, edition: id || null }).catch(() => {});
+    },
+    [documentId],
+  );
+  const edition = editions.find((item) => item.id === editionId) ?? null;
+
+  // Name the edition to the account, so the server will sign its hosted recordings for this
+  // local document. Before the server update this answers "unknown action" and nothing
+  // visible happens (the audio panel keeps its own calm state).
+  useEffect(() => {
+    if (signedIn && editionId) claimBookEdition(editionId).catch(() => {});
+  }, [signedIn, editionId]);
+
+  // A book whose index the server holds (its PDF is a scan, with no text for `readTrackIndex`
+  // to read) takes the list as it is.
+  const listedIndex = useMemo(
+    () => (pdf && edition?.tracks?.length ? indexFromList(edition, pdf.numPages) : null),
+    [pdf, edition],
+  );
+  // Kept WITH the edition it was read for, so switching books cannot show the previous
+  // book's pages. `index: null` means "read, and this book has no track index".
+  const [indexed, setIndexed] = useState<{ editionId: string; index: TrackIndex | null } | null>(
+    null,
+  );
+  // The book's own track index, read from its transcription pages at the back: a few pages
+  // of text, never rendered, and only once a book is named.
+  useEffect(() => {
+    if (!pdf || !edition || edition.tracks?.length) return;
+    let cancelled = false;
+    const readFor = edition.id;
+    readTrackIndex(pdf, edition)
+      .then((index) => !cancelled && setIndexed({ editionId: readFor, index }))
+      // A list by number is still true; a half-read map would not be.
+      .catch(() => !cancelled && setIndexed({ editionId: readFor, index: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, [pdf, edition]);
+  const readIndex = indexed?.editionId === editionId ? indexed.index : null;
+  const trackIndex = edition?.tracks?.length ? listedIndex : readIndex;
+  const indexing = edition?.tracks?.length
+    ? !pdf
+    : Boolean(edition) && indexed?.editionId !== editionId;
+
+  // The activity's name when the book gives one — "Track 34" means nothing to someone
+  // holding page 35.
+  const trackLabel = useCallback(
+    (track: number) => trackIndex?.byTrack.get(track)?.title ?? t('pdf.audio.track', { n: track }),
+    [t, trackIndex],
+  );
+  const player = useTrackPlayer(edition, { label: trackLabel });
+
+  // The recording waits while a word is being read, a note written or spoken, or a book
+  // video plays — and Space/arrows then belong to those, not the recording.
+  const [wordDialogOpen, setWordDialogOpen] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const audioHeld =
+    wordDialogOpen || editing !== null || spoken.speaking || spoken.loading || videoPlaying;
+  useAudioHold(audioHeld);
+  usePlayerKeys(!audioHeld);
+
   const errorCode = loadError ?? fileError;
   if (errorCode) {
     const key = `errors.${errorCode}`;
@@ -611,6 +709,7 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
       closeLabel={t('pdf.notes.close')}
       noteLabel={t('pdf.notes.add')}
       onNote={handleNoteFromSelection}
+      onDialogOpenChange={setWordDialogOpen}
     >
       <ReaderToolbar
         fileName={title}
@@ -635,8 +734,22 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
             ? () => setPanel((open) => (open === 'cheatsheet' ? null : 'cheatsheet'))
             : undefined
         }
-        // PHASE F: onToggleAudio / onToggleVideo / editions /
-        // onEditionChange. Omitted handlers hide their buttons.
+        editionId={editionId}
+        editions={editions}
+        onEditionChange={chooseEdition}
+        editionsNote={signedIn ? undefined : tDesk('audio.signInForEditions')}
+        audioOpen={panel === 'audio'}
+        audioCount={edition?.track_count ?? 0}
+        onToggleAudio={
+          edition ? () => setPanel((open) => (open === 'audio' ? null : 'audio')) : undefined
+        }
+        videoOpen={panel === 'video'}
+        videoCount={edition?.videos?.length ?? 0}
+        onToggleVideo={
+          edition?.videos?.length
+            ? () => setPanel((open) => (open === 'video' ? null : 'video'))
+            : undefined
+        }
         onZoomChange={changeZoom}
         tapToSpeak={tapToSpeak}
         onTapToSpeakChange={setTapToSpeak}
@@ -756,7 +869,29 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
             onClose={() => setPanel(null)}
           />
         )}
-        {/* PHASE F: the audio and video panels open here too. */}
+        {panel === 'video' && edition && !!edition.videos?.length && (
+          <PdfVideoPanel
+            edition={edition}
+            // Until the book's index is read there is no offset to apply; a printed page is
+            // the PDF page in a book without front matter.
+            offset={trackIndex?.offset ?? edition.page_offset ?? 0}
+            currentPage={currentPage}
+            onGoToPage={(pageNumber) => viewHandle.current?.scrollToPage(pageNumber)}
+            onPlayingChange={setVideoPlaying}
+            onClose={() => setPanel(null)}
+          />
+        )}
+        {panel === 'audio' && edition && (
+          <PdfAudioPanel
+            edition={edition}
+            index={trackIndex}
+            indexing={indexing}
+            currentPage={currentPage}
+            player={player}
+            onGoToPage={(pageNumber) => viewHandle.current?.scrollToPage(pageNumber)}
+            onClose={() => setPanel(null)}
+          />
+        )}
       </div>
 
       {editing && (

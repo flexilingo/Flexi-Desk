@@ -68,13 +68,14 @@ export function StudyProgressHeader({
   shadowingProgress,
 }: Props) {
   const { t } = useTranslation('study');
-  const done = Math.max(0, total - remaining);
+  // `remaining` is counted after the card on screen is taken, so the card on screen is number total - remaining.
+  const done = Math.max(0, total - remaining - 1);
   const pct = shadowingActive
     ? shadowingProgress && shadowingProgress.total > 0
       ? Math.round((shadowingProgress.step / shadowingProgress.total) * 100)
       : 0
     : total > 0
-      ? Math.round((done / total) * 100)
+      ? Math.round(((done + 1) / total) * 100)
       : 0;
   const cardType = cardTypeFromProgress(cardProgress);
 

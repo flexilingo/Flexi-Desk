@@ -361,8 +361,7 @@ export function PlayerView() {
     if (whisperAvailable === false) {
       usePodcastStore.setState((s) => ({
         ...s,
-        error:
-          'Whisper is not configured. Go to Settings → Whisper tab and complete both Step 1 (binary path) and Step 2 (model download), then click "Save Configuration".',
+        error: tp('player.whisperNotConfigured'),
       }));
       return;
     }
@@ -516,7 +515,7 @@ export function PlayerView() {
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+                title={sidebarOpen ? tp('player.closeSidebar') : tp('player.openSidebar')}
               >
                 {sidebarOpen ? (
                   <PanelRightClose className="h-4 w-4" />
@@ -604,8 +603,8 @@ export function PlayerView() {
                       <div className="h-3 w-3 rounded-full bg-primary animate-pulse" />
                       <span className="text-xs font-medium text-primary">
                         {transcribePercent > 0
-                          ? `Transcribing... ${transcribePercent}%`
-                          : 'Starting transcription...'}
+                          ? tp('player.transcribingPercent', { percent: transcribePercent })
+                          : tp('player.startingTranscription')}
                       </span>
                     </div>
                   )}
@@ -781,7 +780,7 @@ export function PlayerView() {
         {ENABLED_MODULES.podcastQuiz && showQuiz && (
           <div className="fixed inset-0 z-[9999] flex flex-col bg-background">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
-              <h2 className="text-lg font-semibold">Learning Session</h2>
+              <h2 className="text-lg font-semibold">{tp('player.learningSession')}</h2>
               <button
                 onClick={() => setShowQuiz(false)}
                 className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors text-lg"

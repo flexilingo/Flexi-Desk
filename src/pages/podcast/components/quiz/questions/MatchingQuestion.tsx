@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, RotateCcw, Link2 } from 'lucide-react';
 import type { QuizQuestion } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface MatchingQuestionProps {
   question: QuizQuestion;
@@ -27,6 +28,7 @@ export function MatchingQuestion({
   isCorrect,
   disabled = false,
 }: MatchingQuestionProps) {
+  const { t } = useTranslation('podcastUi');
   const pairs = question.pairs || [];
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchPair[]>([]);
@@ -83,7 +85,7 @@ export function MatchingQuestion({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium text-muted-foreground">
-            Match the Pairs
+            {t('quiz.q.matchTitle')}
           </CardTitle>
           <Badge variant="outline">{question.difficulty}</Badge>
         </div>
@@ -93,14 +95,14 @@ export function MatchingQuestion({
 
         {pairs.length === 0 && (
           <div className="p-4 bg-warning/15 text-warning rounded-lg">
-            <p className="font-medium">No pairs found for this question.</p>
+            <p className="font-medium">{t('quiz.q.noPairs')}</p>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              Word
+              {t('quiz.q.colWord')}
             </div>
             {pairs.map((pair, index) => {
               const matchedPair = getMatchedPairForLeft(pair.left);
@@ -151,7 +153,7 @@ export function MatchingQuestion({
 
           <div className="space-y-2">
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              Match
+              {t('quiz.q.colMatch')}
             </div>
             {shuffledRight.map((word, index) => {
               const matchedPair = getMatchedPairForRight(index);
@@ -188,7 +190,7 @@ export function MatchingQuestion({
 
         {matches.length > 0 && !showFeedback && (
           <div className="flex flex-wrap gap-2 pt-2 border-t">
-            <span className="text-xs text-muted-foreground">Matched:</span>
+            <span className="text-xs text-muted-foreground">{t('quiz.q.matched')}</span>
             {matches.map((match, index) => (
               <span key={index} className="text-xs bg-muted px-2 py-1 rounded">
                 {match.left} → {match.right}
@@ -208,20 +210,20 @@ export function MatchingQuestion({
               {isCorrect ? (
                 <>
                   <CheckCircle2 className="h-5 w-5" />
-                  <span className="font-medium">All correct!</span>
+                  <span className="font-medium">{t('quiz.q.allCorrect')}</span>
                 </>
               ) : (
                 <>
                   <XCircle className="h-5 w-5" />
                   <span className="font-medium">
-                    {score.correct} of {score.total} correct
+                    {t('quiz.q.scoreOf', { correct: score.correct, total: score.total })}
                   </span>
                 </>
               )}
             </div>
             {!isCorrect && (
               <div className="text-sm space-y-1">
-                <p>Correct matches:</p>
+                <p>{t('quiz.q.correctMatches')}</p>
                 <ul className="list-disc list-inside">
                   {pairs.map((pair, index) => (
                     <li key={index}>
@@ -245,16 +247,16 @@ export function MatchingQuestion({
             className="w-full"
           >
             <RotateCcw className="h-4 w-4 mr-1" />
-            Reset Matches
+            {t('quiz.q.resetMatches')}
           </Button>
         )}
 
         {!showFeedback && (
           <div className="text-center text-sm text-muted-foreground">
-            {matches.length} of {pairs.length} pairs matched
+            {t('quiz.q.pairsMatched', { matched: matches.length, total: pairs.length })}
             {selectedLeft && (
               <span className="ml-2 text-primary">
-                (Select match for &quot;{selectedLeft}&quot;)
+                {t('quiz.q.selectMatchFor', { word: selectedLeft })}
               </span>
             )}
           </div>

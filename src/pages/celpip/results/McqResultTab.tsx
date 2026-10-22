@@ -340,8 +340,8 @@ function ReviewItem({
         badge={<TcfLevelBadge level={level} />}
         // The explanations name options by letter (A–D, in the order shown).
         lettered={lettered}
-        // CELPIP's English question and options keep their word lookup.
-        lookup={multi}
+        // Both exams: every word of the question and options is tap-to-lookup, in the exam's language.
+        lookup
         footer={
           explanation ? (
             <TcfMcqExplanationBlock
@@ -514,14 +514,16 @@ function scriptLines(script: unknown): ScriptLine[] {
 
 /** The line with the evidence in it, the evidence marked. */
 function withEvidence(text: string, evidence?: string): ReactNode {
-  if (!evidence) return text;
+  if (!evidence) return <LookupText text={text} />;
   const at = text.indexOf(evidence);
-  if (at < 0) return text;
+  if (at < 0) return <LookupText text={text} />;
   return (
     <>
-      {text.slice(0, at)}
-      <mark className="rounded-[3px] bg-accent/25 px-0.5 text-foreground">{evidence}</mark>
-      {text.slice(at + evidence.length)}
+      <LookupText text={text.slice(0, at)} />
+      <mark className="rounded-[3px] bg-accent/25 px-0.5 text-foreground">
+        <LookupText text={evidence} />
+      </mark>
+      <LookupText text={text.slice(at + evidence.length)} />
     </>
   );
 }

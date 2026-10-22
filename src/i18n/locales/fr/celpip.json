@@ -357,12 +357,16 @@
     "NO_ACTIVE_RECORDING": "Aucun enregistrement à arrêter.",
     "RECORDING_NOT_FOUND": "Cet enregistrement est introuvable.",
     "EMPTY_RECORDING": "Rien n’a été enregistré. Vérifiez votre micro et réessayez.",
-    "MIC_PERMISSION_DENIED": "L’accès au micro a été refusé. Vous pouvez saisir votre réponse.",
-    "UPLOAD_FAILED": "Impossible d’envoyer votre enregistrement. Réessayez ou continuez avec la transcription seule."
+    "MIC_PERMISSION_DENIED": "L’accès au microphone a été refusé. Autorisez-le dans les réglages du système, puis réessayez.",
+    "UPLOAD_FAILED": "Impossible d’envoyer votre enregistrement. Réessayez ou continuez avec la transcription seule.",
+    "NETWORK_ERROR": "Le serveur est injoignable. Vérifiez votre connexion et réessayez.",
+    "COACH_REPORT_NOT_ON_THIS_ACCOUNT": "Ce rapport appartient à un autre compte."
   },
   "examSettingsTitle": "Réglages de l’examen",
   "examSettingsTextSize": "Taille du texte",
   "examSettingsPreview": "Le vif renard brun saute par-dessus le chien paresseux.",
   "examSettingsTranslate": "Toucher pour traduire",
-  "examSettingsTranslateHint": "Touchez un mot pour voir son sens"
+  "examSettingsTranslateHint": "Touchez un mot pour voir son sens",
+  "sectionSubmitOffline": "Vous êtes hors ligne : vos réponses sont enregistrées sur cet ordinateur. Nous les enverrons dès le retour de la connexion.",
+  "sectionSubmitUnreachable": "Le serveur est injoignable : vos réponses sont enregistrées sur cet ordinateur. Nous continuons d’essayer de les envoyer."
 }

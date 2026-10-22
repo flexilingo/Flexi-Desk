@@ -360,12 +360,16 @@
     "NO_ACTIVE_RECORDING": "لا يوجد تسجيل لإيقافه.",
     "RECORDING_NOT_FOUND": "هذا التسجيل غير موجود.",
     "EMPTY_RECORDING": "لم يتم تسجيل أي شيء. تحقق من الميكروفون وحاول مجددًا.",
-    "MIC_PERMISSION_DENIED": "تم رفض الوصول إلى الميكروفون. يمكنك كتابة إجابتك بدلًا من ذلك.",
-    "UPLOAD_FAILED": "تعذّر رفع تسجيلك. أعد المحاولة أو تابع بالنص فقط."
+    "MIC_PERMISSION_DENIED": "تم رفض الوصول إلى الميكروفون. اسمح به من إعدادات النظام ثم حاول مرة أخرى.",
+    "UPLOAD_FAILED": "تعذّر رفع تسجيلك. أعد المحاولة أو تابع بالنص فقط.",
+    "NETWORK_ERROR": "تعذر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى.",
+    "COACH_REPORT_NOT_ON_THIS_ACCOUNT": "هذا التقرير يخص حسابًا آخر."
   },
   "examSettingsTitle": "إعدادات الاختبار",
   "examSettingsTextSize": "حجم النص",
   "examSettingsPreview": "الثعلب البني السريع يقفز فوق الكلب الكسول.",
   "examSettingsTranslate": "انقر للترجمة",
-  "examSettingsTranslateHint": "انقر على أي كلمة لمعرفة معناها"
+  "examSettingsTranslateHint": "انقر على أي كلمة لمعرفة معناها",
+  "sectionSubmitOffline": "أنت غير متصل - إجاباتك محفوظة على هذا الحاسوب. سنرسلها عند عودة الاتصال.",
+  "sectionSubmitUnreachable": "تعذر الوصول إلى الخادم - إجاباتك محفوظة على هذا الحاسوب. سنواصل محاولة إرسالها."
 }

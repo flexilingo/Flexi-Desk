@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "account": "我的账户",
+    "community": "社区",
+    "pro": "专业版",
+    "whatsNew": "新功能"
+  },
+  "signedOut": {
+    "title": "登录后在这里查看你的账户",
+    "body": "此页面显示你的 FlexiLingo 账户。请用邮箱或 Google 登录。",
+    "button": "登录"
+  },
+  "source": {
+    "account": "账户数据",
+    "local": "本机数据",
+    "localNote": "你尚未登录，因此这些数据仅来自这台电脑。登录后可查看账户数据。"
+  },
+  "learning": {
+    "search": "搜索语言",
+    "noResults": "没有找到语言",
+    "mirrored": "已保存到你的账户，并同时保留在这台电脑上。",
+    "signedOutNote": "你尚未登录：这些选择只保存在这台电脑上。",
+    "notAppLanguage": "这里设置你学习的语言和翻译语言。应用本身的语言请在“设置”的“常规”中选择。",
+    "conflictTitle": "这台电脑使用的语言组合不同",
+    "conflictBody": "这台电脑：{{local}}。你的账户：{{account}}。没有做任何更改。",
+    "useAccount": "使用我账户的语言",
+    "keepLocal": "把这台电脑的语言保存到我的账户",
+    "offerPush": "你的账户还没有语言设置。这台电脑使用 {{local}}。",
+    "pushLocal": "保存到我的账户"
+  },
+  "voice": {
+    "deskNote": "在这台电脑上，自然语音、Google 和 FlexiLingo 语音合为一个在线语音（登录后）；设备语音可离线使用。你的选择也会保存到账户，供网站和扩展使用。"
+  },
+  "profile": {
+    "tooBig": "这张图片超过 5 MB。请选择更小的图片。"
+  },
+  "subscription": {
+    "openedInBrowser": "付款页面已在浏览器中打开。完成后请回到这里；本页会自动更新。",
+    "checkAgain": "再次检查",
+    "updated": "你的方案现在是 {{plan}}。",
+    "notYet": "暂时没有变化。如果刚付款，可能需要一分钟。",
+    "daysLeft": "还剩 {{count}} 天"
+  },
+  "redeem": {
+    "title": "有礼品码吗？",
+    "hint": "粘贴礼品码，或邮件中的完整链接。",
+    "placeholder": "礼品码或链接",
+    "invalid": "这看起来不是礼品码或链接。",
+    "until": "有效期至 {{date}}"
+  },
+  "shared": {
+    "title": "与你共享的卡组",
+    "body": "朋友与你共享复习后，会显示在你的卡组旁。请先互相关注，再从某个卡组共享。"
+  },
+  "links": {
+    "title": "分享链接",
+    "body": "在卡组页面为它创建链接，并在那里管理。"
+  },
+  "openDecks": "打开我的卡组",
+  "oauth": {
+    "google": "使用 Google 继续",
+    "waiting": "请在浏览器中完成登录...",
+    "hint": "已打开浏览器窗口。请在那里选择你的 Google 账户；本窗口会自动继续。",
+    "or": "或使用下面的邮箱",
+    "errors": {
+      "GOOGLE_TIMEOUT": "登录耗时过长，已停止。请重试。",
+      "GOOGLE_STATE_MISMATCH": "浏览器的返回与本次登录不匹配。请重试。",
+      "GOOGLE_NOT_CONFIGURED": "此版本未设置 Google 登录。请使用邮箱。",
+      "GOOGLE_OPEN_FAILED": "无法打开浏览器。请改用邮箱。",
+      "GOOGLE_LISTEN_FAILED": "这台电脑无法等待浏览器。请改用邮箱。",
+      "GOOGLE_TOKEN_FAILED": "Google 没有接受此次登录。请重试。",
+      "GOOGLE_SIGN_IN_FAILED": "Google 登录未成功。请重试或使用邮箱。",
+      "GOOGLE_CANCELLED": "登录已取消。"
+    }
+  },
+  "whatsNew": {
+    "title": "新功能",
+    "subtitle": "FlexiLingo 能做的一切，最新的在前。",
+    "all": "全部",
+    "openOnWeb": "在网站打开"
+  }
+}

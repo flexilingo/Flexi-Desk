@@ -35,7 +35,6 @@ export function LockedSection({
   canUpsell?: boolean;
 }) {
   const { t, i18n } = useTranslation('exam');
-  const locale = i18n.language;
 
   return (
     <section className={`${PANEL} px-4 py-5`}>
@@ -74,7 +73,6 @@ export function LockedSection({
  */
 export function GatedBanner({ canUpsell = true }: { canUpsell?: boolean }) {
   const { t, i18n } = useTranslation('exam');
-  const locale = i18n.language;
 
   return (
     <section className={`${PANEL} overflow-hidden`}>

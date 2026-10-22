@@ -76,6 +76,7 @@ export function AddToDeckDialog({
   const [progressText, setProgressText] = useState('');
   const { targetLang, nativeLang } = useLanguageSettings();
   const { t: tAi } = useTranslation('ai');
+  const { t } = useTranslation('podcastUi');
   const { own: ownAi } = useAiSource();
 
   // Fetch local decks when dialog opens
@@ -111,7 +112,7 @@ export function AddToDeckDialog({
 
   const handleCreateDeck = async () => {
     if (!newDeckName.trim()) {
-      setError('Deck name required');
+      setError(t('addDeck.deckNameRequired'));
       return;
     }
     setCreatingDeckLoading(true);
@@ -128,7 +129,7 @@ export function AddToDeckDialog({
       setNewDeckName('');
       setIsCreatingDeck(false);
     } catch {
-      setError('Failed to create deck');
+      setError(t('addDeck.createFailed'));
     } finally {
       setCreatingDeckLoading(false);
     }
@@ -136,7 +137,7 @@ export function AddToDeckDialog({
 
   const handleAddToDeck = useCallback(async () => {
     if (!selectedDeckId || words.length === 0) {
-      setError('Select a deck first');
+      setError(t('addDeck.selectDeckFirst'));
       return;
     }
     setProcessing(true);
@@ -149,7 +150,7 @@ export function AddToDeckDialog({
 
     // Attempt AI enrichment
     try {
-      setProgressText('Analyzing with AI...');
+      setProgressText(t('addDeck.analyzing'));
       const results = await invoke<WordResult[]>('ai_translate_words', {
         words,
         mode,
@@ -163,12 +164,12 @@ export function AddToDeckDialog({
       // AI unavailable — keep the plain-word fallback we already built.
       setAiWarning(
         isAiSetupError(err)
-          ? `${aiErrorText(tAi, err)} Cards added without translation.`
-          : `AI error: ${String(err)}. Cards added without translation.`,
+          ? `${aiErrorText(tAi, err)} ${t('addDeck.noTranslationSuffix')}`
+          : t('addDeck.aiError', { error: String(err) }),
       );
     }
 
-    setProgressText('Saving cards...');
+    setProgressText(t('addDeck.savingCards'));
 
     let added = 0;
     try {
@@ -216,7 +217,7 @@ export function AddToDeckDialog({
       setProcessing(false);
       setProgressText('');
     }
-  }, [selectedDeckId, words, targetLang, nativeLang, mode, sentenceContext, onSuccess, tAi]);
+  }, [selectedDeckId, words, targetLang, nativeLang, mode, sentenceContext, onSuccess, tAi, t]);
 
   if (!open) return null;
 
@@ -229,10 +230,10 @@ export function AddToDeckDialog({
           <div className="py-6 px-4 text-center">
             <PartyPopper className="mx-auto mb-3 h-10 w-10 text-success" />
             <div className="text-lg font-bold text-success mb-1">
-              {cardsAdded} card{cardsAdded !== 1 ? 's' : ''} saved!
+              {t('addDeck.cardsSaved', { count: cardsAdded })}
             </div>
             <div className="text-xs text-muted-foreground mb-3">
-              Added to {selectedDeck?.name ?? 'deck'}
+              {t('addDeck.addedTo', { name: selectedDeck?.name ?? t('addDeck.deckFallback') })}
             </div>
             {aiWarning ? (
               <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-left mb-4">
@@ -241,11 +242,13 @@ export function AddToDeckDialog({
               </div>
             ) : (
               <div className="text-xs text-muted-foreground mb-4">
-                Enriched with AI · {mode === 'smart' ? 'Smart mode' : 'Basic mode'}
+                {t('addDeck.enrichedWith', {
+                  mode: mode === 'smart' ? t('addDeck.smartMode') : t('addDeck.basicMode'),
+                })}
               </div>
             )}
             <Button variant="outline" onClick={onClose} className="text-sm">
-              Close
+              {t('shared.close')}
             </Button>
           </div>
         </DialogContent>
@@ -262,10 +265,8 @@ export function AddToDeckDialog({
         onEscapeKeyDown={(e) => processing && e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Add to Deck</DialogTitle>
-          <DialogDescription>
-            {words.length} word{words.length !== 1 ? 's' : ''}
-          </DialogDescription>
+          <DialogTitle>{t('addDeck.title')}</DialogTitle>
+          <DialogDescription>{t('shared.wordsCount', { count: words.length })}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -288,7 +289,7 @@ export function AddToDeckDialog({
           {/* AI Mode selector */}
           <div className="space-y-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              AI Enrichment
+              {t('addDeck.aiEnrichment')}
             </span>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -304,11 +305,9 @@ export function AddToDeckDialog({
               >
                 <div className="flex items-center gap-1.5">
                   <Zap className="h-3.5 w-3.5 text-success" />
-                  <span className="text-xs font-semibold">Basic</span>
+                  <span className="text-xs font-semibold">{t('addDeck.basic')}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">
-                  Translation + part of speech
-                </span>
+                <span className="text-[10px] text-muted-foreground">{t('addDeck.basicHint')}</span>
               </button>
 
               <button
@@ -324,11 +323,9 @@ export function AddToDeckDialog({
               >
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-warning" />
-                  <span className="text-xs font-semibold">Smart</span>
+                  <span className="text-xs font-semibold">{t('addDeck.smart')}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">
-                  Full enrichment: IPA, examples, tips
-                </span>
+                <span className="text-[10px] text-muted-foreground">{t('addDeck.smartHint')}</span>
               </button>
             </div>
           </div>
@@ -336,7 +333,7 @@ export function AddToDeckDialog({
           {/* Deck Selection */}
           <div className="space-y-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Select Deck
+              {t('addDeck.selectDeck')}
             </span>
 
             {/* Create New Deck */}
@@ -348,14 +345,14 @@ export function AddToDeckDialog({
                 disabled={processing}
               >
                 <Plus className="h-4 w-4" />
-                <span>Create New Deck</span>
+                <span>{t('addDeck.createNew')}</span>
               </button>
             ) : (
               <div className="flex gap-2">
                 <Input
                   value={newDeckName}
                   onChange={(e) => setNewDeckName(e.target.value)}
-                  placeholder="Deck name..."
+                  placeholder={t('addDeck.deckNamePlaceholder')}
                   className="text-sm"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleCreateDeck();
@@ -368,17 +365,19 @@ export function AddToDeckDialog({
                   disabled={!newDeckName.trim() || creatingDeckLoading}
                   size="sm"
                 >
-                  {creatingDeckLoading ? '...' : 'Create'}
+                  {creatingDeckLoading ? '...' : t('addDeck.create')}
                 </Button>
               </div>
             )}
 
             {/* Deck List */}
             {isLoadingDecks ? (
-              <p className="text-xs text-muted-foreground py-4 text-center">Loading decks...</p>
+              <p className="text-xs text-muted-foreground py-4 text-center">
+                {t('addDeck.loadingDecks')}
+              </p>
             ) : decks.length === 0 ? (
               <p className="text-xs text-muted-foreground py-4 text-center">
-                No decks yet. Create one above.
+                {t('addDeck.noDecks')}
               </p>
             ) : (
               <div className="max-h-[160px] overflow-y-auto space-y-1.5">
@@ -396,7 +395,7 @@ export function AddToDeckDialog({
                     <div className="flex flex-col items-start gap-0.5 min-w-0">
                       <span className="text-xs font-semibold truncate max-w-full">{deck.name}</span>
                       <span className="text-[10px] text-muted-foreground">
-                        {deck.card_count ?? 0} cards
+                        {t('shared.cardsCount', { count: deck.card_count ?? 0 })}
                       </span>
                     </div>
                     {selectedDeckId === deck.id && (
@@ -411,7 +410,7 @@ export function AddToDeckDialog({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} disabled={processing} className="text-xs">
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button
             onClick={handleAddToDeck}
@@ -421,10 +420,10 @@ export function AddToDeckDialog({
             {processing ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                {progressText || 'Processing...'}
+                {progressText || t('addDeck.processing')}
               </>
             ) : (
-              `Add ${words.length} Word${words.length !== 1 ? 's' : ''}`
+              t('addDeck.addWords', { count: words.length })
             )}
           </Button>
         </DialogFooter>

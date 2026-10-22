@@ -1,0 +1,278 @@
+{
+  "en": {
+    "categories": {
+      "telegram": "Telegram",
+      "podcasts": "Podcasts",
+      "celpip": "CELPIP",
+      "french": "French",
+      "extension": "Browser Extension",
+      "decks": "Decks & Review",
+      "speaking": "Speaking",
+      "study": "Study",
+      "community": "Community"
+    },
+    "platforms": {
+      "web": "Web",
+      "ios": "iOS",
+      "android": "Android",
+      "desktop": "Desktop",
+      "extension": "Extension",
+      "telegram": "Telegram"
+    },
+    "features": {
+      "featuredBadge": "Start here",
+      "featuredTitle": "The features people use most",
+      "featuredSubtitle": "If you only try a few things, try these.",
+      "allBadge": "Everything",
+      "allTitle": "The full catalogue",
+      "allSubtitle": "Every feature that is live today, grouped by what it is for. Open any one for a full walkthrough with screenshots.",
+      "newBadge": "New",
+      "newestTitle": "Newest first",
+      "newestBadge": "Just shipped",
+      "newestSubtitle": "The most recent additions, in the order they went live."
+    },
+    "detail": {
+      "backToFeatures": "All features",
+      "tryIt": "Open it",
+      "faq": "Questions people ask",
+      "related": "More in this category",
+      "ctaTitle": "Try it on your own material",
+      "ctaDescription": "Free to start. No card, no trial timer.",
+      "ctaLabel": "Create a free account",
+      "onThisPage": "On this page",
+      "since": "Live since {date}",
+      "requestedBy": "Built from {name}'s request on the community board",
+      "requestTimeline": "Asked {asked} · shipped {shipped}"
+    }
+  },
+  "fa": {
+    "categories": {
+      "telegram": "تلگرام",
+      "podcasts": "پادکست",
+      "celpip": "سلپیپ",
+      "french": "فرانسه",
+      "extension": "افزونه مرورگر",
+      "decks": "دسته‌کارت و مرور",
+      "speaking": "مکالمه",
+      "study": "مطالعه",
+      "community": "جامعه"
+    },
+    "platforms": {
+      "web": "وب",
+      "ios": "iOS",
+      "android": "اندروید",
+      "desktop": "دسکتاپ",
+      "extension": "افزونه",
+      "telegram": "تلگرام"
+    },
+    "features": {
+      "featuredBadge": "از اینجا شروع کنید",
+      "featuredTitle": "امکاناتی که بیشتر از همه استفاده می‌شوند",
+      "featuredSubtitle": "اگر قرار است فقط چند چیز را امتحان کنید، همین‌ها را امتحان کنید.",
+      "allBadge": "همه چیز",
+      "allTitle": "فهرست کامل امکانات",
+      "allSubtitle": "هر امکانی که امروز فعال است، دسته‌بندی‌شده بر اساس کاری که می‌کند. روی هرکدام بزنید تا توضیح کامل با تصویر را ببینید.",
+      "newBadge": "جدید",
+      "newestTitle": "جدیدترین اول",
+      "newestBadge": "تازه منتشر شده",
+      "newestSubtitle": "تازه‌ترین چیزهایی که اضافه شده، به ترتیب انتشار."
+    },
+    "detail": {
+      "backToFeatures": "همه امکانات",
+      "tryIt": "بازش کن",
+      "faq": "سؤال‌هایی که پرسیده می‌شود",
+      "related": "بقیه این دسته",
+      "ctaTitle": "روی محتوای خودتان امتحانش کنید",
+      "ctaDescription": "شروعش رایگان است. نه کارت بانکی، نه شمارش معکوس.",
+      "ctaLabel": "ساخت حساب رایگان",
+      "onThisPage": "در این صفحه",
+      "since": "از {date} فعال است",
+      "requestedBy": "ساخته‌شده از درخواست {name} در بورد کامیونیتی",
+      "requestTimeline": "درخواست {asked} · انتشار {shipped}"
+    }
+  },
+  "ar": {
+    "categories": {
+      "telegram": "تيليجرام",
+      "podcasts": "البودكاست",
+      "celpip": "CELPIP",
+      "french": "الفرنسية",
+      "extension": "إضافة المتصفح",
+      "decks": "البطاقات والمراجعة",
+      "speaking": "التحدث",
+      "study": "الدراسة",
+      "community": "المجتمع"
+    },
+    "platforms": {
+      "web": "الويب",
+      "ios": "iOS",
+      "android": "أندرويد",
+      "desktop": "سطح المكتب",
+      "extension": "الإضافة",
+      "telegram": "تيليجرام"
+    },
+    "features": {
+      "featuredBadge": "ابدأ من هنا",
+      "featuredTitle": "الميزات الأكثر استخدامًا",
+      "featuredSubtitle": "إن كنت ستجرّب بضعة أشياء فقط، فجرّب هذه.",
+      "allBadge": "كل شيء",
+      "allTitle": "الفهرس الكامل",
+      "allSubtitle": "كل ميزة تعمل اليوم، مرتّبة حسب الغرض منها. افتح أيًّا منها لشرح كامل مع الصور.",
+      "newBadge": "جديد",
+      "newestTitle": "الأحدث أولًا",
+      "newestBadge": "صدر للتو",
+      "newestSubtitle": "أحدث الإضافات، بترتيب إتاحتها."
+    },
+    "detail": {
+      "backToFeatures": "كل الميزات",
+      "tryIt": "افتحها",
+      "faq": "أسئلة يطرحها الناس",
+      "related": "المزيد في هذا القسم",
+      "ctaTitle": "جرّبها على محتواك أنت",
+      "ctaDescription": "البداية مجانية. بلا بطاقة، وبلا عدّاد تجربة.",
+      "ctaLabel": "أنشئ حسابًا مجانيًا",
+      "onThisPage": "في هذه الصفحة",
+      "since": "متاح منذ {date}",
+      "requestedBy": "بُنيت من طلب {name} على لوحة المجتمع",
+      "requestTimeline": "طُلبت {asked} · أُطلقت {shipped}"
+    }
+  },
+  "fr": {
+    "categories": {
+      "telegram": "Telegram",
+      "podcasts": "Podcasts",
+      "celpip": "CELPIP",
+      "french": "Français",
+      "extension": "Extension navigateur",
+      "decks": "Paquets et révision",
+      "speaking": "Expression orale",
+      "study": "Étude",
+      "community": "Communauté"
+    },
+    "platforms": {
+      "web": "Web",
+      "ios": "iOS",
+      "android": "Android",
+      "desktop": "Ordinateur",
+      "extension": "Extension",
+      "telegram": "Telegram"
+    },
+    "features": {
+      "featuredBadge": "Commencez ici",
+      "featuredTitle": "Les fonctionnalités les plus utilisées",
+      "featuredSubtitle": "Si vous ne devez en essayer que quelques-unes, essayez celles-ci.",
+      "allBadge": "Tout",
+      "allTitle": "Le catalogue complet",
+      "allSubtitle": "Toutes les fonctionnalités en service aujourd'hui, regroupées par usage. Ouvrez-en une pour la visite guidée avec captures d'écran.",
+      "newBadge": "Nouveau",
+      "newestTitle": "Les plus récentes d'abord",
+      "newestBadge": "Tout juste livré",
+      "newestSubtitle": "Les ajouts les plus récents, dans l'ordre de mise en ligne."
+    },
+    "detail": {
+      "backToFeatures": "Toutes les fonctionnalités",
+      "tryIt": "Ouvrir",
+      "faq": "Questions fréquentes",
+      "related": "Autres dans cette catégorie",
+      "ctaTitle": "Essayez-le sur vos propres contenus",
+      "ctaDescription": "Gratuit pour commencer. Sans carte, sans compte à rebours.",
+      "ctaLabel": "Créer un compte gratuit",
+      "onThisPage": "Sur cette page",
+      "since": "En ligne depuis le {date}",
+      "requestedBy": "Construit à partir de la demande de {name} sur le forum de la communauté",
+      "requestTimeline": "Demandé le {asked} · lancé le {shipped}"
+    }
+  },
+  "hi": {
+    "categories": {
+      "telegram": "टेलीग्राम",
+      "podcasts": "पॉडकास्ट",
+      "celpip": "CELPIP",
+      "french": "फ़्रेंच",
+      "extension": "ब्राउज़र एक्सटेंशन",
+      "decks": "डेक और रिवीज़न",
+      "speaking": "बोलना",
+      "study": "अध्ययन",
+      "community": "समुदाय"
+    },
+    "platforms": {
+      "web": "वेब",
+      "ios": "iOS",
+      "android": "एंड्रॉइड",
+      "desktop": "डेस्कटॉप",
+      "extension": "एक्सटेंशन",
+      "telegram": "टेलीग्राम"
+    },
+    "features": {
+      "featuredBadge": "यहाँ से शुरू करें",
+      "featuredTitle": "सबसे ज़्यादा इस्तेमाल होने वाली सुविधाएँ",
+      "featuredSubtitle": "अगर कुछ ही चीज़ें आज़मानी हैं, तो ये आज़माएँ।",
+      "allBadge": "सब कुछ",
+      "allTitle": "पूरी सूची",
+      "allSubtitle": "आज चालू हर सुविधा, काम के हिसाब से समूहित। किसी को भी खोलें और स्क्रीनशॉट के साथ पूरा विवरण देखें।",
+      "newBadge": "नया",
+      "newestTitle": "नवीनतम पहले",
+      "newestBadge": "अभी-अभी आया",
+      "newestSubtitle": "सबसे नई चीज़ें, जिस क्रम में वे चालू हुईं।"
+    },
+    "detail": {
+      "backToFeatures": "सभी सुविधाएँ",
+      "tryIt": "खोलें",
+      "faq": "अक्सर पूछे जाने वाले सवाल",
+      "related": "इसी श्रेणी में और",
+      "ctaTitle": "अपनी ही सामग्री पर आज़माएँ",
+      "ctaDescription": "शुरू करना मुफ़्त है। न कार्ड, न ट्रायल टाइमर।",
+      "ctaLabel": "मुफ़्त खाता बनाएँ",
+      "onThisPage": "इस पन्ने पर",
+      "since": "{date} से उपलब्ध",
+      "requestedBy": "{name} के कम्युनिटी बोर्ड पर किए अनुरोध से बना",
+      "requestTimeline": "माँगा गया {asked} · जारी {shipped}"
+    }
+  },
+  "zh": {
+    "categories": {
+      "telegram": "Telegram",
+      "podcasts": "播客",
+      "celpip": "CELPIP",
+      "french": "法语",
+      "extension": "浏览器扩展",
+      "decks": "卡组与复习",
+      "speaking": "口语",
+      "study": "学习",
+      "community": "社区"
+    },
+    "platforms": {
+      "web": "网页",
+      "ios": "iOS",
+      "android": "安卓",
+      "desktop": "桌面端",
+      "extension": "扩展",
+      "telegram": "Telegram"
+    },
+    "features": {
+      "featuredBadge": "从这里开始",
+      "featuredTitle": "大家用得最多的功能",
+      "featuredSubtitle": "如果只试几样，就试这些。",
+      "allBadge": "全部",
+      "allTitle": "完整功能目录",
+      "allSubtitle": "今天可用的每一项功能，按用途分组。点开任意一项，看带截图的完整说明。",
+      "newBadge": "新增",
+      "newestTitle": "最新在前",
+      "newestBadge": "刚刚上线",
+      "newestSubtitle": "最近新增的功能，按上线顺序排列。"
+    },
+    "detail": {
+      "backToFeatures": "全部功能",
+      "tryIt": "打开",
+      "faq": "常见问题",
+      "related": "同类的其他功能",
+      "ctaTitle": "用你自己的材料试试",
+      "ctaDescription": "免费开始。不需要银行卡，没有倒计时。",
+      "ctaLabel": "创建免费账户",
+      "onThisPage": "本页内容",
+      "since": "{date} 起上线",
+      "requestedBy": "根据 {name} 在社区讨论板上的提议打造",
+      "requestTimeline": "提议于 {asked} · 上线于 {shipped}"
+    }
+  }
+}

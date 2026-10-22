@@ -52,6 +52,12 @@ import frUpdater from './locales/fr/updater.json';
 import hiUpdater from './locales/hi/updater.json';
 import zhUpdater from './locales/zh/updater.json';
 
+import enSentences from './locales/en/sentences.json';
+import faSentences from './locales/fa/sentences.json';
+import arSentences from './locales/ar/sentences.json';
+import frSentences from './locales/fr/sentences.json';
+import hiSentences from './locales/hi/sentences.json';
+import zhSentences from './locales/zh/sentences.json';
 import enWordDialog from './locales/en/wordDialog.json';
 import faWordDialog from './locales/fa/wordDialog.json';
 import arWordDialog from './locales/ar/wordDialog.json';
@@ -126,9 +132,17 @@ import frListening from './locales/fr/listening.json';
 import hiListening from './locales/hi/listening.json';
 import zhListening from './locales/zh/listening.json';
 
+import enAccount from './locales/en/account.json';
+import faAccount from './locales/fa/account.json';
+import arAccount from './locales/ar/account.json';
+import frAccount from './locales/fr/account.json';
+import hiAccount from './locales/hi/account.json';
+import zhAccount from './locales/zh/account.json';
+
 const resources = {
   en: {
     common: enCommon,
+    account: enAccount,
     notes: enNotes,
     vocabulary: enVocabulary,
     cheatsheet: enCheatsheet,
@@ -138,6 +152,7 @@ const resources = {
     updater: enUpdater,
     deckHubOcr: enDeckHubOcr,
     wordDialog: enWordDialog,
+    sentences: enSentences,
     ai: enAi,
     study: enStudy,
     celpip: enCelpip,
@@ -150,6 +165,7 @@ const resources = {
   },
   fa: {
     common: faCommon,
+    account: faAccount,
     notes: faNotes,
     vocabulary: faVocabulary,
     cheatsheet: faCheatsheet,
@@ -159,6 +175,7 @@ const resources = {
     updater: faUpdater,
     deckHubOcr: faDeckHubOcr,
     wordDialog: faWordDialog,
+    sentences: faSentences,
     ai: faAi,
     study: faStudy,
     celpip: faCelpip,
@@ -171,6 +188,7 @@ const resources = {
   },
   ar: {
     common: arCommon,
+    account: arAccount,
     notes: arNotes,
     vocabulary: arVocabulary,
     cheatsheet: arCheatsheet,
@@ -180,6 +198,7 @@ const resources = {
     updater: arUpdater,
     deckHubOcr: arDeckHubOcr,
     wordDialog: arWordDialog,
+    sentences: arSentences,
     ai: arAi,
     study: arStudy,
     celpip: arCelpip,
@@ -192,6 +211,7 @@ const resources = {
   },
   fr: {
     common: frCommon,
+    account: frAccount,
     notes: frNotes,
     vocabulary: frVocabulary,
     cheatsheet: frCheatsheet,
@@ -201,6 +221,7 @@ const resources = {
     updater: frUpdater,
     deckHubOcr: frDeckHubOcr,
     wordDialog: frWordDialog,
+    sentences: frSentences,
     ai: frAi,
     study: frStudy,
     celpip: frCelpip,
@@ -213,6 +234,7 @@ const resources = {
   },
   hi: {
     common: hiCommon,
+    account: hiAccount,
     notes: hiNotes,
     vocabulary: hiVocabulary,
     cheatsheet: hiCheatsheet,
@@ -222,6 +244,7 @@ const resources = {
     updater: hiUpdater,
     deckHubOcr: hiDeckHubOcr,
     wordDialog: hiWordDialog,
+    sentences: hiSentences,
     ai: hiAi,
     study: hiStudy,
     celpip: hiCelpip,
@@ -234,6 +257,7 @@ const resources = {
   },
   zh: {
     common: zhCommon,
+    account: zhAccount,
     notes: zhNotes,
     vocabulary: zhVocabulary,
     cheatsheet: zhCheatsheet,
@@ -243,6 +267,7 @@ const resources = {
     updater: zhUpdater,
     deckHubOcr: zhDeckHubOcr,
     wordDialog: zhWordDialog,
+    sentences: zhSentences,
     ai: zhAi,
     study: zhStudy,
     celpip: zhCelpip,

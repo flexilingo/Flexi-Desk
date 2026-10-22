@@ -45,11 +45,18 @@ export const ENABLED_MODULES = {
   browse: true,
   // TCF Canada / Québec / IRN: the CELPIP exam engine run on an exam profile — complete.
   tcf: true,
-  sentences: false,
+  // The website's Sentence practice and its record, on the signed-in `sentences-app` function; calm until the server update is live.
+  sentences: true,
   // The website's French cheatsheet: topics, verbs, conjugator, offline copy, reader panel.
   cheatsheet: true,
   // The website's Notes: podcast notes, reader notes and the account's notes in one list.
   notes: true,
+  // The website's account pages: Learning, Profile, XP log, Stats, Payments, Community, Friends.
+  account: true,
+  // The Pro page: plans, usage, checkout in the browser, gift codes.
+  subscription: true,
+  // The website's feature catalogue, in the app.
+  whatsNew: true,
 } as const;
 
 export type ModuleKey = keyof typeof ENABLED_MODULES;

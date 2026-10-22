@@ -319,6 +319,8 @@ interface SelectionActionBarProps {
   onAskLena?: (selectedText: string) => void;
   onAddToDeck?: (word: EnhancedWord) => void;
   onAddNote?: (text: string, time: number) => void;
+  /** No podcast note for this text (a book track has no episode to pin it to). */
+  hideNote?: boolean;
   currentTime?: number;
 }
 
@@ -332,9 +334,11 @@ export function SelectionActionBar({
   onAskLena,
   onAddToDeck,
   onAddNote,
+  hideNote = false,
   currentTime = 0,
 }: SelectionActionBarProps) {
   const { t } = useTranslation();
+  const { t: tp } = useTranslation('podcastUi');
   const [copied, setCopied] = useState(false);
 
   const syntheticWord = useMemo<EnhancedWord>(() => {
@@ -425,13 +429,15 @@ export function SelectionActionBar({
       >
         {t('podcast.translate')}
       </button>
-      <button
-        type="button"
-        className="flex items-center gap-1 px-2.5 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm border-0 cursor-pointer hover:bg-muted/70 hover:text-foreground transition-colors duration-150"
-        onClick={handleNote}
-      >
-        {t('podcast.note')}
-      </button>
+      {!hideNote && (
+        <button
+          type="button"
+          className="flex items-center gap-1 px-2.5 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm border-0 cursor-pointer hover:bg-muted/70 hover:text-foreground transition-colors duration-150"
+          onClick={handleNote}
+        >
+          {t('podcast.note')}
+        </button>
+      )}
       <button
         type="button"
         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm border-0 cursor-pointer transition-colors duration-150 ${
@@ -458,7 +464,7 @@ export function SelectionActionBar({
       )}
       <button
         type="button"
-        aria-label="Clear selection"
+        aria-label={tp('subtitle.clearSelection')}
         className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground border-0 cursor-pointer transition-colors duration-150"
         onClick={() => onClear()}
       >

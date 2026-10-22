@@ -357,12 +357,16 @@
     "NO_ACTIVE_RECORDING": "There's no recording to stop.",
     "RECORDING_NOT_FOUND": "That recording is missing.",
     "EMPTY_RECORDING": "Nothing was recorded. Check your microphone and try again.",
-    "MIC_PERMISSION_DENIED": "Microphone access was denied. You can type your answer instead.",
-    "UPLOAD_FAILED": "Couldn't upload your recording. Retry, or continue with the transcript only."
+    "MIC_PERMISSION_DENIED": "Microphone access was denied. Allow it in your system settings, then try again.",
+    "UPLOAD_FAILED": "Couldn't upload your recording. Retry, or continue with the transcript only.",
+    "NETWORK_ERROR": "Couldn't reach the server. Check your connection and try again.",
+    "COACH_REPORT_NOT_ON_THIS_ACCOUNT": "This report belongs to another account."
   },
   "examSettingsTitle": "Exam settings",
   "examSettingsTextSize": "Text size",
   "examSettingsPreview": "The quick brown fox jumps over the lazy dog.",
   "examSettingsTranslate": "Tap to translate",
-  "examSettingsTranslateHint": "Tap any word to see its meaning"
+  "examSettingsTranslateHint": "Tap any word to see its meaning",
+  "sectionSubmitOffline": "You're offline - your answers are saved on this computer. We'll send them when you're back online.",
+  "sectionSubmitUnreachable": "We couldn't reach the server - your answers are saved on this computer. We'll keep trying to send them."
 }

@@ -13,6 +13,12 @@ import ar from '@/i18n/locales/ar/common.json';
 import fr from '@/i18n/locales/fr/common.json';
 import hi from '@/i18n/locales/hi/common.json';
 import zh from '@/i18n/locales/zh/common.json';
+import enAcc from '@/i18n/locales/en/account.json';
+import faAcc from '@/i18n/locales/fa/account.json';
+import arAcc from '@/i18n/locales/ar/account.json';
+import frAcc from '@/i18n/locales/fr/account.json';
+import hiAcc from '@/i18n/locales/hi/account.json';
+import zhAcc from '@/i18n/locales/zh/account.json';
 
 const all = Object.fromEntries(Object.keys(ENABLED_MODULES).map((k) => [k, true])) as Record<
   ModuleKey,
@@ -21,7 +27,14 @@ const all = Object.fromEntries(Object.keys(ENABLED_MODULES).map((k) => [k, true]
 
 describe('sidebar menu', () => {
   it('has the website groups in order, plus the desktop tools', () => {
-    expect(NAV_GROUPS.map((g) => g.id)).toEqual(['home', 'study', 'exams', 'french', 'desk', 'personal']);
+    expect(NAV_GROUPS.map((g) => g.id)).toEqual([
+      'home',
+      'study',
+      'exams',
+      'french',
+      'desk',
+      'personal',
+    ]);
   });
 
   it('every entry is behind a flag that exists', () => {
@@ -33,13 +46,34 @@ describe('sidebar menu', () => {
   it('hides entries whose page is not ported yet', () => {
     const shown = visibleGroups().flatMap((g) => g.items.map((i) => i.to));
     expect(shown).toEqual(
-      expect.arrayContaining(['/', '/podcast', '/videos', '/reader/library', '/study', '/review', '/explore', '/reader', '/celpip', '/exam/tcf', '/settings', '/tutor', '/caption', '/cheatsheet', '/notes', '/vocabulary']),
+      expect.arrayContaining([
+        '/',
+        '/podcast',
+        '/videos',
+        '/reader/library',
+        '/study',
+        '/review',
+        '/explore',
+        '/reader',
+        '/celpip',
+        '/exam/tcf',
+        '/settings',
+        '/tutor',
+        '/caption',
+        '/cheatsheet',
+        '/sentences',
+        '/notes',
+        '/vocabulary',
+      ]),
     );
-    for (const off of ['/sentences']) {
+    // Every entry's page is ported now; a new entry added with its flag off goes in this list.
+    for (const off of [] as string[]) {
       expect(shown).not.toContain(off);
     }
     // Switched on, every defined entry appears.
-    expect(visibleGroups(all).flatMap((g) => g.items)).toHaveLength(NAV_GROUPS.flatMap((g) => g.items).length);
+    expect(visibleGroups(all).flatMap((g) => g.items)).toHaveLength(
+      NAV_GROUPS.flatMap((g) => g.items).length,
+    );
   });
 
   it('lights the entry you are on, not its neighbour', () => {
@@ -83,10 +117,19 @@ describe('sidebar menu', () => {
       'nav.themeSystem',
     ];
     const get = (obj: unknown, key: string) =>
-      key.split('.').reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], obj);
+      key
+        .split('.')
+        .reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], obj);
+    const account = { en: enAcc, fa: faAcc, ar: arAcc, fr: frAcc, hi: hiAcc, zh: zhAcc } as Record<
+      string,
+      unknown
+    >;
     for (const [lang, file] of Object.entries({ en, fa, ar, fr, hi, zh })) {
       for (const key of keys) {
-        const value = get(file, key);
+        // `account:desk.nav.x` lives in the account namespace, the rest in common.
+        const value = key.startsWith('account:')
+          ? get(account[lang], key.slice('account:'.length))
+          : get(file, key);
         expect(typeof value === 'string' && value.length > 0, `${lang}:${key}`).toBe(true);
       }
     }

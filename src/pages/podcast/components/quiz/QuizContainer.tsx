@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { FillBlankQuestion, MCQQuestion, WordOrderQuestion, MatchingQuestion } from './questions';
 import type { QuizQuestion, SessionProgress } from './types';
+import { useTranslation } from 'react-i18next';
 
 interface QuizContainerProps {
   questions: QuizQuestion[];
@@ -37,6 +38,7 @@ export function QuizContainer({
   initialAnsweredIds = [],
   initialAnswerResults = [],
 }: QuizContainerProps) {
+  const { t } = useTranslation('podcastUi');
   const [currentIndex, setCurrentIndex] = useState(initialQuestionIndex);
   const [questionStates, setQuestionStates] = useState<Record<string, QuestionState>>(() => {
     const states: Record<string, QuestionState> = {};
@@ -136,10 +138,10 @@ export function QuizContainer({
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
-            Question {currentIndex + 1} of {questions.length}
+            {t('quiz.container.questionOf', { current: currentIndex + 1, total: questions.length })}
           </span>
           <span className="font-medium text-primary">
-            {progress.current_score_percent}% correct
+            {t('quiz.container.percentCorrect', { percent: progress.current_score_percent })}
           </span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -182,11 +184,11 @@ export function QuizContainer({
             {isLastQuestion ? (
               <>
                 <CheckCircle2 className="h-4 w-4 mr-1" />
-                Finish Quiz
+                {t('quiz.container.finish')}
               </>
             ) : (
               <>
-                Next
+                {t('quiz.container.next')}
                 <ArrowRight className="h-4 w-4 ml-1" />
               </>
             )}

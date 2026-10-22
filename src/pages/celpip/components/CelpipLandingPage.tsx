@@ -32,6 +32,8 @@ import type { SectionType } from '../types';
 import { SUPPORTED_EXAM_TYPES, examBase, formatBand, getExamProfile } from '../examProfiles';
 import { ENABLED_MODULES } from '@/config/features';
 import { StatCards } from './landing/StatCards';
+import { CoachReportCard } from './landing/CoachReportCard';
+import { SkillProfileCard } from './landing/SkillProfileCard';
 import { ExamHistoryList } from './landing/ExamHistoryList';
 import { ScoreProgressChart } from './landing/ScoreProgressChart';
 import { StartExamDialog } from './landing/StartExamDialog';
@@ -307,6 +309,11 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
         </div>
       ))}
 
+      {/* Coach report - above the fold on purpose: the one thing on this page written about THIS learner. */}
+      {isSignedIn && !comingSoon && profile.features.coach && (
+        <CoachReportCard examType={profile.examType} sessions={ownSessions} />
+      )}
+
       {/* Summary stats */}
       {isSignedIn && (
         <StatCards
@@ -317,6 +324,11 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
           bandMax={profile.band.kind === 'level' ? 12 : profile.band.max}
           formatBand={profile.examType === 'celpip' ? undefined : bandFmt}
         />
+      )}
+
+      {/* What practice is worth: per-skill, coverage-weighted, the overall a ceiling (≤) while a skill is unmeasured. */}
+      {isSignedIn && !comingSoon && profile.examType === 'celpip' && (
+        <SkillProfileCard sessions={ownSessions} />
       )}
 
       {/* History + progress */}

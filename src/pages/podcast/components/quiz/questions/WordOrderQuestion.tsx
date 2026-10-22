@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, RotateCcw, Lightbulb } from 'lucide-react';
 import type { QuizQuestion } from '../types';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface WordOrderQuestionProps {
   question: QuizQuestion;
@@ -21,6 +22,7 @@ export function WordOrderQuestion({
   isCorrect,
   disabled = false,
 }: WordOrderQuestionProps) {
+  const { t } = useTranslation('podcastUi');
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [showHint, setShowHint] = useState(false);
   const [hintUsed, setHintUsed] = useState(false);
@@ -76,7 +78,7 @@ export function WordOrderQuestion({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium text-muted-foreground">
-            Arrange Words in Order
+            {t('quiz.q.arrangeTitle')}
           </CardTitle>
           <Badge variant="outline">{question.difficulty}</Badge>
         </div>
@@ -106,7 +108,7 @@ export function WordOrderQuestion({
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center">Click words to build the sentence</p>
+            <p className="text-muted-foreground text-center">{t('quiz.q.clickWords')}</p>
           )}
         </div>
 
@@ -144,12 +146,14 @@ export function WordOrderQuestion({
                 className="text-muted-foreground"
               >
                 <Lightbulb className="h-4 w-4 mr-1" />
-                Show Hint
+                {t('quiz.q.showHint')}
               </Button>
             ) : (
               <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 px-3 py-1.5 rounded-md">
                 <Lightbulb className="h-4 w-4" />
-                First word starts with: {question.answer?.[0]?.charAt(0)?.toUpperCase()}
+                {t('quiz.q.firstWordStarts', {
+                  letter: question.answer?.[0]?.charAt(0)?.toUpperCase(),
+                })}
               </div>
             )}
           </div>
@@ -166,18 +170,23 @@ export function WordOrderQuestion({
               {isCorrect ? (
                 <>
                   <CheckCircle2 className="h-5 w-5" />
-                  <span className="font-medium">Correct!</span>
+                  <span className="font-medium">{t('quiz.q.correct')}</span>
                 </>
               ) : (
                 <>
                   <XCircle className="h-5 w-5" />
-                  <span className="font-medium">Not quite right</span>
+                  <span className="font-medium">{t('quiz.q.notQuite')}</span>
                 </>
               )}
             </div>
             {!isCorrect && question.original && (
               <p className="text-sm">
-                Correct sentence: <strong>&quot;{question.original}&quot;</strong>
+                <Trans
+                  i18nKey="quiz.q.correctSentence"
+                  ns="podcastUi"
+                  values={{ sentence: question.original }}
+                  components={{ b: <strong /> }}
+                />
               </p>
             )}
           </div>
@@ -192,14 +201,14 @@ export function WordOrderQuestion({
               className="flex-shrink-0"
             >
               <RotateCcw className="h-4 w-4 mr-1" />
-              Reset
+              {t('quiz.q.reset')}
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={disabled || selectedWords.length !== jumbledWords.length}
               className="flex-1"
             >
-              Check Answer
+              {t('quiz.q.checkAnswer')}
             </Button>
           </div>
         )}

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { relativeDays } from '../../utils/relativeDate';
 import { Headphones, Play, Clock, Globe, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CefrBadge } from '@/components/common/CefrBadge';
@@ -34,16 +36,6 @@ function daysSince(iso: string | null): number | null {
   return Math.floor((Date.now() - d) / 86_400_000);
 }
 
-function relativeDate(days: number | null): string | null {
-  if (days === null) return null;
-  if (days <= 0) return 'today';
-  if (days === 1) return '1d ago';
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-  return `${Math.floor(days / 365)}y ago`;
-}
-
 function durationLabel(seconds: number | null): string | null {
   if (!seconds || seconds <= 0) return null;
   const m = Math.floor(seconds / 60);
@@ -59,11 +51,12 @@ function durationLabel(seconds: number | null): string | null {
  * Image-forward: big square artwork, CEFR badge, score ring, direct play.
  */
 export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
+  const { t: tp } = useTranslation('podcastUi');
   const [imgError, setImgError] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const days = daysSince(episode.publish_date);
-  const date = relativeDate(days);
+  const date = days === null ? null : relativeDays(tp, days);
   const isNew = days !== null && days <= 2;
   const dur = durationLabel(episode.duration_seconds);
   const feedId = episode.feed_id;
@@ -121,7 +114,7 @@ export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
                 'absolute left-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border-2 bg-card/90 text-[12px] font-extrabold tabular-nums backdrop-blur',
                 scoreRing,
               )}
-              title={`Difficulty ${episode.difficulty_score}/100`}
+              title={tp('levelCard.difficultyTitle', { score: episode.difficulty_score })}
             >
               {episode.difficulty_score}
             </div>
@@ -185,7 +178,7 @@ export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
       >
         <button
           type="button"
-          aria-label="Play episode"
+          aria-label={tp('levelCard.playEpisode')}
           onClick={play}
           disabled={busy}
           className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-card/90 text-primary opacity-90 shadow-md backdrop-blur transition-all hover:scale-105 hover:bg-card group-hover:opacity-100 disabled:opacity-60"
