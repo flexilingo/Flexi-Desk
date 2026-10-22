@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
-import { Loader2, ListChecks, Shuffle, RefreshCw } from 'lucide-react';
+import { Loader2, ListChecks, Shuffle, RefreshCw, Search, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import { useStudyStore } from '../stores/studyStore';
+import { FocusChips } from './FocusChips';
 import {
   ACTIVE_METHODS,
   type ActivityType,
@@ -24,6 +25,10 @@ interface Props {
   decks: DeckStatus[];
   /** Tab to land on when the dialog opens (e.g. 'activities' from the Custom chip). */
   initialTab?: StudySettingsTab;
+  /** The guided tour steps this through the tabs while the dialog stays open; manual tab clicks keep working. */
+  activeTab?: StudySettingsTab;
+  /** The tour is driving this dialog: no overlay, no focus trap, and clicks outside do not close it. */
+  tourLocked?: boolean;
 }
 
 const DURATION_OPTIONS = [5, 10, 15, 20, 30] as const;
@@ -59,7 +64,14 @@ const DECK_STRATEGIES: { id: DeckStrategy; icon: LucideIcon }[] = [
 const SRS_OPTIONS = ['leitner', 'sm2', 'fsrs'] as const;
 type SrsAlgorithm = (typeof SRS_OPTIONS)[number];
 
-export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'pace' }: Props) {
+export function StudySettingsDialog({
+  open,
+  onOpenChange,
+  decks,
+  initialTab = 'pace',
+  activeTab,
+  tourLocked = false,
+}: Props) {
   const { t } = useTranslation('study');
   const config = useStudyStore((s) => s.config);
   const updateConfig = useStudyStore((s) => s.updateConfig);
@@ -79,6 +91,16 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
     setPrevOpen(open);
     if (open) setTab(initialTab);
   }
+  // The tour drives `activeTab` through the three tabs while the dialog stays open.
+  const [prevActiveTab, setPrevActiveTab] = useState(activeTab);
+  if (activeTab !== prevActiveTab) {
+    setPrevActiveTab(activeTab);
+    if (activeTab) setTab(activeTab);
+  }
+
+  // The deck list can hold dozens of rows — search it, and (once any deck is tuned) filter to the tuned ones.
+  const [deckQuery, setDeckQuery] = useState('');
+  const [tunedOnly, setTunedOnly] = useState(false);
 
   // Load the settings that live outside the study config (desk `settings` table).
   useEffect(() => {
@@ -158,6 +180,28 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
   const isDeckOn = (deckId: string) => !disabledDecks.has(deckId);
   const anyDeckOff = decks.some((d) => !isDeckOn(d.deck_id));
   const allDecksOff = decks.length > 0 && decks.every((d) => !isDeckOn(d.deck_id));
+  const deckWeightOf = (id: string) => config?.deck_weights?.[id] ?? 1;
+  // "Tuned" means "you moved this off its default" — being switched off is the strongest such move, so the
+  // Tuned-only filter surfaces those rows too, or the one filter that narrows a long list would hide exactly
+  // the decks the learner went looking for.
+  const isDeckTuned = (id: string) => deckWeightOf(id) !== 1 || !isDeckOn(id);
+  const anyDeckWeighted = decks.some((d) => deckWeightOf(d.deck_id) !== 1);
+  // Until a deck has been tuned the filter can only empty the list, so it is offered only once there is
+  // something to show, and stops applying the moment the last tuned deck goes back to default.
+  const hasTunedDeck = decks.some((d) => isDeckTuned(d.deck_id));
+  const filterTuned = tunedOnly && hasTunedDeck;
+  const normalizedQuery = deckQuery.trim().toLowerCase();
+  const visibleDecks = decks.filter(
+    (d) =>
+      (!normalizedQuery || d.deck_title.toLowerCase().includes(normalizedQuery)) &&
+      (!filterTuned || isDeckTuned(d.deck_id)),
+  );
+  // Each enabled deck's live share of today's pull: "1.5×" is abstract, "18%" says what the bar does.
+  // Switched-off decks are out of both sides of the fraction.
+  const enabledDecks = decks.filter((d) => isDeckOn(d.deck_id));
+  const deckWeightTotal = enabledDecks.reduce((sum, d) => sum + deckWeightOf(d.deck_id), 0);
+  const deckShare = (id: string) =>
+    deckWeightTotal > 0 ? (100 * deckWeightOf(id)) / deckWeightTotal : null;
 
   function setDeckEnabled(deckId: string, enabled: boolean) {
     const next = enabled
@@ -244,8 +288,13 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-lg flex-col gap-0 overflow-hidden p-0">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={!tourLocked}>
+      <DialogContent
+        className="flex max-h-[85vh] max-w-lg flex-col gap-0 overflow-hidden p-0"
+        onInteractOutside={tourLocked ? (e) => e.preventDefault() : undefined}
+        onEscapeKeyDown={tourLocked ? (e) => e.preventDefault() : undefined}
+        onOpenAutoFocus={tourLocked ? (e) => e.preventDefault() : undefined}
+      >
         <DialogHeader className="shrink-0 border-b border-border px-5 pb-3 pt-5">
           <DialogTitle className="text-[17px] font-bold text-foreground">
             {t('settings.title')}
@@ -261,7 +310,10 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
         )}
 
         {/* Tabs */}
-        <div className="mx-5 mt-3 flex shrink-0 rounded-lg border border-border bg-muted/40 p-1">
+        <div
+          data-tour="settings-tabs"
+          className="mx-5 mt-3 flex shrink-0 rounded-lg border border-border bg-muted/40 p-1"
+        >
           {TABS.map((tb) => (
             <button
               key={tb.id}
@@ -284,7 +336,7 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
           {tab === 'pace' && (
             <div className="space-y-5">
               {/* Session duration */}
-              <div className="space-y-2">
+              <div className="space-y-2" data-tour="settings-duration">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('settings.section.capacity')}
@@ -316,7 +368,7 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
               </div>
 
               {/* Deck strategy */}
-              <div className="space-y-2">
+              <div className="space-y-2" data-tour="settings-deck-strategy">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('settings.section.deckStrategy')}
@@ -397,21 +449,35 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
 
               {/* Deck weights + per-deck on/off */}
               {decks.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2" data-tour="settings-deck-weights">
                   <div className="flex items-start justify-between gap-3">
                     <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       {t('settings.deckWeights')}
                     </span>
-                    {anyDeckOff && (
-                      <button
-                        type="button"
-                        onClick={() => saveConfig('disabled_deck_ids', { disabled_deck_ids: [] })}
-                        disabled={isSaving('disabled_deck_ids')}
-                        className="shrink-0 text-[10.5px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-accent disabled:opacity-50"
-                      >
-                        {t('settings.deckEnableAll')}
-                      </button>
-                    )}
+                    {/* Two separate actions rather than one "reset everything": switching a deck back on and
+                        returning it to 1x are different intents. */}
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      {anyDeckOff && (
+                        <button
+                          type="button"
+                          onClick={() => saveConfig('disabled_deck_ids', { disabled_deck_ids: [] })}
+                          disabled={isSaving('disabled_deck_ids')}
+                          className="text-[10.5px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-accent disabled:opacity-50"
+                        >
+                          {t('settings.deckEnableAll')}
+                        </button>
+                      )}
+                      {anyDeckWeighted && (
+                        <button
+                          type="button"
+                          onClick={() => saveConfig('deck_weights', { deck_weights: {} })}
+                          disabled={isSaving('deck_weights')}
+                          className="text-[10.5px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-accent disabled:opacity-50"
+                        >
+                          {t('settings.deckSearchResetAll')}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {/* Switching every deck off is a legitimate choice, but never a
                       silent one — otherwise it surfaces as an empty session with
@@ -421,8 +487,52 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
                       {t('settings.deckAllOffWarning')}
                     </div>
                   )}
+                  {/* Search + tuned-only filter — with dozens of decks, row-by-row scrolling is not viable. */}
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative min-w-0 flex-1">
+                      <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-caption" />
+                      <input
+                        type="text"
+                        value={deckQuery}
+                        onChange={(e) => setDeckQuery(e.target.value)}
+                        placeholder={t('settings.deckSearchPlaceholder')}
+                        aria-label={t('settings.deckSearchPlaceholder')}
+                        className="w-full rounded-md border border-border bg-card py-1.5 pe-7 ps-8 text-[12px] text-foreground placeholder:text-caption focus:outline-none focus:ring-2 focus:ring-ring/30"
+                      />
+                      {deckQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setDeckQuery('')}
+                          aria-label={t('settings.deckSearchClear')}
+                          className="absolute end-1.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-caption hover:text-foreground"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    {hasTunedDeck && (
+                      <button
+                        type="button"
+                        onClick={() => setTunedOnly(!filterTuned)}
+                        aria-pressed={filterTuned}
+                        className={cn(
+                          'shrink-0 rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+                          filterTuned
+                            ? 'border-primary/50 bg-primary/10 text-primary'
+                            : 'border-border text-muted-foreground hover:border-primary/30',
+                        )}
+                      >
+                        {t('settings.deckSearchTunedOnly')}
+                      </button>
+                    )}
+                  </div>
                   <div className="space-y-1.5">
-                    {decks.map((deck) => {
+                    {visibleDecks.length === 0 && (
+                      <p className="rounded-lg border border-border bg-card px-3.5 py-4 text-center text-[11.5px] text-caption">
+                        {t('settings.deckSearchNoResults', { query: deckQuery })}
+                      </p>
+                    )}
+                    {visibleDecks.map((deck) => {
                       const deckKey = `deck_weight_${deck.deck_id}`;
                       const toggleKey = `deck_enabled_${deck.deck_id}`;
                       const currentWeight = config?.deck_weights?.[deck.deck_id] ?? 1;
@@ -442,6 +552,13 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
                           </span>
                           <div className="flex shrink-0 items-center gap-2">
                             <Spinner on={isSaving(deckKey) || isSaving(toggleKey)} />
+                            {/* The concrete answer to "what does moving this bar do": this deck's cut of the
+                                daily mix. A switched-off deck shows nothing rather than a "0%" that reads like a bug. */}
+                            <span className="min-w-[26px] text-end text-[10.5px] font-semibold tabular-nums text-caption">
+                              {on && deckShare(deck.deck_id) != null
+                                ? `${Math.round(deckShare(deck.deck_id) ?? 0)}%`
+                                : ''}
+                            </span>
                             {/* Weights stay visible but inert while the deck is
                                 off, so the tuning comes back untouched when it
                                 is switched on again. */}
@@ -476,6 +593,10 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
           {/* ── Tab 2: Activities ───────────────────────────────────── */}
           {tab === 'activities' && (
             <div className="space-y-2">
+              {/* The quick presets that write the weights below; hand-tuning them shows here as Custom. */}
+              <div data-tour="settings-focus-chips" className="pb-1">
+                <FocusChips disabled={isSaving('focus')} />
+              </div>
               <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('settings.section.activities')}
               </span>
@@ -526,7 +647,7 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
                 </div>
               )}
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5" data-tour="settings-activity-list">
                 {ACTIVE_METHODS.map((activity) => {
                   const enabledList = config?.enabled_activities?.length
                     ? config.enabled_activities
@@ -594,7 +715,7 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
           {tab === 'prefs' && (
             <div className="space-y-4">
               {/* SRS algorithm */}
-              <div className="space-y-2">
+              <div className="space-y-2" data-tour="settings-srs">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     {t('settings.srsAlgorithm')}
@@ -665,7 +786,10 @@ export function StudySettingsDialog({ open, onOpenChange, decks, initialTab = 'p
               </div>
 
               {/* Auto-play TTS */}
-              <div className="overflow-hidden rounded-lg border border-border">
+              <div
+                className="overflow-hidden rounded-lg border border-border"
+                data-tour="settings-autoread"
+              >
                 <div className="flex items-center justify-between gap-4 bg-card px-3.5 py-3">
                   <div className="min-w-0 flex-1">
                     <span className="block text-[12.5px] font-semibold text-foreground">

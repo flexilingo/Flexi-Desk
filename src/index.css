@@ -1,85 +1,226 @@
 @import 'tailwindcss';
+@import './assets/fonts/fonts.css';
 
 @custom-variant dark (&:is(.dark *));
 
-/* FlexiDesk Theme */
+/*
+ * FlexiLingo design system — the website's look (flexi-lingo-front
+ * tailwind.config.js + globals.css, "Palette v4"), as Tailwind v4 tokens.
+ *
+ * Pages style themselves through the SEMANTIC tokens (bg-background, bg-card,
+ * text-foreground, text-muted-foreground, border-border, bg-primary, text-accent,
+ * text-success, …). Light is the website's cream field with white cards and ink
+ * text; dark is a dark cream (warm neutrals — never slate, navy or saturated
+ * green). Every ground is cream (or its dark twin): olive only on small
+ * surfaces (icon tiles, the play button, a selected tab, the default button),
+ * terra is the spice that marks the one main action per view. The raw scales
+ * (olive-*, cream-*, terra-*) exist for those small fixed-colour surfaces.
+ *
+ * Brand: primary #0E240A, accent = the one orange (terra), success = sage,
+ * warning = terracotta, error = red. No indigo/purple, no raw blue. In light,
+ * the text-bearing roles use the website's deeper shades of the same hues so
+ * small text stays readable on cream; dark uses the brand values as they are.
+ */
 @theme {
-  --color-primary: #0e240a;
-  --color-primary-light: #8bb7a3;
-  --color-primary-dark: #6b705c;
-  --color-accent: #c58c6e;
-  --color-accent-foreground: #fffef7;
-  --color-success: #8bb7a3;
-  --color-error: #ef4444;
-  --color-warning: #c58c6e;
-  --color-info: #6b705c;
+  /* ── Fonts ─────────────────────────────────────────────────────────────── */
+  --font-sans:
+    'Inter', 'Vazirmatn', 'Noto Sans SC', 'Noto Sans Devanagari', ui-sans-serif, system-ui,
+    -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --color-background: #fffef7;
-  --color-foreground: #1a1a1a;
+  /* ── Palette v4 scales (same values as the website) ────────────────────── */
+  --color-olive-200: #cfddd5;
+  --color-olive-300: #abbfb4;
+  --color-olive-400: #7a9588;
+  --color-olive-450: #506a46;
+  --color-olive-500: #4a7064;
+  --color-olive-600: #2b5242;
+  --color-olive-650: #19332a;
+  --color-olive-700: #1f4220;
+  --color-olive-800: #163214;
+  --color-olive-900: #0e240a;
+  --color-olive-950: #081806;
+
+  --color-cream-25: #fdfbf6;
+  --color-cream-50: #fbf7ee;
+  --color-cream-100: #f5ecd9;
+  --color-cream-200: #ede2c9;
+  --color-cream-300: #dfd2b4;
+  --color-cream-400: #c5b69a;
+
+  --color-terra-300: #e8b095;
+  --color-terra-400: #d89072;
+  --color-terra-500: #c56a3f;
+  --color-terra-600: #ad5832;
+  --color-terra-700: #884225;
+
+  --color-sage: #8bb7a3;
+  --color-ink: #1a140c;
+
+  /* ── Semantic tokens — light (default) ─────────────────────────────────── */
+  --color-background: #fbf7ee; /* cream-50 page field */
+  --color-foreground: #1a140c; /* ink */
   --color-card: #ffffff;
-  --color-card-foreground: #1a1a1a;
-  --color-muted: #f5f5f0;
-  --color-muted-foreground: #6b705c;
-  --color-border: #e5e2d9;
-
-  --color-sidebar: #f5f5f0;
-  --color-sidebar-foreground: #1a1a1a;
-  --color-sidebar-accent: #8bb7a3;
-
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-}
-
-/* Dark mode overrides */
-@theme {
-  --color-primary-dark-mode: #8bb7a3;
-  --color-primary-light-dark-mode: #a8ccbb;
-}
-
-.dark {
-  --color-primary: #8bb7a3;
-  --color-primary-light: #a8ccbb;
-  --color-primary-dark: #6b705c;
-  --color-accent: #c58c6e;
-  --color-accent-foreground: #fffef7;
-
-  --color-background: #0f172a;
-  --color-foreground: #f1f5f9;
-  --color-card: #1e293b;
-  --color-card-foreground: #f1f5f9;
-  --color-muted: #1e293b;
-  --color-muted-foreground: #94a3b8;
-  --color-border: #334155;
-
-  --color-sidebar: #0f172a;
-  --color-sidebar-foreground: #f1f5f9;
-  --color-sidebar-accent: #8bb7a3;
-}
-
-/* CEFR level colors */
-@theme {
-  --color-cefr-a1: #22c55e;
-  --color-cefr-a2: #22c55e;
-  --color-cefr-b1: #eab308;
-  --color-cefr-b2: #eab308;
-  --color-cefr-c1: #ef4444;
-  --color-cefr-c2: #ef4444;
+  --color-card-foreground: #1a140c;
   --color-popover: #ffffff;
-  --color-popover-foreground: #1a1a1a;
-  --color-destructive: #ef4444;
-  --color-primary-foreground: #fffef7;
+  --color-popover-foreground: #1a140c;
+  --color-muted: #f5ecd9; /* cream-100 panel */
+  --color-muted-foreground: #5a4a38; /* subtext */
+  --color-caption: #9a8c78; /* placeholder / faint caption */
+  --color-border: #e8dcc3;
+  --color-input: #dfd2b4; /* cream-300 */
+  --color-ring: #c56a3f;
+
+  --color-primary: #0e240a;
+  --color-primary-foreground: #fbf7ee;
+  --color-primary-light: #4a7064; /* olive-500 */
+  --color-primary-dark: #163214; /* olive-800 */
+
+  --color-accent: #c56a3f; /* terra-500 — the site's orange */
+  --color-accent-foreground: #ffffff;
+
+  --color-success: #2d7a52; /* the site's success-600, sage family */
+  --color-warning: #a8684a; /* terracotta, deepened for text */
+  --color-error: #b5453a; /* the site's danger-500 */
+  --color-destructive: #b5453a;
+  --color-info: #4a7064;
+  /* Text on a solid status fill (bg-success / bg-warning / bg-error). */
+  --color-success-foreground: #ffffff;
+  --color-warning-foreground: #ffffff;
+  --color-error-foreground: #ffffff;
+
+  /* Sidebar: cream ground like every other surface; the open page is a soft
+     tinted pill with a terra icon (the website's active treatment). */
+  --color-sidebar: #f8f2e4;
+  --color-sidebar-foreground: #1a140c;
+  --color-sidebar-muted: #5a4a38; /* subtext — idle icons and labels */
+  --color-sidebar-accent: #c56a3f; /* terra — the open page's icon */
+  --color-sidebar-tooltip: #163214; /* olive-800 */
+
+  /* CEFR gradient (A1 = success … C2 = terra), as on the website. */
+  --color-cefr-a1: #2d7a52;
+  --color-cefr-a2: #3a9068;
+  --color-cefr-b1: #b5871e;
+  --color-cefr-b2: #ad5832;
+  --color-cefr-c1: #d27848;
+  --color-cefr-c2: #c56a3f;
+
+  /* ── Radii (website: 6 / 8 / 9 / 12 / 14) ──────────────────────────────── */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+
+  /* ── Shadows — olive-tinted, never black (website sh-1 / sh-2 / card) ──── */
+  --shadow-xs: 0 1px 2px rgba(14, 36, 10, 0.04);
+  --shadow-sm: 0 1px 2px rgba(14, 36, 10, 0.04), 0 2px 6px rgba(14, 36, 10, 0.04);
+  --shadow-md: 0 1px 2px rgba(14, 36, 10, 0.04), 0 6px 18px rgba(14, 36, 10, 0.06);
+  --shadow-lg:
+    0 1px 3px rgba(14, 36, 10, 0.06), 0 4px 10px rgba(14, 36, 10, 0.05),
+    0 12px 24px rgba(14, 36, 10, 0.05);
+  --shadow-xl: 0 12px 28px rgba(14, 36, 10, 0.16);
+  --shadow-2xl: 0 24px 60px rgba(14, 36, 10, 0.3);
+  --shadow-card:
+    0 1px 3px rgba(14, 36, 10, 0.06), 0 4px 10px rgba(14, 36, 10, 0.05),
+    0 12px 24px rgba(14, 36, 10, 0.04);
 }
 
+/* ── Semantic tokens — dark, from the same family ───────────────────────── */
 .dark {
-  --color-popover: #1e293b;
-  --color-popover-foreground: #f1f5f9;
-  --color-primary-foreground: #0f172a;
+  /* A dark cream: warm neutrals, never saturated green or navy. */
+  --color-background: #151411;
+  --color-foreground: #f2ecdf;
+  --color-card: #1d1b17;
+  --color-card-foreground: #f2ecdf;
+  --color-popover: #24221d;
+  --color-popover-foreground: #f2ecdf;
+  --color-muted: #2a2722;
+  --color-muted-foreground: #b8b09f;
+  --color-caption: #8c8474;
+  --color-border: #35312a;
+  --color-input: #48423a;
+  --color-ring: #df804d;
+
+  --color-primary: #9dc3b0; /* sage, lifted */
+  --color-primary-foreground: #0e240a;
+  --color-primary-light: #b9d5c7;
+  --color-primary-dark: #6f9a86;
+
+  --color-accent: #df804d; /* brand orange */
+  --color-accent-foreground: #1a140c;
+
+  --color-success: #8bb7a3; /* brand sage */
+  --color-warning: #c58c6e; /* brand terracotta */
+  --color-error: #ef4444;
+  --color-destructive: #ef4444;
+  --color-info: #9fb5ab;
+  --color-success-foreground: #0e240a;
+  --color-warning-foreground: #1a140c;
+  --color-error-foreground: #ffffff;
+
+  --color-sidebar: #191814;
+  --color-sidebar-foreground: #f2ecdf;
+  --color-sidebar-muted: #b8b09f;
+  --color-sidebar-accent: #df804d;
+  --color-sidebar-tooltip: #1f4220;
+
+  --color-cefr-a1: #8bb7a3;
+  --color-cefr-a2: #7db591;
+  --color-cefr-b1: #d1a744;
+  --color-cefr-b2: #d89072;
+  --color-cefr-c1: #df804d;
+  --color-cefr-c2: #e8b095;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.45);
+  --shadow-2xl: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.22);
+
+  color-scheme: dark;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  /* The website's face per script: Persian/Arabic read best in Vazirmatn
+     (Inter first would set the Latin digits and words in a second face). */
+  html[lang='fa'] body,
+  html[lang='ar'] body {
+    font-family: 'Vazirmatn', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+  html[lang='zh'] body {
+    font-family:
+      'Inter', 'Noto Sans SC', 'Noto Sans SC Fallback', ui-sans-serif, system-ui, sans-serif;
+  }
+  html[lang='hi'] body {
+    font-family: 'Inter', 'Noto Sans Devanagari', ui-sans-serif, system-ui, sans-serif;
+  }
+  /* Joined scripts break apart under positive letter-spacing (uppercase
+     eyebrow labels), as on the website. */
+  html[dir='rtl']
+    :is([class*='tracking-wide'], [class*='tracking-wider'], [class*='tracking-widest']) {
+    letter-spacing: 0;
+  }
+  /* Thin warm scrollbars, as on the website. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  }
+  :focus-visible {
+    outline-color: var(--color-ring);
+  }
 }
 
 /* Audio visualizer animation */
@@ -108,4 +249,20 @@ body {
 /* Fix Radix ScrollArea viewport wrapper expanding beyond viewport */
 [data-radix-scroll-area-viewport] > div {
   display: block !important;
+}
+
+/* Study session reading size. The session root carries data-study-size and the
+   card text inside it is set in em, so one choice scales the whole surface
+   proportionally (the website does the same with --study-scale). */
+[data-study-size='compact'] {
+  font-size: 1rem;
+}
+[data-study-size='comfortable'] {
+  font-size: 1.15rem;
+}
+[data-study-size='large'] {
+  font-size: 1.3rem;
+}
+[data-study-size='huge'] {
+  font-size: 1.5rem;
 }

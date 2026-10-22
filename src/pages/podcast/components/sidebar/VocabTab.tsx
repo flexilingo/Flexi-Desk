@@ -11,28 +11,28 @@ const LEVEL_LABEL: Record<string, string> = { unknown: 'Unrated' };
 
 const CEFR_CHIP_COLORS: Record<string, { active: string; badge: string }> = {
   A1: {
-    active: 'bg-[#8BB7A3]/20 text-[#8BB7A3] border-[#8BB7A3]/40',
-    badge: 'bg-[#8BB7A3]/20 text-[#8BB7A3]',
+    active: 'bg-success/20 text-success border-success/40',
+    badge: 'bg-success/20 text-success',
   },
   A2: {
-    active: 'bg-[#8BB7A3]/15 text-[#8BB7A3] border-[#8BB7A3]/30',
-    badge: 'bg-[#8BB7A3]/15 text-[#8BB7A3]',
+    active: 'bg-success/15 text-success border-success/30',
+    badge: 'bg-success/15 text-success',
   },
   B1: {
-    active: 'bg-[#C58C6E]/20 text-[#C58C6E] border-[#C58C6E]/40',
-    badge: 'bg-[#C58C6E]/20 text-[#C58C6E]',
+    active: 'bg-warning/20 text-warning border-warning/40',
+    badge: 'bg-warning/20 text-warning',
   },
   B2: {
-    active: 'bg-[#C58C6E]/15 text-[#C58C6E] border-[#C58C6E]/30',
-    badge: 'bg-[#C58C6E]/15 text-[#C58C6E]',
+    active: 'bg-warning/15 text-warning border-warning/30',
+    badge: 'bg-warning/15 text-warning',
   },
   C1: {
-    active: 'bg-red-500/20 text-red-400 border-red-500/40',
-    badge: 'bg-red-500/20 text-red-400',
+    active: 'bg-error/20 text-error border-error/40',
+    badge: 'bg-error/20 text-error',
   },
   C2: {
-    active: 'bg-red-500/15 text-red-400 border-red-500/30',
-    badge: 'bg-red-500/15 text-red-400',
+    active: 'bg-error/15 text-error border-error/30',
+    badge: 'bg-error/15 text-error',
   },
   unknown: {
     active: 'bg-muted text-muted-foreground border-border',
@@ -42,28 +42,28 @@ const CEFR_CHIP_COLORS: Record<string, { active: string; badge: string }> = {
 
 const CEFR_WORD_CHIP_COLORS: Record<string, { selected: string; unselected: string }> = {
   A1: {
-    selected: 'bg-[#8BB7A3]/20 text-[#8BB7A3] border-[#8BB7A3]/40',
-    unselected: 'bg-transparent text-foreground border-border hover:border-[#8BB7A3]/40',
+    selected: 'bg-success/20 text-success border-success/40',
+    unselected: 'bg-transparent text-foreground border-border hover:border-success/40',
   },
   A2: {
-    selected: 'bg-[#8BB7A3]/15 text-[#8BB7A3] border-[#8BB7A3]/30',
-    unselected: 'bg-transparent text-foreground border-border hover:border-[#8BB7A3]/30',
+    selected: 'bg-success/15 text-success border-success/30',
+    unselected: 'bg-transparent text-foreground border-border hover:border-success/30',
   },
   B1: {
-    selected: 'bg-[#C58C6E]/20 text-[#C58C6E] border-[#C58C6E]/40',
-    unselected: 'bg-transparent text-foreground border-border hover:border-[#C58C6E]/40',
+    selected: 'bg-warning/20 text-warning border-warning/40',
+    unselected: 'bg-transparent text-foreground border-border hover:border-warning/40',
   },
   B2: {
-    selected: 'bg-[#C58C6E]/15 text-[#C58C6E] border-[#C58C6E]/30',
-    unselected: 'bg-transparent text-foreground border-border hover:border-[#C58C6E]/30',
+    selected: 'bg-warning/15 text-warning border-warning/30',
+    unselected: 'bg-transparent text-foreground border-border hover:border-warning/30',
   },
   C1: {
-    selected: 'bg-red-500/20 text-red-400 border-red-500/40',
-    unselected: 'bg-transparent text-foreground border-border hover:border-red-500/40',
+    selected: 'bg-error/20 text-error border-error/40',
+    unselected: 'bg-transparent text-foreground border-border hover:border-error/40',
   },
   C2: {
-    selected: 'bg-red-500/15 text-red-400 border-red-500/30',
-    unselected: 'bg-transparent text-foreground border-border hover:border-red-500/30',
+    selected: 'bg-error/15 text-error border-error/30',
+    unselected: 'bg-transparent text-foreground border-border hover:border-error/30',
   },
   unknown: {
     selected: 'bg-muted text-muted-foreground border-border',
@@ -297,7 +297,7 @@ export function VocabTab({ analysis, onAddToDeck }: VocabTabProps) {
         ) : (
           <Button
             onClick={handleAddToDeck}
-            className="w-full bg-[#8BB7A3] hover:bg-[#8BB7A3]/90 text-white"
+            className="w-full bg-success hover:bg-success/90 text-success-foreground"
             size="sm"
           >
             <Plus className="h-4 w-4 mr-1.5" />

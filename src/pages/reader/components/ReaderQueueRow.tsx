@@ -17,6 +17,7 @@ import { RowMenu, type MenuAction } from './RowMenu';
 export function ReaderQueueRow({ item, menu }: { item: ReadingItem; menu: MenuAction[] }) {
   const { t, i18n } = useTranslation('reader');
   const { t: tl } = useTranslation('readingLibrary');
+  const { t: tDesk } = useTranslation('readerDesk');
   const errorText = useReaderErrorText();
 
   const where = progressLine(item, t, tl);
@@ -40,7 +41,9 @@ export function ReaderQueueRow({ item, menu }: { item: ReadingItem; menu: MenuAc
           <span>
             {item.kind === 'book'
               ? languageName(item.language, i18n.language)
-              : t(`home.kind.${item.kind}`)}
+              : item.kind === 'text'
+                ? tDesk('home.kindText')
+                : t(`home.kind.${item.kind}`)}
           </span>
           {item.status === 'ready' && where && (
             <>

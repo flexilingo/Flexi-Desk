@@ -22,7 +22,7 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () =>
     <button
       onClick={onToggle}
       className={`relative w-9 h-5 rounded-full transition-colors ${
-        enabled ? 'bg-[#8BB7A3]' : 'bg-muted'
+        enabled ? 'bg-success' : 'bg-muted'
       }`}
     >
       <span

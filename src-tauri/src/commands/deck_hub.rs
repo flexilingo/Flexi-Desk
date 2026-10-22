@@ -3,7 +3,7 @@ use tauri::State;
 
 use crate::ai::json_extractor::extract_json;
 use crate::ai::provider::{chat_completion, read_ai_settings};
-use crate::commands::srs::DeckWithStats;
+use crate::commands::srs::{fetch_deck, DeckWithStats};
 use crate::deck_hub::ocr;
 use crate::deck_hub::prompts;
 use crate::deck_hub::types::{AnalyzedItem, DeckHubCardInput, OcrResult};
@@ -17,16 +17,6 @@ use crate::AppState;
 /// those cards from the export file.
 pub(crate) const QUIZLET_EXPORT_SQL: &str = "
     SELECT dc.front, dc.back, v.translation
-    FROM deck_cards dc
-    LEFT JOIN vocabulary v ON v.id = dc.vocabulary_id
-    WHERE dc.deck_id = ?1
-    ORDER BY dc.order_index ASC, dc.added_at ASC";
-
-/// Cards of one deck, with their dictionary enrichment, for pushing to the cloud.
-/// Same `LEFT JOIN` reasoning as [`QUIZLET_EXPORT_SQL`].
-pub(crate) const CLOUD_PUSH_SQL: &str = "
-    SELECT dc.front, dc.back, dc.notes, v.translation, v.definition,
-           v.pos, v.cefr_level, v.phonetic, v.examples
     FROM deck_cards dc
     LEFT JOIN vocabulary v ON v.id = dc.vocabulary_id
     WHERE dc.deck_id = ?1
@@ -91,6 +81,7 @@ pub fn deck_hub_batch_create(
     algorithm: String,
     description: Option<String>,
     cards: Vec<DeckHubCardInput>,
+    native_language: Option<String>,
 ) -> Result<DeckWithStats, String> {
     let conn = lock_db(&state)?;
 
@@ -98,20 +89,15 @@ pub fn deck_hub_batch_create(
 
     let result = (|| -> Result<DeckWithStats, String> {
         // Create deck
-        conn.execute(
-            "INSERT INTO decks (id, name, description, language, algorithm)
-             VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4)",
-            rusqlite::params![deck_name, description, language, algorithm],
-        )
-        .map_err(|e| format!("Deck insert error: {e}"))?;
-
         let deck_id: String = conn
             .query_row(
-                "SELECT id FROM decks WHERE name = ?1 AND language = ?2 ORDER BY created_at DESC LIMIT 1",
-                rusqlite::params![deck_name, language],
+                "INSERT INTO decks (id, name, description, language, algorithm, native_language)
+                 VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5)
+                 RETURNING id",
+                rusqlite::params![deck_name, description, language, algorithm, native_language],
                 |row| row.get(0),
             )
-            .map_err(|e| format!("Deck lookup error: {e}"))?;
+            .map_err(|e| format!("Deck insert error: {e}"))?;
 
         let mut inserted = 0i64;
 
@@ -187,33 +173,7 @@ pub fn deck_hub_batch_create(
         .map_err(|e| format!("Card count update error: {e}"))?;
 
         // Return DeckWithStats
-        let deck = conn
-            .query_row(
-                "SELECT id, name, description, language, algorithm, card_count, created_at, updated_at,
-                        tags, is_public, original_deck_id, cloud_deck_id
-                 FROM decks WHERE id = ?1",
-                rusqlite::params![deck_id],
-                |row| {
-                    Ok(DeckWithStats {
-                        id: row.get(0)?,
-                        name: row.get(1)?,
-                        description: row.get(2)?,
-                        language: row.get(3)?,
-                        algorithm: row.get(4)?,
-                        card_count: row.get(5)?,
-                        created_at: row.get(6)?,
-                        updated_at: row.get(7)?,
-                        tags: crate::commands::srs::parse_tags(row.get::<_, Option<String>>(8)?),
-                        is_public: row.get::<_, Option<i64>>(9)?.unwrap_or(0) != 0,
-                        original_deck_id: row.get(10)?,
-                        cloud_deck_id: row.get(11)?,
-                        due_today: 0,
-                        new_cards: inserted,
-                        mastered: 0,
-                    })
-                },
-            )
-            .map_err(|e| format!("Deck fetch error: {e}"))?;
+        let deck = fetch_deck(&conn, &deck_id)?;
 
         Ok(deck)
     })();
@@ -312,6 +272,39 @@ pub async fn deck_hub_install_tesseract() -> Result<String, String> {
     }
 }
 
+/// Raw bytes of a picked image, for the in-app OCR engine (used when the `tesseract`
+/// CLI is not installed, e.g. on Windows). Only image files are read.
+#[tauri::command]
+pub fn deck_hub_read_image(image_path: String) -> Result<tauri::ipc::Response, String> {
+    if !is_image_path(&image_path) {
+        return Err("NOT_AN_IMAGE".to_string());
+    }
+    let bytes = std::fs::read(&image_path).map_err(|e| format!("Failed to read image: {e}"))?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+fn is_image_path(path: &str) -> bool {
+    std::path::Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| matches!(e.to_ascii_lowercase().as_str(), "png" | "jpg" | "jpeg" | "webp" | "bmp" | "tif" | "tiff"))
+        .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod image_path_tests {
+    use super::*;
+
+    #[test]
+    fn only_image_extensions_are_readable() {
+        assert!(is_image_path("C:\\pics\\Scan.JPG"));
+        assert!(is_image_path("/tmp/a.webp"));
+        assert!(!is_image_path("/etc/passwd"));
+        assert!(!is_image_path("/tmp/notes.txt"));
+        assert!(!is_image_path("/tmp/png"));
+    }
+}
+
 /// Run OCR on an image file. Returns extracted text.
 #[tauri::command]
 pub fn deck_hub_ocr_image(
@@ -375,112 +368,4 @@ pub fn deck_hub_export_quizlet(
         total_items: total,
         format: "quizlet".to_string(),
     })
-}
-
-// ── Cloud Sync ────────────────────────────────────────────
-
-/// Push a local deck to the FlexiLingo cloud (Supabase).
-/// Requires the user to be authenticated.
-#[tauri::command]
-pub async fn deck_hub_cloud_push(
-    state: State<'_, AppState>,
-    deck_id: String,
-) -> Result<serde_json::Value, String> {
-    // 1. Read deck metadata
-    let (deck_name, deck_language, deck_description) = {
-        let conn = lock_db(&state)?;
-        conn.query_row(
-            "SELECT name, language, description FROM decks WHERE id = ?1",
-            rusqlite::params![deck_id],
-            |row| {
-                Ok((
-                    row.get::<_, String>(0)?,
-                    row.get::<_, String>(1)?,
-                    row.get::<_, Option<String>>(2)?,
-                ))
-            },
-        )
-        .map_err(|e| format!("Deck not found: {e}"))?
-    };
-
-    // 2. Read all cards
-    let cards = {
-        let conn = lock_db(&state)?;
-        let mut stmt = conn
-            .prepare(
-                CLOUD_PUSH_SQL,
-            )
-            .map_err(|e| format!("Query error: {e}"))?;
-
-        let result: Vec<_> = stmt
-            .query_map(rusqlite::params![deck_id], |row| {
-                Ok((
-                    row.get::<_, String>(0)?,
-                    row.get::<_, String>(1)?,
-                    row.get::<_, Option<String>>(2)?,
-                ))
-            })
-            .map_err(|e| format!("Query error: {e}"))?
-            .filter_map(|r| r.ok())
-            .collect();
-        result
-    };
-
-    if cards.is_empty() {
-        return Err("Deck has no cards to sync".to_string());
-    }
-
-    // 3. Create deck in cloud
-    let create_body = json!({
-        "title": deck_name,
-        "description": deck_description,
-        "language_pair": deck_language,
-        "is_public": false,
-        "source_type": "desk_upload",
-    });
-
-    let create_result = crate::auth::supabase_call(
-        state.clone(),
-        "POST".to_string(),
-        "/decks?action=create".to_string(),
-        Some(create_body),
-    )
-    .await?;
-
-    let cloud_deck_id = create_result
-        .get("id")
-        .and_then(|v| v.as_str())
-        .ok_or("Cloud deck creation failed: no id returned")?
-        .to_string();
-
-    // 4. Bulk upload cards
-    let cards_payload: Vec<serde_json::Value> = cards
-        .iter()
-        .map(|(front, back, notes)| {
-            json!({
-                "front_text": front,
-                "back_text": back,
-                "notes": notes,
-            })
-        })
-        .collect();
-
-    let bulk_body = json!({
-        "deck_id": cloud_deck_id,
-        "cards": cards_payload,
-    });
-
-    crate::auth::supabase_call(
-        state,
-        "POST".to_string(),
-        "/decks?action=bulk-add-cards".to_string(),
-        Some(bulk_body),
-    )
-    .await?;
-
-    Ok(json!({
-        "cloud_deck_id": cloud_deck_id,
-        "cards_synced": cards.len(),
-        "deck_name": deck_name,
-    }))
 }

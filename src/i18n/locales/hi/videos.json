@@ -1,0 +1,117 @@
+{
+  "subscribe": "सब्सक्राइब करें",
+  "title": "वीडियो",
+  "searchPlaceholder": "वीडियो खोजें…",
+  "pinned": "पिन किया गया",
+  "empty": {
+    "title": "कोई वीडियो नहीं मिला",
+    "subtitle": "कोई फ़िल्टर हटाएँ या कुछ और खोजें।"
+  },
+  "resultCount": "{{count}} वीडियो",
+  "matchCountNone": "कोई वीडियो मेल नहीं खाता",
+  "matchCount_one": "{{count}} वीडियो मेल खाता है",
+  "matchCount_other": "{{count}} वीडियो मेल खाते हैं",
+  "matchCount": "{{count}} वीडियो मेल खाते हैं",
+  "removeFilter": "फ़िल्टर हटाएँ: {{name}}",
+  "minutes": "{{count}} मिनट",
+  "backToCatalogue": "वीडियो पर वापस जाएँ",
+  "notFound": {
+    "title": "वीडियो नहीं मिला",
+    "subtitle": "हो सकता है इसे सूची से हटा दिया गया हो।"
+  },
+  "subtitle": "असली वीडियो, इंटरैक्टिव सबटाइटल के साथ। किसी भी शब्द पर टैप करके अर्थ देखें और सीधे डेक में जोड़ें।",
+  "views": {
+    "newest": "नवीनतम",
+    "newestHint": "हाल ही में जोड़े गए वीडियो।",
+    "shortest": "छोटे",
+    "shortestHint": "छोटे वीडियो — जब आपके पास कुछ ही मिनट हों।",
+    "longest": "लंबे",
+    "longestHint": "आराम से देखने के लिए लंबे वीडियो।"
+  },
+  "browseByTopic": "विषय के अनुसार ब्राउज़ करें",
+  "channels": {
+    "heading": "चैनल",
+    "videoCount": "{{count}} वीडियो",
+    "totalCount": "{{count}} चैनल",
+    "searchPlaceholder": "चैनल खोजें…",
+    "allLanguages": "सभी",
+    "clear": "साफ़ करें",
+    "empty": "कोई मेल खाता चैनल नहीं।"
+  },
+  "channel": {
+    "videoCount": "{{count}} वीडियो",
+    "openOnYoutube": "YouTube पर खोलें"
+  },
+  "categories": {
+    "learning": "सीखना",
+    "stories": "कहानियाँ",
+    "podcast": "पॉडकास्ट",
+    "news": "समाचार",
+    "culture": "संस्कृति",
+    "music": "संगीत",
+    "other": "अन्य"
+  },
+  "filters": {
+    "category": "श्रेणी",
+    "allCategories": "सभी श्रेणियाँ"
+  },
+  "music": {
+    "signInTitle": "संगीत अनुभाग साइन-इन किए गए शिक्षार्थियों के लिए है",
+    "signInBody": "असली गानों से सीखें और बोल शब्द-दर-शब्द देखें। संगीत अनुभाग खोलने के लिए साइन इन करें या मुफ़्त खाता बनाएँ।",
+    "signIn": "साइन इन"
+  },
+  "player": {
+    "openOnYoutube": "YouTube पर देखें",
+    "openChannel": "चैनल खोलें",
+    "openChannelNamed": "{{channel}} खोलें"
+  },
+  "upNext": {
+    "heading": "आगे देखें",
+    "sub": "इसी चैनल से और आपके स्तर के वीडियो",
+    "empty": "अभी सुझाने के लिए और वीडियो नहीं हैं।"
+  },
+  "podcasts": {
+    "filterAllLevels": "सभी स्तर",
+    "cefrBeginner": "शुरुआती",
+    "cefrElementary": "प्राथमिक",
+    "cefrIntermediate": "मध्यवर्ती",
+    "cefrUpperIntermediate": "उच्च माध्यम",
+    "cefrAdvanced": "उन्नत",
+    "cefrProficiency": "दक्षता",
+    "filterByLanguage": "भाषा",
+    "filterAllLanguages": "सभी भाषाएँ",
+    "clearFilters": "साफ़ करें",
+    "filterView": "दृश्य",
+    "filterTopic": "विषय",
+    "filterAllTopics": "सभी विषय",
+    "filterDuration": "अवधि",
+    "filterAnyDuration": "कोई भी अवधि",
+    "filterDurationUnder": "{{minutes}} मिनट से कम",
+    "clearAllFilters": "सभी हटाएं",
+    "seeAll": "सभी देखें",
+    "videoUnavailableTitle": "यह वीडियो यहाँ लोड नहीं हो रहा",
+    "videoUnavailableBody": "अभी आपके कनेक्शन से YouTube तक नहीं पहुँचा जा सकता। फिर से कोशिश करें, या इसे YouTube पर देखें — ट्रांसक्रिप्ट और उसके शब्द यहाँ अब भी उपलब्ध हैं।",
+    "videoUnavailableRetry": "फिर से कोशिश करें",
+    "videoUnavailableOpen": "YouTube पर देखें",
+    "expandPlayer": "विस्तार",
+    "closePlayer": "बंद करें",
+    "play": "चलाएं",
+    "pause": "रोकें"
+  },
+  "loading": "लोड हो रहा है…",
+  "retry": "फिर कोशिश करें",
+  "loadError": "वीडियो लोड नहीं हो सके। अपना कनेक्शन जाँचें और फिर कोशिश करें।",
+  "pagination": {
+    "previous": "पिछला",
+    "next": "अगला",
+    "page": "पृष्ठ {{page}} / {{total}}"
+  },
+  "watch": {
+    "startHint": "शुरू करने के लिए वीडियो पर ही प्ले दबाएँ। इसके बाद नीचे के नियंत्रण काम करेंगे।",
+    "preparing": "वीडियो खुल रहा है…",
+    "importFailed": "यह वीडियो खुल नहीं सका। फिर कोशिश करें।",
+    "noTranscript": "इस वीडियो में अभी इंटरैक्टिव सबटाइटल नहीं हैं।",
+    "replay": "फिर से देखें"
+  },
+  "watchWithSubtitles": "सबटाइटल के साथ देखें"
+}

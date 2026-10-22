@@ -57,6 +57,25 @@ impl InsightSkill {
     }
 }
 
+/// Which exam family an insight is written for. The JSON shapes are the same;
+/// only the examiner's voice, the language of the material and the scale differ.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExamKind {
+    Celpip,
+    /// TCF Canada, TCF Quebec and TCF IRN - a French exam.
+    Tcf,
+}
+
+impl ExamKind {
+    /// `None` and anything unknown mean CELPIP, so older callers keep working.
+    pub fn parse(exam_type: Option<&str>) -> Self {
+        match exam_type {
+            Some(t) if t.starts_with("tcf") => ExamKind::Tcf,
+            _ => ExamKind::Celpip,
+        }
+    }
+}
+
 /// Everything the model needs about one skill, assembled by the frontend from
 /// the results payload so this module never has to understand exam content.
 #[derive(Debug, Deserialize)]
@@ -82,6 +101,16 @@ mod tests {
     fn unknown_skill_is_rejected_with_the_backend_error_code() {
         // The UI resolves this code through i18n, exactly as it does for the cloud.
         assert_eq!(InsightSkill::parse("vocabulary").unwrap_err(), "INVALID_SKILL");
+    }
+
+    #[test]
+    fn exam_kind_reads_the_whole_tcf_family() {
+        for t in ["tcf", "tcf_quebec", "tcf_irn"] {
+            assert_eq!(ExamKind::parse(Some(t)), ExamKind::Tcf);
+        }
+        assert_eq!(ExamKind::parse(Some("celpip")), ExamKind::Celpip);
+        assert_eq!(ExamKind::parse(None), ExamKind::Celpip);
+        assert_eq!(ExamKind::parse(Some("something_else")), ExamKind::Celpip);
     }
 
     #[test]

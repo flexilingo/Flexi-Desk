@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { useTranslation } from 'react-i18next';
 import { setSetting } from '@/lib/tauri-bridge';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { useAiSource } from '@/stores/aiSourceStore';
 import { useCaptionStore } from '@/pages/caption/stores/captionStore';
 import { useDiscoverStore } from '@/pages/podcast/stores/discoverStore';
 import {
@@ -31,6 +34,7 @@ import {
   mapOllamaPullProgress,
   mapOllamaStatus,
   RECOMMENDED_OLLAMA_MODELS,
+  modelKey,
 } from '@/stores/ollamaTypes';
 import {
   Languages,
@@ -110,11 +114,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
         const isCompleted = i < currentStep;
         return (
           <div key={step.label} className="flex items-center gap-2">
-            {i > 0 && (
-              <div
-                className={`h-px w-8 ${isCompleted ? 'bg-primary' : 'bg-border'}`}
-              />
-            )}
+            {i > 0 && <div className={`h-px w-8 ${isCompleted ? 'bg-primary' : 'bg-border'}`} />}
             <div
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 isActive
@@ -235,22 +235,21 @@ function AISetupStep({
   selectedModel: string;
   onSelectModel: (name: string) => void;
 }) {
+  const { t } = useTranslation('ai');
   return (
     <div className="flex flex-col items-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
         <Bot className="h-7 w-7 text-primary" />
       </div>
-      <h1 className="text-2xl font-bold text-foreground mb-2">AI Assistant</h1>
-      <p className="text-muted-foreground mb-8 text-center max-w-md">
-        FlexiDesk uses AI to help you learn. All AI runs locally on your machine.
-      </p>
+      <h1 className="text-2xl font-bold text-foreground mb-2">{t('engine.heading')}</h1>
+      <p className="text-muted-foreground mb-8 text-center max-w-md">{t('engine.intro')}</p>
 
       <div className="w-full max-w-md space-y-4">
         {/* Checking state */}
         {ollamaState === 'checking' && (
           <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Checking Ollama status...</span>
+            <span className="text-sm text-muted-foreground">{t('engine.checking')}</span>
           </div>
         )}
 
@@ -260,15 +259,15 @@ function AISetupStep({
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-foreground">Ollama not found</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Ollama powers the local AI features. Install it to use the tutor, writing assistant, and more.
+                <p className="text-sm font-medium text-foreground">
+                  {t('engine.notInstalledTitle')}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">{t('engine.notInstalledDesc')}</p>
               </div>
             </div>
-            <Button onClick={onInstall} className="w-full gap-2">
+            <Button onClick={onInstall} className="gap-2">
               <Download className="h-4 w-4" />
-              Install Ollama
+              {t('engine.install')}
             </Button>
           </div>
         )}
@@ -278,16 +277,15 @@ function AISetupStep({
           <div className="rounded-lg border border-border bg-card p-4 space-y-3">
             <div className="flex items-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="text-sm text-foreground">Installing Ollama...</span>
+              <span className="text-sm text-foreground">{t('engine.installing')}</span>
             </div>
             {installProgress && (
               <div className="space-y-1">
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all duration-300"
-                    style={{ width: `${Math.min(installProgress.percent, 100)}%` }}
-                  />
-                </div>
+                <progress
+                  max={100}
+                  value={Math.min(installProgress.percent, 100)}
+                  className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-primary"
+                />
                 <p className="text-xs text-muted-foreground text-right">
                   {installProgress.percent.toFixed(0)}%
                   {installProgress.totalBytes > 0 &&
@@ -304,15 +302,13 @@ function AISetupStep({
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-foreground">Ollama is installed but not running</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Start the Ollama server to enable AI features.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t('engine.notRunningTitle')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('engine.notRunningDesc')}</p>
               </div>
             </div>
-            <Button onClick={onStartServe} className="w-full gap-2">
+            <Button onClick={onStartServe} className="gap-2">
               <Play className="h-4 w-4" />
-              Start Ollama
+              {t('engine.start')}
             </Button>
           </div>
         )}
@@ -321,7 +317,7 @@ function AISetupStep({
         {isStarting && (
           <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span className="text-sm text-foreground">Starting Ollama server...</span>
+            <span className="text-sm text-foreground">{t('engine.starting')}</span>
           </div>
         )}
 
@@ -331,10 +327,10 @@ function AISetupStep({
             <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
               <CheckCircle className="h-5 w-5 text-success shrink-0" />
               <div>
-                <p className="text-sm font-medium text-foreground">Ollama is ready!</p>
+                <p className="text-sm font-medium text-foreground">{t('engine.readyTitle')}</p>
                 {models.length > 0 && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Installed models: {models.join(', ')}
+                    {t('engine.installedList', { models: models.join(', ') })}
                   </p>
                 )}
               </div>
@@ -346,10 +342,8 @@ function AISetupStep({
                 <div className="flex items-start gap-3">
                   <Sparkles className="h-5 w-5 text-accent mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">Choose an AI model</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Smaller models are faster. Larger ones are more capable.
-                    </p>
+                    <p className="text-sm font-medium text-foreground">{t('engine.chooseTitle')}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('engine.chooseDesc')}</p>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -372,11 +366,21 @@ function AISetupStep({
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">{model.displayName}</span>
-                          <span className="text-xs text-muted-foreground">{model.parameterCount}</span>
-                          <span className="text-xs text-muted-foreground">~{formatSizeMb(model.sizeMb)}</span>
+                          <span className="text-sm font-medium text-foreground">
+                            {model.displayName}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {model.parameterCount}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            ~{formatSizeMb(model.sizeMb)}
+                          </span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{model.description}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {t(`engine.models.${modelKey(model.name)}`, {
+                            defaultValue: model.description,
+                          })}
+                        </p>
                       </div>
                       {selectedModel === model.name && (
                         <CheckCircle className="h-4 w-4 text-primary shrink-0" />
@@ -384,9 +388,13 @@ function AISetupStep({
                     </label>
                   ))}
                 </div>
-                <Button onClick={onPullModel} className="w-full gap-2">
+                <Button onClick={onPullModel} className="gap-2">
                   <Download className="h-4 w-4" />
-                  Download {WIZARD_MODELS.find((m) => m.name === selectedModel)?.displayName ?? 'model'}
+                  {WIZARD_MODELS.find((m) => m.name === selectedModel)
+                    ? t('engine.downloadModel', {
+                        model: WIZARD_MODELS.find((m) => m.name === selectedModel)!.displayName,
+                      })
+                    : t('engine.downloadModelGeneric')}
                 </Button>
               </div>
             )}
@@ -397,20 +405,22 @@ function AISetupStep({
                 <div className="flex items-center gap-3">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                   <span className="text-sm text-foreground">
-                    Downloading {pullProgress?.modelName ?? selectedModel}...
+                    {t('engine.downloadingModel', {
+                      model: pullProgress?.modelName ?? selectedModel,
+                    })}
                   </span>
                 </div>
                 {pullProgress && (
                   <div className="space-y-1">
-                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all duration-300"
-                        style={{ width: `${Math.min(pullProgress.percent, 100)}%` }}
-                      />
-                    </div>
+                    <progress
+                      max={100}
+                      value={Math.min(pullProgress.percent, 100)}
+                      className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-primary"
+                    />
                     <p className="text-xs text-muted-foreground text-right">
                       {pullProgress.percent.toFixed(0)}%
-                      {pullProgress.total && pullProgress.completed != null &&
+                      {pullProgress.total &&
+                        pullProgress.completed != null &&
                         ` - ${formatBytes(pullProgress.completed)} / ${formatBytes(pullProgress.total)}`}
                     </p>
                   </div>
@@ -425,11 +435,14 @@ function AISetupStep({
           <div className="flex items-start gap-3 rounded-lg border border-error/30 bg-error/5 p-4">
             <AlertCircle className="h-5 w-5 text-error mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-foreground">Something went wrong</p>
+              <p className="text-sm font-medium text-foreground">{t('engine.errorTitle')}</p>
               <p className="text-xs text-muted-foreground mt-1">{error}</p>
             </div>
           </div>
         )}
+
+        {/* Prefer a key of your own? Same shared setup the rest of the app uses. */}
+        {ollamaState !== 'ready' && <OwnKeyAlternative />}
 
         {/* Skip link */}
         {!skipped && ollamaState !== 'ready' && (
@@ -437,16 +450,39 @@ function AISetupStep({
             onClick={onSkip}
             className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
           >
-            Skip for now
+            {t('engine.skip')}
           </button>
         )}
         {skipped && (
-          <p className="text-center text-xs text-muted-foreground">
-            You can set up AI later in Settings.
-          </p>
+          <p className="text-center text-xs text-muted-foreground">{t('engine.skipped')}</p>
         )}
       </div>
     </div>
+  );
+}
+
+function OwnKeyAlternative() {
+  const { t } = useTranslation('ai');
+  const { own } = useAiSource();
+  const [open, setOpen] = useState(false);
+  if (own.kind === 'own' && own.origin === 'own_key') {
+    return (
+      <p className="flex items-center gap-2 text-sm text-foreground">
+        <CheckCircle className="h-4 w-4 text-success shrink-0" />
+        {t('wizard.ownKeyReady')}
+      </p>
+    );
+  }
+  return open ? (
+    <AiSetupCard compact />
+  ) : (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="w-full text-center text-sm text-accent hover:underline underline-offset-4"
+    >
+      {t('wizard.ownKeyLink')}
+    </button>
   );
 }
 
@@ -526,7 +562,10 @@ function PodcastStep({
                     <p className="text-sm font-medium text-foreground truncate">
                       {podcast.title}
                       {podcast.author && (
-                        <span className="text-muted-foreground font-normal"> by {podcast.author}</span>
+                        <span className="text-muted-foreground font-normal">
+                          {' '}
+                          by {podcast.author}
+                        </span>
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
@@ -638,7 +677,9 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
       }
     }
     init();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Listen for download progress
@@ -647,18 +688,29 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
     let unlisten: UnlistenFn | undefined;
     listen<RawWhisperDownloadProgress>('whisper-download-progress', (event) => {
       setDownloadProgress(mapWhisperDownloadProgress(event.payload));
-    }).then((fn) => { unlisten = fn; });
-    return () => { unlisten?.(); };
+    }).then((fn) => {
+      unlisten = fn;
+    });
+    return () => {
+      unlisten?.();
+    };
   }, [isDownloading]);
 
   // Listen for install progress
   useEffect(() => {
     if (!isInstallingWhisper && !isInstallingHomebrew) return;
     let unlisten: UnlistenFn | undefined;
-    listen<{ status: string; message: string; percent: number }>('whisper-install-progress', (event) => {
-      setWhisperInstallMessage(event.payload.message);
-    }).then((fn) => { unlisten = fn; });
-    return () => { unlisten?.(); };
+    listen<{ status: string; message: string; percent: number }>(
+      'whisper-install-progress',
+      (event) => {
+        setWhisperInstallMessage(event.payload.message);
+      },
+    ).then((fn) => {
+      unlisten = fn;
+    });
+    return () => {
+      unlisten?.();
+    };
   }, [isInstallingWhisper, isInstallingHomebrew]);
 
   const handleInstallWhisper = useCallback(async () => {
@@ -672,28 +724,34 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
     }
   }, [installWhisper, fetchAvailableModels, checkWhisper]);
 
-  const handleUseModel = useCallback(async (modelId: string) => {
-    setError(null);
-    try {
-      await setActiveModel(modelId);
-      await checkWhisper();
-    } catch (err) {
-      setError(String(err));
-    }
-  }, [setActiveModel, checkWhisper]);
-
-  const handleDownloadModel = useCallback(async (modelId: string) => {
-    setError(null);
-    try {
-      const path = await downloadModel(modelId);
-      if (path) {
+  const handleUseModel = useCallback(
+    async (modelId: string) => {
+      setError(null);
+      try {
         await setActiveModel(modelId);
         await checkWhisper();
+      } catch (err) {
+        setError(String(err));
       }
-    } catch (err) {
-      setError(String(err));
-    }
-  }, [downloadModel, setActiveModel, checkWhisper]);
+    },
+    [setActiveModel, checkWhisper],
+  );
+
+  const handleDownloadModel = useCallback(
+    async (modelId: string) => {
+      setError(null);
+      try {
+        const path = await downloadModel(modelId);
+        if (path) {
+          await setActiveModel(modelId);
+          await checkWhisper();
+        }
+      } catch (err) {
+        setError(String(err));
+      }
+    },
+    [downloadModel, setActiveModel, checkWhisper],
+  );
 
   const binaryDetected = whisperInstallStatus?.binaryDetected ?? false;
   const isReady = whisperInfo?.isAvailable ?? false;
@@ -820,12 +878,11 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
               <span className="text-sm text-foreground">Downloading model...</span>
             </div>
             <div className="space-y-1">
-              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
-                  style={{ width: `${Math.min(downloadProgress.percent, 100)}%` }}
-                />
-              </div>
+              <progress
+                max={100}
+                value={Math.min(downloadProgress.percent, 100)}
+                className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-primary"
+              />
               <p className="text-xs text-muted-foreground text-right">
                 {downloadProgress.percent.toFixed(0)}%
                 {downloadProgress.totalBytes > 0 &&
@@ -856,10 +913,12 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-foreground">CPU not compatible with this build</p>
+                <p className="text-sm font-semibold text-foreground">
+                  CPU not compatible with this build
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Your processor doesn't support AVX2 instructions required by the pre-built Whisper binary.
-                  This affects CPUs made before 2013 (Intel 3rd gen or older, early AMD).
+                  Your processor doesn't support AVX2 instructions required by the pre-built Whisper
+                  binary. This affects CPUs made before 2013 (Intel 3rd gen or older, early AMD).
                 </p>
               </div>
             </div>
@@ -873,11 +932,14 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary underline underline-offset-2 hover:text-primary/80"
-                    onClick={(e) => { e.preventDefault(); openUrl('https://github.com/ggerganov/whisper.cpp/releases'); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openUrl('https://github.com/ggerganov/whisper.cpp/releases');
+                    }}
                   >
                     whisper.cpp releases
-                  </a>
-                  {' '}— look for a <strong>noavx</strong> or <strong>compat</strong> build if available,
+                  </a>{' '}
+                  — look for a <strong>noavx</strong> or <strong>compat</strong> build if available,
                   or build from source with AVX2 disabled.
                 </li>
                 <li>
@@ -886,8 +948,8 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
                 </li>
               </ol>
               <p className="text-xs text-muted-foreground pt-1">
-                Or skip for now and use the AI Tutor and other features — transcription is only needed for
-                Live Caption and Podcast.
+                Or skip for now and use the AI Tutor and other features — transcription is only
+                needed for Live Caption and Podcast.
               </p>
             </div>
           </div>
@@ -1187,10 +1249,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           )}
 
           {step === 2 && (
-            <WhisperStep
-              skipped={whisperSkipped}
-              onSkip={() => setWhisperSkipped(true)}
-            />
+            <WhisperStep skipped={whisperSkipped} onSkip={() => setWhisperSkipped(true)} />
           )}
 
           {step === 3 && (

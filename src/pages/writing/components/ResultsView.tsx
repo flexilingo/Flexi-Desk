@@ -140,7 +140,7 @@ export function ResultsView() {
                   </div>
                 )}
                 {severityCounts.major && (
-                  <div className="flex items-center gap-1 text-xs text-[#C58C6E]">
+                  <div className="flex items-center gap-1 text-xs text-warning">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     {severityCounts.major} major
                   </div>
@@ -212,7 +212,7 @@ function CorrectionCard({ correction }: { correction: WritingCorrection }) {
           <div className="flex items-center gap-2">
             <span className="text-sm line-through text-error/70">{correction.originalSpan}</span>
             <span className="text-muted-foreground">&rarr;</span>
-            <span className="text-sm font-medium text-[#8BB7A3]">{correction.correctedSpan}</span>
+            <span className="text-sm font-medium text-success">{correction.correctedSpan}</span>
           </div>
           {correction.explanation && (
             <p className="text-xs text-muted-foreground">{correction.explanation}</p>

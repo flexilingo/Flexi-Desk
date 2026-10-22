@@ -271,3 +271,46 @@ pub async fn ai_evaluate_writing(
 
     extract_json(&response)
 }
+
+// ── Setup check ───────────────────────────────────────────
+
+/// What the Settings "test" button gets back: proof the configured AI answered.
+#[derive(serde::Serialize)]
+pub struct AiTestResult {
+    pub provider: String,
+    pub model: String,
+    pub reply: String,
+}
+
+/// Sends one tiny real prompt through the user's configured AI. It reads the
+/// same settings every feature reads, so a pass here means features will work.
+#[tauri::command]
+pub async fn ai_test(state: State<'_, AppState>) -> Result<AiTestResult, String> {
+    let settings = {
+        let conn = lock_db(&state)?;
+        read_ai_settings(&conn)
+    };
+
+    let messages = vec![ChatMessage {
+        role: "user".to_string(),
+        content: "Reply with the single word: ready".to_string(),
+    }];
+
+    let reply = chat_completion(
+        &settings.provider,
+        &settings.model,
+        messages,
+        settings.api_key.as_deref(),
+        settings.base_url.as_deref(),
+        Some(0.0),
+        Some(16),
+        false,
+    )
+    .await?;
+
+    Ok(AiTestResult {
+        provider: settings.provider,
+        model: settings.model,
+        reply: reply.trim().to_string(),
+    })
+}

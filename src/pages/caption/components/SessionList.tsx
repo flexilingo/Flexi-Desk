@@ -25,11 +25,11 @@ import type { CaptionSession, CaptionSessionStatus } from '../types';
 import { formatDuration } from '../types';
 
 const STATUS_CONFIG: Record<CaptionSessionStatus, { label: string; className: string }> = {
-  idle: { label: 'Ready', className: 'bg-[#C58C6E]/15 text-[#C58C6E]' },
-  capturing: { label: 'Capturing', className: 'bg-[#C58C6E]/15 text-[#C58C6E]' },
-  'live-capturing': { label: 'Live', className: 'bg-[#8BB7A3]/15 text-[#8BB7A3]' },
+  idle: { label: 'Ready', className: 'bg-warning/15 text-warning' },
+  capturing: { label: 'Capturing', className: 'bg-warning/15 text-warning' },
+  'live-capturing': { label: 'Live', className: 'bg-success/15 text-success' },
   processing: { label: 'Processing', className: 'bg-primary/10 text-primary' },
-  completed: { label: 'Completed', className: 'bg-[#8BB7A3]/15 text-[#8BB7A3]' },
+  completed: { label: 'Completed', className: 'bg-success/15 text-success' },
   failed: { label: 'Failed', className: 'bg-error/15 text-error' },
 };
 

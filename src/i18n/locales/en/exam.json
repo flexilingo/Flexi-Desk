@@ -1,0 +1,231 @@
+{
+  "tcf": {
+    "title": "TCF Canada",
+    "hubDescription": "Test de connaissance du français, the French test for Canadian immigration",
+    "resultsTitle": "Your TCF Canada Results",
+    "durationShort": "~2 h 47 min",
+    "startDialogDescription": "One full timed mock test: listening, reading, writing and speaking, in the official order.",
+    "sections": {
+      "listening": "Listening (CO)",
+      "reading": "Reading (CE)",
+      "writing": "Writing (EE)",
+      "speaking": "Speaking (EO)"
+    },
+    "sectionIntro": {
+      "listening": {
+        "title": "Listening comprehension",
+        "description": "39 questions from easy to hard. Each recording plays once, with its question and choices on screen. The clock runs only while you answer, not while a recording plays.",
+        "duration": "35 minutes • 39 questions",
+        "practiceDescription": "Questions from easy to hard. Each recording plays once, with its question and choices on screen. The clock runs only while you answer, not while a recording plays."
+      },
+      "reading": {
+        "title": "Reading comprehension",
+        "description": "39 short documents, one question each. Move freely between them.",
+        "duration": "60 minutes • 39 questions",
+        "practiceDescription": "Short documents, one question each. Move freely between them."
+      },
+      "writing": {
+        "title": "Written expression",
+        "description": "Three writing tasks under one shared clock. Keep to each task's word range.",
+        "duration": "60 minutes • 3 tasks",
+        "practiceDescription": "Your writing tasks share one clock. Keep to each task's word range."
+      },
+      "speaking": {
+        "title": "Oral expression",
+        "description": "Three speaking tasks. Task 2 gives you 2 minutes to prepare; tasks 1 and 3 start at once.",
+        "duration": "~12 minutes • 3 tasks",
+        "practiceDescription": "Record each task you picked. Task 2 gives you 2 minutes to prepare; tasks 1 and 3 start at once."
+      }
+    },
+    "itemOf": "Question {{current}} / {{total}}",
+    "answeredCount": "{{count}} answered",
+    "itemsLeft_one": "{{count}} question left",
+    "itemsLeft_other": "{{count}} questions left",
+    "timeLeft": "Time left",
+    "clockPaused": "Clock paused while the recording plays",
+    "answerWhileListening": "You can answer while you listen. Next appears when the recording ends.",
+    "listeningOnce": "Each recording plays once, with its question and choices on screen. The clock stops while it plays and runs while you answer.",
+    "audioDone": "Recording finished — the clock is running. Choose your answer, then go to the next question.",
+    "unansweredWarning": "{{count}} questions are still unanswered. You cannot come back to this section after submitting.",
+    "wordLimit": "{{min}}–{{max}} words · one 60-minute clock for all three tasks",
+    "wordRangeWarning": "Aim for {{min}}–{{max}} words. You can still submit.",
+    "wordRangeTask": "Task {{task}}: {{count}} words ({{min}}–{{max}})",
+    "writingPlaceholder": "Write your answer in French…",
+    "estimateNote": "Listening and reading scores are an estimate: the real TCF calibrates every question. An NCLC below 4 is shown as “< 4”, and your overall level is your lowest skill."
+  },
+  "tcfQuebec": {
+    "title": "TCF Québec",
+    "hubDescription": "The French test for Québec immigration (PSTQ, PEQ). On the official test you choose 1 to 4 papers, with 29 listening and 29 reading questions. Our mock runs all four skills at TCF Canada length (39 + 39 questions) and reports a CEFR level per skill.",
+    "startDialogDescription": "One full timed mock of all four skills: listening, reading, writing and speaking. Listening and reading use TCF Canada's length (39 questions each, 35 and 60 min), longer than the official TCF Québec (29 questions each, 25 and 45 min). Writing (3 tasks, 60 min) and speaking (3 tasks, 12 min) have the official length.",
+    "resultsTitle": "Your TCF Québec Results",
+    "estimateNote": "Listening and reading scores are an estimate: the real TCF calibrates every question. Levels follow the official TCF scale (France Éducation international); your overall level here is your lowest skill. Québec reads each skill on its own Échelle québécoise (for example, 400–499 in listening or reading is level 7–8); PSTQ stream 1 (high qualification) and the PEQ ask for level 7 in listening and speaking and level 5 in reading and writing. Check what your file requires.",
+    "pointsTitle": "Québec points (2013 grid)",
+    "pointsTotal": "{{total}} / {{max}} points",
+    "pointsValue": "{{points}} pts",
+    "pointsFloor": "On this 2013 grid, points start at B2; the two oral skills carry up to 14 of the 16, the written ones one point each. Today's PSTQ ranks French differently: up to 50 points per skill, from level 5 on the Québec scale.",
+    "pointsSource": "Source: the Québec immigration points grid in force since 1 August 2013, as printed in the TCF Manuel du candidat (France Éducation international, Version Q, September 2026, p. 16). The PSTQ now uses its own French points and minimum levels, published on quebec.ca — check the grid your application is assessed on."
+  },
+  "tcfIrn": {
+    "title": "TCF IRN",
+    "hubDescription": "The French test for a French residence card or naturalisation (Intégration, Résidence et Nationalité): four compulsory papers, 25 listening and 25 reading questions (levels up to B2). Since 1 January 2026 France asks for A2 for a first multi-year card, B1 for a first resident card (under 65) and B2 for naturalisation. Practice coming soon.",
+    "startDialogDescription": "One full timed mock test: listening, reading, writing and speaking, in the official order.",
+    "resultsTitle": "Your TCF IRN Results",
+    "estimateNote": "Listening and reading scores are an estimate: the real TCF calibrates every question. TCF IRN scores listening and reading on a 100–499 scale, where 499 is the top of B2, and marks writing and speaking out of 20; levels follow the official TCF scale (France Éducation international). Your overall level here is your lowest skill; the official attestation counts a level as reached when three skills reach it and the fourth is at least at the top of the level below. Check the level your application requires.",
+    "durationShort": "~1 h 35 min"
+  },
+  "scoringInfo": {
+    "open": "How is this score worked out?",
+    "title": "How your score is worked out",
+    "close": "Close",
+    "estimate": "This is a practice estimate, not an official result.",
+    "tableLoading": "Loading the table…",
+    "tableError": "The table did not load.",
+    "retry": "Try again",
+    "overallTitle": "Your overall score",
+    "columns": {
+      "level": "Level",
+      "reading": "Reading",
+      "listening": "Listening",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "mcq": "Listening & Reading score",
+      "task": "Writing & Speaking (out of 20)"
+    },
+    "tableCaption": {
+      "celpip_mcq": "Fewest right answers out of 38 for each level",
+      "tcf_nclc": "IRCC table: the score each NCLC level needs",
+      "tcf_cefr": "Official TCF grid: the score each level needs"
+    },
+    "celpip": {
+      "mcqTitle": "Listening and Reading",
+      "mcqPoints": "Each right answer is one point. A wrong answer costs nothing, so answer every question.",
+      "mcqChart": "Your points become a CLB level through the chart published by Paragon, the maker of CELPIP. Listening needs a few more right answers than Reading for the same level.",
+      "mcqDifficulty": "In the real test, hard questions count for more than easy ones, so the same number of right answers can land on two levels. We can't weigh question difficulty yet, so we give you the lower of the two.",
+      "mcqSlice": "If you practised only some parts, your result is scaled to the full 38 questions. Part 1 is the easiest, so a level from one part is only a rough guide.",
+      "prodTitle": "Writing and Speaking",
+      "prodCriteria": "An AI examiner rates each task on CELPIP's four areas: content and coherence, vocabulary, readability (writing) or listenability (speaking), and task fulfilment.",
+      "prodAverage": "Your level for a section is the average of your tasks, to the nearest half. The real test is rated by trained raters and gives whole levels.",
+      "overall": "It is your lowest skill. Immigration programs check each skill on its own, so your weakest skill is the one that decides.",
+      "source": "Sources: Paragon Testing Enterprises, CELPIP Pro Study Packs; IRCC language test equivalency table."
+    },
+    "tcf": {
+      "mcqTitle": "Listening and Reading",
+      "mcq39": "39 questions that get harder as you go. A right answer is worth more the later it comes: from 3 points for the first, easiest questions to 33 for the last, hardest ones. Your score runs from 100 to 699.",
+      "mcq25": "25 questions that get harder as you go, and a right answer is worth more the later it comes. Your score runs from 100 to 499, and the level goes up to B2.",
+      "mcqEstimate": "France Éducation international, which runs the TCF, does not publish its exact weights, so this score is an estimate.",
+      "mcqSlice": "If you practised only some questions, you see how many you got right instead of a score.",
+      "prodTitle": "Writing and Speaking",
+      "prod": "An AI examiner scores each task out of 20 on doing the task, organisation, vocabulary and grammar, plus fluency when you speak. Your section score is the average of your tasks.",
+      "nclcTitle": "From score to NCLC",
+      "nclc": "Each skill's score becomes an NCLC level through IRCC's official table. Your overall level is your lowest skill.",
+      "levelTitle": "From score to level",
+      "cefr": "Each skill gets a CEFR level, A1 to C2, from France Éducation international's official grid. Your overall level is your lowest skill.",
+      "quebecPoints": "Next to each level you see the points Québec's immigration grid gives it. Points start at B2.",
+      "source": "Sources: France Éducation international, Manuel du candidat; IRCC language test equivalency table.",
+      "sourceQuebec": "Sources: France Éducation international, Manuel du candidat (April 2025); Québec's immigration points grid.",
+      "sourceIrn": "Source: France Éducation international, Manuel du candidat (April 2025)."
+    }
+  },
+  "insightQa": {
+    "fromPassage": "From the passage",
+    "fromRecording": "From the recording",
+    "whyYourChoiceFailed": "Why your answer is wrong",
+    "whyCorrect": "Why this is the answer",
+    "nextTime": "Next time",
+    "wordToKnow": "Word to know",
+    "commonTrap": "{{count}} of your {{wrong}} mistakes fell into the same trap: {{trap}}",
+    "techniquesToPractise": "Techniques to practise",
+    "traps": {
+      "unstated_detail": "Not in the text",
+      "passage_wording_reused": "Same words, different meaning",
+      "plausible_real_world_assumption": "True in real life, not in the text",
+      "partial_match": "Only partly right",
+      "extreme_qualifier": "Too absolute",
+      "ignores_a_stated_condition": "Misses a stated condition",
+      "right_number_wrong_unit": "Right number, wrong unit"
+    },
+    "techniques": {
+      "paraphrase_bridging": "Match the paraphrase",
+      "keyword_anchoring": "Anchor on key words",
+      "condition_scan": "Check every condition",
+      "purpose_before_detail": "Purpose before detail",
+      "note_shorthand": "Short notes while listening",
+      "stance_tracking": "Track who thinks what",
+      "tone_register_read": "Read the tone",
+      "scan_first_and_last_sentence": "Scan the first and last sentences",
+      "distractor_overlap_test": "Distrust copied wording",
+      "option_elimination_by_extremes": "Drop the extreme options",
+      "predict_before_audio": "Predict before you listen",
+      "unit_check": "Check the units"
+    }
+  },
+  "overallLevel": "Overall level",
+  "practiceScoreLabel": "Practice score",
+  "takeAgainShort": "Retake",
+  "retakeUntimed": "Retry untimed",
+  "examBeingScored": "Your exam from {{date}} is being scored — the sections already scored are ready to view.",
+  "scoringBannerTitle": "Still being scored: {{sections}}.",
+  "scoringBannerBody": "Your other scores are below. You can leave this page — scoring carries on without it, and the score will be here when you come back.",
+  "scoringBannerSlow": "It is taking longer than usual, but nothing is lost: it keeps retrying on its own until the score is ready. You can leave this page and come back later.",
+  "examSectionAnalyzing": "Analyzing…",
+  "startPracticeOf": "Start {{section}} practice ({{count}})",
+  "notAnswered": "No answer",
+  "youChoseLabel": "You chose",
+  "insightUpgradeCta": "Upgrade to Pro",
+  "sectionPartsCount_one": "{{count}} part",
+  "sectionPartsCount_other": "{{count}} parts",
+  "scoreReadyNotice": "{{section}} score is ready",
+  "scoreReadyView": "View",
+  "practiceQuestionCount_one": "{{count}} question",
+  "practiceQuestionCount_other": "{{count}} questions",
+  "practiceTaskCount_one": "{{count}} task",
+  "practiceTaskCount_other": "{{count}} tasks",
+  "results": {
+    "tcfHelp": {
+      "translate": "Translate the explanations",
+      "translating": "Translating…",
+      "hideTranslation": "Hide the translation",
+      "showTranslation": "Show the translation",
+      "lockedExplanation": "The full explanation of this question — the sentence that proves the answer, the trap in your choice, how to solve it and the key word — is for Pro members.",
+      "modelAnswersTitle": "Model answers",
+      "bandChip": "NCLC {{band}}",
+      "openToAll": "Open to everyone",
+      "nextLevel": "The next level",
+      "whatSetsBand": "What makes it NCLC {{band}}",
+      "lockedBand": "The same task answered at NCLC {{band}}, with a note on what lifts it to that level, is for Pro members.",
+      "stepsTitle_one": "From NCLC 5 to 7: {{count}} rule",
+      "stepsTitle_other": "From NCLC 5 to 7: {{count}} rules",
+      "examinerModel": "The examiner's model answer for this task",
+      "reference": "Your reference",
+      "stepsTitle9_one": "From NCLC 7 to 9: {{count}} rule",
+      "stepsTitle9_other": "From NCLC 7 to 9: {{count}} rules"
+    },
+    "nextSteps": {
+      "title": "Your next step",
+      "missedCount": "{{missed}} of {{total}} missed",
+      "lockedMcq": "Explanations are for Pro members.",
+      "openSection": "Open {{section}}",
+      "lockedTasks": "Model answers above NCLC 5 are for Pro members.",
+      "nextLevelBand": "next level: NCLC {{band}}",
+      "referenceBand": "reference: NCLC {{band}}",
+      "freeMonthly": "This result is one of your free full results: 2 a month, then 1 a day."
+    },
+    "reviewTabs": {
+      "wrong": "Wrong",
+      "right": "Right",
+      "noneWrong": "You answered every question in this section correctly.",
+      "noneRight": "None of your answers in this section is right yet. Every question is in the Wrong tab.",
+      "showExplanation": "Show the explanation"
+    },
+    "correct": "correct",
+    "yourNextStep": "Your next step",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "bandLabel": "CLB {{band}}",
+    "lockedListeningReview": "Replaying each recording and reading its transcript are part of Pro. A free account gets them on 2 full results a month, and on 1 a day once those are used.",
+    "lockedReadingReview": "Reading the text again is part of Pro. A free account gets it on 2 full results a month, and on 1 a day once those are used.",
+    "tcfRecordingLocked": "Replaying your own recording is part of Pro. A free account gets it on 2 full results a month, and on 1 a day once those are used.",
+    "noSpeechTitle": "We couldn't hear this answer.",
+    "noSpeechBody": "Your microphone recorded almost nothing, so there was nothing to score. Check that the right microphone is selected and not muted, then try this task again."
+  }
+}

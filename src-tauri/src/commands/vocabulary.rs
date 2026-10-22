@@ -412,3 +412,232 @@ pub fn vocabulary_stats(
         not_in_decks: total - in_decks,
     })
 }
+
+// ── Vocabulary page: the whole word store with its SRS status ──────────────
+
+/// One word as the Vocabulary page shows it. The page filters, sorts and pages in the
+/// app (it merges these with the account's history first), so this is the whole store.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct VocabularyWordRow {
+    pub id: i64,
+    pub word: String,
+    pub language: String,
+    pub pos: Option<String>,
+    pub cefr_level: Option<String>,
+    pub translation: Option<String>,
+    pub definition: Option<String>,
+    pub context_sentence: Option<String>,
+    pub source_module: Option<String>,
+    pub created_at: String,
+    pub last_seen_at: String,
+    /// How many times the word was looked up here (at least 1: it is in the store).
+    pub lookup_count: i64,
+    pub deck_count: i64,
+    /// "new" (in no deck), "learning" (in a deck) or "mastered" (a card of it has an
+    /// interval of 21 days or more).
+    pub status: String,
+    /// 0 (not in a deck) to 5, from the best card's interval - the five dots the
+    /// website draws from its Leitner box.
+    pub level: i64,
+}
+
+/// Interval, in days, from which a card counts as mastered.
+const MASTERED_DAYS: f64 = 21.0;
+
+pub fn status_for(deck_count: i64, best_interval_days: f64) -> &'static str {
+    if deck_count <= 0 {
+        "new"
+    } else if best_interval_days >= MASTERED_DAYS {
+        "mastered"
+    } else {
+        "learning"
+    }
+}
+
+pub fn level_for(deck_count: i64, best_interval_days: f64) -> i64 {
+    if deck_count <= 0 {
+        0
+    } else if best_interval_days >= MASTERED_DAYS {
+        5
+    } else if best_interval_days >= 7.0 {
+        4
+    } else if best_interval_days >= 3.0 {
+        3
+    } else if best_interval_days >= 1.0 {
+        2
+    } else {
+        1
+    }
+}
+
+pub fn word_overview(conn: &rusqlite::Connection) -> Result<Vec<VocabularyWordRow>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT v.id, v.word, v.language, v.pos, v.cefr_level, v.translation, v.definition,
+                    v.context_sentence, v.source_module, v.created_at,
+                    COALESCE((SELECT MAX(s.encountered_at) FROM vocabulary_sources s
+                              WHERE s.vocabulary_id = v.id AND s.source_module = 'dictionary'), v.updated_at),
+                    (SELECT COUNT(*) FROM vocabulary_sources s
+                     WHERE s.vocabulary_id = v.id AND s.source_module = 'dictionary'),
+                    (SELECT COUNT(*) FROM deck_cards dc WHERE dc.vocabulary_id = v.id),
+                    COALESCE((SELECT MAX(p.interval_days) FROM deck_cards dc
+                              JOIN srs_progress p ON p.card_id = dc.id
+                              WHERE dc.vocabulary_id = v.id), 0)
+             FROM vocabulary v
+             ORDER BY v.created_at DESC, v.id DESC
+             LIMIT 20000",
+        )
+        .map_err(|e| format!("Overview error: {e}"))?;
+    let rows = stmt
+        .query_map([], |r| {
+            let lookups: i64 = r.get(11)?;
+            let deck_count: i64 = r.get(12)?;
+            let interval: f64 = r.get(13)?;
+            Ok(VocabularyWordRow {
+                id: r.get(0)?,
+                word: r.get(1)?,
+                language: r.get(2)?,
+                pos: r.get(3)?,
+                cefr_level: r.get(4)?,
+                translation: r.get(5)?,
+                definition: r.get(6)?,
+                context_sentence: r.get(7)?,
+                source_module: r.get(8)?,
+                created_at: r.get(9)?,
+                last_seen_at: r.get(10)?,
+                lookup_count: lookups.max(1),
+                deck_count,
+                status: status_for(deck_count, interval).to_string(),
+                level: level_for(deck_count, interval),
+            })
+        })
+        .and_then(|rows| rows.collect::<Result<Vec<_>, _>>())
+        .map_err(|e| format!("Overview error: {e}"))?;
+    Ok(rows)
+}
+
+/// Write one dictionary lookup into the word store: the word is added (or its
+/// translation filled in) and the lookup itself is recorded, so "most clicked" and the
+/// recommendations have a count to read. Returns the word's id.
+pub fn log_word_lookup(
+    conn: &rusqlite::Connection,
+    word: &str,
+    language: &str,
+    translation: Option<String>,
+    pos: Option<String>,
+    cefr_level: Option<String>,
+    context: Option<String>,
+) -> Result<i64, String> {
+    let existing: Option<i64> = conn
+        .query_row(
+            "SELECT id FROM vocabulary WHERE word = ?1 AND language = ?2",
+            rusqlite::params![word, language],
+            |row| row.get(0),
+        )
+        .ok();
+    let id = match existing {
+        Some(id) => {
+            conn.execute(
+                "UPDATE vocabulary SET
+                    translation = COALESCE(?1, translation),
+                    pos = COALESCE(?2, pos),
+                    cefr_level = COALESCE(?3, cefr_level),
+                    context_sentence = COALESCE(context_sentence, ?4),
+                    updated_at = datetime('now')
+                 WHERE id = ?5",
+                rusqlite::params![translation, pos, cefr_level, context, id],
+            )
+            .map_err(|e| format!("Lookup update error: {e}"))?;
+            id
+        }
+        None => {
+            conn.execute(
+                "INSERT INTO vocabulary (word, language, translation, pos, cefr_level, source_module, context_sentence)
+                 VALUES (?1, ?2, ?3, ?4, ?5, 'dictionary', ?6)",
+                rusqlite::params![word, language, translation, pos, cefr_level, context],
+            )
+            .map_err(|e| format!("Lookup insert error: {e}"))?;
+            conn.last_insert_rowid()
+        }
+    };
+    conn.execute(
+        "INSERT OR IGNORE INTO vocabulary_sources (vocabulary_id, source_module, source_id, context_sentence)
+         VALUES (?1, 'dictionary', lower(hex(randomblob(8))), ?2)",
+        rusqlite::params![id, context],
+    )
+    .map_err(|e| format!("Lookup log error: {e}"))?;
+    Ok(id)
+}
+
+#[tauri::command]
+pub fn vocabulary_overview(state: State<'_, AppState>) -> Result<Vec<VocabularyWordRow>, String> {
+    word_overview(&*lock_db(&state)?)
+}
+
+#[tauri::command]
+pub fn vocabulary_log_lookup(
+    state: State<'_, AppState>,
+    word: String,
+    language: String,
+    translation: Option<String>,
+    pos: Option<String>,
+    cefr_level: Option<String>,
+    context: Option<String>,
+) -> Result<i64, String> {
+    log_word_lookup(&*lock_db(&state)?, &word, &language, translation, pos, cefr_level, context)
+}
+
+#[cfg(test)]
+mod overview_tests {
+    use super::*;
+    use crate::db::schema::run_migrations;
+
+    fn db() -> rusqlite::Connection {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations(&conn).unwrap();
+        conn
+    }
+
+    #[test]
+    fn status_and_level_follow_the_best_card() {
+        assert_eq!((status_for(0, 0.0), level_for(0, 99.0)), ("new", 0));
+        assert_eq!((status_for(1, 0.0), level_for(1, 0.0)), ("learning", 1));
+        assert_eq!((status_for(2, 3.0), level_for(2, 3.0)), ("learning", 3));
+        assert_eq!((status_for(1, 20.9), level_for(1, 20.9)), ("learning", 4));
+        assert_eq!((status_for(1, 21.0), level_for(1, 21.0)), ("mastered", 5));
+    }
+
+    #[test]
+    fn lookups_are_counted_and_a_word_is_stored_once() {
+        let conn = db();
+        let a = log_word_lookup(&conn, "maison", "fr", Some("house".into()), None, Some("A1".into()), Some("la maison".into())).unwrap();
+        let b = log_word_lookup(&conn, "maison", "fr", None, Some("noun".into()), None, None).unwrap();
+        let c = log_word_lookup(&conn, "maison", "fr", None, None, None, None).unwrap();
+        assert_eq!((a, b), (b, c));
+        log_word_lookup(&conn, "maison", "en", None, None, None, None).unwrap();
+        let rows = word_overview(&conn).unwrap();
+        assert_eq!(rows.len(), 2);
+        let fr = rows.iter().find(|r| r.language == "fr").unwrap();
+        assert_eq!(fr.lookup_count, 3);
+        assert_eq!(fr.translation.as_deref(), Some("house"));
+        assert_eq!(fr.pos.as_deref(), Some("noun"));
+        assert_eq!(fr.context_sentence.as_deref(), Some("la maison"));
+        assert_eq!(fr.status, "new");
+        assert_eq!(rows.iter().find(|r| r.language == "en").unwrap().lookup_count, 1);
+    }
+
+    #[test]
+    fn a_word_in_a_deck_reads_its_srs_state() {
+        let conn = db();
+        let id = log_word_lookup(&conn, "chat", "fr", Some("cat".into()), None, None, None).unwrap();
+        conn.execute("INSERT INTO decks (id, name, language, algorithm) VALUES ('d1','Deck','fr','fsrs')", []).unwrap();
+        conn.execute("INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back) VALUES ('c1','d1',?1,'chat','cat')", [id]).unwrap();
+        conn.execute("INSERT INTO srs_progress (id, card_id, algorithm, state, interval_days) VALUES ('p1','c1','fsrs','review',30)", []).unwrap();
+        let row = &word_overview(&conn).unwrap()[0];
+        assert_eq!((row.status.as_str(), row.level, row.deck_count), ("mastered", 5, 1));
+        conn.execute("UPDATE srs_progress SET interval_days = 2 WHERE id = 'p1'", []).unwrap();
+        let row = &word_overview(&conn).unwrap()[0];
+        assert_eq!((row.status.as_str(), row.level), ("learning", 2));
+    }
+}

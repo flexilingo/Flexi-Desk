@@ -92,7 +92,7 @@ export function MatchingQuestion({
         {question.hint && <p className="text-sm text-muted-foreground italic">{question.hint}</p>}
 
         {pairs.length === 0 && (
-          <div className="p-4 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-lg">
+          <div className="p-4 bg-warning/15 text-warning rounded-lg">
             <p className="font-medium">No pairs found for this question.</p>
           </div>
         )}
@@ -120,8 +120,8 @@ export function MatchingQuestion({
                     isMatched
                       ? showFeedback
                         ? matchIsCorrect
-                          ? 'bg-green-100 border-green-500 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                          : 'bg-red-100 border-red-500 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                          ? 'bg-success/15 border-success text-success'
+                          : 'bg-error/15 border-error text-error'
                         : 'bg-muted border-muted-foreground/30 opacity-60'
                       : isSelected
                         ? 'bg-primary/10 border-primary'
@@ -137,8 +137,8 @@ export function MatchingQuestion({
                           'h-4 w-4',
                           showFeedback
                             ? matchIsCorrect
-                              ? 'text-green-600'
-                              : 'text-red-600'
+                              ? 'text-success'
+                              : 'text-error'
                             : 'text-muted-foreground',
                         )}
                       />
@@ -170,8 +170,8 @@ export function MatchingQuestion({
                     isMatched
                       ? showFeedback
                         ? matchIsCorrect
-                          ? 'bg-green-100 border-green-500 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                          : 'bg-red-100 border-red-500 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                          ? 'bg-success/15 border-success text-success'
+                          : 'bg-error/15 border-error text-error'
                         : 'bg-muted border-muted-foreground/30 opacity-60'
                       : selectedLeft
                         ? 'bg-card border-border hover:border-primary cursor-pointer'
@@ -201,9 +201,7 @@ export function MatchingQuestion({
           <div
             className={cn(
               'p-3 rounded-lg',
-              isCorrect
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400',
+              isCorrect ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning',
             )}
           >
             <div className="flex items-center gap-2 mb-2">

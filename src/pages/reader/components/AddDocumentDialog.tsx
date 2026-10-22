@@ -3,9 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { open as pickFile } from '@tauri-apps/plugin-dialog';
-import { BookOpen, FileText, FileUp, ImageIcon, Loader2, Lock, X } from 'lucide-react';
+import {
+  AlignLeft,
+  BookOpen,
+  FileText,
+  FileUp,
+  Globe,
+  ImageIcon,
+  Loader2,
+  Lock,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +30,8 @@ import {
   checkReaderDuplicate,
   importReaderBytes,
   importReaderPath,
+  importReaderText,
+  importReaderUrl,
   inspectReaderPath,
 } from '../services/readerService';
 import { imageToPdf } from '../lib/image-to-pdf';
@@ -31,9 +44,21 @@ import {
   type ChosenFile,
 } from '../lib/add-document';
 import { buildReadingQueue } from '../lib/queue';
+import { detectLanguage } from '../lib/detect-language';
+import { MAX_DETECT_BYTES, detectPdfLanguage } from '../lib/detect-pdf-language';
+import { languageName } from '../library/format';
 import { progressLine } from '../lib/reading-copy';
 import { useReaderErrorText } from '../lib/use-error-text';
 import type { ReaderDocument } from '../types';
+
+type AddMode = 'file' | 'text' | 'url';
+const MODES: { id: AddMode; icon: typeof FileText }[] = [
+  { id: 'file', icon: FileUp },
+  { id: 'text', icon: AlignLeft },
+  { id: 'url', icon: Globe },
+];
+/** The language select's value for "read it from the page's own declaration". */
+const AUTO_LANGUAGE = 'auto';
 
 /** A file the picker chose lives outside the app's folder; its dialog grant lets the fs plugin read it. */
 async function readPicked(path: string): Promise<Uint8Array> {
@@ -66,12 +91,18 @@ export function AddDocumentDialog({
 }) {
   const { t } = useTranslation('reader');
   const { t: tl } = useTranslation('readingLibrary');
-  const { t: tDesk } = useTranslation('readerDesk');
+  const { t: tDesk, i18n } = useTranslation('readerDesk');
   const errorText = useReaderErrorText();
   const navigate = useNavigate();
   const { targetLang } = useLanguageSettings();
 
+  const [mode, setMode] = useState<AddMode>('file');
+  const [pasted, setPasted] = useState('');
+  const [pastedTitle, setPastedTitle] = useState('');
+  const [pageUrl, setPageUrl] = useState('');
   const [chosen, setChosen] = useState<ChosenFile | null>(null);
+  // The language the chosen PDF's own text says it is written in; the reader can still pick another.
+  const [detectedFile, setDetectedFile] = useState('');
   const [language, setLanguage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -83,8 +114,21 @@ export function AddDocumentDialog({
   // Synchronous guard: a second tap lands before `busy` has re-rendered.
   const submitting = useRef(false);
   const handled = useRef<number | null>(null);
+  const detectToken = useRef(0);
 
-  const chosenLanguage = language || targetLang;
+  const detectedPasted = useMemo(
+    () => (mode === 'text' ? detectLanguage(pasted) : { code: '', confident: false }),
+    [mode, pasted],
+  );
+  const detected =
+    mode === 'text'
+      ? detectedPasted.confident
+        ? detectedPasted.code
+        : ''
+      : mode === 'file'
+        ? detectedFile
+        : '';
+  const chosenLanguage = language || detected || (mode === 'url' ? AUTO_LANGUAGE : targetLang);
   const existing = useMemo(() => {
     if (!chosen || chosen.kind !== 'pdf') return null;
     const match = sameFile(duplicates, chosen.size);
@@ -96,7 +140,13 @@ export function AddDocumentDialog({
   // broken. Closing it is the reset.
   useEffect(() => {
     if (!open) {
+      setMode('file');
+      setPasted('');
+      setPastedTitle('');
+      setPageUrl('');
       setChosen(null);
+      setDetectedFile('');
+      setLanguage('');
       setError(null);
       setBusy(false);
       setOpening(false);
@@ -113,7 +163,26 @@ export function AddDocumentDialog({
       setAddAgain(false);
       setDuplicates([]);
       setChosen(next);
+      setDetectedFile('');
+      setLanguage('');
+      const token = (detectToken.current += 1);
       if (next.kind !== 'pdf') return;
+      // Read the first pages' text and preselect the language it is written in.
+      void (async () => {
+        try {
+          const bytes = next.path
+            ? await readPicked(next.path)
+            : next.file && next.file.size <= MAX_DETECT_BYTES
+              ? new Uint8Array(await next.file.arrayBuffer())
+              : null;
+          if (!bytes || bytes.byteLength > MAX_DETECT_BYTES) return;
+          const found = await detectPdfLanguage(bytes);
+          if (found.confident && token === detectToken.current)
+            setDetectedFile((now) => (now === '' ? found.code : now));
+        } catch {
+          // A guess that fails is just no preselection.
+        }
+      })();
       try {
         if (next.path) {
           const inspected = await inspectReaderPath(next.path);
@@ -144,6 +213,7 @@ export function AddDocumentDialog({
   useEffect(() => {
     if (!open || !incoming || handled.current === incoming.key) return;
     handled.current = incoming.key;
+    setMode('file');
     takeFile(incoming.file);
   }, [open, incoming, takeFile]);
 
@@ -181,12 +251,33 @@ export function AddDocumentDialog({
   // the document page replaces it: releasing it would re-enable the button while
   // that page loads, and a second press would add the same book again.
   const submit = async () => {
-    if (!chosen || submitting.current) return;
+    if (mode === 'file' && !chosen) return;
+    if (submitting.current) return;
     submitting.current = true;
     setError(null);
     setBusy(true);
     try {
       let created: ReaderDocument;
+      if (mode === 'text') {
+        created = await importReaderText({
+          text: pasted,
+          title: pastedTitle.trim() || undefined,
+          language: chosenLanguage,
+        });
+        setOpening(true);
+        navigate(`/reader/text/${created.id}`);
+        return;
+      }
+      if (mode === 'url') {
+        created = await importReaderUrl({
+          url: pageUrl.trim(),
+          language: chosenLanguage === AUTO_LANGUAGE ? undefined : chosenLanguage,
+        });
+        setOpening(true);
+        navigate(`/reader/text/${created.id}`);
+        return;
+      }
+      if (!chosen) return;
       if (chosen.kind === 'image') {
         let bytes: Uint8Array;
         let pdf: File;
@@ -250,6 +341,12 @@ export function AddDocumentDialog({
   };
 
   const KindIcon = chosen?.kind === 'image' ? ImageIcon : FileText;
+  const canSubmit =
+    mode === 'file'
+      ? !!chosen
+      : mode === 'text'
+        ? pasted.trim().length > 0
+        : pageUrl.trim().length > 0;
 
   return (
     <Dialog
@@ -265,52 +362,140 @@ export function AddDocumentDialog({
       >
         <DialogHeader>
           <DialogTitle>{t('upload.heading')}</DialogTitle>
-          <DialogDescription>{tDesk('upload.hint')}</DialogDescription>
+          <DialogDescription>{tDesk(`upload.hint.${mode}`)}</DialogDescription>
         </DialogHeader>
 
-        {chosen ? (
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/50 px-3.5 py-3">
-            <KindIcon className="h-5 w-5 shrink-0 text-primary-dark" />
-            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-              <bdi>{chosen.name}</bdi>
-            </p>
+        <div role="tablist" aria-label={t('upload.heading')} className="flex flex-wrap gap-1.5">
+          {MODES.map(({ id, icon: Icon }) => (
             <button
+              key={id}
               type="button"
+              role="tab"
+              aria-selected={mode === id}
+              disabled={busy}
               onClick={() => {
-                setChosen(null);
-                setDuplicates([]);
-                setAddAgain(false);
+                setMode(id);
                 setError(null);
               }}
-              disabled={busy}
-              aria-label={tDesk('upload.clear')}
-              title={tDesk('upload.clear')}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              className={cn(
+                'inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors disabled:opacity-50',
+                mode === id
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
             >
-              <X className="h-4 w-4" />
+              <Icon className="h-4 w-4" />
+              {tDesk(`upload.mode.${id}`)}
             </button>
+          ))}
+        </div>
+
+        {mode === 'text' && (
+          <div className="space-y-3">
+            <div>
+              <label
+                htmlFor="reader-paste-text"
+                className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+              >
+                {tDesk('upload.text.label')}
+              </label>
+              <textarea
+                id="reader-paste-text"
+                value={pasted}
+                onChange={(e) => setPasted(e.target.value)}
+                disabled={busy}
+                rows={9}
+                placeholder={tDesk('upload.text.placeholder')}
+                className="block max-h-72 min-h-40 w-full resize-y rounded-md border border-border bg-transparent px-3 py-2 text-sm leading-6 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="reader-paste-title"
+                className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+              >
+                {tDesk('upload.text.title')}
+              </label>
+              <Input
+                id="reader-paste-title"
+                value={pastedTitle}
+                onChange={(e) => setPastedTitle(e.target.value)}
+                disabled={busy}
+                maxLength={200}
+                placeholder={tDesk('upload.text.titlePlaceholder')}
+              />
+            </div>
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => void pick()}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setOver(true);
-            }}
-            onDragLeave={() => setOver(false)}
-            onDrop={onDrop}
-            className={cn(
-              'flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center text-sm transition-colors',
-              over ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
-            )}
-          >
-            <FileUp className="h-6 w-6 text-primary-dark" />
-            <span className="font-semibold text-foreground">{t('upload.dropzone')}</span>
-          </button>
         )}
 
-        {chosen && offerExisting && existing && (
+        {mode === 'url' && (
+          <div>
+            <label
+              htmlFor="reader-page-url"
+              className="mb-1.5 block text-xs font-semibold text-muted-foreground"
+            >
+              {tDesk('upload.url.label')}
+            </label>
+            <Input
+              id="reader-page-url"
+              type="url"
+              inputMode="url"
+              value={pageUrl}
+              onChange={(e) => setPageUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && canSubmit && !busy) void submit();
+              }}
+              disabled={busy}
+              placeholder="https://example.com/article"
+              dir="ltr"
+            />
+          </div>
+        )}
+
+        {mode === 'file' &&
+          (chosen ? (
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/50 px-3.5 py-3">
+              <KindIcon className="h-5 w-5 shrink-0 text-primary-dark" />
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+                <bdi>{chosen.name}</bdi>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setChosen(null);
+                  setDuplicates([]);
+                  setAddAgain(false);
+                  setError(null);
+                }}
+                disabled={busy}
+                aria-label={tDesk('upload.clear')}
+                title={tDesk('upload.clear')}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void pick()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setOver(true);
+              }}
+              onDragLeave={() => setOver(false)}
+              onDrop={onDrop}
+              className={cn(
+                'flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center text-sm transition-colors',
+                over ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
+              )}
+            >
+              <FileUp className="h-6 w-6 text-primary-dark" />
+              <span className="font-semibold text-foreground">{t('upload.dropzone')}</span>
+            </button>
+          ))}
+
+        {mode === 'file' && chosen && offerExisting && existing && (
           <div className="rounded-lg border border-border bg-card px-3.5 py-3">
             <p className="text-sm font-semibold text-foreground">{t('upload.duplicate.title')}</p>
             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
@@ -329,7 +514,7 @@ export function AddDocumentDialog({
         )}
 
         {/* Nothing below means anything until there is a file to ask about. */}
-        {chosen && !offerExisting && (
+        {((mode === 'file' && chosen && !offerExisting) || mode !== 'file') && (
           <div>
             <label
               htmlFor="reader-language"
@@ -344,13 +529,20 @@ export function AddDocumentDialog({
               disabled={busy}
               className="h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
             >
+              {mode === 'url' && (
+                <option value={AUTO_LANGUAGE}>{tDesk('upload.url.autoLanguage')}</option>
+              )}
               {targetLanguages.map((lang) => (
                 <option key={lang.code} value={lang.code}>
                   {lang.name} ({lang.nativeName})
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-muted-foreground">{t('upload.languageHint')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {detected && !language && detected === chosenLanguage
+                ? tDesk('language.detected', { language: languageName(detected, i18n.language) })
+                : t('upload.languageHint')}
+            </p>
           </div>
         )}
 
@@ -366,9 +558,9 @@ export function AddDocumentDialog({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="inline-flex max-w-[34ch] items-start gap-1.5 text-xs leading-5 text-muted-foreground">
             <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            {tDesk('upload.privacy')}
+            {tDesk(mode === 'url' ? 'upload.privacyUrl' : 'upload.privacy')}
           </p>
-          {offerExisting && existing ? (
+          {mode === 'file' && offerExisting && existing ? (
             <div className="inline-flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={() => setAddAgain(true)}>
                 <FileUp className="h-4 w-4" />
@@ -385,7 +577,7 @@ export function AddDocumentDialog({
               </Button>
             </div>
           ) : (
-            <Button onClick={() => void submit()} disabled={!chosen || busy}>
+            <Button onClick={() => void submit()} disabled={!canSubmit || busy}>
               {busy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

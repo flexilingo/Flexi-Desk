@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { AlertTriangle, Loader2, Merge } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +10,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Merge } from 'lucide-react';
+import { InlineError } from '@/components/common/InlineError';
+import { useReviewStore } from '../stores/reviewStore';
 import type { DeckWithStats } from '../types';
+import { useErrorText } from '../lib/useErrorText';
 
 interface MergeDeckDialogProps {
   open: boolean;
@@ -19,94 +22,103 @@ interface MergeDeckDialogProps {
   onMerged: () => void;
 }
 
+const SELECT =
+  'flex h-9 w-full rounded-md border border-border bg-card px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary';
+
 export function MergeDeckDialog({ open, onOpenChange, decks, onMerged }: MergeDeckDialogProps) {
+  const { t } = useTranslation('decks');
+  const errorText = useErrorText();
+  const mergeDecks = useReviewStore((s) => s.mergeDecks);
   const [sourceDeckId, setSourceDeckId] = useState('');
   const [targetDeckId, setTargetDeckId] = useState('');
   const [deleteSource, setDeleteSource] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const sourceDeck = decks.find((d) => d.id === sourceDeckId);
   const targetDeck = decks.find((d) => d.id === targetDeckId);
-  const canMerge = sourceDeckId && targetDeckId && sourceDeckId !== targetDeckId;
+  const canMerge = !!sourceDeckId && !!targetDeckId && sourceDeckId !== targetDeckId;
 
   const handleMerge = async () => {
     if (!canMerge) return;
-    setIsLoading(true);
+    setBusy(true);
     setError(null);
     try {
-      await invoke('srs_merge_decks', {
-        sourceDeckId,
-        targetDeckId,
-        deleteSource,
-      });
-      onMerged();
-      onOpenChange(false);
+      await mergeDecks(sourceDeckId, targetDeckId, deleteSource);
       setSourceDeckId('');
       setTargetDeckId('');
+      onMerged();
+      onOpenChange(false);
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e));
     } finally {
-      setIsLoading(false);
+      setBusy(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Merge className="h-5 w-5" />
-            Merge Decks
+            {t('merge.title')}
           </DialogTitle>
-          <DialogDescription>
-            Move all cards from one deck into another. Duplicate cards (same word) will be skipped.
-          </DialogDescription>
+          <DialogDescription>{t('merge.description')}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Source deck (move cards from)</label>
+            <label htmlFor="merge-source" className="text-sm font-medium">
+              {t('merge.source')}
+            </label>
             <select
+              id="merge-source"
               value={sourceDeckId}
+              disabled={busy}
               onChange={(e) => setSourceDeckId(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className={SELECT}
             >
-              <option value="">Select source deck</option>
+              <option value="">{t('merge.selectSource')}</option>
               {decks
                 .filter((d) => d.id !== targetDeckId)
-                .map((deck) => (
-                  <option key={deck.id} value={deck.id}>
-                    {deck.name} ({deck.cardCount} cards)
+                .map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({t('cardsCount', { count: d.cardCount })})
                   </option>
                 ))}
             </select>
           </div>
-
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Target deck (move cards to)</label>
+            <label htmlFor="merge-target" className="text-sm font-medium">
+              {t('merge.target')}
+            </label>
             <select
+              id="merge-target"
               value={targetDeckId}
+              disabled={busy}
               onChange={(e) => setTargetDeckId(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className={SELECT}
             >
-              <option value="">Select target deck</option>
+              <option value="">{t('merge.selectTarget')}</option>
               {decks
                 .filter((d) => d.id !== sourceDeckId)
-                .map((deck) => (
-                  <option key={deck.id} value={deck.id}>
-                    {deck.name} ({deck.cardCount} cards)
+                .map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({t('cardsCount', { count: d.cardCount })})
                   </option>
                 ))}
             </select>
           </div>
 
           {sourceDeck && targetDeck && sourceDeck.algorithm !== targetDeck.algorithm && (
-            <div className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 rounded-md bg-warning/10 p-3 text-sm text-warning">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
-                Cards will switch from {sourceDeck.algorithm.toUpperCase()} to{' '}
-                {targetDeck.algorithm.toUpperCase()} algorithm.
+                {t('merge.algorithmSwitch', {
+                  from: sourceDeck.algorithm.toUpperCase(),
+                  to: targetDeck.algorithm.toUpperCase(),
+                })}
               </span>
             </div>
           )}
@@ -115,23 +127,22 @@ export function MergeDeckDialog({ open, onOpenChange, decks, onMerged }: MergeDe
             <input
               type="checkbox"
               checked={deleteSource}
+              disabled={busy}
               onChange={(e) => setDeleteSource(e.target.checked)}
               className="rounded"
             />
-            <span className="text-sm text-foreground">Delete source deck after merge</span>
+            <span className="text-sm">{t('merge.deleteSource')}</span>
           </label>
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          <InlineError message={error} onDismiss={() => setError(null)} />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+            {t('cancel')}
           </Button>
-          <Button onClick={handleMerge} disabled={!canMerge || isLoading}>
-            {isLoading ? 'Merging...' : 'Merge Decks'}
+          <Button onClick={handleMerge} disabled={!canMerge || busy}>
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            {busy ? t('merge.merging') : t('merge.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -7,6 +7,7 @@ import { Shell } from '@/components/layout/Shell';
 import { DashboardPage } from '@/pages/dashboard';
 import { StudyPage } from '@/pages/study';
 import { ReviewPage } from '@/pages/review';
+import { ExplorePage } from '@/pages/explore';
 import { ReadingPage } from '@/pages/reading';
 import { TutorPage } from '@/pages/tutor';
 import { CaptionPage } from '@/pages/caption';
@@ -14,14 +15,19 @@ import { PronunciationPage } from '@/pages/pronunciation';
 import { WritingPage } from '@/pages/writing';
 import { CelpipPage } from '@/pages/celpip';
 import { ReaderPage } from '@/pages/reader';
+import { CheatsheetPage } from '@/pages/cheatsheet';
 import { PodcastPage } from '@/pages/podcast';
+import { VideosPage } from '@/pages/videos';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { VocabularyPage } from '@/pages/vocabulary';
+import { NotesPage } from '@/pages/notes';
 import { PluginManagerPage } from '@/pages/plugins/PluginManagerPage';
 import { useAuthStore } from '@/stores/authStore';
 import { ENABLED_MODULES } from '@/config/features';
 import { SetupWizard } from '@/components/onboarding/SetupWizard';
 import { getSetting } from '@/lib/tauri-bridge';
+import { UpdateToast } from '@/components/UpdateToast';
+import { useUpdaterStore } from '@/stores/updaterStore';
 
 function App() {
   // Initialize theme system (applies dark class to <html>)
@@ -45,6 +51,11 @@ function App() {
       });
   }, []);
 
+  // Look for a new version once per launch (silent when offline).
+  useEffect(() => {
+    if (showOnboarding === false) void useUpdaterStore.getState().check({ silent: true });
+  }, [showOnboarding]);
+
   // Auto-start Ollama on app launch (if configured)
   useEffect(() => {
     if (showOnboarding === false) {
@@ -67,26 +78,36 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route element={<Shell />}>
-        <Route index element={<DashboardPage />} />
-        {ENABLED_MODULES.study && <Route path="study/*" element={<StudyPage />} />}
-        {ENABLED_MODULES.review && <Route path="review/*" element={<ReviewPage />} />}
-        {ENABLED_MODULES.reading && <Route path="reading" element={<ReadingPage />} />}
-        {ENABLED_MODULES.reader && <Route path="reader/*" element={<ReaderPage />} />}
-        {ENABLED_MODULES.tutor && <Route path="tutor" element={<TutorPage />} />}
-        {ENABLED_MODULES.caption && <Route path="caption" element={<CaptionPage />} />}
-        {ENABLED_MODULES.pronunciation && (
-          <Route path="pronunciation" element={<PronunciationPage />} />
-        )}
-        {ENABLED_MODULES.writing && <Route path="writing" element={<WritingPage />} />}
-        {ENABLED_MODULES.celpip && <Route path="celpip/*" element={<CelpipPage />} />}
-        {ENABLED_MODULES.podcast && <Route path="podcast/*" element={<PodcastPage />} />}
-        {ENABLED_MODULES.vocabulary && <Route path="vocabulary" element={<VocabularyPage />} />}
-        {ENABLED_MODULES.plugins && <Route path="plugins" element={<PluginManagerPage />} />}
-        {ENABLED_MODULES.settings && <Route path="settings" element={<SettingsPage />} />}
-      </Route>
-    </Routes>
+    <>
+      <UpdateToast />
+      <Routes>
+        <Route element={<Shell />}>
+          <Route index element={<DashboardPage />} />
+          {ENABLED_MODULES.study && <Route path="study/*" element={<StudyPage />} />}
+          {ENABLED_MODULES.review && <Route path="review/*" element={<ReviewPage />} />}
+          {ENABLED_MODULES.browse && <Route path="explore/*" element={<ExplorePage />} />}
+          {ENABLED_MODULES.reading && <Route path="reading" element={<ReadingPage />} />}
+          {ENABLED_MODULES.reader && <Route path="reader/*" element={<ReaderPage />} />}
+          {ENABLED_MODULES.cheatsheet && <Route path="cheatsheet/*" element={<CheatsheetPage />} />}
+          {ENABLED_MODULES.tutor && <Route path="tutor" element={<TutorPage />} />}
+          {ENABLED_MODULES.caption && <Route path="caption" element={<CaptionPage />} />}
+          {ENABLED_MODULES.pronunciation && (
+            <Route path="pronunciation" element={<PronunciationPage />} />
+          )}
+          {ENABLED_MODULES.writing && <Route path="writing" element={<WritingPage />} />}
+          {ENABLED_MODULES.celpip && <Route path="celpip/*" element={<CelpipPage />} />}
+          {(ENABLED_MODULES.celpip || ENABLED_MODULES.tcf) && (
+            <Route path="exam/:examType/*" element={<CelpipPage />} />
+          )}
+          {ENABLED_MODULES.podcast && <Route path="podcast/*" element={<PodcastPage />} />}
+          {ENABLED_MODULES.videos && <Route path="videos/*" element={<VideosPage />} />}
+          {ENABLED_MODULES.vocabulary && <Route path="vocabulary" element={<VocabularyPage />} />}
+          {ENABLED_MODULES.notes && <Route path="notes" element={<NotesPage />} />}
+          {ENABLED_MODULES.plugins && <Route path="plugins" element={<PluginManagerPage />} />}
+          {ENABLED_MODULES.settings && <Route path="settings" element={<SettingsPage />} />}
+        </Route>
+      </Routes>
+    </>
   );
 }
 

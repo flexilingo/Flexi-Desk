@@ -62,8 +62,8 @@ export function FillBlankQuestion({
                   'inline-block min-w-[80px] mx-1 px-2 py-0.5 rounded border-b-2',
                   showFeedback
                     ? isCorrect
-                      ? 'bg-green-100 border-green-500 text-green-700'
-                      : 'bg-red-100 border-red-500 text-red-700'
+                      ? 'bg-success/15 border-success text-success'
+                      : 'bg-error/15 border-error text-error'
                     : 'bg-primary/10 border-primary',
                 )}
               >
@@ -103,7 +103,7 @@ export function FillBlankQuestion({
                 Show Hint
               </Button>
             ) : (
-              <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-3 py-1.5 rounded-md">
+              <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 px-3 py-1.5 rounded-md">
                 <Lightbulb className="h-4 w-4" />
                 {question.hint}
               </div>
@@ -115,9 +115,7 @@ export function FillBlankQuestion({
           <div
             className={cn(
               'flex items-center gap-2 p-3 rounded-lg',
-              isCorrect
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+              isCorrect ? 'bg-success/15 text-success' : 'bg-error/15 text-error',
             )}
           >
             {isCorrect ? (

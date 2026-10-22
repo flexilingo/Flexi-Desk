@@ -110,7 +110,7 @@ export function NotesTab({
 
           {/* Timestamp + subtitle preview */}
           <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span className="font-mono text-[#8BB7A3]">{formatTimeMs(currentTimeMs)}</span>
+            <span className="font-mono text-success">{formatTimeMs(currentTimeMs)}</span>
             {currentSubtitle && <span className="truncate">{currentSubtitle}</span>}
           </div>
 
@@ -163,7 +163,7 @@ export function NotesTab({
                 {/* Play button with timestamp */}
                 <button
                   onClick={() => onSeek(bm.positionMs / 1000)}
-                  className="flex items-center gap-1 text-[10px] text-[#8BB7A3] font-mono mt-0.5 shrink-0 hover:text-[#8BB7A3]/80 transition-colors"
+                  className="flex items-center gap-1 text-[10px] text-success font-mono mt-0.5 shrink-0 hover:text-success/80 transition-colors"
                   title="Seek to this position"
                 >
                   <Play className="h-3 w-3 fill-current" />
@@ -215,7 +215,7 @@ export function NotesTab({
                           <p className="text-[10px] text-muted-foreground">{bm.note}</p>
                           {onUpdateBookmark && (
                             <button
-                              className="text-[10px] text-[#8BB7A3] hover:underline mt-0.5"
+                              className="text-[10px] text-success hover:underline mt-0.5"
                               onClick={() => handleStartEdit(bm)}
                             >
                               Edit
@@ -225,7 +225,7 @@ export function NotesTab({
                       ) : (
                         onUpdateBookmark && (
                           <button
-                            className="text-[10px] text-[#8BB7A3] hover:underline mt-0.5"
+                            className="text-[10px] text-success hover:underline mt-0.5"
                             onClick={() => handleStartEdit(bm)}
                           >
                             + Add note
@@ -260,7 +260,7 @@ export function NotesTab({
       {/* View All Notes link */}
       {bookmarks.length > 0 && (
         <div className="pt-1 border-t border-border">
-          <button className="flex items-center gap-1 text-xs text-[#8BB7A3] hover:underline w-full justify-center py-2">
+          <button className="flex items-center gap-1 text-xs text-success hover:underline w-full justify-center py-2">
             View All Notes
             <ExternalLink className="h-3 w-3" />
           </button>

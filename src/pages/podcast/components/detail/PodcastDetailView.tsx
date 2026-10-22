@@ -13,6 +13,7 @@ import {
   Check,
   ExternalLink,
   AlertTriangle,
+  Share2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { useImportAndPlay } from '../../hooks/useImportAndPlay';
 import { DetailEpisodeCard } from './DetailEpisodeCard';
 import { RequestPodcastPanel } from './RequestPodcastPanel';
+import { LevelFitCard } from './LevelFitCard';
+import { RelatedEpisodes } from './RelatedEpisodes';
 import type { CuratedEpisodeLite } from '../../types';
 
 const PAGE_SIZE = 20;
@@ -41,6 +44,7 @@ function StatCell({ value, label }: { value: string; label: string }) {
 
 export function PodcastDetailView() {
   const { t } = useTranslation('common');
+  const { t: tp } = useTranslation('podcastUi');
   const navigate = useNavigate();
   const { feedId: feedIdParam } = useParams<{ feedId: string }>();
   const feedId = Number(feedIdParam);
@@ -78,6 +82,7 @@ export function PodcastDetailView() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [rssCopied, setRssCopied] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     if (Number.isFinite(feedId)) load(feedId);
@@ -134,6 +139,15 @@ export function PodcastDetailView() {
     setRssCopied(true);
     setTimeout(() => setRssCopied(false), 1600);
   };
+
+  // The show's public page: what a person pastes to a friend.
+  const shareShow = async () => {
+    await navigator.clipboard.writeText(`https://flexilingo.com/podcasts/${feedId}`);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 1600);
+  };
+
+  const readyEpisodes = episodes.filter((e) => e.status === 'ready');
 
   return (
     <div className="space-y-5">
@@ -195,6 +209,13 @@ export function PodcastDetailView() {
                 {podcast.language}
               </span>
             )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <Button variant="outline" size="sm" onClick={shareShow}>
+              {linkCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+              {linkCopied ? tp('linkCopied') : tp('share')}
+            </Button>
           </div>
 
           {/* Account actions */}
@@ -320,6 +341,15 @@ export function PodcastDetailView() {
         </div>
       )}
 
+      {curated && (
+        <LevelFitCard
+          level={curated.cefr_level}
+          bands={readyEpisodes.map((e) => e.difficulty_band ?? e.cefr_level)}
+          wordsPerMinute={curated.avg_wpm ?? null}
+          readyCount={analyzedCount}
+        />
+      )}
+
       {/* Request-a-podcast — only when not curated */}
       {!curated && <RequestPodcastPanel feedId={feedId} />}
 
@@ -430,6 +460,12 @@ export function PodcastDetailView() {
           </>
         )}
       </section>
+
+      <RelatedEpisodes
+        seedEpisodeId={readyEpisodes[0]?.id}
+        excludeFeedId={feedId}
+        language={podcast.language}
+      />
     </div>
   );
 }

@@ -5,6 +5,9 @@ import {
   AlignLeft,
   AlignRight,
   BookOpen,
+  Bookmark,
+  Layers,
+  PictureInPicture2,
   Captions,
   CaptionsOff,
   Focus,
@@ -80,7 +83,17 @@ interface ControlBarProps {
   onTogglePauseOnHover?: () => void;
   translationAlignment?: 'left' | 'center' | 'right';
   onTranslationAlignmentChange?: (alignment: 'left' | 'center' | 'right') => void;
-  // Show estimated CEFR
+  /** Previous/next LINE (the website's behavior); without them the buttons move 5 s. */
+  onPrevLine?: () => void;
+  onNextLine?: () => void;
+  /** Bookmark the moment (B). */
+  onBookmark?: () => void;
+  bookmarked?: boolean;
+  /** Picture-in-Picture (P); undefined where the webview cannot float anything. */
+  onTogglePip?: () => void;
+  pipActive?: boolean;
+  /** Opens the Listening Program launcher ("Practice"). */
+  onPractice?: () => void;
 }
 
 const SPEED_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -123,8 +136,17 @@ export function ControlBar({
   onTogglePauseOnHover,
   translationAlignment,
   onTranslationAlignmentChange,
+  onPrevLine,
+  onNextLine,
+  onBookmark,
+  bookmarked,
+  onTogglePip,
+  pipActive,
+  onPractice,
 }: ControlBarProps) {
   const { t } = useTranslation();
+  const { t: tp } = useTranslation('podcastUi');
+  const { t: tl } = useTranslation('listening');
   const [showSpeedPopover, setShowSpeedPopover] = useState(false);
   const [showVolumePopover, setShowVolumePopover] = useState(false);
   const [showSubtitlePopover, setShowSubtitlePopover] = useState(false);
@@ -198,8 +220,9 @@ export function ControlBar({
         <div className="flex items-center gap-0.5 md:gap-1">
           <ControlButton
             icon={<SkipBack className="w-full h-full" />}
-            label="-5s"
-            onClick={() => onSeek(-5)}
+            label={onPrevLine ? tp('prevLine') : '-5s'}
+            shortcut={onPrevLine ? '\u2190' : undefined}
+            onClick={() => (onPrevLine ? onPrevLine() : onSeek(-5))}
           />
           <ControlButton
             icon={
@@ -217,8 +240,9 @@ export function ControlBar({
           />
           <ControlButton
             icon={<SkipForward className="w-full h-full" />}
-            label="+5s"
-            onClick={() => onSeek(5)}
+            label={onNextLine ? tp('nextLine') : '+5s'}
+            shortcut={onNextLine ? '\u2192' : undefined}
+            onClick={() => (onNextLine ? onNextLine() : onSeek(5))}
           />
 
           {/* Volume */}
@@ -388,6 +412,31 @@ export function ControlBar({
         {/* RIGHT: Sync, Subtitle Settings, Focus, Help, Exit */}
         {hasRight && (
           <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
+            {onPractice && (
+              <ControlButton
+                icon={<Layers className="w-full h-full" />}
+                label={tl('launcher.label')}
+                onClick={onPractice}
+              />
+            )}
+            {onBookmark && (
+              <ControlButton
+                icon={<Bookmark className={`w-full h-full ${bookmarked ? 'fill-current' : ''}`} />}
+                label={tp('bookmark')}
+                shortcut="B"
+                active={bookmarked}
+                onClick={onBookmark}
+              />
+            )}
+            {onTogglePip && (
+              <ControlButton
+                icon={<PictureInPicture2 className="w-full h-full" />}
+                label={tp('pip')}
+                shortcut="P"
+                active={pipActive}
+                onClick={onTogglePip}
+              />
+            )}
             {onSyncClick && (
               <ControlButton
                 icon={<Timer className="w-full h-full" />}

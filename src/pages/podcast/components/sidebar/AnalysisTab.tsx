@@ -13,12 +13,12 @@ import type { NlpAnalysis } from '../../types';
 import { cefrSupported } from '../../utils/words';
 
 const CEFR_BAR_COLORS: Record<string, string> = {
-  A1: 'bg-[#8BB7A3]',
-  A2: 'bg-[#8BB7A3]/70',
-  B1: 'bg-[#C58C6E]',
-  B2: 'bg-[#C58C6E]/70',
-  C1: 'bg-red-500',
-  C2: 'bg-red-500/70',
+  A1: 'bg-success',
+  A2: 'bg-success/70',
+  B1: 'bg-warning',
+  B2: 'bg-warning/70',
+  C1: 'bg-error',
+  C2: 'bg-error/70',
 };
 
 type SubTab = 'overview' | 'grammar' | 'phrases' | 'collocations' | 'cefr' | 'vocabulary';
@@ -127,7 +127,7 @@ export function AnalysisTab({ analysis, cloudAnalysis, sourceLang = 'en' }: Anal
   return (
     <div className="space-y-3">
       {/* Status badge */}
-      <div className="flex items-center gap-1.5 text-xs text-[#8BB7A3] font-medium">
+      <div className="flex items-center gap-1.5 text-xs text-success font-medium">
         <CheckCircle className="h-3.5 w-3.5" />
         Analysis complete
       </div>
@@ -143,7 +143,7 @@ export function AnalysisTab({ analysis, cloudAnalysis, sourceLang = 'en' }: Anal
               onClick={() => setActiveTab(key)}
               className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-[10px] font-medium transition-colors ${
                 isActive
-                  ? 'border-[#8BB7A3] bg-[#8BB7A3]/10 text-[#8BB7A3]'
+                  ? 'border-success bg-success/10 text-success'
                   : 'border-border bg-background/50 text-muted-foreground hover:bg-muted/50'
               }`}
             >

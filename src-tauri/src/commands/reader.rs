@@ -10,7 +10,7 @@ use tauri::State;
 
 use crate::reader::files;
 use crate::reader::store::{self, *};
-use crate::reader::{decode_header, looks_like_pdf};
+use crate::reader::{decode_header, looks_like_pdf, normalise_language, text};
 use crate::AppState;
 
 fn lock_db<'a>(
@@ -146,6 +146,128 @@ pub async fn reader_import_bytes(state: State<'_, AppState>, request: Request<'_
     inserted
 }
 
+// ── Text documents: pasted text and web pages ────────────────────────────────
+
+#[derive(Deserialize)]
+pub struct ImportText {
+    pub text: String,
+    pub title: Option<String>,
+    pub language: Option<String>,
+}
+
+/// Store a text (the pages it splits into) as a document of kind `text`.
+fn store_text(
+    state: &State<'_, AppState>,
+    text: &str,
+    title: Option<&str>,
+    source_name: &str,
+    language: Option<&str>,
+) -> Result<ReaderDocument, String> {
+    let text = text::normalise_text(text);
+    if text.trim().is_empty() {
+        return Err("EMPTY_TEXT".to_string());
+    }
+    if text.chars().count() > text::MAX_TEXT_CHARS {
+        return Err("TEXT_TOO_LONG".to_string());
+    }
+    let pages = text::split_pages(&text);
+    if pages.is_empty() {
+        return Err("EMPTY_TEXT".to_string());
+    }
+    let language = normalise_language(language, "en");
+    let derived;
+    let title = match title.map(str::trim).filter(|t| !t.is_empty()) {
+        Some(t) => t,
+        None => {
+            derived = text::title_from_text(&text);
+            &derived
+        }
+    };
+    let id = uuid::Uuid::new_v4().to_string();
+    let conn = lock_db(state)?;
+    insert_text_document(
+        &conn,
+        &NewTextDocument { id: &id, title, source_name, language: &language, pages: &pages },
+    )
+}
+
+#[tauri::command]
+pub fn reader_import_text(state: State<'_, AppState>, input: ImportText) -> Result<ReaderDocument, String> {
+    store_text(&state, &input.text, input.title.as_deref(), "pasted-text.txt", input.language.as_deref())
+}
+
+#[derive(Deserialize)]
+pub struct ImportUrl {
+    pub url: String,
+    pub title: Option<String>,
+    pub language: Option<String>,
+}
+
+/// Pages bigger than this are refused before they are read into memory.
+const MAX_PAGE_BYTES: u64 = 5 * 1024 * 1024;
+
+async fn fetch_page(url: &reqwest::Url) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(20))
+        .user_agent("Mozilla/5.0 (compatible; FlexiLingo Desk)")
+        .build()
+        .map_err(|_| "URL_FETCH_FAILED".to_string())?;
+    let resp = client.get(url.clone()).send().await.map_err(|_| "URL_FETCH_FAILED".to_string())?;
+    if !resp.status().is_success() {
+        return Err("URL_FETCH_FAILED".to_string());
+    }
+    let kind = resp
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_lowercase();
+    if !kind.is_empty() && !kind.contains("html") && !kind.starts_with("text/") {
+        return Err("URL_NOT_TEXT".to_string());
+    }
+    if resp.content_length().map_or(false, |n| n > MAX_PAGE_BYTES) {
+        return Err("URL_TOO_LARGE".to_string());
+    }
+    let plain = kind.starts_with("text/plain");
+    let body = resp.text_with_charset("utf-8").await.map_err(|_| "URL_FETCH_FAILED".to_string())?;
+    if body.len() as u64 > MAX_PAGE_BYTES {
+        return Err("URL_TOO_LARGE".to_string());
+    }
+    // A plain-text address is already the text: wrap it so the extractor keeps its lines.
+    Ok(if plain { format!("<body><pre>{}</pre></body>", body.replace('&', "&amp;").replace('<', "&lt;")) } else { body })
+}
+
+/// Fetch a web page, keep its prose, and store it as a text document.
+#[tauri::command]
+pub async fn reader_import_url(state: State<'_, AppState>, input: ImportUrl) -> Result<ReaderDocument, String> {
+    let raw = input.url.trim();
+    let candidate = if raw.contains("://") { raw.to_string() } else { format!("https://{raw}") };
+    let url = reqwest::Url::parse(&candidate).map_err(|_| "INVALID_URL".to_string())?;
+    if !matches!(url.scheme(), "http" | "https") || url.host_str().is_none() {
+        return Err("INVALID_URL".to_string());
+    }
+    let html = fetch_page(&url).await?;
+    let article = text::extract_article(&html);
+    if article.text.chars().count() < 40 {
+        return Err("URL_NO_TEXT".to_string());
+    }
+    let language = input.language.as_deref().filter(|l| !l.trim().is_empty()).or(article.language.as_deref());
+    let title = input.title.as_deref().filter(|t| !t.trim().is_empty()).or(article.title.as_deref());
+    let host = url.host_str().unwrap_or("page").trim_start_matches("www.").to_string();
+    store_text(&state, &article.text, title, &host, language)
+}
+
+#[derive(Deserialize)]
+pub struct TextPageInput {
+    pub document_id: String,
+    pub page: Option<f64>,
+}
+
+#[tauri::command]
+pub fn reader_text_page(state: State<'_, AppState>, input: TextPageInput) -> Result<ReaderTextPage, String> {
+    get_text_page(&*lock_db(&state)?, &input.document_id, input.page)
+}
+
 // ── Documents ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -174,7 +296,10 @@ pub fn reader_rename(state: State<'_, AppState>, input: RenameInput) -> Result<R
 pub fn reader_delete(state: State<'_, AppState>, document_id: String) -> Result<OkResult, String> {
     let conn = lock_db(&state)?;
     let stored = store::stored_file(&conn, &document_id)?;
-    files::remove(&files::default_reader_dir()?, &stored)?;
+    // A text document has no file: its pages live in the database and go with the rows.
+    if !stored.is_empty() {
+        files::remove(&files::default_reader_dir()?, &stored)?;
+    }
     delete_rows(&conn, &document_id)?;
     Ok(OkResult { ok: true })
 }

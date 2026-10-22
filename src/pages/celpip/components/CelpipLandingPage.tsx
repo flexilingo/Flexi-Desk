@@ -18,28 +18,43 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { SignInDialog } from '@/components/auth/SignInDialog';
-import { useCelpipStore, isRankedSession, isResumable } from '../stores/celpipStore';
-import { meanOf } from '../results/shared';
-import { EXAM_SESSION_TTL_MS } from '../types';
+import {
+  useCelpipStore,
+  isRankedSession,
+  isResumable,
+  hasSectionLeft,
+  isScoringSession,
+  sessionProgress,
+} from '../stores/celpipStore';
+import { meanOf, SECTION_META } from '../results/shared';
+import { EXAM_SESSION_TTL_MS, SECTION_TYPES } from '../types';
+import type { SectionType } from '../types';
+import { SUPPORTED_EXAM_TYPES, examBase, formatBand, getExamProfile } from '../examProfiles';
+import { ENABLED_MODULES } from '@/config/features';
 import { StatCards } from './landing/StatCards';
 import { ExamHistoryList } from './landing/ExamHistoryList';
 import { ScoreProgressChart } from './landing/ScoreProgressChart';
 import { StartExamDialog } from './landing/StartExamDialog';
+import type { ExamPreselect } from './landing/StartExamDialog';
 
-/** CELPIP General is the only exam this desk client can start. */
-const EXAM_TYPE = 'celpip';
+// How far through its sections the active exam is, as a width.
+const PROGRESS_WIDTH = ['w-[12%]', 'w-[37%]', 'w-[62%]', 'w-[87%]'];
 
-// current_section (0..3) → how far through the four sections the active exam is.
-const ACTIVE_PROGRESS: Record<number, string> = {
-  0: 'w-[12%]',
-  1: 'w-[37%]',
-  2: 'w-[62%]',
-  3: 'w-[87%]',
-};
-
-export function CelpipLandingPage() {
+/**
+ * The hub of one exam type: what it is, start/resume, stats, history and the
+ * progress chart. CELPIP and the TCF family share it; `examType` picks the
+ * profile (titles, clocks, band scale, whether it can be started at all).
+ */
+export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }) {
   const { t, i18n } = useTranslation('celpip');
+  const { t: tx } = useTranslation('exam');
   const navigate = useNavigate();
+  const profile = getExamProfile(examType);
+  const base = examBase(profile.examType);
+  const short = profile.sectionShortLabels;
+  const fullDuration = t(profile.durationShortKey, { ns: profile.ns });
+  const comingSoon = profile.hubStatus === 'comingSoon';
+  const bandFmt = (n: number) => formatBand(profile, n);
 
   const { sessions, isSessionsLoading, fetchSessions } = useCelpipStore();
 
@@ -48,27 +63,42 @@ export function CelpipLandingPage() {
   const isSignedIn = !!session;
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [preselect, setPreselect] = useState<ExamPreselect | undefined>(undefined);
   const [signInOpen, setSignInOpen] = useState(false);
 
   useEffect(() => {
-    if (isSignedIn) fetchSessions(EXAM_TYPE);
-  }, [fetchSessions, isSignedIn]);
+    if (isSignedIn) fetchSessions(profile.examType);
+  }, [fetchSessions, isSignedIn, profile.examType]);
+
+  // The store holds one exam type's sessions at a time; ignore a stale list.
+  const ownSessions = useMemo(
+    () => sessions.filter((s) => (s.exam_type ?? profile.examType) === profile.examType),
+    [sessions, profile.examType],
+  );
+
+  const openDialog = (sel?: ExamPreselect) => {
+    setPreselect(sel);
+    setDialogOpen(true);
+  };
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' });
 
-  // Only an unfinished, still-in-TTL session is resumable (learning never expires).
+  // Only an unfinished, still-in-TTL session with a section left is resumable
+  // (learning never expires). One whose sections are all submitted is being
+  // scored and must not hide Start.
   const activeSession = useMemo(
-    () => sessions.find((s) => isResumable(s, EXAM_SESSION_TTL_MS)),
-    [sessions],
+    () => ownSessions.find((s) => isResumable(s, EXAM_SESSION_TTL_MS) && hasSectionLeft(s)),
+    [ownSessions],
   );
+  const scoringSessions = useMemo(() => ownSessions.filter(isScoringSession), [ownSessions]);
 
   // Completed rows drive the history list; ranked rows drive stats + the chart.
   const completedSessions = useMemo(
-    () => sessions.filter((s) => s.status === 'completed'),
-    [sessions],
+    () => ownSessions.filter((s) => s.status === 'completed'),
+    [ownSessions],
   );
-  const rankedSessions = useMemo(() => sessions.filter(isRankedSession), [sessions]);
+  const rankedSessions = useMemo(() => ownSessions.filter(isRankedSession), [ownSessions]);
 
   const stats = useMemo(() => {
     const scores = rankedSessions.map((s) => s.m_score as number);
@@ -92,9 +122,42 @@ export function CelpipLandingPage() {
           <GraduationCap className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{t('celpip.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('celpip.description')}</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t(profile.titleKey, { ns: profile.ns })}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t(profile.hubDescriptionKey, { ns: profile.ns })}
+          </p>
         </div>
+      </div>
+
+      {/* The exams of this module: CELPIP and the TCF family share this hub. */}
+      <div className="flex flex-wrap items-center gap-2" role="tablist">
+        {SUPPORTED_EXAM_TYPES.filter((x) => x === 'celpip' || ENABLED_MODULES.tcf).map((x) => {
+          const other = getExamProfile(x);
+          const active = x === profile.examType;
+          return (
+            <button
+              key={x}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => navigate(examBase(x))}
+              className={`inline-flex items-center gap-1.5 rounded-[9px] border px-3 py-1.5 text-[12.5px] font-semibold transition-colors ${
+                active
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+              }`}
+            >
+              {t(other.titleKey, { ns: other.ns })}
+              {other.hubStatus === 'comingSoon' && (
+                <span className="rounded-full bg-muted px-1.5 py-[1px] text-[10px] font-bold text-muted-foreground">
+                  {t('comingSoon')}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Hero — the single entry point for starting a session */}
@@ -105,7 +168,7 @@ export function CelpipLandingPage() {
             {t('heroTitle')}
           </h2>
           <p className="max-w-xl text-[12px] leading-relaxed text-muted-foreground">
-            {t('examDescription')}
+            {comingSoon ? t('comingSoon') : t('examDescription')}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground">
             {/* The dialog below now opens on PRACTICE, so the clock belongs to
@@ -113,42 +176,70 @@ export function CelpipLandingPage() {
                 run at three hours. */}
             <span className="inline-flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
-              {t('heroFullDuration', { duration: t('duration') })}
+              {t('heroFullDuration', { duration: fullDuration })}
             </span>
             <span className="inline-flex flex-wrap items-center gap-2">
               <span>4 {t('sections')}:</span>
               <span className="inline-flex items-center gap-0.5 font-semibold text-success">
-                <Headphones className="h-3 w-3" /> L
+                <Headphones className="h-3 w-3" /> {short.listening}
               </span>
               <span className="inline-flex items-center gap-0.5 font-semibold text-accent">
-                <BookOpen className="h-3 w-3" /> R
+                <BookOpen className="h-3 w-3" /> {short.reading}
               </span>
               <span className="inline-flex items-center gap-0.5 font-semibold text-primary">
-                <PenLine className="h-3 w-3" /> W
+                <PenLine className="h-3 w-3" /> {short.writing}
               </span>
               <span className="inline-flex items-center gap-0.5 font-semibold text-warning">
-                <Mic className="h-3 w-3" /> S
+                <Mic className="h-3 w-3" /> {short.speaking}
               </span>
             </span>
           </div>
         </div>
-        {!isSignedIn ? (
+        {comingSoon ? (
+          <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-[12px] font-semibold text-muted-foreground">
+            {t('comingSoon')}
+          </span>
+        ) : !isSignedIn ? (
           <Button onClick={() => setSignInOpen(true)} disabled={isAuthLoading}>
             <LogIn className="h-3.5 w-3.5" />
             {t('signInToStart', 'Sign in to start')}
           </Button>
         ) : activeSession ? (
-          <Button onClick={() => navigate(`/celpip/session/${activeSession.id}`)}>
+          <Button onClick={() => navigate(`${base}/session/${activeSession.id}`)}>
             <Play className="h-3.5 w-3.5" />
             {t('resumeExam')}
           </Button>
         ) : (
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button onClick={() => openDialog()}>
             <Play className="h-3.5 w-3.5" />
             {t('startCta')}
           </Button>
         )}
       </section>
+
+      {/* Practise one section, or one task of it: opens the dialog on that
+          section with every choice ticked, and the first tap picks just one. */}
+      {isSignedIn && !comingSoon && profile.features.practice && !activeSession && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[12px] font-semibold text-muted-foreground">
+            {t('choosePracticeSections')}
+          </span>
+          {SECTION_TYPES.map((key: SectionType) => {
+            const Icon = SECTION_META[key].icon;
+            return (
+              <Button
+                key={key}
+                variant="outline"
+                size="sm"
+                onClick={() => openDialog({ section: key })}
+              >
+                <Icon className={`h-3.5 w-3.5 ${SECTION_META[key].color}`} />
+                {t(profile.sectionLabelKeys[key], { ns: profile.ns })}
+              </Button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Signed-out notice — exams run on the user's FlexiLingo account */}
       {!isSignedIn && !isAuthLoading && (
@@ -183,21 +274,38 @@ export function CelpipLandingPage() {
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold text-foreground">{t('examInProgress')}</p>
             <p className="mt-0.5 text-[11.5px] tabular-nums text-muted-foreground">
-              {t('currentSectionProgress', {
-                current: activeSession.current_section + 1,
-                total: 4,
-              })}
+              {t('currentSectionProgress', sessionProgress(activeSession))}
               {' · '}
               {formatDate(activeSession.created_at)}
             </p>
             <div className="mt-2 h-1.5 max-w-[260px] overflow-hidden rounded-full bg-muted">
               <div
-                className={`h-full rounded-full bg-warning ${ACTIVE_PROGRESS[activeSession.current_section] ?? 'w-0'}`}
+                className={`h-full rounded-full bg-warning ${
+                  PROGRESS_WIDTH[
+                    Math.min(3, Math.max(0, sessionProgress(activeSession).current - 1))
+                  ] ?? 'w-0'
+                }`}
               />
             </div>
           </div>
         </div>
       )}
+
+      {/* Finished, still being scored — the results page shows what is ready */}
+      {scoringSessions.map((s) => (
+        <div
+          key={s.id}
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-success/40 bg-success/[0.08] px-4 py-3"
+        >
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-success" />
+          <p className="min-w-0 flex-1 text-[13px] font-semibold text-foreground">
+            {tx('examBeingScored', { date: formatDate(s.started_at ?? s.created_at) })}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => navigate(`${base}/results/${s.id}`)}>
+            {t('viewResults')}
+          </Button>
+        </div>
+      ))}
 
       {/* Summary stats */}
       {isSignedIn && (
@@ -206,6 +314,8 @@ export function CelpipLandingPage() {
           best={stats.best}
           avg={stats.avg}
           lastLabel={stats.lastLabel}
+          bandMax={profile.band.kind === 'level' ? 12 : profile.band.max}
+          formatBand={profile.examType === 'celpip' ? undefined : bandFmt}
         />
       )}
 
@@ -230,13 +340,19 @@ export function CelpipLandingPage() {
                 <p className="text-[11.5px] text-muted-foreground">{t('progressSubtitle')}</p>
               </div>
             </div>
-            <ScoreProgressChart sessions={rankedSessions} className="px-4 py-4 sm:px-5" />
+            <ScoreProgressChart
+              sessions={rankedSessions}
+              bandMax={profile.band.kind === 'level' ? 12 : profile.band.max}
+              className="px-4 py-4 sm:px-5"
+            />
           </section>
 
           <div className="xl:order-1">
             <ExamHistoryList
               sessions={completedSessions}
-              onView={(id) => navigate(`/celpip/results/${id}`)}
+              onView={(id) => navigate(`${base}/results/${id}`)}
+              short={profile.examType === 'celpip' ? undefined : short}
+              formatBand={profile.examType === 'celpip' ? undefined : bandFmt}
             />
           </div>
         </div>
@@ -254,16 +370,21 @@ export function CelpipLandingPage() {
         </div>
       )}
 
-      <StartExamDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <StartExamDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        examType={profile.examType}
+        preselect={preselect}
+      />
 
       <SignInDialog
         open={signInOpen}
         onOpenChange={setSignInOpen}
         description={t(
           'signInDialogHint',
-          'Sign in to start CELPIP exams and keep your scores on your account.',
+          'Sign in to start exams and keep your scores on your account.',
         )}
-        onSignedIn={() => fetchSessions(EXAM_TYPE)}
+        onSignedIn={() => fetchSessions(profile.examType)}
       />
     </div>
   );

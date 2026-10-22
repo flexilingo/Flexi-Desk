@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
 import type {
+  SessionCard,
   DailyPlan,
   DeckStatus,
   NextActivityResponse,
@@ -266,3 +267,32 @@ export const useStudyStore = create<StudyState>()(
       }),
   })),
 );
+
+// ── Shadowing's two calls (no store state: a run owns its own cards) ────────
+
+/** Every card of a session, each word once, in plan order; `full` widens the run to the session's decks. */
+export async function fetchSessionCards(sessionId: string, full: boolean): Promise<SessionCard[]> {
+  const res = await invoke<{ cards: SessionCard[]; total: number }>('study_session_cards', {
+    sessionId,
+    full,
+  });
+  return res.cards;
+}
+
+export interface ShadowProgressResult {
+  cards_viewed: number;
+  seconds_reported: number;
+  seconds_credited: number;
+  seconds_used_today: number;
+  daily_cap_seconds: number;
+  xp_earned: number;
+}
+
+/** Tells the engine which cards were heard and how many seconds actually played. */
+export function reportShadowProgress(body: {
+  session_id: string;
+  card_ids: string[];
+  played_seconds: number;
+}): Promise<ShadowProgressResult> {
+  return invoke<ShadowProgressResult>('study_report_shadow_progress', { body });
+}

@@ -8,8 +8,8 @@ interface CorrectionPanelProps {
 
 const borderColorByType: Record<CorrectionType, string> = {
   grammar: 'border-l-primary',
-  spelling: 'border-l-[#C58C6E]',
-  word_choice: 'border-l-[#8BB7A3]',
+  spelling: 'border-l-warning',
+  word_choice: 'border-l-success',
   word_order: 'border-l-muted',
 };
 
@@ -40,15 +40,9 @@ export function CorrectionPanel({ corrections }: CorrectionPanelProps) {
               key={index}
               className={`border-l-4 ${borderColorByType[correction.type]} rounded bg-card p-3 space-y-1`}
             >
-              <p className="text-sm text-muted-foreground line-through">
-                ❌ {correction.original}
-              </p>
-              <p className="text-sm font-medium text-foreground">
-                ✅ {correction.corrected}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                💡 {correction.explanation}
-              </p>
+              <p className="text-sm text-muted-foreground line-through">❌ {correction.original}</p>
+              <p className="text-sm font-medium text-foreground">✅ {correction.corrected}</p>
+              <p className="text-sm text-muted-foreground">💡 {correction.explanation}</p>
             </div>
           ))}
         </div>

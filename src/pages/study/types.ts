@@ -28,7 +28,7 @@ export type DeckStrategy = 'mix' | 'isolated' | 'rotation';
 export type SessionStatus = 'active' | 'completed' | 'abandoned';
 export type HealthStatus = 'untouched' | 'fresh' | 'good' | 'warning' | 'critical';
 export type SRSAlgorithm = 'leitner' | 'sm2' | 'fsrs';
-export type StudyScope = 'due' | 'new' | 'weak';
+export type StudyScope = 'due' | 'new' | 'weak' | 'random' | 'leech';
 export type StudyFocus = 'balanced' | 'listening' | 'production' | 'recognition';
 
 export interface StageRule {
@@ -165,6 +165,14 @@ export interface CardNotes {
   collocations?: string[];
   common_mistakes?: { wrong: string; correct: string }[];
   etymology?: string;
+  learning_lang?: string;
+  conjugations?: {
+    groups?: {
+      mood?: string;
+      tense?: string;
+      forms?: { pr?: string; gloss?: string; form: string; ipa?: string }[];
+    }[];
+  };
   pronunciation_tips?: string;
   cultural_note?: string;
   examples?: { source?: string; target?: string; en?: string; tr?: string }[];
@@ -225,6 +233,9 @@ export interface NextActivityResponse {
     deck_id: string;
     deck_title: string;
     notes: CardNotes | null;
+    /** The language the deck's words are written in. */
+    deck_language?: string;
+    deck_native_language?: string | null;
   } | null;
   srs_algorithm: SRSAlgorithm;
   card_progress: CardProgressSnapshot | null;
@@ -249,10 +260,64 @@ export interface SubmitActivityBody {
   self_rating?: 1 | 2 | 3 | 4 | 5;
 }
 
+/** The answer judge's scorecard for a written sentence (the website's `Scorecard`). */
+export interface Scorecard {
+  accepted: boolean;
+  /** 0-100. */
+  score: number;
+  criteria: {
+    meaning: boolean;
+    grammar: boolean;
+    spelling: 'ok' | 'accents' | 'typos';
+    elision: boolean | null;
+  };
+  /** Only what the judge was confident about; a hint never changes the verdict. */
+  hints: {
+    register?: 'formal' | 'neutral' | 'informal';
+    natural?: boolean;
+    errorType?:
+      | 'gender_agreement'
+      | 'verb_conjugation'
+      | 'word_order'
+      | 'preposition_or_article'
+      | 'spelling_or_accent'
+      | 'negation'
+      | 'wrong_word'
+      | 'avoir_expression';
+  };
+}
+
 export interface SubmitResponse {
   activity: PracticeActivity;
   proficiency: CardProficiency;
   coaching: SentenceCoaching | null;
+  /** Null when no model graded it (the one-line `activity.ai_feedback` stands in). */
+  judgement: Scorecard | null;
+}
+
+/** One card of a shadowing run (`study_session_cards`). */
+export interface SessionCard {
+  card_id: string;
+  deck_id: string;
+  front_text: string;
+  back_text: string;
+  notes: CardNotes | null;
+  /** The language the front is written in (the deck's). */
+  language: string;
+  native_language: string | null;
+}
+
+/** The end-of-session report's data, counted per CARD (the Rust `study::insights`). */
+export interface SessionInsights {
+  unique_cards: number;
+  attempts: number;
+  first_try_correct: number;
+  ended_correct: number;
+  active_seconds: number;
+  struggles: { card_id: string; front_text: string; attempts: number; ended_correct: boolean }[];
+  by_level: { level: string; seen: number; missed: number }[];
+  /** day_offset 0 = today. */
+  forecast: { day_offset: number; count: number }[];
 }
 
 export interface SessionSummaryResponse {
@@ -270,6 +335,8 @@ export interface SessionSummaryResponse {
   };
   /** XP awarded for this session. */
   xp_earned?: number;
+  /** The per-card view; absent when the backend could not build it. */
+  session_insights?: SessionInsights;
 }
 
 export interface DeckStatus {

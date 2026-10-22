@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, ChevronLeft, Clock, RotateCcw, Settings, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronLeft, Clock, Minimize2, RotateCcw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { CardProgressSnapshot } from '../../types';
 import { cardTypeFromProgress } from '../../utils/srs-display';
+import type { ShadowingProgress } from '../ShadowingRunner';
 
 interface Props {
   total: number;
@@ -14,10 +16,20 @@ interface Props {
   cardProgress: CardProgressSnapshot | null;
   /** How many times this card has already come round in this session. */
   requeueCount: number;
-  /** Shows the previous card's answer; undefined on the first card. */
+  /** Repeats the session added to its own queue so far — why the denominator can read 31 on a session that began as 30. */
+  repeatsAdded: number;
+  /** Shows the previous card's answer; undefined on the first card (and in shadowing, which has no card to step back to). */
   onPrevCard?: () => void;
-  onSettings: () => void;
   onExit: () => void;
+  /** The display menu + shortcut sheet, built by the runner. */
+  controls: ReactNode;
+  /** In focus mode the header keeps only what you need mid-card. */
+  focusMode: boolean;
+  onToggleFocusMode: () => void;
+  /** Whether the shadowing drill is the mode on screen. */
+  shadowingActive: boolean;
+  /** Shadowing's own position and clock, so the header reports the run the learner is actually watching. */
+  shadowingProgress?: ShadowingProgress | null;
 }
 
 const CARD_TYPE_CLS: Record<string, string> = {
@@ -32,6 +44,12 @@ function fmt(seconds: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/**
+ * The runner's top bar: exit, previous card, the display menu, the tallies, clock and
+ * progress. Shadowing never submits an answer, so right/wrong would sit at 0/0 for the
+ * whole run and say nothing — it shows its own count, round and playback stopwatch
+ * instead (the session clock keeps running while paused and would claim time nobody spent).
+ */
 export function StudyProgressHeader({
   total,
   remaining,
@@ -40,77 +58,137 @@ export function StudyProgressHeader({
   elapsedSeconds,
   cardProgress,
   requeueCount,
+  repeatsAdded,
   onPrevCard,
-  onSettings,
   onExit,
+  controls,
+  focusMode,
+  onToggleFocusMode,
+  shadowingActive,
+  shadowingProgress,
 }: Props) {
   const { t } = useTranslation('study');
   const done = Math.max(0, total - remaining);
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const pct = shadowingActive
+    ? shadowingProgress && shadowingProgress.total > 0
+      ? Math.round((shadowingProgress.step / shadowingProgress.total) * 100)
+      : 0
+    : total > 0
+      ? Math.round((done / total) * 100)
+      : 0;
   const cardType = cardTypeFromProgress(cardProgress);
 
   return (
-    <div className="w-full space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 text-xs tabular-nums text-muted-foreground">
-          {/* SRS card type */}
-          <span
-            className={cn(
-              'rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase',
-              CARD_TYPE_CLS[cardType],
-            )}
+    <div
+      className="z-40 shrink-0 border-b border-border bg-card/95 backdrop-blur"
+      data-testid="study-header"
+    >
+      <div
+        className={cn(
+          'mx-auto flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:gap-2 sm:px-4 sm:py-3',
+          focusMode ? 'max-w-[72em]' : 'max-w-5xl',
+        )}
+      >
+        {/* Row 1 (narrow window): controls. From `sm` the two groups dissolve into one row. */}
+        <div className="flex items-center gap-1.5 sm:contents">
+          <Button variant="outline" size="sm" onClick={onExit}>
+            <ArrowLeft className="rtl:rotate-180" />
+            <span className="hidden sm:inline">{t('runner.exit')}</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={onPrevCard}
+            disabled={!onPrevCard || shadowingActive}
+            title={t('runner.prevCard')}
+            aria-label={t('runner.prevCard')}
           >
-            {t(`runner.cardType.${cardType}`)}
-          </span>
-
-          {/* This card has come round again inside the session */}
-          {requeueCount > 0 && (
-            <span
-              className="inline-flex items-center gap-1 text-warning"
-              title={t('runner.requeued')}
+            <ChevronLeft className="rtl:rotate-180" />
+          </Button>
+          {/* Leaving fullscreen: the F key and a row inside the menu are things you must already know. Focus
+              mode hides the rest of the app, so the way back out is the one control that must be visible. */}
+          {focusMode && (
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={onToggleFocusMode}
+              title={t('runner.exitFocus')}
+              aria-label={t('runner.exitFocus')}
             >
-              <RotateCcw className="h-3 w-3" />
-              {requeueCount}
-            </span>
-          )}
-
-          <span className="inline-flex items-center gap-1 text-success">
-            <Check className="h-3.5 w-3.5" />
-            {correct}
-          </span>
-          <span className="inline-flex items-center gap-1 text-error">
-            <X className="h-3.5 w-3.5" />
-            {incorrect}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            {fmt(elapsedSeconds)}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {t('runner.remaining', { count: remaining })}
-          </span>
-          {onPrevCard && (
-            <Button variant="ghost" size="icon" onClick={onPrevCard} title={t('runner.prevCard')}>
-              <ChevronLeft className="h-4 w-4" />
+              <Minimize2 />
             </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={onSettings} title={t('landing.settings')}>
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onExit}>
-            {t('runner.exit')}
-          </Button>
+          {controls}
         </div>
-      </div>
 
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full bg-primary transition-all duration-300"
-          style={{ width: `${pct}%` }}
-        />
+        {/* Row 2: progress. */}
+        <div className="flex items-center gap-1.5 sm:contents">
+          {!focusMode && (
+            <>
+              {!shadowingActive && (
+                <>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-error/40 bg-error/10 px-2 py-1 text-xs font-bold tabular-nums text-error">
+                    <X className="h-3 w-3" /> {incorrect}
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2 py-1 text-xs font-bold tabular-nums text-success">
+                    <Check className="h-3 w-3" /> {correct}
+                  </span>
+                </>
+              )}
+              <span className="hidden items-center gap-1 rounded-full border border-border bg-muted px-2 py-1 font-mono text-xs font-semibold tabular-nums text-muted-foreground sm:inline-flex">
+                <Clock className="h-3 w-3" />
+                {shadowingActive ? (shadowingProgress?.elapsed ?? '0:00') : fmt(elapsedSeconds)}
+              </span>
+            </>
+          )}
+          <div
+            className="h-1.5 min-w-12 flex-1 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-valuenow={pct}
+          >
+            <div
+              className="h-full bg-primary transition-all duration-300"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <span
+            className="whitespace-nowrap text-xs font-bold tabular-nums text-muted-foreground"
+            data-testid="study-counter"
+          >
+            {shadowingActive
+              ? `${shadowingProgress?.step ?? 0} / ${shadowingProgress?.total ?? 0}${
+                  shadowingProgress?.round
+                    ? ` · ${t('shadowing.round', { pass: shadowingProgress.round })}`
+                    : ''
+                }`
+              : `${Math.min(total, done + 1)} / ${total}`}
+          </span>
+          {/* One chip, two things to say: on a repeated card it names THIS card's pass; the rest of the time it
+              accounts for the session total having grown, from the moment it grows. */}
+          {!shadowingActive && (requeueCount > 0 || repeatsAdded > 0) && (
+            <span
+              title={t('runner.requeueHint')}
+              className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-1.5 py-1 text-[11px] font-semibold text-warning"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span className="hidden sm:inline">
+                {requeueCount > 0
+                  ? t('runner.requeueBadge', { count: requeueCount })
+                  : t('runner.repeatsAdded', { count: repeatsAdded })}
+              </span>
+            </span>
+          )}
+          {!focusMode && !shadowingActive && (
+            <span
+              className={cn(
+                'hidden rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase sm:inline-flex',
+                CARD_TYPE_CLS[cardType],
+              )}
+            >
+              {t(`runner.cardType.${cardType}`)}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

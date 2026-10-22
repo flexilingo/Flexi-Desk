@@ -1,5 +1,7 @@
 import { X } from 'lucide-react';
 import { useTutorStore } from '../stores/tutorStore';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { isAiSetupError } from '@/lib/aiSource';
 import { TutorLanding } from './TutorLanding';
 import { NewConversationWizard } from './NewConversationWizard';
 import { ConversationDetail } from './ConversationDetail';
@@ -11,7 +13,12 @@ export function TutorPage() {
   return (
     <div className="relative h-[calc(100vh-4rem)]">
       {/* Error banner */}
-      {error && (
+      {error && isAiSetupError(error) && (
+        <div className="absolute top-2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 px-4 rtl:translate-x-1/2">
+          <AiSetupCard compact onReady={clearError} />
+        </div>
+      )}
+      {error && !isAiSetupError(error) && (
         <div className="absolute top-0 left-0 right-0 z-50 flex items-center gap-2 bg-error/10 border-b border-error px-4 py-2 text-sm text-error">
           <span className="flex-1">{error}</span>
           <button type="button" onClick={clearError} className="p-0.5 hover:bg-error/20 rounded">

@@ -2,7 +2,7 @@ import { createContext, useContext, useCallback, useEffect, useState } from 'rea
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
-import { WordDialog } from '@/pages/podcast/components/WordDialog';
+import { WordDialog } from '@/components/WordDialog';
 import { ClickableText } from '@/pages/study/components/session/ClickableText';
 
 // Ported from front's `WordLookupProvider.tsx`. Difference: desk already has its
@@ -43,9 +43,12 @@ interface ActiveLookup {
 export function WordLookupProvider({
   children,
   enabled = true,
+  contentLang = 'en',
 }: {
   children: ReactNode;
   enabled?: boolean;
+  /** Language of the exam content - the word dialog's source language (CELPIP en, TCF fr). */
+  contentLang?: 'en' | 'fr';
 }) {
   const { t } = useTranslation('celpip');
   const [lookup, setLookup] = useState<ActiveLookup | null>(null);
@@ -145,8 +148,8 @@ export function WordLookupProvider({
           onOpenChange={(o) => {
             if (!o) setLookup(null);
           }}
-          // CELPIP is an English exam, so the source language is never in doubt.
-          sourceLang="en"
+          // The exam's own language: English for CELPIP, French for the TCF family.
+          sourceLang={contentLang}
           sentenceContext={lookup.sentence}
         />
       )}

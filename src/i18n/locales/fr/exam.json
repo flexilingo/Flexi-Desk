@@ -1,0 +1,231 @@
+{
+  "tcf": {
+    "title": "TCF Canada",
+    "hubDescription": "Test de connaissance du français pour l'immigration au Canada",
+    "resultsTitle": "Vos résultats au TCF Canada",
+    "durationShort": "~2 h 47 min",
+    "startDialogDescription": "Un test blanc complet et chronométré : compréhension orale, écrite, expression écrite et orale, dans l'ordre officiel.",
+    "sections": {
+      "listening": "Compréhension orale (CO)",
+      "reading": "Compréhension écrite (CE)",
+      "writing": "Expression écrite (EE)",
+      "speaking": "Expression orale (EO)"
+    },
+    "sectionIntro": {
+      "listening": {
+        "title": "Compréhension orale",
+        "description": "39 questions, de la plus facile à la plus difficile. Chaque enregistrement est diffusé une seule fois, avec sa question et ses choix à l'écran. Le chronomètre ne tourne que pendant vos réponses, pas pendant l'écoute.",
+        "duration": "35 minutes • 39 questions",
+        "practiceDescription": "Des questions de la plus facile à la plus difficile. Chaque enregistrement est diffusé une seule fois, avec sa question et ses choix à l'écran. Le chronomètre ne tourne que pendant vos réponses, pas pendant l'écoute."
+      },
+      "reading": {
+        "title": "Compréhension écrite",
+        "description": "39 courts documents, une question chacun. Vous pouvez circuler librement.",
+        "duration": "60 minutes • 39 questions",
+        "practiceDescription": "De courts documents, une question chacun. Vous pouvez circuler librement."
+      },
+      "writing": {
+        "title": "Expression écrite",
+        "description": "Trois tâches avec un seul chronomètre. Respectez le nombre de mots de chaque tâche.",
+        "duration": "60 minutes • 3 tâches",
+        "practiceDescription": "Vos tâches partagent un seul chronomètre. Respectez le nombre de mots de chaque tâche."
+      },
+      "speaking": {
+        "title": "Expression orale",
+        "description": "Trois tâches. La tâche 2 prévoit 2 minutes de préparation ; les tâches 1 et 3 commencent tout de suite.",
+        "duration": "~12 minutes • 3 tâches",
+        "practiceDescription": "Enregistrez chaque tâche choisie. La tâche 2 prévoit 2 minutes de préparation ; les tâches 1 et 3 commencent tout de suite."
+      }
+    },
+    "itemOf": "Question {{current}} / {{total}}",
+    "answeredCount": "{{count}} répondues",
+    "itemsLeft_one": "{{count}} question restante",
+    "itemsLeft_other": "{{count}} questions restantes",
+    "timeLeft": "Temps restant",
+    "clockPaused": "Chronomètre en pause pendant l'enregistrement",
+    "answerWhileListening": "Vous pouvez répondre pendant l'écoute. Le bouton Suivant apparaît à la fin de l'enregistrement.",
+    "listeningOnce": "Chaque enregistrement est diffusé une seule fois, avec sa question et ses choix à l'écran. Le chronomètre s'arrête pendant l'écoute et tourne pendant que vous répondez.",
+    "audioDone": "Enregistrement terminé — le chronomètre tourne. Choisissez votre réponse, puis passez à la question suivante.",
+    "unansweredWarning": "{{count}} questions sont sans réponse. Après l'envoi, vous ne pourrez plus revenir à cette section.",
+    "wordLimit": "{{min}} à {{max}} mots · un seul chronomètre de 60 minutes pour les trois tâches",
+    "wordRangeWarning": "Visez {{min}} à {{max}} mots. Vous pouvez tout de même envoyer.",
+    "wordRangeTask": "Tâche {{task}} : {{count}} mots ({{min}}–{{max}})",
+    "writingPlaceholder": "Rédigez votre réponse en français…",
+    "estimateNote": "Les scores de compréhension orale et écrite sont une estimation : le vrai TCF calibre chaque question. Un NCLC inférieur à 4 s'affiche « < 4 », et votre niveau global est celui de votre compétence la plus faible."
+  },
+  "tcfQuebec": {
+    "title": "TCF Québec",
+    "hubDescription": "Le test de français pour l'immigration au Québec (PSTQ, PEQ). À l'examen officiel, vous choisissez de 1 à 4 épreuves, avec 29 questions en compréhension orale et 29 en compréhension écrite. Notre test blanc fait passer les quatre compétences au format du TCF Canada (39 + 39 questions) et donne un niveau du CECRL par compétence.",
+    "startDialogDescription": "Un test blanc complet et chronométré des quatre compétences : compréhension orale, compréhension écrite, expression écrite et expression orale. Les deux compréhensions suivent le format du TCF Canada (39 questions chacune, 35 et 60 min), plus long que le TCF Québec officiel (29 questions chacune, 25 et 45 min). L'expression écrite (3 tâches, 60 min) et l'expression orale (3 tâches, 12 min) ont la durée officielle.",
+    "resultsTitle": "Vos résultats au TCF Québec",
+    "estimateNote": "Les scores de compréhension orale et écrite sont une estimation : le vrai TCF calibre chaque question. Les niveaux suivent la grille officielle du TCF (France Éducation international) ; ici, votre niveau global est celui de votre compétence la plus faible. Le Québec lit chaque compétence sur son Échelle québécoise (par exemple, 400–499 en compréhension orale ou écrite = niveau 7–8) ; le volet 1 du PSTQ (haute qualification) et le PEQ exigent le niveau 7 en compréhension et expression orales et le niveau 5 en compréhension et expression écrites. Vérifiez ce que votre dossier exige.",
+    "pointsTitle": "Points du Québec (grille de 2013)",
+    "pointsTotal": "{{total}} / {{max}} points",
+    "pointsValue": "{{points}} pts",
+    "pointsFloor": "Dans cette grille de 2013, les points commencent au B2 ; les deux épreuves orales valent jusqu'à 14 des 16 points, les écrites un point chacune. Le PSTQ actuel classe le français autrement : jusqu'à 50 points par compétence, à partir du niveau 5 de l'échelle québécoise.",
+    "pointsSource": "Source : barème québécois d'immigration en vigueur depuis le 1er août 2013, reproduit dans le Manuel du candidat au TCF (France Éducation international, Version Q, septembre 2026, p. 16). Le PSTQ applique désormais ses propres points et niveaux minimaux de français, publiés sur quebec.ca — vérifiez la grille selon laquelle votre dossier est évalué."
+  },
+  "tcfIrn": {
+    "title": "TCF IRN",
+    "hubDescription": "Le test de français pour un titre de séjour ou la naturalisation en France (Intégration, Résidence et Nationalité) : quatre épreuves obligatoires, 25 questions en compréhension orale et 25 en compréhension écrite (niveaux jusqu'au B2). Depuis le 1er janvier 2026, la France demande l'A2 pour une première carte pluriannuelle, le B1 pour une première carte de résident (moins de 65 ans) et le B2 pour la naturalisation. Entraînement bientôt disponible.",
+    "startDialogDescription": "Un test blanc complet et chronométré : compréhension orale, écrite, expression écrite et orale, dans l'ordre officiel.",
+    "resultsTitle": "Vos résultats au TCF IRN",
+    "estimateNote": "Les scores de compréhension orale et écrite sont une estimation : le vrai TCF calibre chaque question. Le TCF IRN note les compréhensions de 100 à 499, 499 étant le haut du B2, et les expressions sur 20 ; les niveaux suivent la grille officielle du TCF (France Éducation international). Ici, votre niveau global est celui de votre compétence la plus faible ; l'attestation officielle considère un niveau atteint quand trois compétences l'atteignent et que la quatrième se situe au moins en haut du niveau inférieur. Vérifiez le niveau exigé par votre demande.",
+    "durationShort": "~1 h 35 min"
+  },
+  "scoringInfo": {
+    "open": "Comment ce score est-il calculé ?",
+    "title": "Comment votre score est calculé",
+    "close": "Fermer",
+    "estimate": "Il s'agit d'une estimation d'entraînement, pas d'un résultat officiel.",
+    "tableLoading": "Chargement du tableau…",
+    "tableError": "Le tableau n'a pas pu être chargé.",
+    "retry": "Réessayer",
+    "overallTitle": "Votre score global",
+    "columns": {
+      "level": "Niveau",
+      "reading": "Compréhension écrite",
+      "listening": "Compréhension orale",
+      "writing": "Expression écrite",
+      "speaking": "Expression orale",
+      "mcq": "Score CO et CE",
+      "task": "EE et EO (sur 20)"
+    },
+    "tableCaption": {
+      "celpip_mcq": "Nombre minimal de bonnes réponses sur 38 pour chaque niveau",
+      "tcf_nclc": "Tableau d'IRCC : le score requis pour chaque niveau NCLC",
+      "tcf_cefr": "Grille officielle du TCF : le score requis pour chaque niveau"
+    },
+    "celpip": {
+      "mcqTitle": "Compréhension orale et écrite",
+      "mcqPoints": "Chaque bonne réponse vaut un point. Une mauvaise réponse ne fait rien perdre : répondez donc à toutes les questions.",
+      "mcqChart": "Vos points deviennent un niveau CLB grâce au tableau publié par Paragon, le concepteur du CELPIP. À niveau égal, la compréhension orale demande quelques bonnes réponses de plus que la compréhension écrite.",
+      "mcqDifficulty": "Dans le vrai test, les questions difficiles comptent plus que les faciles : un même nombre de bonnes réponses peut donc correspondre à deux niveaux. Nous ne pouvons pas encore pondérer la difficulté, alors nous vous donnons le plus bas des deux.",
+      "mcqSlice": "Si vous n'avez fait que certaines parties, votre résultat est ramené aux 38 questions complètes. La partie 1 est la plus facile : un niveau tiré d'une seule partie n'est qu'une indication.",
+      "prodTitle": "Expression écrite et orale",
+      "prodCriteria": "Un examinateur IA évalue chaque tâche selon les quatre critères du CELPIP : contenu et cohérence, vocabulaire, lisibilité (à l'écrit) ou clarté à l'écoute (à l'oral), et réalisation de la tâche.",
+      "prodAverage": "Votre niveau dans une section est la moyenne de vos tâches, arrondie au demi-niveau. Le vrai test est noté par des évaluateurs formés et donne des niveaux entiers.",
+      "overall": "C'est votre compétence la plus faible. Les programmes d'immigration examinent chaque compétence séparément : c'est donc la plus faible qui décide.",
+      "source": "Sources : Paragon Testing Enterprises, CELPIP Pro Study Packs ; tableau d'équivalence des tests de langue d'IRCC."
+    },
+    "tcf": {
+      "mcqTitle": "Compréhension orale et écrite",
+      "mcq39": "39 questions de plus en plus difficiles. Plus une question arrive tard, plus sa bonne réponse rapporte : de 3 points pour les premières, les plus faciles, à 33 pour les dernières, les plus difficiles. Votre score va de 100 à 699.",
+      "mcq25": "25 questions de plus en plus difficiles ; plus une question arrive tard, plus sa bonne réponse rapporte. Votre score va de 100 à 499 et le niveau monte jusqu'à B2.",
+      "mcqEstimate": "France Éducation international, qui organise le TCF, ne publie pas ses pondérations exactes : ce score est donc une estimation.",
+      "mcqSlice": "Si vous n'avez fait que quelques questions, vous voyez votre nombre de bonnes réponses au lieu d'un score.",
+      "prodTitle": "Expression écrite et orale",
+      "prod": "Un examinateur IA note chaque tâche sur 20 : réalisation de la tâche, organisation, lexique et grammaire, plus l'aisance à l'oral. Le score de la section est la moyenne de vos tâches.",
+      "nclcTitle": "Du score au NCLC",
+      "nclc": "Le score de chaque compétence devient un niveau NCLC grâce au tableau officiel d'IRCC. Votre niveau global est votre compétence la plus faible.",
+      "levelTitle": "Du score au niveau",
+      "cefr": "Chaque compétence reçoit un niveau du CECR, de A1 à C2, selon la grille officielle de France Éducation international. Votre niveau global est votre compétence la plus faible.",
+      "quebecPoints": "À côté de chaque niveau, vous voyez les points que lui accorde la grille d'immigration du Québec. Les points commencent à B2.",
+      "source": "Sources : France Éducation international, Manuel du candidat ; tableau d'équivalence des tests de langue d'IRCC.",
+      "sourceQuebec": "Sources : France Éducation international, Manuel du candidat (avril 2025) ; grille de points de l'immigration du Québec.",
+      "sourceIrn": "Source : France Éducation international, Manuel du candidat (avril 2025)."
+    }
+  },
+  "insightQa": {
+    "fromPassage": "Extrait du texte",
+    "fromRecording": "Extrait de l'enregistrement",
+    "whyYourChoiceFailed": "Pourquoi votre réponse est fausse",
+    "whyCorrect": "Pourquoi c'est la bonne réponse",
+    "nextTime": "La prochaine fois",
+    "wordToKnow": "Mot à connaître",
+    "commonTrap": "{{count}} de vos {{wrong}} erreurs viennent du même piège : {{trap}}",
+    "techniquesToPractise": "Techniques à travailler",
+    "traps": {
+      "unstated_detail": "Absent du texte",
+      "passage_wording_reused": "Mêmes mots, autre sens",
+      "plausible_real_world_assumption": "Vrai dans la vie, pas dans le texte",
+      "partial_match": "Vrai en partie seulement",
+      "extreme_qualifier": "Trop absolu",
+      "ignores_a_stated_condition": "Oublie une condition énoncée",
+      "right_number_wrong_unit": "Bon nombre, mauvaise unité"
+    },
+    "techniques": {
+      "paraphrase_bridging": "Repérer la reformulation",
+      "keyword_anchoring": "S'ancrer sur les mots-clés",
+      "condition_scan": "Vérifier chaque condition",
+      "purpose_before_detail": "Le but avant les détails",
+      "note_shorthand": "Notes brèves pendant l'écoute",
+      "stance_tracking": "Suivre qui pense quoi",
+      "tone_register_read": "Lire le ton",
+      "scan_first_and_last_sentence": "Parcourir la première et la dernière phrase",
+      "distractor_overlap_test": "Se méfier des mots recopiés",
+      "option_elimination_by_extremes": "Écarter les options absolues",
+      "predict_before_audio": "Anticiper avant d'écouter",
+      "unit_check": "Vérifier les unités"
+    }
+  },
+  "overallLevel": "Niveau global",
+  "practiceScoreLabel": "Score d'entraînement",
+  "takeAgainShort": "Refaire",
+  "retakeUntimed": "Recommencer sans chrono",
+  "examBeingScored": "Votre examen du {{date}} est en cours de notation — les sections déjà notées sont consultables.",
+  "scoringBannerTitle": "Encore en cours de notation : {{sections}}.",
+  "scoringBannerBody": "Vos autres scores sont ci-dessous. Vous pouvez quitter cette page — la notation continue sans elle, et le score sera ici à votre retour.",
+  "scoringBannerSlow": "Cela prend plus de temps que d'habitude, mais rien n'est perdu : la notation réessaie d'elle-même jusqu'à ce que le score soit prêt. Vous pouvez quitter la page et revenir plus tard.",
+  "examSectionAnalyzing": "Analyse en cours…",
+  "startPracticeOf": "Commencer : {{section}} ({{count}})",
+  "notAnswered": "Sans réponse",
+  "youChoseLabel": "Votre choix",
+  "insightUpgradeCta": "Passer à Pro",
+  "sectionPartsCount_one": "{{count}} partie",
+  "sectionPartsCount_other": "{{count}} parties",
+  "scoreReadyNotice": "Le score de {{section}} est prêt",
+  "scoreReadyView": "Voir",
+  "practiceQuestionCount_one": "{{count}} question",
+  "practiceQuestionCount_other": "{{count}} questions",
+  "practiceTaskCount_one": "{{count}} tâche",
+  "practiceTaskCount_other": "{{count}} tâches",
+  "results": {
+    "tcfHelp": {
+      "translate": "Traduire les explications en français",
+      "translating": "Traduction en cours…",
+      "hideTranslation": "Masquer la traduction",
+      "showTranslation": "Afficher la traduction",
+      "lockedExplanation": "L'explication complète de cette question (la phrase qui prouve la réponse, le piège de votre choix, la méthode pour la résoudre et le mot clé) est réservée aux membres Pro.",
+      "modelAnswersTitle": "Réponses modèles",
+      "bandChip": "NCLC {{band}}",
+      "openToAll": "Accessible à tous",
+      "nextLevel": "Le niveau suivant",
+      "whatSetsBand": "Ce qui en fait un NCLC {{band}}",
+      "lockedBand": "La même tâche traitée au niveau NCLC {{band}}, avec ce qui la porte à ce niveau, est réservée aux membres Pro.",
+      "stepsTitle_one": "Du NCLC 5 au NCLC 7 : {{count}} règle",
+      "stepsTitle_other": "Du NCLC 5 au NCLC 7 : {{count}} règles",
+      "examinerModel": "La réponse modèle de l'examinateur pour cette tâche",
+      "reference": "Votre référence",
+      "stepsTitle9_one": "Du NCLC 7 au NCLC 9 : {{count}} règle",
+      "stepsTitle9_other": "Du NCLC 7 au NCLC 9 : {{count}} règles"
+    },
+    "nextSteps": {
+      "title": "Votre prochaine étape",
+      "missedCount": "{{missed}} ratées sur {{total}}",
+      "lockedMcq": "Les explications sont réservées aux membres Pro.",
+      "openSection": "Ouvrir {{section}}",
+      "lockedTasks": "Les réponses modèles au-dessus du NCLC 5 sont réservées aux membres Pro.",
+      "nextLevelBand": "niveau suivant : NCLC {{band}}",
+      "referenceBand": "référence : NCLC {{band}}",
+      "freeMonthly": "Ce résultat fait partie de vos résultats complets gratuits : 2 par mois, puis 1 par jour."
+    },
+    "reviewTabs": {
+      "wrong": "Erreurs",
+      "right": "Bonnes réponses",
+      "noneWrong": "Vous avez répondu correctement à toutes les questions de cette section.",
+      "noneRight": "Aucune bonne réponse dans cette section pour l'instant : toutes les questions sont dans l'onglet « Erreurs ».",
+      "showExplanation": "Voir l'explication"
+    },
+    "correct": "correct",
+    "yourNextStep": "Votre prochaine étape",
+    "showMore": "Voir plus",
+    "showLess": "Voir moins",
+    "bandLabel": "CLB {{band}}",
+    "lockedListeningReview": "Réécouter chaque enregistrement et lire sa transcription font partie de Pro. Un compte gratuit y a droit pour 2 résultats complets par mois, puis pour 1 par jour une fois ceux-ci utilisés.",
+    "lockedReadingReview": "Relire le texte fait partie de Pro. Un compte gratuit y a droit pour 2 résultats complets par mois, puis pour 1 par jour une fois ceux-ci utilisés.",
+    "tcfRecordingLocked": "Réécouter votre propre enregistrement fait partie de Pro. Un compte gratuit y a droit pour 2 résultats complets par mois, puis pour 1 par jour une fois ceux-ci utilisés.",
+    "noSpeechTitle": "Nous n'avons pas pu entendre cette réponse.",
+    "noSpeechBody": "Votre micro n'a presque rien enregistré, il n'y avait donc rien à évaluer. Vérifiez que le bon micro est sélectionné et qu'il n'est pas coupé, puis refaites cette tâche."
+  }
+}

@@ -15,14 +15,14 @@ interface SectionPillStyle {
 const SECTION_STYLES: SectionPillStyle[] = [
   {
     label: 'L',
-    active: 'bg-success text-white shadow-sm',
+    active: 'bg-success text-success-foreground shadow-sm',
     done: 'bg-success/20 text-success',
     pending: 'bg-muted text-muted-foreground',
     line: 'bg-success/40',
   },
   {
     label: 'R',
-    active: 'bg-accent text-white shadow-sm',
+    active: 'bg-accent text-accent-foreground shadow-sm',
     done: 'bg-accent/20 text-accent',
     pending: 'bg-muted text-muted-foreground',
     line: 'bg-accent/40',
@@ -36,7 +36,7 @@ const SECTION_STYLES: SectionPillStyle[] = [
   },
   {
     label: 'S',
-    active: 'bg-warning text-white shadow-sm',
+    active: 'bg-warning text-warning-foreground shadow-sm',
     done: 'bg-warning/20 text-warning',
     pending: 'bg-muted text-muted-foreground',
     line: 'bg-warning/40',
@@ -55,6 +55,8 @@ interface ExamProgressProps {
    */
   translateOn?: boolean;
   onTranslateChange?: (on: boolean) => void;
+  /** Pill labels per section (CO/CE/EE/EO for TCF); defaults to L/R/W/S. */
+  sectionLabels?: string[];
 }
 
 export function ExamProgress({
@@ -64,6 +66,7 @@ export function ExamProgress({
   onEndExam,
   translateOn,
   onTranslateChange,
+  sectionLabels,
 }: ExamProgressProps) {
   const { t } = useTranslation('celpip');
 
@@ -79,7 +82,7 @@ export function ExamProgress({
             <div
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[8px] text-[12px] font-bold tabular-nums transition-colors ${pillStyle}`}
             >
-              <span>{style.label}</span>
+              <span>{sectionLabels?.[i] ?? style.label}</span>
               {isDone && <Check className="w-3 h-3" strokeWidth={3} />}
             </div>
             {i < totalSections - 1 && (

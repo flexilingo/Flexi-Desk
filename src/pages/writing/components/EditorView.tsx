@@ -159,9 +159,9 @@ export function EditorView() {
 
         {/* Time expired warning */}
         {timeExpired && (
-          <div className="flex items-center gap-2 rounded-lg border border-[#C58C6E]/30 bg-[#C58C6E]/5 px-4 py-2">
-            <AlertCircle className="h-4 w-4 text-[#C58C6E]" />
-            <p className="text-sm text-[#C58C6E]">
+          <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/5 px-4 py-2">
+            <AlertCircle className="h-4 w-4 text-warning" />
+            <p className="text-sm text-warning">
               Time limit reached. You can still continue or submit.
             </p>
           </div>

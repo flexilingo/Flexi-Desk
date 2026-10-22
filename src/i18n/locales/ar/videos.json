@@ -1,0 +1,120 @@
+{
+  "subscribe": "اشترك في القناة",
+  "title": "الفيديوهات",
+  "searchPlaceholder": "ابحث عن فيديو…",
+  "pinned": "مثبّت",
+  "empty": {
+    "title": "لم يتم العثور على فيديوهات",
+    "subtitle": "جرّب إزالة عامل تصفية أو البحث عن شيء آخر."
+  },
+  "resultCount": "{{count}} فيديو",
+  "matchCountNone": "لا توجد فيديوهات مطابقة",
+  "matchCount_one": "فيديو واحد مطابق",
+  "matchCount_two": "فيديوهان مطابقان",
+  "matchCount_few": "{{count}} فيديوهات مطابقة",
+  "matchCount_many": "{{count}} فيديو مطابقًا",
+  "matchCount_other": "{{count}} فيديو مطابق",
+  "matchCount": "{{count}} فيديو مطابق",
+  "removeFilter": "إزالة الفلتر: {{name}}",
+  "minutes": "{{count}} دقيقة",
+  "backToCatalogue": "العودة إلى الفيديوهات",
+  "notFound": {
+    "title": "الفيديو غير موجود",
+    "subtitle": "ربما تمت إزالته من الفهرس."
+  },
+  "subtitle": "فيديوهات حقيقية مع ترجمة تفاعلية. اضغط على أي كلمة لترى معناها ثم أضفها مباشرة إلى مجموعتك.",
+  "views": {
+    "newest": "الأحدث",
+    "newestHint": "أحدث الفيديوهات المضافة.",
+    "shortest": "القصيرة",
+    "shortestHint": "فيديوهات قصيرة — مناسبة حين يكون لديك دقائق قليلة.",
+    "longest": "الطويلة",
+    "longestHint": "فيديوهات أطول للمشاهدة المتأنية."
+  },
+  "browseByTopic": "تصفّح حسب الموضوع",
+  "channels": {
+    "heading": "القنوات",
+    "videoCount": "{{count}} فيديو",
+    "totalCount": "{{count}} قناة",
+    "searchPlaceholder": "ابحث عن قناة…",
+    "allLanguages": "الكل",
+    "clear": "مسح",
+    "empty": "لا توجد قنوات مطابقة."
+  },
+  "channel": {
+    "videoCount": "{{count}} فيديو",
+    "openOnYoutube": "افتح على يوتيوب"
+  },
+  "categories": {
+    "learning": "تعليمي",
+    "stories": "قصص",
+    "podcast": "بودكاست",
+    "news": "أخبار",
+    "culture": "ثقافة",
+    "music": "موسيقى",
+    "other": "أخرى"
+  },
+  "filters": {
+    "category": "الفئة",
+    "allCategories": "كل الفئات"
+  },
+  "music": {
+    "signInTitle": "قسم الموسيقى للمستخدمين المسجّلين",
+    "signInBody": "تعلّم مع أغانٍ حقيقية وتابع الكلمات كلمةً بكلمة. سجّل الدخول أو أنشئ حساباً مجانياً لفتح قسم الموسيقى.",
+    "signIn": "تسجيل الدخول"
+  },
+  "player": {
+    "openOnYoutube": "شاهد على يوتيوب",
+    "openChannel": "افتح القناة",
+    "openChannelNamed": "افتح {{channel}}"
+  },
+  "upNext": {
+    "heading": "التالي",
+    "sub": "المزيد من هذه القناة ومن مستواك",
+    "empty": "لا توجد فيديوهات أخرى لاقتراحها بعد."
+  },
+  "podcasts": {
+    "filterAllLevels": "جميع المستويات",
+    "cefrBeginner": "مبتدئ",
+    "cefrElementary": "أساسي",
+    "cefrIntermediate": "متوسط",
+    "cefrUpperIntermediate": "متوسط متقدم",
+    "cefrAdvanced": "متقدم",
+    "cefrProficiency": "إتقان",
+    "filterByLanguage": "اللغة",
+    "filterAllLanguages": "جميع اللغات",
+    "clearFilters": "مسح",
+    "filterView": "العرض",
+    "filterTopic": "الموضوع",
+    "filterAllTopics": "كل المواضيع",
+    "filterDuration": "المدة",
+    "filterAnyDuration": "أي مدة",
+    "filterDurationUnder": "أقل من {{minutes}} دقيقة",
+    "clearAllFilters": "مسح الكل",
+    "seeAll": "عرض الكل",
+    "videoUnavailableTitle": "تعذّر تشغيل هذا الفيديو هنا",
+    "videoUnavailableBody": "لا يمكن الوصول إلى YouTube من اتصالك الآن. حاول مرة أخرى، أو شاهده على YouTube — لا يزال بإمكانك قراءة النص ودراسة كلماته هنا.",
+    "videoUnavailableRetry": "حاول مرة أخرى",
+    "videoUnavailableOpen": "شاهد على YouTube",
+    "expandPlayer": "توسيع",
+    "closePlayer": "إغلاق",
+    "play": "تشغيل",
+    "pause": "إيقاف مؤقت"
+  },
+  "loading": "جارٍ التحميل…",
+  "retry": "حاول مرة أخرى",
+  "loadError": "تعذّر تحميل الفيديوهات. تحقق من اتصالك وحاول مرة أخرى.",
+  "pagination": {
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "الصفحة {{page}} من {{total}}"
+  },
+  "watch": {
+    "startHint": "اضغط زر التشغيل على الفيديو نفسه لبدء التشغيل. بعد ذلك تعمل أزرار التحكم في الأسفل.",
+    "preparing": "جارٍ فتح الفيديو…",
+    "importFailed": "تعذّر فتح هذا الفيديو. حاول مرة أخرى.",
+    "noTranscript": "لا توجد ترجمة تفاعلية لهذا الفيديو بعد.",
+    "replay": "شاهد مرة أخرى"
+  },
+  "watchWithSubtitles": "شاهد مع الترجمة"
+}

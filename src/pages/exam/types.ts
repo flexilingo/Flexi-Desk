@@ -289,13 +289,13 @@ export function formatExamElapsed(seconds: number): string {
 }
 
 export function examScoreColor(score: number): string {
-  if (score >= 80) return 'text-[#8BB7A3]';
-  if (score >= 60) return 'text-[#C58C6E]';
+  if (score >= 80) return 'text-success';
+  if (score >= 60) return 'text-warning';
   return 'text-error';
 }
 
 export function examScoreBg(score: number): string {
-  if (score >= 80) return 'bg-[#8BB7A3]/10';
-  if (score >= 60) return 'bg-[#C58C6E]/10';
+  if (score >= 80) return 'bg-success/10';
+  if (score >= 60) return 'bg-warning/10';
   return 'bg-error/10';
 }

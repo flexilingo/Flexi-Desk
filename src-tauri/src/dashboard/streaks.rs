@@ -88,7 +88,7 @@ pub fn get_xp_progress(conn: &Connection) -> Result<super::types::XPProgress, St
 
     let xp_today: i64 = conn
         .query_row(
-            "SELECT COALESCE(SUM(xp_amount), 0) FROM xp_log WHERE date(created_at) = ?1",
+            "SELECT COALESCE(SUM(xp_amount), 0) FROM xp_log WHERE date(created_at, 'localtime') = ?1",
             rusqlite::params![today],
             |row| row.get(0),
         )
@@ -325,6 +325,30 @@ mod tests {
         assert_eq!(progress.xp_today, 30);
         let expected_pct = (30.0_f64 / 50.0 * 100.0).min(100.0);
         assert!((progress.percentage - expected_pct).abs() < 0.01);
+    }
+
+    /// Rows are stored in UTC; 23:00 local today is already "tomorrow" in UTC for any
+    /// zone behind it (e.g. Toronto). Run with TZ=America/Toronto to exercise this.
+    #[test]
+    fn test_get_xp_progress_counts_late_evening_local_xp() {
+        let conn = setup();
+        let late = chrono::Local::now()
+            .date_naive()
+            .and_hms_opt(23, 0, 0)
+            .unwrap()
+            .and_local_timezone(chrono::Local)
+            .single()
+            .unwrap()
+            .with_timezone(&chrono::Utc)
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
+        conn.execute(
+            "INSERT INTO xp_log (id, module, action, xp_amount, created_at)
+             VALUES ('late', 'review', 'session', 40, ?1)",
+            rusqlite::params![late],
+        )
+        .unwrap();
+        assert_eq!(get_xp_progress(&conn).unwrap().xp_today, 40);
     }
 }
 

@@ -1,0 +1,17 @@
+{
+  "title": "Updates",
+  "subtitle": "Keep FlexiDesk up to date",
+  "currentVersion": "Current version {{version}}",
+  "check": "Check for updates",
+  "checking": "Checking...",
+  "upToDate": "You are on the latest version.",
+  "available": "Version {{version}} is available.",
+  "install": "Download and install",
+  "installing": "Downloading...",
+  "downloading": "Downloading... {{percent}}%",
+  "downloadingUnknown": "Downloading...",
+  "ready": "The update is installed. Restart to finish.",
+  "restart": "Restart now",
+  "dismiss": "Dismiss",
+  "error": "Could not update: {{message}}"
+}

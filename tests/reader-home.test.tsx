@@ -246,7 +246,7 @@ describe('reading home', () => {
     await screen.findByRole('heading', { name: 'Already here' });
     fireEvent.click(screen.getByRole('button', { name: 'home.add' }));
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('upload.hint')).toBeInTheDocument();
+    expect(within(dialog).getByText('upload.hint.file')).toBeInTheDocument();
     expect(within(dialog).getByText('upload.privacy')).toBeInTheDocument();
 
     // A file dropped on the page opens the same dialog with the file chosen.

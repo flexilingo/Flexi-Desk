@@ -13,6 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useLanguageSettings } from '@/hooks/useLanguageSettings';
+import { useTranslation } from 'react-i18next';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { useAiSource } from '@/stores/aiSourceStore';
+import { isAiSetupError } from '@/lib/aiSource';
+import { aiErrorText } from '@/components/ai/aiErrorText';
 
 interface Deck {
   id: string;
@@ -70,6 +75,8 @@ export function AddToDeckDialog({
   const [aiWarning, setAiWarning] = useState<string | null>(null);
   const [progressText, setProgressText] = useState('');
   const { targetLang, nativeLang } = useLanguageSettings();
+  const { t: tAi } = useTranslation('ai');
+  const { own: ownAi } = useAiSource();
 
   // Fetch local decks when dialog opens
   useEffect(() => {
@@ -154,8 +161,11 @@ export function AddToDeckDialog({
       aiUsed = true;
     } catch (err) {
       // AI unavailable — keep the plain-word fallback we already built.
-      const errMsg = String(err);
-      setAiWarning(`AI error: ${errMsg}. Cards added without translation.`);
+      setAiWarning(
+        isAiSetupError(err)
+          ? `${aiErrorText(tAi, err)} Cards added without translation.`
+          : `AI error: ${String(err)}. Cards added without translation.`,
+      );
     }
 
     setProgressText('Saving cards...');
@@ -206,7 +216,7 @@ export function AddToDeckDialog({
       setProcessing(false);
       setProgressText('');
     }
-  }, [selectedDeckId, words, targetLang, nativeLang, mode, sentenceContext, onSuccess]);
+  }, [selectedDeckId, words, targetLang, nativeLang, mode, sentenceContext, onSuccess, tAi]);
 
   if (!open) return null;
 
@@ -218,16 +228,16 @@ export function AddToDeckDialog({
         <DialogContent className="max-h-[90dvh] overflow-y-auto">
           <div className="py-6 px-4 text-center">
             <PartyPopper className="mx-auto mb-3 h-10 w-10 text-success" />
-            <div className="text-lg font-bold text-[#8BB7A3] mb-1">
+            <div className="text-lg font-bold text-success mb-1">
               {cardsAdded} card{cardsAdded !== 1 ? 's' : ''} saved!
             </div>
             <div className="text-xs text-muted-foreground mb-3">
               Added to {selectedDeck?.name ?? 'deck'}
             </div>
             {aiWarning ? (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/30 text-left mb-4">
-                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-700 dark:text-amber-300">{aiWarning}</p>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-left mb-4">
+                <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <p className="text-xs text-warning">{aiWarning}</p>
               </div>
             ) : (
               <div className="text-xs text-muted-foreground mb-4">
@@ -272,6 +282,9 @@ export function AddToDeckDialog({
             </div>
           )}
 
+          {/* Smart mode runs on the user's own AI: set it up here rather than failing later. */}
+          {mode === 'smart' && ownAi.kind === 'unconfigured' && <AiSetupCard compact />}
+
           {/* AI Mode selector */}
           <div className="space-y-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -285,12 +298,12 @@ export function AddToDeckDialog({
                 className={cn(
                   'flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition-all text-left',
                   mode === 'basic'
-                    ? 'border-[#8BB7A3] bg-[#8BB7A3]/10'
-                    : 'border-border hover:border-[#8BB7A3]/50',
+                    ? 'border-success bg-success/10'
+                    : 'border-border hover:border-success/50',
                 )}
               >
                 <div className="flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-[#8BB7A3]" />
+                  <Zap className="h-3.5 w-3.5 text-success" />
                   <span className="text-xs font-semibold">Basic</span>
                 </div>
                 <span className="text-[10px] text-muted-foreground">
@@ -305,12 +318,12 @@ export function AddToDeckDialog({
                 className={cn(
                   'flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition-all text-left',
                   mode === 'smart'
-                    ? 'border-[#C58C6E] bg-[#C58C6E]/10'
-                    : 'border-border hover:border-[#C58C6E]/50',
+                    ? 'border-warning bg-warning/10'
+                    : 'border-border hover:border-warning/50',
                 )}
               >
                 <div className="flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-[#C58C6E]" />
+                  <Sparkles className="h-3.5 w-3.5 text-warning" />
                   <span className="text-xs font-semibold">Smart</span>
                 </div>
                 <span className="text-[10px] text-muted-foreground">
@@ -330,7 +343,7 @@ export function AddToDeckDialog({
             {!isCreatingDeck ? (
               <button
                 type="button"
-                className="w-full p-3 rounded-xl border-2 border-dashed border-border bg-transparent text-muted-foreground text-xs cursor-pointer flex items-center justify-center gap-2 hover:border-[#8BB7A3] hover:text-foreground transition-all"
+                className="w-full p-3 rounded-xl border-2 border-dashed border-border bg-transparent text-muted-foreground text-xs cursor-pointer flex items-center justify-center gap-2 hover:border-success hover:text-foreground transition-all"
                 onClick={() => setIsCreatingDeck(true)}
                 disabled={processing}
               >
@@ -375,8 +388,8 @@ export function AddToDeckDialog({
                     type="button"
                     className={`w-full flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                       selectedDeckId === deck.id
-                        ? 'border-[#8BB7A3] bg-[#8BB7A3]/10'
-                        : 'border-border bg-muted/30 hover:border-[#8BB7A3]/50'
+                        ? 'border-success bg-success/10'
+                        : 'border-border bg-muted/30 hover:border-success/50'
                     }`}
                     onClick={() => setSelectedDeckId(deck.id)}
                   >

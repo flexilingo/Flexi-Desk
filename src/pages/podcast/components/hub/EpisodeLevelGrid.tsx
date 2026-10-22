@@ -14,6 +14,8 @@ interface Props {
   onOpenPodcast?: (feedId: number) => void;
   /** Heading shown above the grid, e.g. "128 B1 episodes". */
   heading?: string;
+  /** Draw nothing when there are no episodes (a search lane among others). */
+  hideWhenEmpty?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ export function EpisodeLevelGrid({
   onPlay,
   onOpenPodcast,
   heading,
+  hideWhenEmpty,
 }: Props) {
   const { t } = useTranslation('common');
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -44,6 +47,7 @@ export function EpisodeLevelGrid({
   }
 
   if (episodes.length === 0) {
+    if (hideWhenEmpty) return null;
     return (
       <div className="rounded-2xl border border-dashed border-border py-12 text-center">
         <Headphones className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />

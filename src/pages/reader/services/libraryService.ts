@@ -73,3 +73,46 @@ export const removeFromLibraryShelf = (body: { book_id: string }) =>
 
 export const setLibraryPosition = (body: { book_id: string; page: number; scroll_pct?: number }) =>
   supabaseCall<{ ok: boolean; last_page: number }>('POST', '/library?action=set-position', body);
+
+/** A book's meta, its first page and the other episodes of its series (`library?action=book`, public). */
+export interface LibraryBookDetail {
+  book: LibraryBook;
+  first_page: { page_number: number; chapter_title: string | null; content: string } | null;
+  series: { id: string; slug: string; title: string; level: CefrLevel; series_order: number }[];
+}
+
+/** One page of a book (`library?action=page` / `public-page`). */
+export interface LibraryPage {
+  book_id: string;
+  title: string;
+  language: string;
+  page_number: number;
+  page_count: number;
+  chapter_title: string | null;
+  content: string;
+  word_count: number;
+  char_count: number;
+  truncated: boolean;
+  has_prev: boolean;
+  has_next: boolean;
+}
+
+export const getLibraryBook = (bookId: string) =>
+  supabaseCall<LibraryBookDetail>(
+    'GET',
+    `/library?action=book&book_id=${encodeURIComponent(bookId)}`,
+  );
+
+/** Needs an account. */
+export const getLibraryPage = (bookId: string, page: number) =>
+  supabaseCall<LibraryPage>(
+    'GET',
+    `/library?action=page&book_id=${encodeURIComponent(bookId)}&page=${page}`,
+  );
+
+/** Any page of a published book, no account needed. */
+export const getPublicLibraryPage = (bookId: string, page: number) =>
+  supabaseCall<LibraryPage>(
+    'GET',
+    `/library?action=public-page&book_id=${encodeURIComponent(bookId)}&page=${page}`,
+  );

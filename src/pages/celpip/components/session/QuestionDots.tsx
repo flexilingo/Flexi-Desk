@@ -19,7 +19,7 @@ export function QuestionDots({ total, current, answered, onJump, forwardOnly }: 
             disabled={!canJump}
             className={`w-7 h-7 rounded-full text-xs font-medium transition-colors ${
               i === current
-                ? 'bg-accent text-white'
+                ? 'bg-accent text-accent-foreground'
                 : answered.has(i)
                   ? 'bg-accent/30 text-accent'
                   : 'bg-muted text-muted-foreground'

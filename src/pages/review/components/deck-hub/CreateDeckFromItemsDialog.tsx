@@ -1,137 +1,147 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { Algorithm } from '../../types';
-import type { DeckWithStats } from '../../types';
+import { InlineError } from '@/components/common/InlineError';
+import type { Algorithm, DeckWithStats } from '../../types';
+import { useErrorText } from '../../lib/useErrorText';
+import { LanguagePicker } from '../parts/LanguagePicker';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedCount: number;
   defaultLanguage?: string;
-  onCreate: (name: string, language: string, algorithm: Algorithm, description?: string) => Promise<DeckWithStats>;
+  /** Language the meanings are in (the translation language chosen on the page). */
+  nativeLanguage?: string;
+  onCreate: (
+    name: string,
+    language: string,
+    algorithm: Algorithm,
+    description: string | undefined,
+    nativeLanguage: string | undefined,
+  ) => Promise<DeckWithStats>;
   onCreated: (deck: DeckWithStats) => void;
 }
 
-const ALGORITHMS: { value: Algorithm; label: string }[] = [
-  { value: 'fsrs', label: 'FSRS (recommended)' },
-  { value: 'sm2', label: 'SM-2' },
-  { value: 'leitner', label: 'Leitner' },
-];
+const ALGORITHMS: Algorithm[] = ['fsrs', 'sm2', 'leitner'];
 
 export function CreateDeckFromItemsDialog({
   open,
   onOpenChange,
   selectedCount,
   defaultLanguage = 'en',
+  nativeLanguage,
   onCreate,
   onCreated,
 }: Props) {
+  const { t } = useTranslation('decks');
+  const errorText = useErrorText();
   const [name, setName] = useState('');
   const [language, setLanguage] = useState(defaultLanguage);
   const [algorithm, setAlgorithm] = useState<Algorithm>('fsrs');
   const [description, setDescription] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!open) return null;
-
   const handleCreate = async () => {
-    if (!name.trim()) { setError('Deck name is required'); return; }
-    setIsCreating(true);
+    if (!name.trim()) {
+      setError(t('hub.nameRequired'));
+      return;
+    }
+    setBusy(true);
     setError(null);
     try {
-      const deck = await onCreate(name.trim(), language, algorithm, description || undefined);
-      onCreated(deck);
-      onOpenChange(false);
-      // Reset
+      const deck = await onCreate(
+        name.trim(),
+        language,
+        algorithm,
+        description || undefined,
+        nativeLanguage,
+      );
       setName('');
       setDescription('');
+      onOpenChange(false);
+      onCreated(deck);
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e));
     } finally {
-      setIsCreating(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-      onClick={() => !isCreating && onOpenChange(false)}
-    >
-      <div
-        className="bg-card border border-border rounded-xl p-6 max-w-md w-full mx-4 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div>
-          <h2 className="text-lg font-semibold">Create Deck</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {selectedCount} card{selectedCount !== 1 ? 's' : ''} will be added
-          </p>
-        </div>
-
+    <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('hub.createDeck')}</DialogTitle>
+          <DialogDescription>{t('hub.willBeAdded', { count: selectedCount })}</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-foreground block mb-1">Deck name</label>
+            <label className="mb-1 block text-sm font-medium">{t('hub.deckName')}</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Business English"
+              placeholder={t('hub.namePlaceholder')}
               autoFocus
+              disabled={busy}
             />
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-foreground block mb-1">Language</label>
-              <Input
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                placeholder="en"
-                maxLength={5}
-              />
+              <label className="mb-1 block text-sm font-medium">{t('form.cardsAreIn')}</label>
+              <LanguagePicker value={language} onSelect={setLanguage} disabled={busy} />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground block mb-1">Algorithm</label>
+              <label className="mb-1 block text-sm font-medium">{t('form.algorithm')}</label>
               <select
                 value={algorithm}
+                disabled={busy}
                 onChange={(e) => setAlgorithm(e.target.value as Algorithm)}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-sm"
               >
                 {ALGORITHMS.map((a) => (
-                  <option key={a.value} value={a.value}>{a.label}</option>
+                  <option key={a} value={a}>
+                    {t(`form.algo.${a}.label`)}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
-
           <div>
-            <label className="text-sm font-medium text-foreground block mb-1">
-              Description <span className="text-muted-foreground font-normal">(optional)</span>
+            <label className="mb-1 block text-sm font-medium">
+              {t('form.description')}{' '}
+              <span className="font-normal text-muted-foreground">({t('form.optional')})</span>
             </label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description..."
+              placeholder={t('hub.descPlaceholder')}
+              disabled={busy}
             />
           </div>
+          <InlineError message={error} onDismiss={() => setError(null)} />
         </div>
-
-        {error && (
-          <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</p>
-        )}
-
-        <div className="flex gap-2 justify-end pt-1">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isCreating}>
-            Cancel
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={busy}>
+            {t('cancel')}
           </Button>
-          <Button size="sm" onClick={handleCreate} disabled={isCreating || !name.trim()}>
-            {isCreating && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
-            Create Deck
+          <Button size="sm" onClick={handleCreate} disabled={busy || !name.trim()}>
+            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {t('hub.createDeck')}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

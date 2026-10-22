@@ -1,238 +1,324 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect, type ReactElement } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { LucideIcon } from 'lucide-react';
-import {
-  LayoutDashboard,
-  BookOpen,
-  BookOpenText,
-  MessageSquare,
-  Captions,
-  Mic,
-  PenLine,
-  GraduationCap,
-  Podcast,
-  Puzzle,
-  Library,
-  Settings,
-  PanelLeftClose,
-  PanelLeft,
-  Layers,
-  Dumbbell,
-  Bug,
-} from 'lucide-react';
+import { Bug, ChevronsLeft, ChevronsRight, Crown, Sparkles } from 'lucide-react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { useAuthStore } from '@/stores/authStore';
+import { isPaidTier, useSubscriptionStore } from '@/stores/subscriptionStore';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { ENABLED_MODULES, type ModuleKey } from '@/config/features';
+import {
+  isItemActive,
+  subscriptionUrl,
+  visibleGroups,
+  type NavItem,
+} from '@/components/layout/sidebarConfig';
 
-interface NavItem {
-  to: string;
-  label: string;
-  /** i18n key (namespace:key) resolved at render; `label` is the fallback and the page name. */
-  labelKey?: string;
-  icon: LucideIcon;
-  module: ModuleKey;
-}
+const BUG_URL = 'https://github.com/flexilingo/Flexi-Desk/issues/new';
 
-const allNavItems: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' as ModuleKey },
-  { to: '/study', label: 'Study', icon: Dumbbell, module: 'study' as ModuleKey },
-  { to: '/vocabulary', label: 'Vocabulary', icon: Library, module: 'vocabulary' as ModuleKey },
-  { to: '/review', label: 'Decks', icon: Layers, module: 'review' as ModuleKey },
-  { to: '/reading', label: 'Reading', icon: BookOpen, module: 'reading' as ModuleKey },
-  {
-    to: '/reader',
-    label: 'Reader',
-    labelKey: 'reader:title',
-    icon: BookOpenText,
-    module: 'reader' as ModuleKey,
-  },
-  { to: '/tutor', label: 'AI Tutor', icon: MessageSquare, module: 'tutor' as ModuleKey },
-  { to: '/caption', label: 'Live Caption', icon: Captions, module: 'caption' as ModuleKey },
-  { to: '/pronunciation', label: 'Pronunciation', icon: Mic, module: 'pronunciation' as ModuleKey },
-  { to: '/writing', label: 'Writing', icon: PenLine, module: 'writing' as ModuleKey },
-  { to: '/celpip', label: 'CELPIP', icon: GraduationCap, module: 'celpip' as ModuleKey },
-  { to: '/podcast', label: 'Podcast', icon: Podcast, module: 'podcast' as ModuleKey },
-  { to: '/plugins', label: 'Plugins', icon: Puzzle, module: 'plugins' as ModuleKey },
-];
-
-const bottomNavItems = [
-  { to: '/settings', label: 'Settings', icon: Settings, module: 'settings' as ModuleKey },
-];
+/** Row shape shared by every entry, so links, the offer and the foot line up. */
+const ROW = 'relative flex items-center rounded-md text-[13.5px] leading-5 transition-colors';
+const ROW_OPEN = 'gap-2.5 px-3 py-[7px]';
+const ROW_MINI = 'mx-auto h-10 w-10 justify-center';
+const IDLE =
+  'text-sidebar-foreground/80 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground';
 
 /**
- * The page title for a route, so the header names where you ARE rather than
- * the last sidebar entry clicked (a deep link or an in-page navigation never
- * touches the sidebar). Longest matching `to` wins; null for an unknown route.
+ * The label beside an icon in the mini sidebar: opens at once, on the page side,
+ * in the website's olive tooltip.
  */
-export function routeTitle(pathname: string, t: (key: string) => string): string | null {
-  const items = [...allNavItems, ...bottomNavItems];
-  let best: NavItem | null = null;
-  for (const item of items) {
-    const hit =
-      item.to === '/'
-        ? pathname === '/'
-        : pathname === item.to || pathname.startsWith(`${item.to}/`);
-    if (hit && (!best || item.to.length > best.to.length)) best = item;
-  }
-  if (!best) return null;
-  return best.labelKey ? t(best.labelKey) : best.label;
+function MiniLabel({
+  label,
+  side,
+  children,
+}: {
+  label: string;
+  side: 'left' | 'right';
+  children: ReactElement;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side={side} sideOffset={10}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
-const navItems = allNavItems.filter((item) => ENABLED_MODULES[item.module]);
+function SidebarLink({
+  item,
+  collapsed,
+  side,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  side: 'left' | 'right';
+}) {
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const setCurrentPage = useAppStore((s) => s.setCurrentPage);
+  const active = isItemActive(item, pathname);
+  const label = t(item.labelKey);
+  const Icon = item.icon;
+
+  const link = (
+    <NavLink
+      to={item.to}
+      onClick={() => setCurrentPage(label)}
+      aria-label={collapsed ? label : undefined}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        ROW,
+        collapsed ? ROW_MINI : ROW_OPEN,
+        // The open page: a soft tinted pill, a semibold label and the terra icon —
+        // the website's treatment, on cream.
+        active
+          ? 'bg-primary/[0.075] font-semibold text-sidebar-foreground dark:bg-sidebar-foreground/[0.08]'
+          : IDLE,
+      )}
+    >
+      {collapsed && item.monogram ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            'text-[10px] font-bold leading-none tracking-wide',
+            active ? 'text-sidebar-accent' : 'text-sidebar-muted',
+          )}
+        >
+          {item.monogram}
+        </span>
+      ) : (
+        <Icon
+          aria-hidden="true"
+          strokeWidth={active ? 2.2 : 1.9}
+          className={cn(
+            'h-4 w-4 shrink-0',
+            active ? 'text-sidebar-accent' : 'text-sidebar-muted/80',
+          )}
+        />
+      )}
+      {!collapsed && <span className="truncate">{label}</span>}
+    </NavLink>
+  );
+
+  return collapsed ? (
+    <MiniLabel label={label} side={side}>
+      {link}
+    </MiniLabel>
+  ) : (
+    link
+  );
+}
+
+/**
+ * The PRO offer at the foot of the sidebar, as on the website: shown to a
+ * signed-in learner who has not bought a plan (a trial is still offered the
+ * purchase). A bought plan gets a quiet link to its page instead. Both open the
+ * website's subscription page in the system browser.
+ */
+function ProOffer({ collapsed, side }: { collapsed: boolean; side: 'left' | 'right' }) {
+  const { t, i18n } = useTranslation();
+  const session = useAuthStore((s) => s.session);
+  const subscription = useSubscriptionStore((s) => s.subscription);
+  const hasResolved = useSubscriptionStore((s) => s.hasResolved);
+  const isLoading = useSubscriptionStore((s) => s.isLoading);
+  const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
+
+  useEffect(() => {
+    if (session && !hasResolved && !isLoading) void fetchSubscription();
+  }, [session, hasResolved, isLoading, fetchSubscription]);
+
+  if (!session || !hasResolved) return null;
+
+  const tier = subscription?.tier ?? 'free';
+  const bought = isPaidTier(tier) && tier !== 'trial' && subscription?.status !== 'trialing';
+  const open = () => void openUrl(subscriptionUrl(i18n.language));
+
+  if (bought) {
+    const plan = tier === 'lifetime' ? 'Lifetime' : tier === 'pro_max' ? 'PRO MAX' : 'PRO';
+    const title = t('nav.planTitle', { plan });
+    if (collapsed) {
+      return (
+        <MiniLabel label={title} side={side}>
+          <button
+            type="button"
+            onClick={open}
+            aria-label={title}
+            className={cn(ROW, ROW_MINI, IDLE)}
+          >
+            <Crown className="h-4 w-4 text-warning" aria-hidden="true" strokeWidth={1.9} />
+          </button>
+        </MiniLabel>
+      );
+    }
+    return (
+      <button type="button" onClick={open} className={cn(ROW, ROW_OPEN, IDLE, 'text-start')}>
+        <Crown className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" strokeWidth={1.9} />
+        <span className="min-w-0 truncate font-semibold">{title}</span>
+      </button>
+    );
+  }
+
+  const label = t('nav.upgradeToPro');
+  if (collapsed) {
+    return (
+      <MiniLabel label={label} side={side}>
+        <button
+          type="button"
+          onClick={open}
+          aria-label={label}
+          className={cn(ROW, ROW_MINI, 'text-accent hover:bg-accent/10')}
+        >
+          <Sparkles className="h-4 w-4" aria-hidden="true" strokeWidth={1.9} />
+        </button>
+      </MiniLabel>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={open}
+      className="mb-1 flex items-start gap-2.5 rounded-md border border-accent/30 bg-accent/[0.07] px-3 py-2.5 text-start transition-colors hover:bg-accent/[0.12]"
+    >
+      <Sparkles
+        className="mt-0.5 h-4 w-4 shrink-0 text-accent"
+        aria-hidden="true"
+        strokeWidth={1.9}
+      />
+      <span className="min-w-0">
+        <span className="block truncate text-[13px] font-bold leading-5 text-sidebar-foreground">
+          {label}
+        </span>
+        <span className="block truncate text-[11.5px] leading-4 text-sidebar-muted">
+          {t('nav.upgradeToProBody')}
+        </span>
+      </span>
+    </button>
+  );
+}
 
 export function Sidebar() {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
-  const setCurrentPage = useAppStore((s) => s.setCurrentPage);
+  const { t, i18n } = useTranslation();
+  const collapsed = !sidebarOpen;
+  const isRtl = i18n.dir(i18n.language) === 'rtl';
+  const side = isRtl ? 'left' : 'right';
+  const groups = visibleGroups();
 
-  const { t } = useTranslation();
-  const labelOf = (item: NavItem) => (item.labelKey ? t(item.labelKey) : item.label);
+  // Points the way the sidebar will move: in when open, out when folded.
+  const CollapseIcon = isRtl === collapsed ? ChevronsLeft : ChevronsRight;
+  const collapseLabel = collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar');
+  const bugLabel = t('nav.reportBug');
 
-  const isRtl = document.documentElement.dir === 'rtl';
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <aside
+  const footButton = (
+    label: string,
+    icon: ReactElement,
+    onClick: () => void,
+    expanded?: boolean,
+  ) => {
+    const button = (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={collapsed ? label : undefined}
+        aria-expanded={expanded}
         className={cn(
-          'flex h-screen flex-col border-e border-border bg-sidebar text-sidebar-foreground transition-all duration-300',
-          sidebarOpen ? 'w-60' : 'w-16',
+          ROW,
+          collapsed ? ROW_MINI : ROW_OPEN,
+          'text-sidebar-muted hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
         )}
       >
-        {/* Header */}
-        <div className="flex h-14 items-center justify-between px-3">
-          {sidebarOpen && (
-            <span className="text-lg font-bold tracking-tight text-primary">FlexiDesk</span>
+        {icon}
+        {!collapsed && <span className="truncate">{label}</span>}
+      </button>
+    );
+    return collapsed ? (
+      <MiniLabel label={label} side={side}>
+        {button}
+      </MiniLabel>
+    ) : (
+      button
+    );
+  };
+
+  return (
+    // One provider for every mini label: once one is open, the next opens at
+    // once while the pointer runs down the column.
+    <TooltipProvider delayDuration={100} skipDelayDuration={400}>
+      <aside
+        className={cn(
+          'flex h-screen shrink-0 flex-col overflow-hidden border-e border-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-in-out',
+          collapsed ? 'w-16' : 'w-60',
+        )}
+      >
+        {/* Brand */}
+        <div
+          className={cn(
+            'flex h-14 shrink-0 items-center',
+            collapsed ? 'justify-center' : 'gap-2.5 ps-5 pe-4',
           )}
-          <button
-            onClick={toggleSidebar}
-            className="rounded-md p-1.5 hover:bg-muted transition-colors"
-          >
-            {sidebarOpen ? (
-              <PanelLeftClose className="h-5 w-5 text-muted-foreground" />
-            ) : (
-              <PanelLeft className="h-5 w-5 text-muted-foreground" />
-            )}
-          </button>
+        >
+          <img
+            src="/logo.png"
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-8 shrink-0"
+            width={32}
+            height={32}
+          />
+          {!collapsed && (
+            <span className="flex min-w-0 items-baseline gap-1.5">
+              <span className="truncate text-[15px] font-extrabold tracking-tight text-sidebar-foreground">
+                FlexiLingo
+              </span>
+              <span className="rounded-xs bg-primary/[0.08] px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-sidebar-muted dark:bg-sidebar-foreground/[0.08]">
+                Desk
+              </span>
+            </span>
+          )}
         </div>
 
-        <Separator />
-
-        {/* Navigation */}
-        <ScrollArea className="flex-1 py-2">
-          <nav className="flex flex-col gap-1 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-
-              const link = (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/' || item.to === '/review'}
-                  onClick={() => setCurrentPage(item.label)}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-sidebar-accent/20 text-sidebar-accent'
-                        : 'text-sidebar-foreground hover:bg-muted',
-                    )
-                  }
-                >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  {sidebarOpen && <span>{labelOf(item)}</span>}
-                </NavLink>
-              );
-
-              if (!sidebarOpen) {
-                return (
-                  <Tooltip key={item.to}>
-                    <TooltipTrigger asChild>{link}</TooltipTrigger>
-                    <TooltipContent side={isRtl ? 'left' : 'right'}>{labelOf(item)}</TooltipContent>
-                  </Tooltip>
-                );
-              }
-
-              return link;
-            })}
-          </nav>
-        </ScrollArea>
-
-        {/* Bottom Nav */}
-        <Separator />
-        <nav className="flex flex-col gap-1 px-2 py-2">
-          {bottomNavItems
-            .filter((item) => ENABLED_MODULES[item.module])
-            .map((item) => {
-              const Icon = item.icon;
-              const link = (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={false}
-                  onClick={() => setCurrentPage(item.label)}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-sidebar-accent/20 text-sidebar-accent'
-                        : 'text-sidebar-foreground hover:bg-muted',
-                    )
-                  }
-                >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  {sidebarOpen && <span>{item.label}</span>}
-                </NavLink>
-              );
-              if (!sidebarOpen) {
-                return (
-                  <Tooltip key={item.to}>
-                    <TooltipTrigger asChild>{link}</TooltipTrigger>
-                    <TooltipContent side={isRtl ? 'left' : 'right'}>{item.label}</TooltipContent>
-                  </Tooltip>
-                );
-              }
-              return link;
-            })}
-
-          {(() => {
-            const bugLink = (
-              <button
-                onClick={() => openUrl('https://github.com/flexilingo/Flexi-Desk/issues/new')}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-muted transition-colors w-full"
-              >
-                <Bug className="h-5 w-5 shrink-0" />
-                {sidebarOpen && <span>Report a Bug</span>}
-              </button>
-            );
-            if (!sidebarOpen) {
-              return (
-                <Tooltip>
-                  <TooltipTrigger asChild>{bugLink}</TooltipTrigger>
-                  <TooltipContent side={isRtl ? 'left' : 'right'}>Report a Bug</TooltipContent>
-                </Tooltip>
-              );
-            }
-            return bugLink;
-          })()}
+        {/* Menu */}
+        <nav className="scrollbar-hide flex-1 overflow-y-auto overflow-x-hidden py-2">
+          {groups.map((group, idx) => (
+            <div key={group.id} className={cn(collapsed ? 'px-2' : 'px-3', idx > 0 && 'mt-3')}>
+              {collapsed
+                ? idx > 0 && <div className="mx-3 mb-2.5 h-px bg-border" />
+                : !group.hideLabel && (
+                    <div className="mb-1 px-3 text-[11.5px] font-semibold uppercase leading-4 tracking-wider text-sidebar-muted/70">
+                      {t(group.labelKey)}
+                    </div>
+                  )}
+              <div className="flex flex-col gap-px">
+                {group.items.map((item) => (
+                  <SidebarLink key={item.to} item={item} collapsed={collapsed} side={side} />
+                ))}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        {/* Footer */}
-        <div className="flex h-10 items-center justify-center px-3">
-          {sidebarOpen ? (
-            <a
-              href="https://flexilingo.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              Powered by FlexiLingo
-            </a>
-          ) : (
-            <span className="text-xs font-bold text-primary">FL</span>
+        {/* Foot: the PRO offer, bug report and the fold toggle. */}
+        <div
+          className={cn(
+            'flex shrink-0 flex-col gap-px border-t border-border py-2',
+            collapsed ? 'px-2' : 'px-3',
+          )}
+        >
+          <ProOffer collapsed={collapsed} side={side} />
+          {footButton(
+            bugLabel,
+            <Bug className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={1.9} />,
+            () => void openUrl(BUG_URL),
+          )}
+          {footButton(
+            collapseLabel,
+            <CollapseIcon className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={1.9} />,
+            toggleSidebar,
+            !collapsed,
           )}
         </div>
       </aside>

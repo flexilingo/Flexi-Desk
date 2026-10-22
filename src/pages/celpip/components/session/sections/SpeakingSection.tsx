@@ -6,7 +6,6 @@ import {
   Square,
   X,
   ZoomIn,
-  Keyboard,
   Loader2,
   RefreshCw,
   MicOff,
@@ -19,8 +18,23 @@ import { Button } from '@/components/ui/button';
 import type { SpeakingPrompts } from '../../../types';
 import { LookupText } from '../WordLookup';
 import { ExamText } from '../ExamText';
-import { saveDraft, loadDraft, clearDraft } from '../../../services/examDraft';
+import { saveDraft, loadDraft } from '../../../services/examDraft';
 import { useCelpipStore, errorCodeOf } from '../../../stores/celpipStore';
+import { MicAccessPanel } from '@/components/mic/MicAccessPanel';
+import MicLevelBars from '@/components/mic/MicLevelBars';
+import MicLevelCheck from '../../speaking/MicLevelCheck';
+import { pretranscribeTask } from '../../../services/celpipCloud';
+import { micFailureOf, readMicLevel, type MicFailure } from '../../../services/micProbe';
+import {
+  LEVEL_POLL_MS,
+  QuietWatch,
+  TakeMeter,
+  everyTakeSilent,
+  isSilentTake,
+  levelFraction,
+  type TakeVerdict,
+} from '../../../utils/micLevel';
+import { withUploadRetry } from '../../../utils/uploadRetry';
 
 // Real-exam flow: each task starts its preparation countdown the moment it
 // appears; recording starts automatically when prep ends; after the answer is
@@ -36,11 +50,11 @@ type TaskState =
   | 'prompt' // learning mode only — read freely, recording starts on demand
   | 'prep' // reading time — countdown runs, recording starts on expiry
   | 'recording' // native mic recording with countdown, early stop allowed
-  | 'typing' // typed-answers fallback mode
   | 'saving' // transcribing + uploading the recording
   | 'saved' // learning mode only — answer stored, user advances manually
   | 'save-error' // transcribe/upload failed — retry or continue with fallback transcript
-  | 'mic-error' // recorder failed to start — retry or continue without answer
+  | 'mic-error' // recorder failed to start — unblock steps, try again, or skip
+  | 'silent' // the answer was (nearly) inaudible — record again or keep it
   | 'done'; // all tasks answered — section submitted
 
 type SavingPhase = 'transcribing' | 'uploading';
@@ -50,9 +64,6 @@ interface AudioAnswer {
   duration_sec: number;
 }
 
-// Typing is slower than speaking — give typed-mode users a longer answer window
-// than the spoken time limit (a 60s spoken answer is ~130-150 words).
-const TYPING_TIME_MULTIPLIER = 3;
 // Learning mode has no exam timers, but an unbounded recording still needs a
 // safety cap so an abandoned mic doesn't record forever.
 const LEARNING_MAX_RECORDING_SEC = 300;
@@ -65,18 +76,24 @@ interface SpeakingSectionProps {
   prompts: SpeakingPrompts;
   /** Called once the section has been submitted successfully. */
   onComplete?: () => void;
-  /** No-microphone fallback — user types answers instead of recording them. */
-  typedMode?: boolean;
   /** Untimed relaxed mode: manual start/stop/next, no prep countdown. */
   learningMode?: boolean;
+  /** Storage folder under `<user>/` for the recordings (celpip | tcf | tcf_quebec | tcf_irn). */
+  recordingSegment?: string;
+  /** TCF: a task with no preparation time starts recording at once, with no zero countdown. */
+  startWithoutPrep?: boolean;
+  /** Language of the exam content: the `lang` attribute and the local Whisper language. */
+  contentLang?: 'en' | 'fr';
 }
 
 export default function SpeakingSection({
   sessionId,
   prompts,
   onComplete,
-  typedMode: typedModeProp = false,
   learningMode = false,
+  recordingSegment = 'celpip',
+  startWithoutPrep = false,
+  contentLang,
 }: SpeakingSectionProps) {
   const { t } = useTranslation('celpip');
   const submit = useCelpipStore((s) => s.submit);
@@ -88,14 +105,19 @@ export default function SpeakingSection({
   const [countdown, setCountdown] = useState(0);
   const [transcripts, setTranscripts] = useState<Record<string, string>>({});
   const [audioAnswers, setAudioAnswers] = useState<Record<string, AudioAnswer>>({});
-  const [typedDraft, setTypedDraft] = useState('');
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  // `typedMode` can be restored from a draft even when the parent didn't pass it.
-  const [typedMode, setTypedMode] = useState(typedModeProp);
   // Quiet inline notice: local Whisper isn't configured, so the backend will
   // transcribe the uploaded audio instead. Not an error — the answer is saved.
   const [whisperNotice, setWhisperNotice] = useState(false);
+  // Why the recorder could not start (drives the unblock steps).
+  const [micFailure, setMicFailure] = useState<MicFailure>('denied');
+  // Live level while recording: the bars, and the "too quiet" warning.
+  const [micLevel, setMicLevel] = useState(0);
+  const [micQuiet, setMicQuiet] = useState(false);
+  // Every task so far silent: offer the microphone test beside the question.
+  const [silentAll, setSilentAll] = useState(false);
+  const { t: tx } = useTranslation('exam');
 
   const startTime = useRef<number>(0);
   const recordStartRef = useRef<number>(0);
@@ -103,13 +125,21 @@ export default function SpeakingSection({
   const stoppingRef = useRef(false);
   const submittedRef = useRef(false);
   // Async handlers (countdown expiry, save callbacks) must read the latest
-  // values — mirror the answer maps and typed draft in refs.
+  // values — mirror the answer maps in refs.
   const transcriptsRef = useRef<Record<string, string>>({});
   const audioAnswersRef = useRef<Record<string, AudioAnswer>>({});
-  const typedDraftRef = useRef('');
   // Stash enough to resume a failed save: the native file still exists in Rust,
   // so we only need the measured duration and whatever transcript we already got.
   const pendingSaveRef = useRef<{ durationSec: number; transcript: string } | null>(null);
+  // The meter of the answer being recorded, the verdict of each task so far this page load,
+  // and the silent answer waiting for "record again" / "continue anyway".
+  const takeMeterRef = useRef<TakeMeter | null>(null);
+  const takeVerdictsRef = useRef<Record<string, TakeVerdict>>({});
+  const silentTakeRef = useRef<{
+    durationSec: number;
+    transcript: string;
+    whisperUnavailable: boolean;
+  } | null>(null);
 
   const currentTask = prompts.tasks[taskIndex];
   const isLastTask = taskIndex >= prompts.tasks.length - 1;
@@ -150,7 +180,7 @@ export default function SpeakingSection({
   };
 
   // Final payload: audio answers where we have them, transcript text otherwise
-  // (typed mode / save-failure fallback). The backend re-transcribes audio
+  // (save-failure fallback). The backend re-transcribes audio
   // answers server-side and uses string answers as the transcript directly. We
   // still pass `transcripts` so a failed server-side Whisper falls back to the
   // local one.
@@ -164,7 +194,7 @@ export default function SpeakingSection({
       answers[k] = audioAnswersRef.current[k] ?? transcriptsRef.current[k] ?? '';
     });
     const timeSpent = Math.round((Date.now() - startTime.current) / 1000);
-    await clearDraft(sessionId, 'speaking');
+    // The draft stays until the server holds the answers (the store clears it).
     const ok = await submit({
       session_id: sessionId,
       section_type: 'speaking',
@@ -216,7 +246,11 @@ export default function SpeakingSection({
     let transcript = '';
     let whisperUnavailable = false;
     try {
-      transcript = await invoke<string>('celpip_transcribe_recording', { sessionId, taskKey });
+      transcript = await invoke<string>('celpip_transcribe_recording', {
+        sessionId,
+        taskKey,
+        language: contentLang ?? 'en',
+      });
     } catch (err) {
       if (errorCodeOf(err) === 'WHISPER_NOT_CONFIGURED') {
         whisperUnavailable = true;
@@ -227,18 +261,74 @@ export default function SpeakingSection({
       }
     }
 
-    // Step 2 — upload the audio file and keep its public URL.
+    // A (nearly) silent answer stops here and asks, instead of being saved and
+    // scored as silence: five exam takers had answers scored as no speech, two
+    // recorded all eight tasks silently and got CLB 1. The local transcript
+    // overrules the meter - words heard means the meter is the one that is wrong.
+    const verdict: TakeVerdict = takeMeterRef.current?.verdict() ?? 'unmeasured';
+    takeMeterRef.current = null;
+    if (isSilentTake(verdict, transcript)) {
+      silentTakeRef.current = { durationSec, transcript, whisperUnavailable };
+      const earlier = Array.from(
+        { length: taskIndex },
+        (_, i) => takeVerdictsRef.current[`task_${i}`],
+      );
+      setSilentAll(everyTakeSilent([...earlier, 'silent']));
+      setTaskState('silent');
+      return;
+    }
+    takeVerdictsRef.current[taskKey] = verdict === 'silent' ? 'heard' : verdict;
+    await uploadRecording(durationSec, transcript, whisperUnavailable);
+  };
+
+  // Step 2 — upload the audio file and keep its public URL. A dropped connection
+  // is retried by itself (after waiting for the computer to be online again).
+  const uploadRecording = async (
+    durationSec: number,
+    transcript: string,
+    whisperUnavailable: boolean,
+  ) => {
+    setTaskState('saving');
     setSavingPhase('uploading');
     try {
-      const audioUrl = await invoke<string>('celpip_upload_recording', { sessionId, taskKey });
+      const audioUrl = await withUploadRetry(() =>
+        invoke<string>('celpip_upload_recording', {
+          sessionId,
+          taskKey,
+          segment: recordingSegment,
+        }),
+      );
       setWhisperNotice(whisperUnavailable);
       setAudioAnswerFor(taskKey, { audio_url: audioUrl, duration_sec: durationSec });
       setTranscriptFor(taskKey, transcript);
+      // The server transcribes this answer while the learner records the next one,
+      // so scoring has nothing left to transcribe. A failure is harmless.
+      void pretranscribeTask({
+        session_id: sessionId,
+        task_key: taskKey,
+        audio_url: audioUrl,
+      }).catch(() => {});
       finishTask();
     } catch {
       pendingSaveRef.current = { durationSec, transcript };
       setTaskState('save-error');
     }
+  };
+
+  // "Continue anyway": keep the silent answer - saved and scored like any other.
+  const keepSilentTake = () => {
+    const take = silentTakeRef.current;
+    silentTakeRef.current = null;
+    if (!take) return;
+    takeVerdictsRef.current[taskKey] = 'silent';
+    void uploadRecording(take.durationSec, take.transcript, take.whisperUnavailable);
+  };
+
+  // "Record again": throw the silent answer away and run the task again.
+  const rerecordSilentTake = () => {
+    silentTakeRef.current = null;
+    delete takeVerdictsRef.current[taskKey];
+    void startRecording();
   };
 
   const stopRecording = async () => {
@@ -277,28 +367,43 @@ export default function SpeakingSection({
       }
       recordStartRef.current = Date.now();
       stoppingRef.current = false;
+      takeMeterRef.current = new TakeMeter();
+      setMicQuiet(false);
       startCountdown(
         learningMode ? LEARNING_MAX_RECORDING_SEC : currentTask.speaking_seconds,
         () => void stopRecording(),
       );
-    } catch {
+    } catch (err) {
+      setMicFailure(micFailureOf(err));
       setTaskState('mic-error');
     }
   };
 
-  const startTyping = () => {
-    setTypedDraft('');
-    typedDraftRef.current = '';
-    setTaskState('typing');
-    if (!learningMode) {
-      startCountdown(currentTask.speaking_seconds * TYPING_TIME_MULTIPLIER, finishTyping);
+  // While recording: read the native level, feed the quiet watch (live warning)
+  // and the take meter (verdict when the answer ends).
+  useEffect(() => {
+    if (taskState !== 'recording') {
+      setMicLevel(0);
+      return;
     }
-  };
-
-  const finishTyping = () => {
-    clearCountdown();
-    commitTranscriptOnly(typedDraftRef.current.trim());
-  };
+    const watch = new QuietWatch(Date.now());
+    let busy = false;
+    const timer = setInterval(() => {
+      if (busy) return;
+      busy = true;
+      readMicLevel()
+        .then((dbfs) => {
+          setMicLevel(levelFraction(dbfs));
+          takeMeterRef.current?.push(dbfs);
+          setMicQuiet(watch.push(Date.now(), dbfs));
+        })
+        .catch(() => {})
+        .finally(() => {
+          busy = false;
+        });
+    }, LEVEL_POLL_MS);
+    return () => clearInterval(timer);
+  }, [taskState]);
 
   const retryUpload = () => {
     const pending = pendingSaveRef.current;
@@ -326,7 +431,6 @@ export default function SpeakingSection({
         audioAnswersRef.current = restoredAudio;
         setTranscripts(restoredTr);
         setAudioAnswers(restoredAudio);
-        if (draft.typedMode) setTypedMode(true);
         // Resume at the first task with no saved answer yet.
         const firstUnanswered = prompts.tasks.findIndex(
           (_, i) =>
@@ -363,11 +467,13 @@ export default function SpeakingSection({
       setTaskState('prompt');
       return;
     }
+    // A task with no preparation time (TCF tasks 1 and 3) records at once.
+    if (startWithoutPrep && !(currentTask.prep_seconds > 0)) {
+      void startRecording();
+      return;
+    }
     setTaskState('prep');
-    startCountdown(currentTask.prep_seconds, () => {
-      if (typedMode) startTyping();
-      else void startRecording();
-    });
+    startCountdown(currentTask.prep_seconds, () => void startRecording());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, taskIndex]);
 
@@ -381,10 +487,9 @@ export default function SpeakingSection({
       answers: transcripts,
       audioAnswers,
       sectionStartedAt: startTime.current,
-      typedMode,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskIndex, transcripts, audioAnswers, typedMode, ready]);
+  }, [taskIndex, transcripts, audioAnswers, ready]);
 
   // DEV ONLY — fast-forward the current sub-stage without waiting for timers.
   const isDev = import.meta.env.DEV;
@@ -398,13 +503,12 @@ export default function SpeakingSection({
       commitTranscriptOnly(DEV_PLACEHOLDER);
     } else if (taskState === 'recording') {
       void stopRecording();
-    } else if (taskState === 'typing') {
-      if (!typedDraftRef.current.trim()) typedDraftRef.current = DEV_PLACEHOLDER;
-      finishTyping();
     } else if (taskState === 'save-error') {
       continueWithoutAudio();
     } else if (taskState === 'mic-error') {
       commitTranscriptOnly('');
+    } else if (taskState === 'silent') {
+      keepSilentTake();
     }
   };
   const devSkipLabel =
@@ -416,16 +520,11 @@ export default function SpeakingSection({
           ? 'Fake answer'
           : taskState === 'recording'
             ? 'Stop recording'
-            : taskState === 'typing'
-              ? 'Finish typing'
-              : taskState === 'save-error'
-                ? 'Skip upload'
-                : taskState === 'mic-error'
-                  ? 'Skip task'
-                  : 'Waiting';
-
-  const formatCountdown = (sec: number) =>
-    `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`;
+            : taskState === 'save-error'
+              ? 'Skip upload'
+              : taskState === 'mic-error'
+                ? 'Skip task'
+                : 'Waiting';
 
   if (!currentTask) return null;
 
@@ -437,12 +536,6 @@ export default function SpeakingSection({
           <span className="text-sm font-medium text-foreground">
             {t('task')} {taskIndex + 1} / {prompts.tasks.length}
           </span>
-          {typedMode && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[11px] font-semibold">
-              <Keyboard className="w-3 h-3" />
-              {t('typedModeNotice')}
-            </span>
-          )}
         </div>
         <div className="flex gap-1">
           {prompts.tasks.map((_, i) => (
@@ -462,7 +555,9 @@ export default function SpeakingSection({
           <div
             className={`w-full ${currentTask.type === 'comparing_persuading' ? 'max-w-2xl' : 'max-w-lg'}`}
           >
-            <h3 className="text-lg font-semibold text-foreground mb-2">{currentTask.title}</h3>
+            <h3 lang={contentLang} className="text-lg font-semibold text-foreground mb-2">
+              {currentTask.title}
+            </h3>
 
             {/* Context / situation */}
             {currentTask.situation && (
@@ -544,9 +639,31 @@ export default function SpeakingSection({
               </ExamText>
             )}
 
-            <ExamText base={15} className="text-foreground mb-6">
-              <LookupText text={currentTask.prompt} />
-            </ExamText>
+            {/* TCF tasks carry a consigne (and, for the entretien, the examiner's
+                guiding questions) instead of a prompt. */}
+            <div lang={contentLang}>
+              {currentTask.consigne ? (
+                <>
+                  <ExamText base={15} className="text-foreground mb-3 whitespace-pre-line">
+                    {currentTask.consigne}
+                  </ExamText>
+                  {currentTask.guiding_questions && currentTask.guiding_questions.length > 0 && (
+                    <ul className="mb-6 space-y-1.5">
+                      {currentTask.guiding_questions.map((q, i) => (
+                        <ExamText key={i} as="li" base={14} className="flex gap-2 text-foreground">
+                          <span className="shrink-0 font-bold text-accent">•</span>
+                          {q}
+                        </ExamText>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              ) : (
+                <ExamText base={15} className="text-foreground mb-6 whitespace-pre-line">
+                  <LookupText text={currentTask.prompt} />
+                </ExamText>
+              )}
+            </div>
 
             {/* Quiet inline notice: local Whisper unavailable, backend will transcribe */}
             {whisperNotice && (
@@ -559,11 +676,11 @@ export default function SpeakingSection({
             {taskState === 'prompt' && (
               <div className="flex justify-center">
                 <Button
-                  onClick={() => (typedMode ? startTyping() : void startRecording())}
+                  onClick={() => void startRecording()}
                   className="inline-flex items-center gap-1.5"
                 >
-                  {typedMode ? <Keyboard className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  {typedMode ? t('speakingStartTyping') : t('speakingStartRecording')}
+                  <Mic className="w-4 h-4" />
+                  {t('speakingStartRecording')}
                 </Button>
               </div>
             )}
@@ -585,9 +702,7 @@ export default function SpeakingSection({
                 <p className="text-muted-foreground mb-2">{t('speakingPreparing')}</p>
                 <span className="text-4xl font-bold text-primary">{countdown}</span>
                 <p className="text-sm text-muted-foreground mt-1">{t('seconds')}</p>
-                <p className="text-xs text-muted-foreground mt-3">
-                  {typedMode ? t('typingAutoStart') : t('speakingAutoStart')}
-                </p>
+                <p className="text-xs text-muted-foreground mt-3">{t('speakingAutoStart')}</p>
               </div>
             )}
 
@@ -596,7 +711,17 @@ export default function SpeakingSection({
                 <div className="w-16 h-16 bg-error/15 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
                   <Mic className="w-8 h-8 text-error" />
                 </div>
+                <MicLevelBars level={micLevel} label={tx('micLevelLabel')} />
                 <p className="text-error font-semibold mb-1">{t('speakingRecording')}</p>
+                {micQuiet && (
+                  <p
+                    role="status"
+                    className="mx-auto mb-2 flex max-w-sm items-start justify-center gap-1.5 text-[12.5px] font-semibold text-warning"
+                  >
+                    <MicOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    {tx('speakingMicQuiet')}
+                  </p>
+                )}
                 <span className="text-2xl font-bold text-foreground">{countdown}</span>
                 <p className="text-sm text-muted-foreground mt-1">{t('seconds')}</p>
                 <div className="flex justify-center mt-4">
@@ -607,41 +732,6 @@ export default function SpeakingSection({
                   >
                     <Square className="w-4 h-4" />
                     {t('speakingStopRecording')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {taskState === 'typing' && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-primary">
-                    <Keyboard className="w-3.5 h-3.5" />
-                    {t('typedAnswerLabel')}
-                  </span>
-                  {!learningMode && (
-                    <span
-                      className={`text-sm font-mono font-bold px-2 py-0.5 rounded ${
-                        countdown <= 30 ? 'text-error bg-error/10' : 'text-foreground bg-muted'
-                      }`}
-                    >
-                      {formatCountdown(countdown)}
-                    </span>
-                  )}
-                </div>
-                <textarea
-                  autoFocus
-                  className="w-full min-h-[160px] resize-none bg-card border border-border rounded-lg p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder={t('typedAnswerPlaceholder')}
-                  value={typedDraft}
-                  onChange={(e) => {
-                    setTypedDraft(e.target.value);
-                    typedDraftRef.current = e.target.value;
-                  }}
-                />
-                <div className="flex justify-end mt-3">
-                  <Button onClick={finishTyping} className="inline-flex items-center gap-1.5">
-                    {t('typedDone')}
                   </Button>
                 </div>
               </div>
@@ -682,26 +772,56 @@ export default function SpeakingSection({
             )}
 
             {taskState === 'mic-error' && (
-              <div className="flex flex-col gap-3 p-4 rounded-xl bg-error/10 border border-error/40">
+              <div className="flex flex-col gap-3">
+                <p className="text-[13px] text-error">{t('speakingMicFailed')}</p>
+                <MicAccessPanel
+                  status={micFailure}
+                  onRetry={() => void startRecording()}
+                  fallbackSlot={
+                    <button
+                      onClick={() => commitTranscriptOnly('')}
+                      className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                    >
+                      {t('speakingSkipTask')}
+                    </button>
+                  }
+                />
+              </div>
+            )}
+
+            {taskState === 'silent' && (
+              <div className="flex flex-col gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4">
                 <div className="flex items-start gap-2.5">
-                  <MicOff className="w-4 h-4 text-error shrink-0 mt-0.5" />
-                  <p className="text-[13px] text-error">{t('speakingMicFailed')}</p>
+                  <MicOff className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                  <div className="flex flex-col gap-1.5">
+                    <p className="text-[13px] font-bold text-foreground">
+                      {tx('speakingSilentTitle')}
+                    </p>
+                    <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                      {tx('speakingSilentMessage')}
+                    </p>
+                    {silentAll && taskIndex > 0 && (
+                      <p className="text-[12.5px] font-semibold leading-relaxed text-foreground">
+                        {tx('speakingSilentAllMessage')}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <Button
-                    onClick={() => void startRecording()}
-                    className="inline-flex items-center gap-1.5"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    {t('speakingRetryRecording')}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button onClick={rerecordSilentTake} className="inline-flex items-center gap-1.5">
+                    <Mic className="h-3.5 w-3.5" />
+                    {tx('speakingSilentRerecord')}
                   </Button>
                   <button
-                    onClick={() => commitTranscriptOnly('')}
-                    className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                    onClick={keepSilentTake}
+                    className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
                   >
-                    {t('speakingSkipTask')}
+                    {isLastTask && !learningMode
+                      ? tx('speakingSilentSubmit')
+                      : tx('speakingSilentContinue')}
                   </button>
                 </div>
+                {silentAll && <MicLevelCheck />}
               </div>
             )}
 
@@ -752,7 +872,7 @@ export default function SpeakingSection({
         <button
           onClick={handleDevSkip}
           disabled={isSubmitting || taskState === 'saving' || taskState === 'done'}
-          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[10001] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-warning text-white text-[13px] font-semibold border-2 border-dashed border-white/60 shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[10001] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-warning text-warning-foreground text-[13px] font-semibold border-2 border-dashed border-white/60 shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <SkipForward className="w-4 h-4" />
           DEV: {devSkipLabel}

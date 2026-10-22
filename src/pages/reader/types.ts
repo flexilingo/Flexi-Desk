@@ -68,7 +68,7 @@ export interface BookVideo {
 }
 
 export type ReaderStatus = 'processing' | 'ready' | 'failed';
-export type ReaderSourceKind = 'pdf' | 'image';
+export type ReaderSourceKind = 'pdf' | 'image' | 'text';
 export type ReaderExtractionMethod = 'text' | 'ocr' | 'mixed';
 
 /**

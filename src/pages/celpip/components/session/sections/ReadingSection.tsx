@@ -9,13 +9,7 @@ import { DevSkipButton } from '../DevSkipButton';
 import { LookupText } from '../WordLookup';
 import { ExamText } from '../ExamText';
 import type { ReadingContent } from '../../../types';
-import {
-  saveDraft,
-  loadDraft,
-  clearDraft,
-  elapsedSince,
-  remainingFrom,
-} from '../../../services/examDraft';
+import { saveDraft, loadDraft, elapsedSince, remainingFrom } from '../../../services/examDraft';
 
 const TIME_LIMIT_SEC = 55 * 60;
 
@@ -97,7 +91,7 @@ export function ReadingSection({
 
   const handleSubmit = () => {
     const timeSpent = elapsedSince(startTime.current);
-    clearDraft(sessionId, 'reading');
+    // The draft stays until the server holds the answers (the store clears it).
     onSubmit(answers, timeSpent);
     setShowConfirm(false);
   };

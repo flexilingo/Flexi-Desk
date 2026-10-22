@@ -1,0 +1,121 @@
+{
+  "subscribe": "Subscribe",
+  "title": "Videos",
+  "searchPlaceholder": "Search videos…",
+  "pinned": "Pinned",
+  "empty": {
+    "title": "No videos found",
+    "subtitle": "Try removing a filter or searching for something else."
+  },
+  "resultCount": "{{count}} videos",
+  "matchCountNone": "No videos match",
+  "matchCount_one": "{{count}} video matches",
+  "matchCount_other": "{{count}} videos match",
+  "matchCount": "{{count}} videos match",
+  "removeFilter": "Remove filter: {{name}}",
+  "minutes": "{{count}} min",
+  "backToCatalogue": "Back to videos",
+  "notFound": {
+    "title": "Video not found",
+    "subtitle": "It may have been removed from the catalogue."
+  },
+  "subtitle": "Real videos with interactive subtitles. Tap any word to see what it means, then send it straight to a deck.",
+  "views": {
+    "newest": "Newest",
+    "newestHint": "The most recently added videos.",
+    "shortest": "Short ones",
+    "shortestHint": "Quick videos — good when you have a few minutes.",
+    "longest": "Long ones",
+    "longestHint": "Longer videos to settle into."
+  },
+  "browseByTopic": "Browse by Topic",
+  "channels": {
+    "heading": "Channels",
+    "videoCount_one": "{{count}} video",
+    "videoCount_other": "{{count}} videos",
+    "videoCount": "{{count}} videos",
+    "totalCount": "{{count}} channels",
+    "searchPlaceholder": "Search channels…",
+    "allLanguages": "All",
+    "clear": "Clear",
+    "empty": "No channels match that."
+  },
+  "channel": {
+    "videoCount_one": "{{count}} video",
+    "videoCount_other": "{{count}} videos",
+    "videoCount": "{{count}} videos",
+    "openOnYoutube": "Open on YouTube"
+  },
+  "categories": {
+    "learning": "Learning",
+    "stories": "Stories",
+    "podcast": "Podcasts",
+    "news": "News",
+    "culture": "Culture",
+    "music": "Music",
+    "other": "Other"
+  },
+  "filters": {
+    "category": "Category",
+    "allCategories": "All categories"
+  },
+  "music": {
+    "signInTitle": "Music is for signed-in learners",
+    "signInBody": "Learn with real songs and follow the lyrics word by word. Sign in or create a free account to open the music section.",
+    "signIn": "Sign in"
+  },
+  "player": {
+    "openOnYoutube": "Watch on YouTube",
+    "openChannel": "Open channel",
+    "openChannelNamed": "Open {{channel}}"
+  },
+  "upNext": {
+    "heading": "Up next",
+    "sub": "More from this channel and at your level",
+    "empty": "No more videos to suggest yet."
+  },
+  "podcasts": {
+    "filterAllLevels": "All Levels",
+    "cefrBeginner": "Beginner",
+    "cefrElementary": "Elementary",
+    "cefrIntermediate": "Intermediate",
+    "cefrUpperIntermediate": "Upper-Int.",
+    "cefrAdvanced": "Advanced",
+    "cefrProficiency": "Proficiency",
+    "filterByLanguage": "Language",
+    "filterAllLanguages": "All Languages",
+    "clearFilters": "Clear",
+    "filterView": "View",
+    "filterTopic": "Topic",
+    "filterAllTopics": "All Topics",
+    "filterDuration": "Length",
+    "filterAnyDuration": "Any length",
+    "filterDurationUnder": "Under {{minutes}} min",
+    "clearAllFilters": "Clear all",
+    "seeAll": "See all",
+    "videoUnavailableTitle": "This video won't load here",
+    "videoUnavailableBody": "YouTube can't be reached from your connection right now. Try again, or watch it on YouTube — you can still read the transcript and study its words here.",
+    "videoUnavailableRetry": "Try again",
+    "videoUnavailableOpen": "Watch on YouTube",
+    "expandPlayer": "Expand",
+    "closePlayer": "Close",
+    "play": "Play",
+    "pause": "Pause"
+  },
+  "loading": "Loading…",
+  "retry": "Try again",
+  "loadError": "Videos could not be loaded. Check your connection and try again.",
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{page}} of {{total}}"
+  },
+  "watch": {
+    "startHint": "Press play on the video itself to start it. The controls below work after that.",
+    "preparing": "Opening the video…",
+    "importFailed": "This video could not be opened. Try again.",
+    "noTranscript": "This video has no interactive subtitles yet.",
+    "replay": "Watch again"
+  },
+  "watchWithSubtitles": "Watch with subtitles"
+}

@@ -36,6 +36,11 @@ pub fn build_action_message(action: &str, sentence: &str, target_lang: &str) -> 
 
 "{sentence}""#,
         ),
+        "vocab" => format!(
+            r#"List the key vocabulary of this sentence: for each important word or phrase give its meaning in this context, its part of speech, and one short example. Respond entirely in {lang}.
+
+"{sentence}""#,
+        ),
         _ => format!(
             r#"Help me understand this English sentence. Respond entirely in {lang}.
 

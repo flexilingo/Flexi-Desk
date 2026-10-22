@@ -13,6 +13,14 @@ interface AudioPlayerProps {
   /** Learning mode — real exams play once with no controls; this shows a full
    *  player (play/pause + seek) so the user can scrub freely. */
   fullControls?: boolean;
+  /** Resume a recording that was cut off at this position (seconds). */
+  startAt?: number;
+  /** The recording was already heard in full before a reload: it is not offered again. */
+  startCompleted?: boolean;
+  /** TCF: reports the playback position about once a second, for the draft. */
+  onProgress?: (sec: number) => void;
+  /** TCF: one line shown beside "playing" (e.g. you can answer while you listen). */
+  playingHint?: string;
 }
 
 export function AudioPlayer({
@@ -21,6 +29,10 @@ export function AudioPlayer({
   autoPlay = true,
   forceComplete = false,
   fullControls = false,
+  startAt = 0,
+  startCompleted = false,
+  onProgress,
+  playingHint,
 }: AudioPlayerProps) {
   const { t } = useTranslation('celpip');
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -32,6 +44,7 @@ export function AudioPlayer({
   const [duration, setDuration] = useState(0);
   // onComplete must fire exactly once even if `ended` and dev-skip race.
   const completedOnceRef = useRef(false);
+  const lastReportedRef = useRef(-1);
 
   useEffect(() => {
     // No audio available — complete immediately so the questions show.
@@ -41,6 +54,11 @@ export function AudioPlayer({
         completedOnceRef.current = true;
         onComplete();
       }
+      return;
+    }
+    if (startCompleted) {
+      setState('complete');
+      completedOnceRef.current = true;
       return;
     }
     // Real-exam behaviour: audio starts on its own after a short countdown —
@@ -136,8 +154,21 @@ export function AudioPlayer({
           ref={audioRef}
           src={src}
           onEnded={handleEnded}
-          onTimeUpdate={(e) => fullControls && setCurrentTime(e.currentTarget.currentTime)}
-          onLoadedMetadata={(e) => fullControls && setDuration(e.currentTarget.duration || 0)}
+          onTimeUpdate={(e) => {
+            const at = e.currentTarget.currentTime;
+            if (fullControls) setCurrentTime(at);
+            const whole = Math.floor(at);
+            if (onProgress && whole !== lastReportedRef.current) {
+              lastReportedRef.current = whole;
+              onProgress(at);
+            }
+          }}
+          onLoadedMetadata={(e) => {
+            if (startAt > 0 && startAt < (e.currentTarget.duration || Infinity)) {
+              e.currentTarget.currentTime = startAt;
+            }
+            if (fullControls) setDuration(e.currentTarget.duration || 0);
+          }}
           onPause={() => fullControls && setIsPaused(true)}
           onPlay={() => fullControls && setIsPaused(false)}
           preload="auto"
@@ -150,7 +181,7 @@ export function AudioPlayer({
           <button
             onClick={togglePlay}
             aria-label={isPaused ? t('listeningStartAudio') : t('pauseAudio')}
-            className="w-9 h-9 rounded-full bg-accent text-white inline-flex items-center justify-center hover:bg-accent/90 transition-colors shrink-0"
+            className="w-9 h-9 rounded-full bg-accent text-accent-foreground inline-flex items-center justify-center hover:bg-accent/90 transition-colors shrink-0"
           >
             {isPaused ? <Play className="w-4 h-4 ms-0.5" /> : <Pause className="w-4 h-4" />}
           </button>
@@ -174,7 +205,7 @@ export function AudioPlayer({
         <>
           <button
             onClick={handleStart}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-medium hover:bg-accent/90 transition-colors"
           >
             <Play className="w-4 h-4" />
             {t('listeningStartAudio')}
@@ -196,6 +227,7 @@ export function AudioPlayer({
         <>
           <Volume2 className="w-5 h-5 text-accent animate-pulse" />
           <span className="text-sm text-accent font-medium">{t('listeningAudioPlaying')}</span>
+          {playingHint && <span className="text-xs text-muted-foreground">{playingHint}</span>}
         </>
       )}
 

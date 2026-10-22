@@ -49,9 +49,43 @@ pub fn list_input_devices() -> Result<Vec<AudioDevice>, String> {
 pub struct RecordingHandle {
     stop_signal: Arc<AtomicBool>,
     join_handle: Option<std::thread::JoinHandle<Result<RecordingResult, String>>>,
+    /// The capture buffer, read-only from here: the live level meter looks at its tail.
+    live: Arc<Mutex<Vec<f32>>>,
+    sample_rate: u32,
+    channels: u16,
+}
+
+/// Floor of the level scale: digital silence.
+pub const LEVEL_FLOOR_DBFS: f64 = -100.0;
+
+/// Loudness of a run of samples (-1..1) in dBFS; silence is the floor.
+pub fn frame_dbfs(samples: &[f32]) -> f64 {
+    if samples.is_empty() {
+        return LEVEL_FLOOR_DBFS;
+    }
+    let sum: f64 = samples.iter().map(|&s| (s as f64) * (s as f64)).sum();
+    let rms = (sum / samples.len() as f64).sqrt();
+    if rms > 0.0 {
+        (20.0 * rms.log10()).max(LEVEL_FLOOR_DBFS)
+    } else {
+        LEVEL_FLOOR_DBFS
+    }
 }
 
 impl RecordingHandle {
+    /// Loudness of roughly the last 100 ms of the recording, in dBFS.
+    /// Read-only: it never touches what is being recorded.
+    pub fn recent_dbfs(&self) -> f64 {
+        let window = (self.sample_rate as usize / 10).max(1) * self.channels.max(1) as usize;
+        match self.live.lock() {
+            Ok(buf) => {
+                let from = buf.len().saturating_sub(window);
+                frame_dbfs(&buf[from..])
+            }
+            Err(_) => LEVEL_FLOOR_DBFS,
+        }
+    }
+
     /// Signal the capture thread to stop, join it, and return
     /// the recorded WAV path + duration.
     pub fn stop(mut self) -> Result<RecordingResult, String> {
@@ -107,6 +141,7 @@ pub fn start_recording(
 
     let buffer: Arc<Mutex<Vec<f32>>> = Arc::new(Mutex::new(Vec::new()));
     let buf_writer = buffer.clone();
+    let live = buffer.clone();
 
     // Spawn the capture thread ─ cpal streams are !Send on
     // some backends, so we keep the stream on a dedicated thread.
@@ -155,6 +190,9 @@ pub fn start_recording(
     Ok(RecordingHandle {
         stop_signal: stop,
         join_handle: Some(handle),
+        live,
+        sample_rate,
+        channels,
     })
 }
 
@@ -467,4 +505,33 @@ fn write_wav(path: &PathBuf, mono: &[f32], sample_rate: u32) -> Result<(), Strin
         .map_err(|e| format!("WAV finalize error: {e}"))?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod level_tests {
+    use super::*;
+
+    #[test]
+    fn silence_and_empty_input_sit_on_the_floor() {
+        assert_eq!(frame_dbfs(&[]), LEVEL_FLOOR_DBFS);
+        assert_eq!(frame_dbfs(&[0.0; 512]), LEVEL_FLOOR_DBFS);
+    }
+
+    #[test]
+    fn a_full_scale_square_wave_is_zero_dbfs() {
+        let loud: Vec<f32> = (0..512).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+        assert!(frame_dbfs(&loud).abs() < 1e-9);
+    }
+
+    #[test]
+    fn halving_the_amplitude_costs_six_decibels() {
+        let a = frame_dbfs(&[0.5; 256]);
+        let b = frame_dbfs(&[0.25; 256]);
+        assert!((a - b - 6.0206).abs() < 0.01, "{a} vs {b}");
+    }
+
+    #[test]
+    fn a_tiny_signal_never_goes_below_the_floor() {
+        assert_eq!(frame_dbfs(&[1e-12; 64]), LEVEL_FLOOR_DBFS);
+    }
 }

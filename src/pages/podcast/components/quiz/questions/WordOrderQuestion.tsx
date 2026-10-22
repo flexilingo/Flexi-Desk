@@ -147,7 +147,7 @@ export function WordOrderQuestion({
                 Show Hint
               </Button>
             ) : (
-              <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-3 py-1.5 rounded-md">
+              <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 px-3 py-1.5 rounded-md">
                 <Lightbulb className="h-4 w-4" />
                 First word starts with: {question.answer?.[0]?.charAt(0)?.toUpperCase()}
               </div>
@@ -159,9 +159,7 @@ export function WordOrderQuestion({
           <div
             className={cn(
               'p-3 rounded-lg',
-              isCorrect
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+              isCorrect ? 'bg-success/15 text-success' : 'bg-error/15 text-error',
             )}
           >
             <div className="flex items-center gap-2 mb-2">

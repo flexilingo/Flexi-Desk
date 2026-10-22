@@ -10,6 +10,10 @@ interface ExamHistoryListProps {
   /** Completed sessions only, newest first. */
   sessions: ExamSession[];
   onView: (sessionId: string) => void;
+  /** Section pill labels (CO/CE/EE/EO for TCF); defaults to the first letter. */
+  short?: Record<SectionType, string>;
+  /** How a band is written (TCF's "< 4"). */
+  formatBand?: (n: number) => string;
 }
 
 interface DayGroup {
@@ -18,7 +22,7 @@ interface DayGroup {
   items: ExamSession[];
 }
 
-export function ExamHistoryList({ sessions, onView }: ExamHistoryListProps) {
+export function ExamHistoryList({ sessions, onView, short, formatBand }: ExamHistoryListProps) {
   const { t, i18n } = useTranslation('celpip');
 
   // Ranked = counts toward score history. The newest ranked session is "Latest";
@@ -114,6 +118,8 @@ export function ExamHistoryList({ sessions, onView }: ExamHistoryListProps) {
                     isLearning={isLearning}
                     deltaVsPrev={deltaVsPrev}
                     durationSec={durationSec}
+                    short={short}
+                    formatBand={formatBand}
                     onView={() => onView(s.id)}
                   />
                 );
@@ -133,6 +139,8 @@ interface HistoryRowProps {
   isPractice: boolean;
   isLearning: boolean;
   deltaVsPrev: number | null;
+  short?: Record<SectionType, string>;
+  formatBand?: (n: number) => string;
   durationSec: number | null;
   onView: () => void;
 }
@@ -145,6 +153,8 @@ function HistoryRow({
   isLearning,
   deltaVsPrev,
   durationSec,
+  short,
+  formatBand,
   onView,
 }: HistoryRowProps) {
   const { t } = useTranslation('celpip');
@@ -170,6 +180,7 @@ function HistoryRow({
       <div className="flex shrink-0 flex-col items-center gap-1">
         <MScoreChip
           score={session.m_score}
+          format={formatBand}
           mode={isLearning ? 'learning' : isPractice ? 'practice' : 'full'}
         />
         <span className="text-[10px] font-bold tabular-nums text-muted-foreground">
@@ -213,7 +224,7 @@ function HistoryRow({
         )}
       </div>
 
-      <SectionPills items={sectionScores} />
+      <SectionPills items={sectionScores} short={short} format={formatBand} />
 
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent rtl:rotate-180" />
     </button>
@@ -225,9 +236,11 @@ function HistoryRow({
 function MScoreChip({
   score,
   mode,
+  format,
 }: {
   score: number | null;
   mode: 'full' | 'practice' | 'learning';
+  format?: (n: number) => string;
 }) {
   if (score == null) {
     const Icon: LucideIcon =
@@ -252,12 +265,22 @@ function MScoreChip({
       <span className="text-[7.5px] font-bold uppercase leading-none tracking-[.1em] opacity-70">
         M
       </span>
-      <span className="text-[17px] font-extrabold leading-tight tabular-nums">{score}</span>
+      <span className="text-[17px] font-extrabold leading-tight tabular-nums">
+        {format ? format(score) : score}
+      </span>
     </div>
   );
 }
 
-function SectionPills({ items }: { items: { key: SectionType; score: number | null }[] }) {
+function SectionPills({
+  items,
+  short,
+  format,
+}: {
+  items: { key: SectionType; score: number | null }[];
+  short?: Record<SectionType, string>;
+  format?: (n: number) => string;
+}) {
   const taken = items.filter((i) => i.score != null);
   if (taken.length === 0) return null;
   return (
@@ -267,8 +290,8 @@ function SectionPills({ items }: { items: { key: SectionType; score: number | nu
           key={i.key}
           className={`inline-flex items-baseline gap-1 rounded-[6px] px-1.5 py-[3px] text-[10.5px] font-bold uppercase tabular-nums ${SECTION_META[i.key].chip}`}
         >
-          {i.key.charAt(0)}
-          <span>{i.score}</span>
+          {short?.[i.key] ?? i.key.charAt(0)}
+          <span>{i.score != null && format ? format(i.score) : i.score}</span>
         </span>
       ))}
     </div>

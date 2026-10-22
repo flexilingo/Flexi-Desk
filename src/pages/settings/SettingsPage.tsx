@@ -33,7 +33,8 @@ import {
 } from '@/components/ui/select';
 
 import { SyncSettings } from '@/pages/settings/SyncSettings';
-import { OllamaModelManager } from '@/pages/settings/components/OllamaModelManager';
+import { UpdatesSection } from '@/pages/settings/components/UpdatesSection';
+import { AiSettingsSection } from '@/pages/settings/components/AiSettingsSection';
 import { ExportDialog } from '@/pages/settings/ExportDialog';
 import { ImportDialog } from '@/pages/settings/ImportDialog';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
@@ -44,7 +45,7 @@ type SettingsTab = 'general' | 'ai' | 'whisper' | 'sync' | 'data';
 
 const TABS: { id: SettingsTab; icon: typeof User; label: string }[] = [
   { id: 'general', icon: Settings, label: 'General' },
-  { id: 'ai', icon: Brain, label: 'AI Provider' },
+  { id: 'ai', icon: Brain, label: 'My AI' },
   { id: 'whisper', icon: Mic, label: 'Whisper' },
   // TODO: Enable when fully tested
   // { id: 'sync', icon: Cloud, label: 'Sync' },
@@ -198,7 +199,7 @@ function AuthSection() {
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={sending || !email}>
+              <Button type="submit" disabled={sending || !email}>
                 {sending ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
@@ -232,7 +233,7 @@ function AuthSection() {
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground text-center tracking-[0.3em] font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={verifying || otp.length !== 6}>
+              <Button type="submit" disabled={verifying || otp.length !== 6}>
                 {verifying ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
@@ -261,174 +262,6 @@ function AuthSection() {
             </form>
           )}
         </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// --- AI Provider Section ---
-
-type AIProvider = 'ollama' | 'openai' | 'anthropic';
-
-function AIProviderSection() {
-  const [provider, setProvider] = useState<AIProvider>('ollama');
-  const [apiKey, setApiKey] = useState('');
-  const [baseUrl, setBaseUrl] = useState('http://localhost:11434');
-  const [model, setModel] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const p = await getSetting('ai_provider');
-      if (p) setProvider(p as AIProvider);
-      const key = await getSetting(`${p || 'openai'}_api_key`);
-      if (key) setApiKey(key);
-      const url = await getSetting(`${p || 'ollama'}_base_url`);
-      if (url) setBaseUrl(url);
-      const m = await getSetting('ai_model');
-      if (m) setModel(m);
-    })();
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await setSetting('ai_provider', provider);
-      if (apiKey) await setSetting(`${provider}_api_key`, apiKey);
-      await setSetting(`${provider}_base_url`, baseUrl);
-      await setSetting(
-        'ai_model',
-        model ||
-          (provider === 'openai'
-            ? 'gpt-4o-mini'
-            : provider === 'anthropic'
-              ? 'claude-sonnet-4-20250514'
-              : 'llama3.2'),
-      );
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const providerOptions: { id: AIProvider; name: string; description: string }[] = [
-    { id: 'ollama', name: 'Ollama (Local)', description: 'Free, private, runs on your machine' },
-    { id: 'openai', name: 'OpenAI', description: 'GPT-4o, requires API key' },
-    { id: 'anthropic', name: 'Anthropic', description: 'Claude, requires API key' },
-  ];
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-            <Brain className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <CardTitle className="text-base">AI Provider</CardTitle>
-            <CardDescription>
-              Configure the AI backend for Tutor, Writing Coach, and Exams
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Provider Selection */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Provider</label>
-          <div className="space-y-2">
-            {providerOptions.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  setProvider(opt.id);
-                  // Set default model for the new provider
-                  if (opt.id === 'openai') setModel('gpt-4o-mini');
-                  else if (opt.id === 'anthropic') setModel('claude-sonnet-4-20250514');
-                  else setModel('');
-                }}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${
-                  provider === opt.id
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:bg-muted'
-                }`}
-              >
-                <div
-                  className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                    provider === opt.id ? 'border-primary' : 'border-muted-foreground/30'
-                  }`}
-                >
-                  {provider === opt.id && <div className="h-2 w-2 rounded-full bg-primary" />}
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{opt.name}</p>
-                  <p className="text-xs text-muted-foreground">{opt.description}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* API Key (for cloud providers) */}
-        {provider !== 'ollama' && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">API Key</label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={provider === 'openai' ? 'sk-...' : 'sk-ant-...'}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-        )}
-
-        {/* Base URL (for Ollama) */}
-        {provider === 'ollama' && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Ollama URL</label>
-            <input
-              type="text"
-              value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="http://localhost:11434"
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-        )}
-
-        {/* Ollama: Model Manager */}
-        {provider === 'ollama' && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Models</label>
-            <OllamaModelManager />
-          </div>
-        )}
-
-        {/* Cloud providers: Model text input */}
-        {provider !== 'ollama' && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Model</label>
-            <input
-              type="text"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder={provider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-20250514'}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-        )}
-
-        <Button onClick={handleSave} disabled={saving} className="w-full">
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : saved ? (
-            <Check className="h-4 w-4 mr-2" />
-          ) : null}
-          {saved ? 'Saved!' : 'Save Configuration'}
-        </Button>
       </CardContent>
     </Card>
   );
@@ -538,7 +371,7 @@ function LanguagesSection() {
           </Select>
         </div>
 
-        <Button onClick={handleSave} disabled={saving} className="w-full">
+        <Button onClick={handleSave} disabled={saving}>
           {saving ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : saved ? (
@@ -668,6 +501,7 @@ function GeneralSection() {
       <AuthSection />
       <LanguagesSection />
       <AppearanceSection />
+      <UpdatesSection />
     </div>
   );
 }
@@ -728,7 +562,7 @@ export function SettingsPage() {
 
       {/* Tab Content */}
       {activeTab === 'general' && <GeneralSection />}
-      {activeTab === 'ai' && <AIProviderSection />}
+      {activeTab === 'ai' && <AiSettingsSection />}
       {activeTab === 'whisper' && <WhisperSetup />}
       {activeTab === 'sync' && <SyncSettings />}
       {activeTab === 'data' && <DataSection />}

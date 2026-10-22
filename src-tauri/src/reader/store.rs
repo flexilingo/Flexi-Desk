@@ -158,7 +158,7 @@ pub fn list_documents(conn: &Connection) -> Result<DocumentList, String> {
 /// Documents with exactly this byte size — the duplicate check before an import.
 pub fn find_by_size(conn: &Connection, size_bytes: i64) -> Result<Vec<ReaderDocument>, String> {
     let mut stmt = conn
-        .prepare(&format!("SELECT {DOC_COLS} FROM reader_documents WHERE size_bytes = ?1 ORDER BY created_at DESC"))
+        .prepare(&format!("SELECT {DOC_COLS} FROM reader_documents WHERE size_bytes = ?1 AND kind != 'text' ORDER BY created_at DESC, rowid DESC"))
         .map_err(db_err("DOCUMENTS_FETCH_FAILED"))?;
     stmt.query_map(params![size_bytes], doc_from_row)
         .and_then(|rows| rows.collect::<Result<Vec<_>, _>>())
@@ -300,6 +300,100 @@ pub fn stored_file(conn: &Connection, id: &str) -> Result<String, String> {
         .optional()
         .map_err(db_err("DOCUMENT_FETCH_FAILED"))?
         .ok_or_else(|| "DOCUMENT_NOT_FOUND".to_string())
+}
+
+// ── Text documents (pasted text, web pages) ──────────────────────────────────
+
+pub struct NewTextDocument<'a> {
+    pub id: &'a str,
+    pub title: &'a str,
+    /// Shown as the "file name": `pasted-text.txt`, or the page's host.
+    pub source_name: &'a str,
+    pub language: &'a str,
+    pub pages: &'a [String],
+}
+
+/// Insert a text document and all its pages in one transaction.
+pub fn insert_text_document(conn: &Connection, d: &NewTextDocument) -> Result<ReaderDocument, String> {
+    if d.pages.is_empty() {
+        return Err("EMPTY_TEXT".to_string());
+    }
+    let title: String = {
+        let t = d.title.trim();
+        let t = if t.is_empty() { "Text" } else { t };
+        t.chars().take(MAX_TITLE_CHARS).collect()
+    };
+    let words: i64 = d.pages.iter().map(|p| text::count_words(p, d.language)).sum();
+    let bytes: i64 = d.pages.iter().map(|p| p.len() as i64).sum();
+    let tx = conn.unchecked_transaction().map_err(db_err("DOCUMENT_CREATE_FAILED"))?;
+    tx.execute(
+        "INSERT INTO reader_documents (id, title, original_filename, kind, file_path, size_bytes, language,
+                                       page_count, word_count, extraction_method)
+         VALUES (?1, ?2, ?3, 'text', '', ?4, ?5, ?6, ?7, 'text')",
+        params![d.id, title, safe_file_name(Some(d.source_name), "text"), bytes, d.language, d.pages.len() as i64, words],
+    )
+    .map_err(db_err("DOCUMENT_CREATE_FAILED"))?;
+    for (i, content) in d.pages.iter().enumerate() {
+        tx.execute(
+            "INSERT INTO reader_text_pages (document_id, page, content) VALUES (?1, ?2, ?3)",
+            params![d.id, (i + 1) as i64, content],
+        )
+        .map_err(db_err("DOCUMENT_CREATE_FAILED"))?;
+    }
+    tx.commit().map_err(db_err("DOCUMENT_CREATE_FAILED"))?;
+    get_document(conn, d.id)
+}
+
+/// One page of a text document, in the shape of the cloud's `reader?action=page`.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct ReaderTextPage {
+    pub document_id: String,
+    pub title: String,
+    pub language: String,
+    pub page_number: i64,
+    pub page_count: i64,
+    pub content: String,
+    pub word_count: i64,
+    pub char_count: i64,
+    pub truncated: bool,
+    pub has_prev: bool,
+    pub has_next: bool,
+}
+
+/// A page of a text document. A page number outside the document is clamped into it, so a
+/// bookmark that is too large still opens the last page.
+pub fn get_text_page(conn: &Connection, id: &str, page: Option<f64>) -> Result<ReaderTextPage, String> {
+    let doc = get_document(conn, id)?;
+    if doc.source_kind != "text" {
+        return Err("DOCUMENT_NOT_FOUND".to_string());
+    }
+    let total: i64 = conn
+        .query_row("SELECT COUNT(*) FROM reader_text_pages WHERE document_id = ?1", params![id], |r| r.get(0))
+        .map_err(db_err("PAGE_FETCH_FAILED"))?;
+    if total == 0 {
+        return Err("PAGE_NOT_FOUND".to_string());
+    }
+    let n = page_number(page).min(total);
+    let content: String = conn
+        .query_row(
+            "SELECT content FROM reader_text_pages WHERE document_id = ?1 AND page = ?2",
+            params![id, n],
+            |r| r.get(0),
+        )
+        .map_err(db_err("PAGE_FETCH_FAILED"))?;
+    Ok(ReaderTextPage {
+        document_id: doc.id,
+        title: doc.title,
+        word_count: text::count_words(&content, &doc.language),
+        char_count: content.chars().count() as i64,
+        language: doc.language,
+        page_number: n,
+        page_count: total,
+        content,
+        truncated: false,
+        has_prev: n > 1,
+        has_next: n < total,
+    })
 }
 
 /// Delete the rows; every dependent table goes with them by cascade. The caller removes the
@@ -1364,5 +1458,47 @@ mod tests {
         }
         assert_eq!(delete_rows(&c, "a").unwrap_err(), "DOCUMENT_NOT_FOUND");
         assert_eq!(stored_file(&c, "a").unwrap_err(), "DOCUMENT_NOT_FOUND");
+    }
+
+    #[test]
+    fn a_text_document_keeps_its_pages_and_serves_them_clamped() {
+        let c = db();
+        let pages = vec!["First page about Toronto.".to_string(), "Second page about Vancouver.".to_string()];
+        let d = insert_text_document(
+            &c,
+            &NewTextDocument { id: "t1", title: "  Two cities ", source_name: "pasted-text.txt", language: "en", pages: &pages },
+        )
+        .unwrap();
+        assert_eq!((d.source_kind.as_str(), d.page_count, d.word_count), ("text", Some(2), Some(8)));
+        assert_eq!((d.title.as_str(), d.extraction_method.as_deref()), ("Two cities", Some("text")));
+
+        let p1 = get_text_page(&c, "t1", Some(1.0)).unwrap();
+        assert_eq!((p1.page_number, p1.page_count, p1.has_prev, p1.has_next), (1, 2, false, true));
+        assert_eq!(p1.content, "First page about Toronto.");
+        let beyond = get_text_page(&c, "t1", Some(99.0)).unwrap();
+        assert_eq!((beyond.page_number, beyond.has_next), (2, false));
+        assert_eq!(get_text_page(&c, "t1", None).unwrap().page_number, 1);
+
+        // Listed with the other documents; never offered as a duplicate of a same-size PDF.
+        assert_eq!(list_documents(&c).unwrap().total, 1);
+        assert!(find_by_size(&c, d.byte_size).unwrap().is_empty());
+
+        // Deleting it takes the pages along.
+        delete_rows(&c, "t1").unwrap();
+        let left: i64 = c.query_row("SELECT COUNT(*) FROM reader_text_pages", [], |r| r.get(0)).unwrap();
+        assert_eq!(left, 0);
+    }
+
+    #[test]
+    fn text_documents_reject_empty_input_and_pdfs_have_no_text_pages() {
+        let c = db();
+        let none: Vec<String> = vec![];
+        assert_eq!(
+            insert_text_document(&c, &NewTextDocument { id: "e", title: "x", source_name: "x.txt", language: "en", pages: &none }).unwrap_err(),
+            "EMPTY_TEXT"
+        );
+        doc(&c, "p", 10);
+        assert_eq!(get_text_page(&c, "p", Some(1.0)).unwrap_err(), "DOCUMENT_NOT_FOUND");
+        assert_eq!(get_text_page(&c, "missing", Some(1.0)).unwrap_err(), "DOCUMENT_NOT_FOUND");
     }
 }

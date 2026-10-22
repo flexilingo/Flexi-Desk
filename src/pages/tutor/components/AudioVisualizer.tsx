@@ -13,11 +13,11 @@ export function AudioVisualizer({ state }: AudioVisualizerProps) {
       <div
         className={`absolute h-32 w-32 rounded-full transition-all duration-700 ${
           state === 'listening'
-            ? 'bg-[#8BB7A3]/20 scale-110 animate-pulse'
+            ? 'bg-success/20 scale-110 animate-pulse'
             : state === 'speaking'
               ? 'bg-primary/20 scale-105 animate-pulse'
               : state === 'thinking'
-                ? 'bg-[#C58C6E]/20 scale-100 animate-pulse'
+                ? 'bg-warning/20 scale-100 animate-pulse'
                 : 'bg-muted/20 scale-100'
         }`}
       />
@@ -26,11 +26,11 @@ export function AudioVisualizer({ state }: AudioVisualizerProps) {
       <div
         className={`absolute h-24 w-24 rounded-full transition-all duration-500 ${
           state === 'listening'
-            ? 'bg-[#8BB7A3]/30'
+            ? 'bg-success/30'
             : state === 'speaking'
               ? 'bg-primary/30'
               : state === 'thinking'
-                ? 'bg-[#C58C6E]/30'
+                ? 'bg-warning/30'
                 : 'bg-muted/30'
         }`}
       />
@@ -39,11 +39,11 @@ export function AudioVisualizer({ state }: AudioVisualizerProps) {
       <div
         className={`relative flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300 ${
           state === 'listening'
-            ? 'bg-[#8BB7A3]'
+            ? 'bg-success'
             : state === 'speaking'
               ? 'bg-primary'
               : state === 'thinking'
-                ? 'bg-[#C58C6E]'
+                ? 'bg-warning'
                 : 'bg-muted'
         }`}
       >

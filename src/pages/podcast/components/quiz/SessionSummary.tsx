@@ -27,10 +27,10 @@ interface SessionSummaryProps {
 }
 
 const getPerformanceMessage = (score: number) => {
-  if (score >= 90) return { message: 'Excellent!', color: 'text-green-600', icon: Trophy };
-  if (score >= 70) return { message: 'Great Job!', color: 'text-blue-600', icon: TrendingUp };
-  if (score >= 50) return { message: 'Good Effort!', color: 'text-amber-600', icon: Target };
-  return { message: 'Keep Practicing!', color: 'text-red-600', icon: TrendingDown };
+  if (score >= 90) return { message: 'Excellent!', color: 'text-success', icon: Trophy };
+  if (score >= 70) return { message: 'Great Job!', color: 'text-primary', icon: TrendingUp };
+  if (score >= 50) return { message: 'Good Effort!', color: 'text-warning', icon: Target };
+  return { message: 'Keep Practicing!', color: 'text-error', icon: TrendingDown };
 };
 
 const formatTime = (seconds: number) => {
@@ -41,12 +41,12 @@ const formatTime = (seconds: number) => {
 };
 
 const cefrColors: Record<string, string> = {
-  A1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  A2: 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-400',
-  B1: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  B2: 'bg-blue-200 text-blue-800 dark:bg-blue-900/40 dark:text-blue-400',
-  C1: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  C2: 'bg-purple-200 text-purple-800 dark:bg-purple-900/40 dark:text-purple-400',
+  A1: 'bg-cefr-a1/15 text-cefr-a1',
+  A2: 'bg-cefr-a2/15 text-cefr-a2',
+  B1: 'bg-cefr-b1/15 text-cefr-b1',
+  B2: 'bg-cefr-b2/15 text-cefr-b2',
+  C1: 'bg-cefr-c1/15 text-cefr-c1',
+  C2: 'bg-cefr-c2/15 text-cefr-c2',
 };
 
 export function SessionSummary({
@@ -67,9 +67,7 @@ export function SessionSummary({
         <div
           className={cn(
             'p-6 text-center',
-            summary.score_percent >= 70
-              ? 'bg-green-50 dark:bg-green-900/10'
-              : 'bg-amber-50 dark:bg-amber-900/10',
+            summary.score_percent >= 70 ? 'bg-success/10' : 'bg-warning/10',
           )}
         >
           <PerformanceIcon className={cn('h-12 w-12 mx-auto mb-2', performance.color)} />
@@ -80,9 +78,9 @@ export function SessionSummary({
           </p>
 
           {xpInfo && xpInfo.earned > 0 && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 mt-3 bg-[#C58C6E]/20 rounded-full border border-[#C58C6E]/30">
-              <Star className="h-4 w-4 text-[#C58C6E]" />
-              <span className="text-lg font-bold text-[#C58C6E]">+{xpInfo.earned} XP</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 mt-3 bg-warning/20 rounded-full border border-warning/30">
+              <Star className="h-4 w-4 text-warning" />
+              <span className="text-lg font-bold text-warning">+{xpInfo.earned} XP</span>
             </div>
           )}
         </div>
@@ -102,12 +100,12 @@ export function SessionSummary({
           </div>
 
           {(xpInfo || (streakInfo && streakInfo.currentStreak > 0)) && (
-            <div className="flex items-center justify-center gap-3 p-3 bg-[#C58C6E]/10 rounded-lg border border-[#C58C6E]/20">
+            <div className="flex items-center justify-center gap-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
               {xpInfo && (
                 <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-[#C58C6E]" />
+                  <Star className="h-4 w-4 text-warning" />
                   <div className="text-center">
-                    <div className="text-sm font-bold text-[#C58C6E]">Level {xpInfo.level}</div>
+                    <div className="text-sm font-bold text-warning">Level {xpInfo.level}</div>
                     <div className="text-xs text-muted-foreground">{xpInfo.total} total XP</div>
                   </div>
                 </div>
@@ -116,12 +114,12 @@ export function SessionSummary({
                 <div
                   className={cn(
                     'flex items-center gap-2',
-                    xpInfo && 'pl-3 border-l border-[#C58C6E]/20',
+                    xpInfo && 'pl-3 border-l border-warning/20',
                   )}
                 >
-                  <Flame className="h-4 w-4 text-[#C58C6E]" />
+                  <Flame className="h-4 w-4 text-warning" />
                   <div className="text-center">
-                    <div className="text-sm font-bold text-[#C58C6E]">
+                    <div className="text-sm font-bold text-warning">
                       {streakInfo.currentStreak} day streak
                     </div>
                     <div className="text-xs text-muted-foreground">
@@ -174,7 +172,7 @@ export function SessionSummary({
         {summary.strong_areas?.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2 text-green-600">
+              <CardTitle className="text-base flex items-center gap-2 text-success">
                 <CheckCircle2 className="h-4 w-4" />
                 Strong Areas
               </CardTitle>
@@ -182,7 +180,7 @@ export function SessionSummary({
             <CardContent>
               <div className="flex flex-wrap gap-1">
                 {summary.strong_areas.map((area) => (
-                  <Badge key={area} variant="outline" className="bg-green-50 dark:bg-green-900/20">
+                  <Badge key={area} variant="outline" className="bg-success/10">
                     {area.replace('_', ' ')}
                   </Badge>
                 ))}
@@ -194,7 +192,7 @@ export function SessionSummary({
         {summary.weak_areas?.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2 text-amber-600">
+              <CardTitle className="text-base flex items-center gap-2 text-warning">
                 <XCircle className="h-4 w-4" />
                 Needs Practice
               </CardTitle>
@@ -202,7 +200,7 @@ export function SessionSummary({
             <CardContent>
               <div className="flex flex-wrap gap-1">
                 {summary.weak_areas.map((area) => (
-                  <Badge key={area} variant="outline" className="bg-amber-50 dark:bg-amber-900/20">
+                  <Badge key={area} variant="outline" className="bg-warning/10">
                     {area.replace('_', ' ')}
                   </Badge>
                 ))}
@@ -214,12 +212,12 @@ export function SessionSummary({
 
       {/* Milestone progress */}
       {milestoneProgress && (
-        <Card className={milestoneProgress.ready_for_test ? 'border-[#8BB7A3] bg-[#8BB7A3]/5' : ''}>
+        <Card className={milestoneProgress.ready_for_test ? 'border-success bg-success/5' : ''}>
           <CardContent className="p-4">
             {milestoneProgress.ready_for_test ? (
               <div className="text-center space-y-2">
                 <div className="text-2xl">&#x1f389;</div>
-                <p className="font-semibold text-[#6B705C]">Ready for Level-Up Test!</p>
+                <p className="font-semibold text-muted-foreground">Ready for Level-Up Test!</p>
                 <p className="text-sm text-muted-foreground">
                   {milestoneProgress.sessions} sessions completed with{' '}
                   {Math.round(milestoneProgress.accuracy * 100)}% accuracy
@@ -227,7 +225,7 @@ export function SessionSummary({
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[#6B705C]">Learning Path Progress</p>
+                <p className="text-sm font-medium text-muted-foreground">Learning Path Progress</p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span>Sessions: {milestoneProgress.sessions}</span>
                   <span>Accuracy: {Math.round(milestoneProgress.accuracy * 100)}%</span>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Languages, StickyNote, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { WordDialog } from '@/pages/podcast/components/WordDialog';
+import { WordDialog } from '@/components/WordDialog';
 import { LookupContext, type LookupFn } from './lookup-context';
 import { SpeakButton } from './SpeakButton';
 import { useSelectionPhrase } from './useSelectionPhrase';

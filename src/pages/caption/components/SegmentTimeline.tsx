@@ -68,9 +68,9 @@ function SegmentRow({
 
   const confidenceColor =
     segment.confidence >= 0.8
-      ? 'border-l-[#8BB7A3]'
+      ? 'border-l-success'
       : segment.confidence >= 0.5
-        ? 'border-l-[#C58C6E]'
+        ? 'border-l-warning'
         : 'border-l-error';
 
   return (

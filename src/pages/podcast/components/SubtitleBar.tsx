@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import type { PodcastTranscriptSegment, PodcastWordTimestamp } from '../types';
 import type { EnhancedWord, EnhancedSubtitle } from '../studio-types';
-import { WordDialog } from './WordDialog';
+import { WordDialog } from '@/components/WordDialog';
 import { QuickAddNoteDialog } from './QuickAddNoteDialog';
 import { cleanWord, cefrCacheKey } from '../utils/words';
 import { usePlayerStore } from '../stores/playerStore';
@@ -110,11 +110,11 @@ function getCefrColor(cefr: string, isEstimated?: boolean): string {
   switch (cefr) {
     case 'A1':
     case 'A2':
-      base = '#22c55e';
+      base = '#8BB7A3'; // sage
       break;
     case 'B1':
     case 'B2':
-      base = '#eab308';
+      base = '#C58C6E'; // terracotta
       break;
     case 'C1':
     case 'C2':
@@ -299,7 +299,7 @@ function ClickableWord({
       {isHovered && !isSelecting && showAddOnWords && word.isClickable && (
         <button
           type="button"
-          className="absolute -top-2.5 -left-2.5 w-5 h-5 p-0 border-0 rounded-full bg-blue-500 text-white text-sm font-bold flex items-center justify-center cursor-pointer shadow-md z-10"
+          className="absolute -top-2.5 -left-2.5 w-5 h-5 p-0 border-0 rounded-full bg-accent text-accent-foreground text-sm font-bold flex items-center justify-center cursor-pointer shadow-md z-10"
           onClick={handleAddClick}
           onMouseEnter={() => setIsHovered(true)}
           title={t('podcast.addToDeck')}
@@ -348,7 +348,7 @@ function ClickableWord({
                 </span>
               </div>
               {word.confidence != null && word.confidence < 100 && (
-                <span className="text-[11px] text-amber-400/90 bg-amber-400/15 px-2 py-0.5 rounded">
+                <span className="text-[11px] text-warning bg-warning/15 px-2 py-0.5 rounded">
                   {word.confidence}%{word.isEstimated && ' estimated'}
                 </span>
               )}
@@ -577,6 +577,70 @@ const justifyMap = {
   right: 'flex-end',
 } as const;
 
+/** The words of a neighbouring line as plain selectable words with flat reading-order indices. */
+function contextLineWords(
+  seg: PodcastTranscriptSegment | null,
+  startIndex: number,
+): EnhancedWord[] {
+  if (!seg) return [];
+  return seg.text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((text, i) => ({
+      text,
+      cleanText: cleanWord(text),
+      index: startIndex + i,
+      cefr: 'unknown' as EnhancedWord['cefr'],
+      status: 'new' as const,
+      isClickable: false,
+    }));
+}
+
+/**
+ * The line before or after the spoken one. Quiet until a selection reaches into it, then drawn at full
+ * strength so it is clear what is being taken.
+ */
+function ContextLine({
+  words,
+  fontSize,
+  justify,
+  isWordSelected,
+  isSelecting,
+  handlers,
+}: {
+  words: EnhancedWord[];
+  fontSize: number;
+  justify: string;
+  isWordSelected: (index: number) => boolean;
+  isSelecting: boolean;
+  handlers: WordRangeSelectionHandlers;
+}) {
+  if (words.length === 0) return null;
+  const reached = words.some((w) => isWordSelected(w.index));
+  return (
+    <div
+      dir="auto"
+      className={`flex w-full flex-wrap items-center gap-x-1.5 leading-snug transition-opacity ${
+        reached ? 'opacity-100 text-foreground' : 'opacity-50 text-muted-foreground'
+      } ${isSelecting ? 'select-none' : ''}`}
+      style={{ fontSize: `${Math.max(12, Math.round(fontSize * 0.7))}px`, justifyContent: justify }}
+    >
+      {words.map((w) => (
+        <span
+          key={w.index}
+          data-word-index={w.index}
+          onMouseDown={(e) => handlers.onWordMouseDown(w.index, e)}
+          onMouseEnter={() => handlers.onWordMouseEnter(w.index)}
+          onMouseUp={(e) => handlers.onWordMouseUp(w.index, e)}
+          className={`cursor-text rounded px-0.5 ${isWordSelected(w.index) ? 'bg-success/30' : ''}`}
+        >
+          {w.text}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function SubtitleBar({
   segments,
   currentTime,
@@ -624,6 +688,18 @@ export function SubtitleBar({
       segments.find((seg) => currentTimeMs >= seg.startMs && currentTimeMs <= seg.endMs) ?? null
     );
   }, [segments, currentTimeMs]);
+
+  // The lines either side of the spoken one. They are drawn quietly, and a drag that starts or ends on
+  // them takes their words too: one selection over the words of every visible line, in reading order.
+  const { prevSegment, nextSegment } = useMemo(() => {
+    const i = activeSegment ? segments.indexOf(activeSegment) : -1;
+    return {
+      prevSegment: i > 0 ? segments[i - 1] : null,
+      nextSegment: i >= 0 && i < segments.length - 1 ? segments[i + 1] : null,
+    };
+  }, [segments, activeSegment]);
+  const prevWords = useMemo(() => contextLineWords(prevSegment, 0), [prevSegment]);
+  const curOffset = prevWords.length;
 
   // Find active word index
   const activeWordIndex = useMemo(() => {
@@ -708,7 +784,8 @@ export function SubtitleBar({
       return {
         text: w.word,
         cleanText: clean,
-        index: idx,
+        // Flat reading-order index: the lines before come first.
+        index: idx + curOffset,
         cefr: cefr as EnhancedWord['cefr'],
         status: 'new' as const,
         isClickable: clean.length > 1,
@@ -717,7 +794,16 @@ export function SubtitleBar({
         collocationScore: collMatch?.score,
       };
     });
-  }, [rawWords, cefrMap, collocations]);
+  }, [rawWords, cefrMap, collocations, curOffset]);
+
+  const nextWords = useMemo(
+    () => contextLineWords(nextSegment, curOffset + enhancedWords.length),
+    [nextSegment, curOffset, enhancedWords.length],
+  );
+  const flatWords = useMemo(
+    () => [...prevWords, ...enhancedWords, ...nextWords],
+    [prevWords, enhancedWords, nextWords],
+  );
 
   // Build enhanced subtitle for selection hook
   const enhancedSubtitle = useMemo<EnhancedSubtitle | null>(() => {
@@ -727,16 +813,16 @@ export function SubtitleBar({
       text: activeSegment.text,
       startTime: activeSegment.startMs / 1000,
       endTime: activeSegment.endMs / 1000,
-      words: enhancedWords,
+      words: flatWords,
       difficulty: 0,
       isProcessed: true,
       activeWordIndex,
     };
-  }, [activeSegment, enhancedWords, activeWordIndex]);
+  }, [activeSegment, flatWords, activeWordIndex]);
 
   // Word range selection
   const selection = useWordRangeSelection(
-    enhancedWords,
+    flatWords,
     activeSegment?.id,
     undefined,
     undefined,
@@ -891,7 +977,7 @@ export function SubtitleBar({
         {selection.isSelectionActive && enhancedSubtitle?.words && (
           <SelectionActionBar
             selectedText={selection.selectedText}
-            words={enhancedSubtitle.words}
+            words={flatWords}
             selectedIndices={selection.selectedIndices}
             onClear={selection.clearSelection}
             containerRef={containerRef}
@@ -903,6 +989,15 @@ export function SubtitleBar({
             currentTime={currentTime}
           />
         )}
+
+        <ContextLine
+          words={prevWords}
+          fontSize={fontSize}
+          justify={justify}
+          isWordSelected={selection.isWordSelected}
+          isSelecting={selection.selectionState.isSelecting}
+          handlers={selection.handlers}
+        />
 
         <div
           className="flex flex-wrap items-center gap-1 leading-relaxed w-full"
@@ -924,7 +1019,9 @@ export function SubtitleBar({
                 isSelected={selection.isWordSelected(group.wordIndices[0])}
                 isSelecting={selection.selectionState.isSelecting}
                 selectionHandlers={selection.handlers}
-                isActiveWord={activeWordIndex >= 0 && activeWordIndex >= group.wordIndices[0]}
+                isActiveWord={
+                  activeWordIndex >= 0 && activeWordIndex + curOffset >= group.wordIndices[0]
+                }
                 onPauseOnHover={handlePauseOnHover}
                 onResumeOnLeave={handleResumeOnLeave}
               />
@@ -939,13 +1036,22 @@ export function SubtitleBar({
                 isWordSelected={selection.isWordSelected}
                 isSelecting={selection.selectionState.isSelecting}
                 selectionHandlers={selection.handlers}
-                activeWordIndex={activeWordIndex >= 0 ? activeWordIndex : undefined}
+                activeWordIndex={activeWordIndex >= 0 ? activeWordIndex + curOffset : undefined}
                 onPauseOnHover={handlePauseOnHover}
                 onResumeOnLeave={handleResumeOnLeave}
               />
             ),
           )}
         </div>
+
+        <ContextLine
+          words={nextWords}
+          fontSize={fontSize}
+          justify={justify}
+          isWordSelected={selection.isWordSelected}
+          isSelecting={selection.selectionState.isSelecting}
+          handlers={selection.handlers}
+        />
       </div>
 
       <WordDialog

@@ -98,7 +98,7 @@ export function EpisodeListView() {
         {/* Decorative blob */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-[#8BB7A3]/20 blur-3xl"
+          className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-success/20 blur-3xl"
         />
 
         <div className="relative">
@@ -158,7 +158,7 @@ export function EpisodeListView() {
                     SAGE_PILL_CLASS,
                   )}
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#3d6b58] dark:bg-[#a5c7b8]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
                   {t('podcast.episodesReadyLabel', { count: readyCount })}
                 </div>
               )}
@@ -309,7 +309,7 @@ function EpisodeRow({
         {isCurrentPlaying ? (
           <Play className="h-4 w-4 fill-primary text-primary" />
         ) : episode.isPlayed ? (
-          <Check className="h-4 w-4 text-[#8BB7A3]" />
+          <Check className="h-4 w-4 text-success" />
         ) : (
           <Play className="h-4 w-4 text-muted-foreground" />
         )}
@@ -334,13 +334,13 @@ function EpisodeRow({
           )}
           {dateStr && <span>{dateStr}</span>}
           {episode.cefrLevel && (
-            <span className="rounded-full border border-[#8BB7A3]/40 bg-[#8BB7A3]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#3d6b58] dark:text-[#a5c7b8]">
+            <span className="rounded-full border border-success/40 bg-success/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-success">
               {episode.cefrLevel}
             </span>
           )}
-          {episode.isDownloaded && <HardDrive className="h-3 w-3 text-[#8BB7A3]" />}
+          {episode.isDownloaded && <HardDrive className="h-3 w-3 text-success" />}
           {episode.transcriptStatus === 'completed' && (
-            <FileText className="h-3 w-3 text-[#8BB7A3]" />
+            <FileText className="h-3 w-3 text-success" />
           )}
         </div>
 
@@ -355,7 +355,7 @@ function EpisodeRow({
         {isDownloading && downloadPercent !== undefined && (
           <div className="h-1 w-full max-w-50 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-[#C58C6E] transition-all duration-300"
+              className="h-full rounded-full bg-warning transition-all duration-300"
               style={{ width: `${downloadPercent}%` }}
             />
           </div>

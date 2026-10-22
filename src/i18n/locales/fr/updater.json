@@ -1,0 +1,17 @@
+{
+  "title": "Mises à jour",
+  "subtitle": "Gardez FlexiDesk à jour",
+  "currentVersion": "Version actuelle {{version}}",
+  "check": "Rechercher des mises à jour",
+  "checking": "Recherche en cours...",
+  "upToDate": "Vous utilisez la dernière version.",
+  "available": "La version {{version}} est disponible.",
+  "install": "Télécharger et installer",
+  "installing": "Téléchargement...",
+  "downloading": "Téléchargement... {{percent}} %",
+  "downloadingUnknown": "Téléchargement...",
+  "ready": "La mise à jour est installée. Redémarrez pour terminer.",
+  "restart": "Redémarrer maintenant",
+  "dismiss": "Fermer",
+  "error": "Mise à jour impossible : {{message}}"
+}

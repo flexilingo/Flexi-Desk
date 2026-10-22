@@ -20,12 +20,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { useCelpipStore } from '../../stores/celpipStore';
 import { SECTION_META } from '../../results/shared';
+import { examBase, getExamProfile } from '../../examProfiles';
 import type { SectionType, StartPracticePayload } from '../../types';
 
 type StartMode = 'full' | 'practice' | 'learning';
 
-/** The exam is CELPIP General — the only exam a desk client can start. */
-const EXAM_TYPE = 'celpip';
+/** Open the dialog on one section, already ticked ("tap one task to practise it"). */
+export interface ExamPreselect {
+  section: SectionType;
+  /** Zero-based index into that section's choices. Omit to tick the whole section. */
+  partIndex?: number;
+}
 
 // Named parts per section — the full per-part picker lives inside this dialog
 // (front folded its old /practice page in here). Labels stay English: they are
@@ -60,6 +65,10 @@ const SECTION_PARTS: Record<SectionType, string[]> = {
 
 const SECTIONS: SectionType[] = ['listening', 'reading', 'writing', 'speaking'];
 
+function emptyParts(): Record<SectionType, Set<number>> {
+  return { listening: new Set(), reading: new Set(), writing: new Set(), speaking: new Set() };
+}
+
 /**
  * Learning mode is no longer a THIRD MODE — it is a switch inside practice, the
  * same as the web dialog. As a card it asked the learner to classify themselves
@@ -81,11 +90,47 @@ const MODES: { key: StartMode; icon: typeof GraduationCap; recommended?: boolean
 interface StartExamDialogProps {
   open: boolean;
   onClose: () => void;
+  /** Which exam to start: celpip (default), tcf, tcf_quebec or tcf_irn. */
+  examType?: string;
+  /** Opening from a card that names one section/task lands on it, already ticked. */
+  preselect?: ExamPreselect;
 }
 
-export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
+export function StartExamDialog({
+  open,
+  onClose,
+  examType = 'celpip',
+  preselect,
+}: StartExamDialogProps) {
   const { t } = useTranslation('celpip');
+  const { t: tx } = useTranslation('exam');
   const navigate = useNavigate();
+  // Everything exam-specific: the picker's choices, the duration, what exists.
+  const profile = getExamProfile(examType);
+  const practiceParts = profile.practiceParts;
+  // Named parts per section: CELPIP's are its parts (a choice's position IS the
+  // part_index); an exam with its own practiceParts (TCF: CO/CE by level band,
+  // EE/EO by task) maps each choice to its part_index list.
+  const sectionParts: Record<SectionType, string[]> = practiceParts
+    ? {
+        listening: practiceParts.listening.map((p) => p.label),
+        reading: practiceParts.reading.map((p) => p.label),
+        writing: practiceParts.writing.map((p) => p.label),
+        speaking: practiceParts.speaking.map((p) => p.label),
+      }
+    : SECTION_PARTS;
+  // The whole duration, said out loud on the full-exam card.
+  const fullDuration = t(profile.durationShortKey, { ns: profile.ns });
+  const partsFor = (sel: ExamPreselect | undefined): Record<SectionType, Set<number>> => {
+    const parts = emptyParts();
+    if (sel) {
+      parts[sel.section] =
+        sel.partIndex === undefined
+          ? new Set(sectionParts[sel.section].map((_, i) => i))
+          : new Set([sel.partIndex]);
+    }
+    return parts;
+  };
 
   const {
     start,
@@ -95,27 +140,38 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
     clearError,
   } = useCelpipStore();
 
-  const emptyParts = (): Record<SectionType, Set<number>> => ({
-    listening: new Set(),
-    reading: new Set(),
-    writing: new Set(),
-    speaking: new Set(),
-  });
+  // Practice is the default (it is what learners choose and finish); an exam with
+  // no practice (TCF IRN) opens on the full exam.
+  const defaultMode = (): StartMode => (profile.features.practice ? 'practice' : 'full');
 
-  const [mode, setMode] = useState<StartMode>('practice');
+  const [mode, setMode] = useState<StartMode>(() => (preselect ? 'practice' : defaultMode()));
   const [noRepeat, setNoRepeat] = useState(true);
   // "Untimed, with translation" — the old Learning mode, now a practice option.
   const [untimed, setUntimed] = useState(false);
-  const [selectedParts, setSelectedParts] = useState<Record<SectionType, Set<number>>>(emptyParts);
-  // Practice opens with Listening unfolded, so the default mode shows its choices
+  const [selectedParts, setSelectedParts] = useState<Record<SectionType, Set<number>>>(() =>
+    partsFor(preselect),
+  );
+  // Practice opens with a section unfolded, so the default mode shows its choices
   // instead of four collapsed rows above a button with nothing to start.
-  const [expandedSection, setExpandedSection] = useState<SectionType | null>('listening');
+  const firstExpanded = (sel: ExamPreselect | undefined): SectionType | null =>
+    sel ? sel.section : profile.features.practice ? 'listening' : null;
+  const [expandedSection, setExpandedSection] = useState<SectionType | null>(() =>
+    firstExpanded(preselect),
+  );
+  // Opened from a whole section, every choice starts ticked so Start runs the whole
+  // section. The first tap on one of its choices then means "just this one", not
+  // "all but this one" (on the web, learners tapped Task 1, 2, 3 in turn trying to
+  // practise one task: each tap removed it, and they never got a score).
+  const wholeSection = (sel: ExamPreselect | undefined) =>
+    sel && sel.partIndex === undefined ? sel.section : null;
+  const [pickSingle, setPickSingle] = useState<SectionType | null>(() => wholeSection(preselect));
   // Client-only guard message (empty selection) — distinct from a backend code.
   const [clientError, setClientError] = useState<string | null>(null);
 
   const totalSelected = SECTIONS.reduce((sum, key) => sum + selectedParts[key].size, 0);
+  const pickedSections = SECTIONS.filter((key) => selectedParts[key].size > 0);
   const allPartsSelected = SECTIONS.every(
-    (key) => selectedParts[key].size === SECTION_PARTS[key].length,
+    (key) => selectedParts[key].size === sectionParts[key].length,
   );
 
   // Reset every time the dialog opens (render-adjust pattern, matching the store's
@@ -124,11 +180,12 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (open) {
-      setMode('practice');
+      setMode(preselect ? 'practice' : defaultMode());
       setNoRepeat(true);
       setUntimed(false);
-      setSelectedParts(emptyParts());
-      setExpandedSection('listening');
+      setSelectedParts(partsFor(preselect));
+      setExpandedSection(firstExpanded(preselect));
+      setPickSingle(wholeSection(preselect));
       setClientError(null);
       clearError();
     }
@@ -146,8 +203,9 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
 
   // Section header click toggles all its parts; a chip click toggles one part.
   const toggleSection = (key: SectionType) => {
+    setPickSingle(null);
     setSelectedParts((prev) => {
-      const all = SECTION_PARTS[key].map((_, i) => i);
+      const all = sectionParts[key].map((_, i) => i);
       const allSelected = all.every((i) => prev[key].has(i));
       return { ...prev, [key]: allSelected ? new Set<number>() : new Set(all) };
     });
@@ -155,7 +213,11 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
   };
 
   const togglePart = (key: SectionType, index: number) => {
+    const single = pickSingle === key;
+    if (single) setPickSingle(null);
     setSelectedParts((prev) => {
+      // Whole section pre-ticked from a section card: the first tap means "just this one".
+      if (single) return { ...prev, [key]: new Set([index]) };
       const next = new Set(prev[key]);
       if (next.has(index)) next.delete(index);
       else next.add(index);
@@ -182,14 +244,14 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
     // error code and we surface it inline — never auto-close on a bad start.
     if (sessionId) {
       onClose();
-      navigate(`/celpip/session/${sessionId}`);
+      navigate(`${examBase(profile.examType)}/session/${sessionId}`);
     }
   };
 
   const startFull = async (learning = false) => {
     setClientError(null);
     const id = await start({
-      exam_type: EXAM_TYPE,
+      exam_type: profile.examType,
       no_repeat: noRepeat,
       ...(learning ? { learning_mode: true } : {}),
     });
@@ -213,11 +275,14 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
     const sections: StartPracticePayload['sections'] = {};
     for (const key of SECTIONS) {
       if (selectedParts[key].size > 0) {
-        sections[key] = Array.from(selectedParts[key]).sort((a, b) => a - b);
+        const picked = Array.from(selectedParts[key]).sort((a, b) => a - b);
+        sections[key] = practiceParts
+          ? picked.flatMap((i) => practiceParts[key][i].partIndices)
+          : picked;
       }
     }
     const id = await startPracticeSession({
-      exam_type: EXAM_TYPE,
+      exam_type: profile.examType,
       sections,
       ...(learning ? { learning_mode: true } : {}),
     });
@@ -232,7 +297,15 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
   const submitLabel = () => {
     if (isStarting) return mode === 'practice' ? t('startingPractice') : t('assembling');
     if (mode === 'practice') {
-      return totalSelected > 0 ? `${t('startPractice')} (${totalSelected})` : t('startPractice');
+      if (totalSelected === 0) return t('startPractice');
+      // With one section picked the button names it, so "Start Practice (6)"
+      // never starts Listening when the learner meant Reading.
+      return pickedSections.length === 1
+        ? tx('startPracticeOf', {
+            section: t(profile.sectionLabelKeys[pickedSections[0]], { ns: profile.ns }),
+            count: totalSelected,
+          })
+        : `${t('startPractice')} (${totalSelected})`;
     }
     return t('startExam');
   };
@@ -252,8 +325,17 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
         </DialogHeader>
 
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
-          {/* Mode chooser */}
-          <div className="flex flex-col gap-1.5">
+          {/* Mode chooser — an exam with no practice (TCF IRN) shows what it is instead. */}
+          {!profile.features.practice && (
+            <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {t(profile.titleKey, { ns: profile.ns })}
+              </span>
+              {' · '}
+              {t(profile.startDialogDescriptionKey, { ns: profile.ns })}
+            </p>
+          )}
+          <div className={`flex flex-col gap-1.5 ${profile.features.practice ? '' : 'hidden'}`}>
             {MODES.map(({ key, icon: Icon, recommended }) => (
               <button
                 key={key}
@@ -280,7 +362,7 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
                 </span>
                 <span className="text-[11.5px] leading-snug text-muted-foreground">
                   {key === 'full'
-                    ? t('modeFullDesc', { duration: t('duration') })
+                    ? t('modeFullDesc', { duration: fullDuration })
                     : t(key === 'practice' ? 'modePracticeDesc' : 'modeLearningDesc')}
                 </span>
               </button>
@@ -290,13 +372,17 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
           {mode === 'full' && (
             <>
               <NoRepeatToggle checked={noRepeat} onChange={setNoRepeat} label={t('noRepeatMode')} />
-              <MetaStrip duration={t('duration')} sectionsLabel={t('sections')} />
+              <MetaStrip
+                duration={fullDuration}
+                sectionsLabel={t('sections')}
+                short={profile.sectionShortLabels}
+              />
             </>
           )}
 
           {/* Practice: the untimed switch — the old Learning mode, asked as a
               question about THIS run. */}
-          {mode === 'practice' && (
+          {mode === 'practice' && profile.features.learning && (
             <>
               <SwitchRow
                 icon={TimerOff}
@@ -324,7 +410,7 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
               <div className="flex flex-col gap-1.5">
                 {SECTIONS.map((key) => {
                   const Icon = SECTION_META[key].icon;
-                  const parts = SECTION_PARTS[key];
+                  const parts = sectionParts[key];
                   const picked = selectedParts[key];
                   const allSelected = picked.size === parts.length;
                   const someSelected = picked.size > 0;
@@ -361,7 +447,9 @@ export function StartExamDialog({ open, onClose }: StartExamDialogProps) {
                             )}
                           </span>
                           <Icon className={`h-4 w-4 shrink-0 ${SECTION_META[key].color}`} />
-                          <span className="text-[13px] font-bold text-foreground">{t(key)}</span>
+                          <span className="text-[13px] font-bold text-foreground">
+                            {t(profile.sectionLabelKeys[key], { ns: profile.ns })}
+                          </span>
                           <span className="text-[11px] tabular-nums text-muted-foreground">
                             {picked.size}/{parts.length}
                           </span>
@@ -461,7 +549,15 @@ function NoRepeatToggle({
   );
 }
 
-function MetaStrip({ duration, sectionsLabel }: { duration: string; sectionsLabel: string }) {
+function MetaStrip({
+  duration,
+  sectionsLabel,
+  short,
+}: {
+  duration: string;
+  sectionsLabel: string;
+  short: Record<SectionType, string>;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground">
       <span className="inline-flex items-center gap-1.5">
@@ -471,16 +567,16 @@ function MetaStrip({ duration, sectionsLabel }: { duration: string; sectionsLabe
       <span className="inline-flex flex-wrap items-center gap-2">
         <span>4 {sectionsLabel}:</span>
         <span className="inline-flex items-center gap-0.5 font-semibold text-success">
-          <Headphones className="h-3 w-3" /> L
+          <Headphones className="h-3 w-3" /> {short.listening}
         </span>
         <span className="inline-flex items-center gap-0.5 font-semibold text-accent">
-          <BookOpen className="h-3 w-3" /> R
+          <BookOpen className="h-3 w-3" /> {short.reading}
         </span>
         <span className="inline-flex items-center gap-0.5 font-semibold text-primary">
-          <PenLine className="h-3 w-3" /> W
+          <PenLine className="h-3 w-3" /> {short.writing}
         </span>
         <span className="inline-flex items-center gap-0.5 font-semibold text-warning">
-          <Mic className="h-3 w-3" /> S
+          <Mic className="h-3 w-3" /> {short.speaking}
         </span>
       </span>
     </div>

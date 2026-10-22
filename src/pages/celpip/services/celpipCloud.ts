@@ -1,7 +1,11 @@
 import { supabaseCall } from '@/lib/supabase';
+import type { CoachReportListResponse, CoachReportResponse } from '../coach/coachTypes';
 import type {
   AssembleExamPayload,
   ExamConfig,
+  ExamScoringInfo,
+  TranslateExplanationPayload,
+  TranslateExplanationResponse,
   ExamPartVocab,
   ExamResults,
   ExamSession,
@@ -125,4 +129,77 @@ export const getPartVocab = (sessionId: string) =>
   supabaseCall<{ parts: ExamPartVocab[]; total_words: number; first_view?: boolean }>(
     'GET',
     `/exam?${qs({ action: 'get_part_vocab', session_id: sessionId })}`,
+  );
+
+// ── Scoring info + explanation translation (user-flow actions) ───────────────
+
+/** The tables behind "how is this scored?" — static per exam, built by the backend from its scorers' constants. */
+export const getScoringInfo = (examType: string) =>
+  supabaseCall<ExamScoringInfo>(
+    'GET',
+    `/exam?${qs({ action: 'get_scoring_info', exam_type: examType })}`,
+  );
+
+/** Translate one TCF explanation card into the UI language (Pro; cached server-side). */
+export const translateExplanation = (payload: TranslateExplanationPayload) =>
+  supabaseCall<TranslateExplanationResponse>('POST', '/exam?action=translate_explanation', {
+    ...payload,
+  } as unknown as Record<string, unknown>);
+
+/** The announcement slot to show a learner whose older results were scored the old way ({ slot: null } for everyone else). */
+export const getScoringNotice = (examType: string) =>
+  supabaseCall<{ slot: string | null }>(
+    'GET',
+    `/exam?${qs({ action: 'get_scoring_notice', exam_type: examType })}`,
+  );
+
+// ── Review transcripts (exam-review, the caller's own scored session) ────────
+
+export interface ReviewTranscripts {
+  parts: { position: number; script: unknown; evidence: string | null }[];
+  /** A locked result: every part arrives with script and evidence null. */
+  locked?: boolean;
+}
+
+/** Listening scripts for review, once Listening is scored (get_results strips them on purpose). */
+export const getReviewTranscripts = (sessionId: string) =>
+  supabaseCall<ReviewTranscripts>(
+    'GET',
+    `/exam-review?${qs({ action: 'transcripts', session_id: sessionId })}`,
+  );
+
+// ── Speaking: transcribe one answer while the learner records the next ───────
+
+/** Fire-and-forget after each upload; a failure is harmless - scoring transcribes whatever was not settled. */
+export const pretranscribeTask = (payload: {
+  session_id: string;
+  task_key: string;
+  audio_url: string;
+}) =>
+  supabaseCall<{ accepted: boolean; reason?: string }>('POST', '/exam?action=pretranscribe_task', {
+    ...payload,
+  });
+
+// ── Coach reports (written on the server every couple of days; desk only reads) ─
+
+/** Omit reportId for the newest report. */
+export const getCoachReport = (examType: string, reportId?: string) =>
+  supabaseCall<CoachReportResponse>(
+    'GET',
+    `/exam?${qs({ action: 'get_coach_report', exam_type: examType, report_id: reportId })}`,
+  );
+
+export const listCoachReports = (examType: string) =>
+  supabaseCall<CoachReportListResponse>(
+    'GET',
+    `/exam?${qs({ action: 'list_coach_reports', exam_type: examType })}`,
+  );
+
+export const markCoachReportRead = (reportId: string) =>
+  supabaseCall<{ read_at: string | null; changed: boolean }>(
+    'POST',
+    '/exam?action=mark_coach_report_read',
+    {
+      report_id: reportId,
+    },
   );

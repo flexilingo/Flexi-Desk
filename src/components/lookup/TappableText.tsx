@@ -1,4 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Languages } from 'lucide-react';
 import { TEXT_WORD_MARKERS, snapSelectionToWords } from '@/pages/reader/text/snap-selection';
 import { SpeakButton } from './SpeakButton';
 import { useLookup } from './lookup-context';
@@ -22,6 +24,9 @@ const HOVER_DWELL_MS = 700;
  * short enough that a button nobody is heading for still goes away.
  */
 const HOVER_GRACE_MS = 320;
+
+/** How long the chip a tap raised (tap to speak) waits to be used. */
+const TAP_CHIP_MS = 5000;
 
 /** The looked-up mark: olive, because it reports state rather than asking for a click. */
 const LOOKED_UP = [
@@ -50,6 +55,7 @@ export function TappableText({
   language,
   speakOnHover = false,
   markLookedUp = false,
+  onSpeakWord,
 }: {
   text: string;
   className?: string;
@@ -67,7 +73,13 @@ export function TappableText({
    * reader back into a wall of text with no sign of where they had been.
    */
   markLookedUp?: boolean;
+  /**
+   * TAP TO SPEAK: a click says the word instead of opening it. The click also raises the
+   * chip under the word, which still offers the translation (and the voice again).
+   */
+  onSpeakWord?: (word: string) => void;
 }) {
+  const { t } = useTranslation('reader');
   const lookup = useLookup();
   const host = useRef<HTMLDivElement | null>(null);
 
@@ -84,6 +96,8 @@ export function TappableText({
     x: number;
     y: number;
     forText: string;
+    /** Set when a click raised the chip: the sentence the translation is asked in. */
+    sentence?: string;
   } | null>(null);
   const dwell = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const grace = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -127,6 +141,25 @@ export function TappableText({
 
   /** Open a word, marking it on the page first when the host asked for that. */
   const open = (el: HTMLElement, word: string, sentence: string) => {
+    if (onSpeakWord) {
+      onSpeakWord(word);
+      const block = host.current;
+      if (block) {
+        const box = el.getBoundingClientRect();
+        const frame = block.getBoundingClientRect();
+        clearTimeout(grace.current);
+        setSpoken({
+          word,
+          sentence,
+          x: box.left + box.width / 2 - frame.left,
+          y: box.bottom - frame.top,
+          forText: text,
+        });
+        // A chip nobody reaches for goes away on its own.
+        grace.current = setTimeout(() => setSpoken(null), TAP_CHIP_MS);
+      }
+      return;
+    }
     if (markLookedUp) {
       el.classList.add(...LOOKED_UP);
       el.dataset.lookedUp = '';
@@ -324,6 +357,23 @@ export function TappableText({
             title={spoken.word}
             className="inline-flex h-7 w-7 items-center justify-center rounded-full text-primary transition-colors hover:bg-muted"
           />
+          {spoken.sentence !== undefined && lookup && (
+            <button
+              type="button"
+              title={t('read.translateSelection')}
+              aria-label={t('read.translateSelection')}
+              onClick={() => {
+                const word = spoken.word;
+                const sentence = spoken.sentence ?? '';
+                clearTimeout(grace.current);
+                setSpoken(null);
+                lookup(word, sentence);
+              }}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-primary transition-colors hover:bg-muted"
+            >
+              <Languages className="h-4 w-4" />
+            </button>
+          )}
         </span>
       )}
     </div>

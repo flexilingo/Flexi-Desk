@@ -1,0 +1,225 @@
+{
+  "tcf": {
+    "title": "TCF Canada",
+    "hubDescription": "用于加拿大移民的法语水平考试",
+    "resultsTitle": "您的 TCF Canada 成绩",
+    "durationShort": "约 2 小时 47 分钟",
+    "startDialogDescription": "一套完整的计时模拟考试：听力、阅读、写作和口语，按官方顺序进行。",
+    "sections": {
+      "listening": "听力 (CO)",
+      "reading": "阅读 (CE)",
+      "writing": "写作 (EE)",
+      "speaking": "口语 (EO)"
+    },
+    "sectionIntro": {
+      "listening": {
+        "title": "听力理解",
+        "description": "39 道题，由易到难。每段录音只播放一次，题目和选项同时显示在屏幕上。只在你作答时计时，录音播放时不计时。",
+        "duration": "35 分钟 • 39 道题",
+        "practiceDescription": "题目由易到难。每段录音只播放一次，题目和选项同时显示在屏幕上。只在你作答时计时，录音播放时不计时。"
+      },
+      "reading": {
+        "title": "阅读理解",
+        "description": "39 篇短文，每篇一道题。可以自由切换。",
+        "duration": "60 分钟 • 39 道题",
+        "practiceDescription": "短文，每篇一道题。可以自由切换。"
+      },
+      "writing": {
+        "title": "书面表达",
+        "description": "三项写作任务，共用一个计时器。请注意每项任务的字数范围。",
+        "duration": "60 分钟 • 3 项任务",
+        "practiceDescription": "你选择的写作任务共用一个计时器。请注意每项任务的字数范围。"
+      },
+      "speaking": {
+        "title": "口头表达",
+        "description": "三项口语任务。任务 2 有 2 分钟准备时间；任务 1 和 3 立即开始。",
+        "duration": "约 12 分钟 • 3 项任务",
+        "practiceDescription": "录下你选择的每项任务。任务 2 有 2 分钟准备时间；任务 1 和 3 立即开始。"
+      }
+    },
+    "itemOf": "第 {{current}} / {{total}} 题",
+    "answeredCount": "已答 {{count}} 题",
+    "itemsLeft_other": "还剩 {{count}} 题",
+    "timeLeft": "剩余时间",
+    "clockPaused": "录音播放期间计时暂停",
+    "answerWhileListening": "可以边听边作答。录音结束后会出现“下一步”按钮。",
+    "listeningOnce": "每段录音只播放一次，题目和选项同时显示在屏幕上。录音播放时计时暂停，作答时计时。",
+    "audioDone": "录音已播放完毕——计时已开始。请选择答案，然后进入下一题。",
+    "unansweredWarning": "还有 {{count}} 道题未作答。提交后将无法返回本部分。",
+    "wordLimit": "{{min}}–{{max}} 词 · 三项任务共用 60 分钟计时",
+    "wordRangeWarning": "建议写 {{min}}–{{max}} 词。仍然可以提交。",
+    "wordRangeTask": "任务 {{task}}：{{count}} 词（{{min}}–{{max}}）",
+    "writingPlaceholder": "请用法语作答…",
+    "estimateNote": "听力和阅读分数为估算值：真实的 TCF 会对每道题进行校准。低于 4 的 NCLC 显示为“< 4”，您的总体水平取决于最弱的一项技能。"
+  },
+  "tcfQuebec": {
+    "title": "TCF Québec",
+    "hubDescription": "魁北克移民（PSTQ、PEQ）所用的法语考试。官方考试可自选 1 至 4 个科目，听力和阅读各 29 道题。我们的模拟考试按 TCF Canada 的篇幅（39 + 39 道题）考全部四项技能，并给出每项技能的 CEFR 等级。",
+    "startDialogDescription": "一套完整的计时模拟考试，涵盖全部四项技能：听力、阅读、写作和口语。听力和阅读采用 TCF Canada 的篇幅（各 39 道题，35 和 60 分钟），比官方 TCF Québec（各 29 道题，25 和 45 分钟）更长。写作（3 项任务，60 分钟）和口语（3 项任务，12 分钟）的时长与官方相同。",
+    "resultsTitle": "您的 TCF Québec 成绩",
+    "estimateNote": "听力和阅读分数为估算值：真实的 TCF 会对每道题进行校准。等级依据 TCF 官方对照表（France Éducation international）；这里的总体等级取决于您最弱的一项技能。魁北克用自己的 Échelle québécoise 换算每项技能（例如听力或阅读 400–499 分 = 7–8 级）；PSTQ 第 1 类（高技能）和 PEQ 要求听力和口语达到 7 级，阅读和写作达到 5 级。请核对您的申请要求。",
+    "pointsTitle": "魁北克计分（2013 年表）",
+    "pointsTotal": "{{total}} / {{max}} 分",
+    "pointsValue": "{{points}} 分",
+    "pointsFloor": "在这份 2013 年的计分表中，从 B2 起给分；听力和口语两项最多占 16 分中的 14 分，阅读和写作各 1 分。现行 PSTQ 的法语计分方式不同：每项技能最高 50 分，从魁北克等级的 5 级起计分。",
+    "pointsSource": "来源：魁北克移民计分表，自 2013 年 8 月 1 日起生效，载于 TCF《Manuel du candidat》（France Éducation international，Q 版，2026 年 9 月，第 16 页）。PSTQ 现已采用自己的法语计分和最低等级，公布于 quebec.ca——请核对评估您申请所用的表格。"
+  },
+  "tcfIrn": {
+    "title": "TCF IRN",
+    "hubDescription": "申请法国居留证或入籍（Intégration, Résidence et Nationalité）所用的法语考试：四个必考科目，听力 25 题、阅读 25 题（等级最高至 B2）。自 2026 年 1 月 1 日起，法国要求首次申请多年居留证达到 A2，首次申请长期居民卡（carte de résident，65 岁以下）达到 B1，入籍达到 B2。练习即将推出。",
+    "startDialogDescription": "一套完整的计时模拟考试：听力、阅读、写作和口语，按官方顺序进行。",
+    "resultsTitle": "您的 TCF IRN 成绩",
+    "estimateNote": "听力和阅读分数为估算值：真实的 TCF 会对每道题进行校准。TCF IRN 的听力和阅读按 100–499 计分，499 即 B2 的上限，写作和口语按 20 分制评分；等级依据 TCF 官方对照表（France Éducation international）。这里的总体等级取决于您最弱的一项技能；官方证明中，三项技能达到某一等级、第四项至少处于下一级的高段时，即视为达到该等级。请核对您的申请所需等级。",
+    "durationShort": "约1小时35分钟"
+  },
+  "scoringInfo": {
+    "open": "这个分数是怎么计算的？",
+    "title": "您的分数是怎么计算的",
+    "close": "关闭",
+    "estimate": "这是练习估算分数，不是官方成绩。",
+    "tableLoading": "正在加载表格…",
+    "tableError": "表格加载失败。",
+    "retry": "重试",
+    "overallTitle": "您的总分",
+    "columns": {
+      "level": "等级",
+      "reading": "阅读",
+      "listening": "听力",
+      "writing": "写作",
+      "speaking": "口语",
+      "mcq": "听力与阅读分数",
+      "task": "写作与口语（满分 20）"
+    },
+    "tableCaption": {
+      "celpip_mcq": "每个等级所需的最少答对题数（共 38 题）",
+      "tcf_nclc": "IRCC 对照表：各 NCLC 等级所需分数",
+      "tcf_cefr": "TCF 官方对照表：各等级所需分数"
+    },
+    "celpip": {
+      "mcqTitle": "听力和阅读",
+      "mcqPoints": "每答对一题得一分。答错不扣分，所以请回答每一道题。",
+      "mcqChart": "您的得分会按照 CELPIP 的开发机构 Paragon 公布的对照表换算成 CLB 等级。达到同一等级时，听力需要比阅读多答对几题。",
+      "mcqDifficulty": "在真实考试中，难题比简单题的分量更重，所以相同的答对题数可能对应两个等级。我们目前还无法衡量题目难度，因此总是给您两者中较低的等级。",
+      "mcqSlice": "如果您只练习了部分内容，结果会按完整的 38 题折算。第 1 部分最简单，所以只根据一个部分得出的等级仅供粗略参考。",
+      "prodTitle": "写作和口语",
+      "prodCriteria": "AI 考官按照 CELPIP 的四个评分维度为每个任务打分：内容与连贯性、词汇、可读性（写作）或可听性（口语），以及任务完成度。",
+      "prodAverage": "您在某一部分的等级是各任务的平均值，四舍五入到半级。真实考试由受过培训的评分员评分，并给出整数等级。",
+      "overall": "它是您最弱的一项技能。移民项目会分别查看每项技能，所以起决定作用的是最弱的那一项。",
+      "source": "来源：Paragon Testing Enterprises，CELPIP Pro Study Packs；IRCC 语言考试对照表。"
+    },
+    "tcf": {
+      "mcqTitle": "听力和阅读",
+      "mcq39": "39 道题，难度逐渐增加。题目越靠后，答对的分值越高：从最前面最简单的题每题 3 分，到最后最难的题每题 33 分。您的分数在 100 到 699 之间。",
+      "mcq25": "25 道题，难度逐渐增加，题目越靠后，答对的分值越高。您的分数在 100 到 499 之间，等级最高到 B2。",
+      "mcqEstimate": "TCF 的主办机构 France Éducation international 没有公布确切的题目权重，所以这个分数是估算值。",
+      "mcqSlice": "如果您只练习了部分题目，您看到的是答对的题数，而不是分数。",
+      "prodTitle": "写作和口语",
+      "prod": "AI 考官为每个任务打分，满分 20：任务完成度、组织结构、词汇和语法，口语另加流利度。该部分的分数是您各任务的平均值。",
+      "nclcTitle": "从分数到 NCLC",
+      "nclc": "每项技能的分数通过 IRCC 的官方对照表换算成 NCLC 等级。您的总体水平取决于最弱的一项技能。",
+      "levelTitle": "从分数到等级",
+      "cefr": "每项技能按照 France Éducation international 的官方对照表获得一个 CEFR 等级（A1 到 C2）。您的总体水平取决于最弱的一项技能。",
+      "quebecPoints": "每个等级旁边显示魁北克移民评分表给该等级的分数。B2 起才开始计分。",
+      "source": "来源：France Éducation international，Manuel du candidat；IRCC 语言考试对照表。",
+      "sourceQuebec": "来源：France Éducation international，Manuel du candidat（2025 年 4 月）；魁北克移民积分表。",
+      "sourceIrn": "来源：France Éducation international，Manuel du candidat（2025 年 4 月）。"
+    }
+  },
+  "insightQa": {
+    "fromPassage": "原文摘录",
+    "fromRecording": "录音原话",
+    "whyYourChoiceFailed": "为什么您的答案不对",
+    "whyCorrect": "为什么这是正确答案",
+    "nextTime": "下次这样做",
+    "wordToKnow": "需要掌握的词",
+    "commonTrap": "您的 {{wrong}} 个错误中有 {{count}} 个掉进了同一个陷阱：{{trap}}",
+    "techniquesToPractise": "需要练习的技巧",
+    "traps": {
+      "unstated_detail": "原文没有提到",
+      "passage_wording_reused": "用词相同，意思不同",
+      "plausible_real_world_assumption": "现实中成立，原文中不成立",
+      "partial_match": "只对了一部分",
+      "extreme_qualifier": "说得太绝对",
+      "ignores_a_stated_condition": "忽略了原文中的条件",
+      "right_number_wrong_unit": "数字对，单位错"
+    },
+    "techniques": {
+      "paraphrase_bridging": "识别同义改写",
+      "keyword_anchoring": "锁定关键词",
+      "condition_scan": "逐一核对条件",
+      "purpose_before_detail": "先看目的，再看细节",
+      "note_shorthand": "边听边速记",
+      "stance_tracking": "追踪每个人的观点",
+      "tone_register_read": "判断语气",
+      "scan_first_and_last_sentence": "先看首句和末句",
+      "distractor_overlap_test": "警惕照搬原文的选项",
+      "option_elimination_by_extremes": "排除绝对化选项",
+      "predict_before_audio": "听前先预测",
+      "unit_check": "核对单位"
+    }
+  },
+  "overallLevel": "总体等级",
+  "practiceScoreLabel": "练习分数",
+  "takeAgainShort": "重考",
+  "retakeUntimed": "不计时重做",
+  "examBeingScored": "你 {{date}} 的考试正在评分——已评分的部分现在就可以查看。",
+  "scoringBannerTitle": "仍在评分中：{{sections}}。",
+  "scoringBannerBody": "你的其他分数在下方。你可以离开此页面——评分会在后台继续，回来时分数就在这里。",
+  "scoringBannerSlow": "比平时花的时间更长，但不会丢失任何内容：系统会自动重试，直到分数准备好。你可以离开页面，稍后再回来。",
+  "examSectionAnalyzing": "分析中…",
+  "startPracticeOf": "开始{{section}}练习（{{count}}）",
+  "notAnswered": "未作答",
+  "youChoseLabel": "您的选择",
+  "insightUpgradeCta": "升级到 Pro",
+  "sectionPartsCount_other": "{{count}} 个小节",
+  "scoreReadyNotice": "{{section}}成绩已出",
+  "scoreReadyView": "查看",
+  "practiceQuestionCount": "{{count}} 道题",
+  "practiceTaskCount": "{{count}} 项任务",
+  "results": {
+    "tcfHelp": {
+      "translate": "将讲解翻译成中文",
+      "translating": "正在翻译…",
+      "hideTranslation": "隐藏翻译",
+      "showTranslation": "显示翻译",
+      "lockedExplanation": "这道题的完整讲解（证明答案的原句、你所选选项中的陷阱、解题方法和关键词）仅对 Pro 会员开放。",
+      "modelAnswersTitle": "示范回答",
+      "bandChip": "NCLC {{band}}",
+      "openToAll": "所有人可看",
+      "nextLevel": "下一个级别",
+      "whatSetsBand": "为什么是 NCLC {{band}}",
+      "lockedBand": "同一任务的 NCLC {{band}} 级示范回答，以及它为何能达到这一级别的说明，仅对 Pro 会员开放。",
+      "stepsTitle": "从 NCLC 5 到 7：{{count}} 条规则",
+      "examinerModel": "考官为此任务给出的示范回答",
+      "reference": "你的参照",
+      "stepsTitle9": "从 NCLC 7 到 9：{{count}} 条规则"
+    },
+    "nextSteps": {
+      "title": "你的下一步",
+      "missedCount": "{{total}} 题中错了 {{missed}} 题",
+      "lockedMcq": "讲解仅对 Pro 会员开放。",
+      "openSection": "打开{{section}}",
+      "lockedTasks": "NCLC 5 以上的示范回答仅对 Pro 会员开放。",
+      "nextLevelBand": "下一级：NCLC {{band}}",
+      "referenceBand": "参照：NCLC {{band}}",
+      "freeMonthly": "这是你的免费完整结果之一：每月 2 次，之后每天 1 次。"
+    },
+    "reviewTabs": {
+      "wrong": "答错",
+      "right": "答对",
+      "noneWrong": "本部分所有题目你都答对了。",
+      "noneRight": "本部分还没有答对的题目；所有题目都在「答错」标签中。",
+      "showExplanation": "查看解析"
+    },
+    "correct": "正确",
+    "yourNextStep": "你的下一步",
+    "showMore": "展开",
+    "showLess": "收起",
+    "bandLabel": "CLB {{band}}",
+    "lockedListeningReview": "重听每段录音并查看文字稿是 Pro 的内容。免费账户每月有 2 份完整结果可以使用；用完后每天 1 份。",
+    "lockedReadingReview": "重读原文是 Pro 的内容。免费账户每月有 2 份完整结果可以查看；用完后每天 1 份。",
+    "tcfRecordingLocked": "重听你自己的录音是 Pro 的内容。免费账户每月有 2 份完整结果可以使用；用完后每天 1 份。",
+    "noSpeechTitle": "我们没有听到这条回答。",
+    "noSpeechBody": "您的麦克风几乎没有录到声音，所以没有内容可以评分。请确认选择了正确的麦克风且没有静音，然后重做这个任务。"
+  }
+}

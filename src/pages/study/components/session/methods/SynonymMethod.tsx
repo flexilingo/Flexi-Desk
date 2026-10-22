@@ -6,7 +6,14 @@ import { AnswerFeedback } from '../AnswerFeedback';
 import { ClickableText } from '../ClickableText';
 import type { MethodProps } from '../types';
 
-export function SynonymMethod({ activity, submitting, onSubmit, onNext, onLookup }: MethodProps) {
+export function SynonymMethod({
+  activity,
+  submitting,
+  onSubmit,
+  onNext,
+  onLookup,
+  advancing,
+}: MethodProps) {
   const { t } = useTranslation('study');
   const [picked, setPicked] = useState<number | null>(null);
   const [result, setResult] = useState<boolean | null>(null);
@@ -69,7 +76,11 @@ export function SynonymMethod({ activity, submitting, onSubmit, onNext, onLookup
       </div>
 
       {result !== null && <AnswerFeedback isCorrect={result} expected={options[correctIndex]} />}
-      {result !== null && <Button onClick={onNext}>{t('runner.next')}</Button>}
+      {result !== null && (
+        <Button onClick={onNext} loading={advancing}>
+          {t('runner.next')}
+        </Button>
+      )}
     </div>
   );
 }

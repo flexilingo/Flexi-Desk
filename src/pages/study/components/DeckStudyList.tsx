@@ -142,7 +142,7 @@ export function DeckStudyList({ decks, isLoading, onPickDeck }: Props) {
   ];
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" data-tour="deck-list">
       <div className="flex items-center justify-between">
         <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
           {t('deckList.title')}
@@ -181,7 +181,7 @@ export function DeckStudyList({ decks, isLoading, onPickDeck }: Props) {
         </div>
       ) : (
         <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
-          {filteredDecks.map((d) => {
+          {filteredDecks.map((d, index) => {
             const StatusIcon = HEALTH_ICON[d.health_status];
             const label = healthLabel(d.health_status, d.days_since_practice);
             const mastery = masteryPct(d);
@@ -204,7 +204,7 @@ export function DeckStudyList({ decks, isLoading, onPickDeck }: Props) {
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-sm font-semibold text-foreground leading-snug line-clamp-1">
+                    <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2 break-words">
                       {d.deck_title}
                     </p>
                     <span
@@ -264,6 +264,7 @@ export function DeckStudyList({ decks, isLoading, onPickDeck }: Props) {
                     size="sm"
                     onClick={() => onPickDeck(d)}
                     disabled={d.total_cards === 0}
+                    data-tour={index === 0 ? 'deck-study-btn' : undefined}
                     className="shrink-0"
                   >
                     {t('deckList.start')}

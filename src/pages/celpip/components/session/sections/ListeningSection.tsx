@@ -10,13 +10,10 @@ import { DevSkipButton } from '../DevSkipButton';
 import { LookupText } from '../WordLookup';
 import { ExamText } from '../ExamText';
 import type { ListeningContent } from '../../../types';
-import {
-  saveDraft,
-  loadDraft,
-  clearDraft,
-  elapsedSince,
-  remainingFrom,
-} from '../../../services/examDraft';
+import { saveDraft, elapsedSince } from '../../../services/examDraft';
+import { initialTimeLeft, resumeAudio } from '../../../utils/examClocks';
+import { useLoadedDraft } from '../tcf/tcfShared';
+import type { ExamSectionDraft } from '../../../types';
 
 const TIME_LIMIT_SEC = 55 * 60;
 // Per-question answer window by section type (key = part_index). The official
@@ -42,62 +39,89 @@ interface ListeningSectionProps {
   isSubmitting: boolean;
   /** Untimed relaxed mode: no countdowns, free back-nav, replayable audio, transcript */
   learningMode?: boolean;
+  /**
+   * Practice: the section clock stands still while the learner is away, so a part
+   * left half-heard still has the time it needs on return. A full sitting keeps
+   * the wall clock, as the real test does.
+   */
+  pauseClockWhileAway?: boolean;
 }
 
-export function ListeningSection({
+/**
+ * Drafts live in SQLite, so reading one is async: the section opens only once its
+ * draft is known, straight from it - the part, the questions answered, the clock
+ * and where the recording stood (`audio`) - instead of opening blank and filling in
+ * a moment later.
+ */
+export function ListeningSection(props: ListeningSectionProps) {
+  const { ready, draft } = useLoadedDraft(props.sessionId, 'listening');
+  if (!ready) {
+    return (
+      <div className="flex items-center justify-center h-full bg-background">
+        <Loader2 className="w-6 h-6 animate-spin text-accent" />
+      </div>
+    );
+  }
+  return <ListeningInner {...props} draft={draft} />;
+}
+
+function ListeningInner({
   sessionId,
   content,
   audioUrls,
   onSubmit,
   isSubmitting,
   learningMode = false,
-}: ListeningSectionProps) {
+  pauseClockWhileAway = false,
+  draft,
+}: ListeningSectionProps & { draft: ExamSectionDraft | null }) {
   const { t, i18n } = useTranslation('celpip');
-  // Drafts load asynchronously from SQLite — hold all timers and autosave until
-  // the load settles, otherwise the initial defaults would clobber the draft.
-  const [loaded, setLoaded] = useState(false);
-  const [partIndex, setPartIndex] = useState(0);
-  const [audioComplete, setAudioComplete] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [resume] = useState(() => ({ partIndex: draft?.partIndex ?? 0, ...resumeAudio(draft) }));
+  const [partIndex, setPartIndex] = useState(draft?.partIndex ?? 0);
+  const [audioComplete, setAudioComplete] = useState(resume.done);
+  const [currentQuestion, setCurrentQuestion] = useState(draft?.currentQuestion ?? 0);
+  const [answers, setAnswers] = useState<Record<string, number>>(
+    () => (draft?.answers as Record<string, number> | undefined) ?? {},
+  );
   const [questionTimeLeft, setQuestionTimeLeft] = useState(DEFAULT_QUESTION_TIME_SEC);
-  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SEC);
+  const [timeLeft, setTimeLeft] = useState(() =>
+    initialTimeLeft(draft, TIME_LIMIT_SEC, pauseClockWhileAway, Date.now()),
+  );
   const [showConfirm, setShowConfirm] = useState(false);
   const [devAudioSkip, setDevAudioSkip] = useState(false);
-  const startTime = useRef<number>(0);
+  const [sectionStartedAt] = useState(() => draft?.sectionStartedAt || Date.now());
+  const startTime = useRef<number>(sectionStartedAt);
   const autoSubmitRef = useRef(false);
 
-  // Restore draft on mount (or start a fresh section clock).
+  // Latest values for persist(), which also runs from the clock and the audio.
+  const audioStateRef = useRef(draft?.audio);
+  // Seconds the clock has run, counted by the tick itself so a save never reads a value one render behind.
+  const activeSecRef = useRef(TIME_LIMIT_SEC - timeLeft);
+  const progressRef = useRef({ partIndex, currentQuestion, answers });
   useEffect(() => {
-    let cancelled = false;
-    loadDraft(sessionId, 'listening').then((draft) => {
-      if (cancelled) return;
-      if (draft) {
-        setPartIndex(draft.partIndex);
-        setCurrentQuestion(draft.currentQuestion);
-        setAnswers(draft.answers as Record<string, number>);
-        startTime.current = draft.sectionStartedAt;
-        setTimeLeft(remainingFrom(draft.sectionStartedAt, TIME_LIMIT_SEC));
-      } else {
-        startTime.current = Date.now();
-        setTimeLeft(TIME_LIMIT_SEC);
-      }
-      setLoaded(true);
+    progressRef.current = { partIndex, currentQuestion, answers };
+  }, [partIndex, currentQuestion, answers]);
+
+  const persist = useCallback(() => {
+    void saveDraft(sessionId, 'listening', {
+      ...progressRef.current,
+      sectionStartedAt: startTime.current,
+      activeSec: activeSecRef.current,
+      audio: audioStateRef.current,
     });
-    return () => {
-      cancelled = true;
-    };
   }, [sessionId]);
 
-  // Section-level timer — recomputed from the epoch start so a suspended app
-  // never gains free time. Learning mode is untimed.
+  // Section-level timer. Saved every tick: leaving between saves must not lose
+  // clock time. Learning mode is untimed.
   useEffect(() => {
-    if (learningMode || !loaded) return;
+    if (learningMode) return;
     const interval = setInterval(() => {
-      setTimeLeft(remainingFrom(startTime.current, TIME_LIMIT_SEC));
+      setTimeLeft((left) => Math.max(0, left - 1));
+      activeSecRef.current = Math.min(TIME_LIMIT_SEC, activeSecRef.current + 1);
+      persist();
     }, 1000);
     return () => clearInterval(interval);
-  }, [learningMode, loaded]);
+  }, [learningMode, persist]);
 
   // Per-question timer — resets on each question/part change; expiry auto-advances (forward-only)
   useEffect(() => {
@@ -116,15 +140,8 @@ export function ListeningSection({
 
   // Autosave on every answer/nav change.
   useEffect(() => {
-    if (!loaded || startTime.current === 0) return;
-    saveDraft(sessionId, 'listening', {
-      partIndex,
-      currentQuestion,
-      answers,
-      sectionStartedAt: startTime.current,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partIndex, currentQuestion, answers, loaded]);
+    persist();
+  }, [partIndex, currentQuestion, answers, persist]);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60)
@@ -166,7 +183,7 @@ export function ListeningSection({
 
   const handleSubmit = () => {
     const timeSpent = elapsedSince(startTime.current);
-    clearDraft(sessionId, 'listening');
+    // The draft stays until the server holds the answers (the store clears it).
     onSubmit(answers, timeSpent);
     setShowConfirm(false);
   };
@@ -183,12 +200,12 @@ export function ListeningSection({
   // Auto-submit when the section timer reaches 0.
   useEffect(() => {
     if (learningMode) return;
-    if (loaded && timeLeft === 0 && !autoSubmitRef.current && !isSubmitting) {
+    if (timeLeft === 0 && !autoSubmitRef.current && !isSubmitting) {
       autoSubmitRef.current = true;
       handleSubmit();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, loaded]);
+  }, [timeLeft]);
 
   // DEV ONLY — fast-forward the current sub-stage: skip the audio playback, then
   // step question-by-question (auto-answering option 0 when unanswered).
@@ -202,14 +219,6 @@ export function ListeningSection({
     }
     goToNextQuestion();
   };
-
-  if (!loaded) {
-    return (
-      <div className="flex items-center justify-center h-full bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-accent" />
-      </div>
-    );
-  }
 
   if (!currentPart) return null;
 
@@ -277,7 +286,20 @@ export function ListeningSection({
         <AudioPlayer
           key={`part_${partIndex}`}
           src={currentPart.audio_url || audioUrls[`part_${currentPart.part_index + 1}`] || ''}
-          onComplete={() => setAudioComplete(true)}
+          onComplete={() => {
+            audioStateRef.current = { partIndex, pos: 0, done: true };
+            setAudioComplete(true);
+            persist();
+          }}
+          onProgress={(sec) => {
+            // A replay in learning mode must not hide questions already unlocked.
+            if (audioStateRef.current?.partIndex === partIndex && audioStateRef.current.done)
+              return;
+            audioStateRef.current = { partIndex, pos: sec, done: false };
+            persist();
+          }}
+          startAt={partIndex === resume.partIndex ? resume.startAt : 0}
+          startCompleted={partIndex === resume.partIndex && resume.done}
           autoPlay
           forceComplete={devAudioSkip}
           fullControls={learningMode}

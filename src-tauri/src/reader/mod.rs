@@ -12,6 +12,7 @@
 
 pub mod files;
 pub mod store;
+pub mod text;
 
 use serde_json::Value;
 

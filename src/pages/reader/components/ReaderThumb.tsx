@@ -1,4 +1,4 @@
-import { FileText, ImageIcon } from 'lucide-react';
+import { AlignLeft, FileText, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BookCover } from '../library/BookCover';
 import type { ReadingItem } from '../lib/queue';
@@ -22,7 +22,7 @@ export function ReaderThumb({ item, size }: { item: ReadingItem; size: 'xs' | 'm
     );
   }
 
-  const Icon = item.kind === 'image' ? ImageIcon : FileText;
+  const Icon = item.kind === 'image' ? ImageIcon : item.kind === 'text' ? AlignLeft : FileText;
   return (
     <div
       aria-hidden

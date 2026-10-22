@@ -105,7 +105,7 @@ export function SessionListView() {
                     onClick={() => setPracticeMode(mode)}
                     className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                       practiceMode === mode
-                        ? 'bg-primary text-white'
+                        ? 'bg-primary text-primary-foreground'
                         : 'bg-card text-muted-foreground hover:bg-muted'
                     }`}
                   >

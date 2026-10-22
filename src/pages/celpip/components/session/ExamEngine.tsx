@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { Loader2, WifiOff } from 'lucide-react';
 import { ExamProgress } from './ExamProgress';
 import { SectionIntro } from './SectionIntro';
 import { ListeningSection } from './sections/ListeningSection';
@@ -13,15 +13,21 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { WordLookupProvider } from './WordLookup';
 import { ExamSettingsProvider } from './ExamSettingsContext';
 import { useCelpipStore } from '../../stores/celpipStore';
-import { loadDraft, elapsedSince } from '../../services/examDraft';
+import { TcfListeningSection } from './tcf/TcfListeningSection';
+import { TcfReadingSection } from './tcf/TcfReadingSection';
+import { TcfWritingSection } from './tcf/TcfWritingSection';
+import { clearDraft, loadDraft, elapsedSince } from '../../services/examDraft';
+import { examBase, getExamProfile, sectionClockSeconds } from '../../examProfiles';
 import { SECTION_TYPES } from '../../types';
 import type { SectionType, SubmitSectionPayload } from '../../types';
 
 /**
- * Orchestrates a CELPIP session: gates each section behind its intro, runs the
- * four sections in canonical order, auto-completes when they're done, and offers
- * an early exit. Data + mutations flow through `useCelpipStore`; drafts persist
- * to SQLite so a crash mid-exam loses nothing.
+ * Orchestrates an exam session (CELPIP or the TCF family): gates each section
+ * behind its intro, runs the four sections in canonical order, auto-completes
+ * when they're done, and offers an early exit. What differs per exam type (item
+ * mode, clocks, recording folder, labels) comes from the session's exam profile.
+ * Data + mutations flow through `useCelpipStore`; drafts persist to SQLite so a
+ * crash mid-exam loses nothing.
  */
 export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string }) {
   const params = useParams();
@@ -34,6 +40,7 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
   const storeError = useCelpipStore((s) => s.error);
   const isSubmitting = useCelpipStore((s) => s.isSubmitting);
   const isCompleting = useCelpipStore((s) => s.isCompleting);
+  const submitNotice = useCelpipStore((s) => s.submitNotice);
   const fetchDetail = useCelpipStore((s) => s.fetchDetail);
   const submit = useCelpipStore((s) => s.submit);
   const complete = useCelpipStore((s) => s.complete);
@@ -48,9 +55,6 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [endSummary, setEndSummary] = useState('');
   const [ending, setEnding] = useState(false);
-  // Speaking without a mic — user typed answers. Restored from the draft so a
-  // mid-section reload doesn't drop them back into mic mode.
-  const [speakingTypedMode, setSpeakingTypedMode] = useState(false);
   // Whether the current section has a persisted draft (async — SQLite).
   const [hasDraft, setHasDraft] = useState(false);
   // Guards the auto-complete effect from firing twice.
@@ -73,23 +77,16 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
   }, []);
 
   const session = detail?.session;
+  // Everything that differs per exam type. CELPIP's profile reproduces what this
+  // engine did before profiles existed; an unknown type falls back to it.
+  const profile = getExamProfile(session?.exam_type);
+  const base = examBase(profile.examType);
+  const isPractice = session?.mode === 'practice';
   // Learning mode: untimed, word-clickable, relaxed navigation.
   const learningMode = session?.practice_config?.learning_mode === true;
   const currentSectionIndex = session?.current_section ?? 0;
   const currentSectionType: SectionType | undefined = SECTION_TYPES[currentSectionIndex];
   const isCompleted = session?.status === 'completed';
-
-  // Restore the speaking typed-mode flag when that section becomes current.
-  useEffect(() => {
-    if (currentSectionType !== 'speaking') return;
-    let cancelled = false;
-    loadDraft(sessionId, 'speaking').then((d) => {
-      if (!cancelled) setSpeakingTypedMode(d?.typedMode === true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [currentSectionType, sessionId]);
 
   // Does the current section have a resumable draft? (drives `sectionStarted`)
   useEffect(() => {
@@ -106,11 +103,21 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
     };
   }, [currentSectionType, sessionId, currentSectionIndex]);
 
+  // A section the server already holds has no use for its draft any more. The
+  // draft is cleared only here and by the store after a confirmed submit - never
+  // before, so a submit lost offline plus a restart cannot throw the answers away.
+  useEffect(() => {
+    if (!detail) return;
+    detail.section_results.forEach((r) => {
+      if (r.status !== 'pending') void clearDraft(sessionId, r.section_type);
+    });
+  }, [detail, sessionId]);
+
   // Completed sessions (incl. expired ones the backend finalized) aren't
   // resumable — send the user straight to results.
   useEffect(() => {
-    if (isCompleted) navigate(`/celpip/results/${sessionId}`, { replace: true });
-  }, [isCompleted, navigate, sessionId]);
+    if (isCompleted) navigate(`${base}/results/${sessionId}`, { replace: true });
+  }, [isCompleted, navigate, sessionId, base]);
 
   // Auto-complete when all sections are done — there is no finish button.
   useEffect(() => {
@@ -118,11 +125,11 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
     if (session.current_section >= SECTION_TYPES.length && session.status !== 'completed') {
       autoCompleteTriggered.current = true;
       complete(sessionId).then((ok) => {
-        if (ok) navigate(`/celpip/results/${sessionId}`);
+        if (ok) navigate(`${base}/results/${sessionId}`);
         else autoCompleteTriggered.current = false;
       });
     }
-  }, [session, isCompleting, sessionId, navigate, complete]);
+  }, [session, isCompleting, sessionId, navigate, complete, base]);
 
   // Loading / error gates.
   if (!detail || !session) {
@@ -165,8 +172,8 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
     answers: Record<string, unknown>,
     timeSpent: number,
     transcripts?: Record<string, string>,
-  ) => {
-    if (!currentSectionType) return;
+  ): Promise<boolean> => {
+    if (!currentSectionType) return false;
     setSubmitError(null);
     const payload: SubmitSectionPayload = {
       session_id: sessionId,
@@ -176,8 +183,31 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
       ...(transcripts ? { transcripts } : {}),
     };
     const ok = await submit(payload);
-    if (!ok) setSubmitError(t('sectionSubmitError'));
+    if (!ok) {
+      const code = useCelpipStore.getState().error;
+      setSubmitError(
+        code
+          ? t(`errors.${code}`, { defaultValue: t('sectionSubmitError') })
+          : t('sectionSubmitError'),
+      );
+    }
+    return ok;
   };
+
+  // Items/tasks this session holds in a section — shown on the intro of a
+  // practice slice instead of the full paper's count (TCF copy only).
+  const heldCount = (section: SectionType): number | undefined => {
+    const set = detail.exam_set;
+    if (section === 'listening') return set.listening_content?.parts?.length;
+    if (section === 'reading') return set.reading_content?.parts?.length;
+    if (section === 'writing') return set.writing_prompts?.tasks?.length;
+    return set.speaking_prompts?.tasks?.length;
+  };
+  // A section clock belongs to the whole paper (TCF CO: 35 min for 39 items); a
+  // practice slice gets the same pace for what it holds. Counted in the unit of
+  // `sectionPartCount`: parts for CELPIP, items for TCF (one part each).
+  const clockSec = (section: 'listening' | 'reading' | 'writing') =>
+    sectionClockSeconds(profile, section, isPractice, heldCount(section));
 
   // What will actually be kept if the user ends now — precomputed (drafts are
   // async) so the confirm dialog never surprises them with an empty result.
@@ -241,7 +271,7 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
       if (!completed) throw new Error('COMPLETE_FAILED');
       // complete() already clears every section's draft.
       setShowEndConfirm(false);
-      navigate(`/celpip/results/${sessionId}`);
+      navigate(`${base}/results/${sessionId}`);
     } catch {
       autoCompleteTriggered.current = false;
       setSubmitError(t('sectionSubmitError'));
@@ -257,27 +287,35 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
         <SectionIntro
           sectionType={currentSectionType as SectionType}
           requiresMic={currentSectionType === 'speaking'}
+          copyPrefix={profile.sectionIntroPrefix}
+          copyNs={profile.ns}
+          itemCount={isPractice ? heldCount(currentSectionType as SectionType) : undefined}
           onStart={() => setIntroShown((prev) => new Set([...prev, currentSectionIndex]))}
-          onStartTyped={
-            currentSectionType === 'speaking'
-              ? () => {
-                  setSpeakingTypedMode(true);
-                  setIntroShown((prev) => new Set([...prev, currentSectionIndex]));
-                }
-              : undefined
-          }
         />
       );
     }
 
     switch (currentSectionType) {
       case 'listening':
+        if (profile.listeningMode === 'items') {
+          return (
+            <TcfListeningSection
+              sessionId={sessionId}
+              content={detail.exam_set.listening_content}
+              audioUrls={detail.exam_set.audio_urls || {}}
+              timeLimitSec={clockSec('listening')}
+              onSubmit={(answers, time) => handleSubmitSection(answers, time)}
+              isSubmitting={isSubmitting}
+            />
+          );
+        }
         return (
           <ListeningSection
             sessionId={sessionId}
             content={detail.exam_set.listening_content}
             audioUrls={detail.exam_set.audio_urls || {}}
             learningMode={learningMode}
+            pauseClockWhileAway={isPractice}
             onSubmit={(answers, time) =>
               handleSubmitSection(answers as Record<string, unknown>, time)
             }
@@ -285,6 +323,18 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
           />
         );
       case 'reading':
+        if (profile.readingMode === 'items') {
+          return (
+            <TcfReadingSection
+              sessionId={sessionId}
+              content={detail.exam_set.reading_content}
+              timeLimitSec={clockSec('reading')}
+              pauseClockWhileAway={isPractice}
+              onSubmit={(answers, time) => handleSubmitSection(answers, time)}
+              isSubmitting={isSubmitting}
+            />
+          );
+        }
         return (
           <ReadingSection
             sessionId={sessionId}
@@ -297,11 +347,24 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
           />
         );
       case 'writing':
+        if (profile.writingClock === 'shared') {
+          return (
+            <TcfWritingSection
+              sessionId={sessionId}
+              prompts={detail.exam_set.writing_prompts}
+              timeLimitSec={clockSec('writing')}
+              pauseClockWhileAway={isPractice}
+              onSubmit={(answers, time) => handleSubmitSection(answers, time)}
+              isSubmitting={isSubmitting}
+            />
+          );
+        }
         return (
           <WritingSection
             sessionId={sessionId}
             prompts={detail.exam_set.writing_prompts}
             learningMode={learningMode}
+            pauseClockWhileAway={isPractice}
             onSubmit={(answers, time) =>
               handleSubmitSection(answers as Record<string, unknown>, time)
             }
@@ -315,8 +378,10 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
           <SpeakingSection
             sessionId={sessionId}
             prompts={detail.exam_set.speaking_prompts}
-            typedMode={speakingTypedMode}
             learningMode={learningMode}
+            recordingSegment={profile.recordingSegment}
+            startWithoutPrep={profile.speakingStartsWithoutPrep}
+            contentLang={profile.examType === 'celpip' ? undefined : profile.contentLang}
           />
         );
       default:
@@ -331,9 +396,26 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
         totalSections={4}
         sectionStatuses={sectionStatuses}
         onEndExam={openEndConfirm}
+        sectionLabels={[
+          profile.sectionShortLabels.listening,
+          profile.sectionShortLabels.reading,
+          profile.sectionShortLabels.writing,
+          profile.sectionShortLabels.speaking,
+        ]}
         translateOn={learningMode ? translateOn : undefined}
         onTranslateChange={learningMode ? setTranslateOn : undefined}
       />
+      {submitNotice && (
+        <div
+          role="status"
+          className="mx-4 mt-2 flex items-start gap-2 rounded-[10px] border border-warning/40 bg-warning/10 p-3 text-sm text-foreground"
+        >
+          <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <span>
+            {submitNotice === 'offline' ? t('sectionSubmitOffline') : t('sectionSubmitUnreachable')}
+          </span>
+        </div>
+      )}
       {submitError && (
         <div className="mx-4 mt-2 p-3 bg-error/10 border border-error/40 rounded-[10px] text-sm text-error flex items-center justify-between">
           <span>{submitError}</span>
@@ -371,7 +453,9 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
   // Learning mode: every LookupText in the sections becomes word-clickable,
   // opening the shared word dialog. Normal exams render plain text.
   const withLookup = learningMode ? (
-    <WordLookupProvider enabled={translateOn}>{engineContent}</WordLookupProvider>
+    <WordLookupProvider enabled={translateOn} contentLang={profile.contentLang}>
+      {engineContent}
+    </WordLookupProvider>
   ) : (
     engineContent
   );

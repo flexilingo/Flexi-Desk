@@ -3,6 +3,7 @@ import { Headphones, Play, Loader2, Clock, Gauge } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CefrChip, ScoreChip, ReadyChip } from '../hub/PodcastAnalysisChips';
 import { episodeDifficulty } from '../../utils/difficulty';
+import { isUnsupportedLanguage } from '../../utils/levelFit';
 import type { CuratedEpisodeLite } from '../../types';
 
 function formatDuration(seconds: number | null): string {
@@ -31,6 +32,7 @@ interface Props {
 
 export function DetailEpisodeCard({ episode, podcastImage, isOpening, onOpen }: Props) {
   const { t } = useTranslation('common');
+  const { t: tp } = useTranslation('podcastUi');
   const [imgError, setImgError] = useState(false);
 
   const thumb = (!imgError && (episode.image_url || podcastImage)) || null;
@@ -101,6 +103,14 @@ export function DetailEpisodeCard({ episode, podcastImage, isOpening, onOpen }: 
             </>
           )}
         </div>
+
+        {episode.status === 'failed' && (
+          <span className="mt-auto pt-2 text-[10px] font-semibold uppercase tracking-wide text-error">
+            {isUnsupportedLanguage(episode.error_message)
+              ? tp('unsupportedLanguage')
+              : tp('failed')}
+          </span>
+        )}
 
         {isReady && (level || score != null) && (
           <div className="mt-auto flex gap-1 pt-2">

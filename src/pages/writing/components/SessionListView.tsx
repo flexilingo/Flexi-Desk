@@ -219,7 +219,7 @@ function SessionRow({
 
   const statusIcon =
     session.status === 'scored' || session.status === 'corrected' ? (
-      <Check className="h-4 w-4 text-[#8BB7A3]" />
+      <Check className="h-4 w-4 text-success" />
     ) : (
       <PenLine className="h-4 w-4 text-muted-foreground" />
     );

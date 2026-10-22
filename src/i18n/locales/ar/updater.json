@@ -1,0 +1,17 @@
+{
+  "title": "التحديثات",
+  "subtitle": "حافظ على تحديث FlexiDesk",
+  "currentVersion": "الإصدار الحالي {{version}}",
+  "check": "التحقق من وجود تحديثات",
+  "checking": "جارٍ التحقق...",
+  "upToDate": "أنت تستخدم أحدث إصدار.",
+  "available": "الإصدار {{version}} متاح.",
+  "install": "تنزيل وتثبيت",
+  "installing": "جارٍ التنزيل...",
+  "downloading": "جارٍ التنزيل... {{percent}}٪",
+  "downloadingUnknown": "جارٍ التنزيل...",
+  "ready": "تم تثبيت التحديث. أعد التشغيل للإنهاء.",
+  "restart": "إعادة التشغيل الآن",
+  "dismiss": "إغلاق",
+  "error": "تعذّر التحديث: {{message}}"
+}

@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 
 export async function supabaseCall<T = unknown>(
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: Record<string, unknown>,
 ): Promise<T> {

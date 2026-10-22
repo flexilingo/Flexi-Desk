@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Maximize2, Mic, Pause, Play, Volume1, Volume2, VolumeX, X } from 'lucide-react';
 import { usePlayerStore } from '../stores/playerStore';
 import { usePodcastStore } from '../stores/podcastStore';
+import { VideoHost } from '@/pages/videos/player/VideoHost';
 
 function formatTime(s: number): string {
   if (!isFinite(s) || s < 0) return '0:00';
@@ -31,6 +32,8 @@ export function MiniPlayer() {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   if (!currentEpisode) return null;
+  // A catalogue video: the Shell hosts its picture (docked on the watch page, floating elsewhere).
+  if (currentEpisode.youtubeId) return <VideoHost />;
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current || duration <= 0) return;

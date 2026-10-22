@@ -87,7 +87,11 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
   useEffect(() => {
     if (!whisperInfo?.isAvailable && whisperInstallStatus && !whisperInstallStatus.binaryDetected) {
       // No binary found via install status, that's fine
-    } else if (!whisperInfo?.isAvailable && whisperInstallStatus?.binaryDetected && whisperInstallStatus.binaryPath) {
+    } else if (
+      !whisperInfo?.isAvailable &&
+      whisperInstallStatus?.binaryDetected &&
+      whisperInstallStatus.binaryPath
+    ) {
       // Binary detected at a common path, auto-set it
       setBinaryPath(whisperInstallStatus.binaryPath);
       setIsAutoDetecting(true);
@@ -112,9 +116,12 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
 
   // Listen for whisper install progress events
   useEffect(() => {
-    const unlisten = listen<{ status: string; message: string; percent: number }>('whisper-install-progress', (event) => {
-      useCaptionStore.getState().setWhisperInstallMessage(event.payload.message);
-    });
+    const unlisten = listen<{ status: string; message: string; percent: number }>(
+      'whisper-install-progress',
+      (event) => {
+        useCaptionStore.getState().setWhisperInstallMessage(event.payload.message);
+      },
+    );
     return () => {
       unlisten.then((fn) => fn());
     };
@@ -196,7 +203,7 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
       <CardContent className="space-y-6">
         {/* Success state */}
         {whisperInfo?.isAvailable && (
-          <div className="flex items-center gap-2 rounded-md bg-[#8BB7A3]/10 px-3 py-2 text-sm text-[#8BB7A3]">
+          <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
             <CheckCircle2 className="h-4 w-4" />
             Whisper is configured and ready
           </div>
@@ -240,7 +247,7 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                   </li>
                   <li>
                     <strong className="text-foreground">Large v3 Turbo</strong> —{' '}
-                    <span className="text-[#8BB7A3] font-medium">Recommended.</span> Near-best
+                    <span className="text-success font-medium">Recommended.</span> Near-best
                     accuracy with significantly faster speed than full Large models.
                   </li>
                   <li>
@@ -281,7 +288,7 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
 
           {/* Binary already configured */}
           {binaryPath && !isAutoDetecting && (
-            <div className="flex items-center gap-2 rounded-md bg-[#8BB7A3]/10 px-3 py-2 text-sm text-[#8BB7A3]">
+            <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
               <CheckCircle2 className="h-4 w-4" />
               <span className="truncate font-mono text-xs">{binaryPath}</span>
             </div>
@@ -296,7 +303,9 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-foreground">CPU not compatible with this build</p>
+                      <p className="text-xs font-semibold text-foreground">
+                        CPU not compatible with this build
+                      </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Your processor (pre-2013) doesn't support AVX2 instructions required by the
                         pre-built Whisper binary.
@@ -311,13 +320,19 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary underline underline-offset-2 hover:text-primary/80"
-                        onClick={(e) => { e.preventDefault(); openUrl('https://github.com/ggerganov/whisper.cpp/releases'); }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          openUrl('https://github.com/ggerganov/whisper.cpp/releases');
+                        }}
                       >
                         whisper.cpp releases
-                      </a>
-                      {' '}(look for a noavx or compat build, or build from source).
+                      </a>{' '}
+                      (look for a noavx or compat build, or build from source).
                     </li>
-                    <li>Use <strong>Custom binary path</strong> below to point to your installed binary.</li>
+                    <li>
+                      Use <strong>Custom binary path</strong> below to point to your installed
+                      binary.
+                    </li>
                   </ol>
                   <button onClick={clearError} className="text-xs text-muted-foreground underline">
                     Dismiss
@@ -336,35 +351,41 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
               )}
 
               {/* Can auto-install (Homebrew available on macOS) */}
-              {whisperInstallStatus.canAutoInstall && !isInstallingWhisper && !isInstallingHomebrew && (
-                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    whisper-cli was not found on your system. Click below to install it automatically.
-                  </p>
-                  <Button onClick={installWhisper} className="w-full" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Install Whisper
-                  </Button>
-                </div>
-              )}
+              {whisperInstallStatus.canAutoInstall &&
+                !isInstallingWhisper &&
+                !isInstallingHomebrew && (
+                  <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      whisper-cli was not found on your system. Click below to install it
+                      automatically.
+                    </p>
+                    <Button onClick={installWhisper} className="w-full" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Install Whisper
+                    </Button>
+                  </div>
+                )}
 
               {/* No Homebrew on macOS — install Homebrew first */}
-              {!whisperInstallStatus.canAutoInstall && whisperInstallStatus.platform === 'macos' && !isInstallingHomebrew && !isInstallingWhisper && (
-                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    Homebrew (macOS package manager) is needed to install Whisper.
-                    {whisperInstallStatus.arch === 'x86_64' && (
-                      <span className="block mt-1 text-warning">
-                        Note: On Intel Macs, Homebrew installation may require your password.
-                      </span>
-                    )}
-                  </p>
-                  <Button onClick={installHomebrew} className="w-full" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Install Homebrew
-                  </Button>
-                </div>
-              )}
+              {!whisperInstallStatus.canAutoInstall &&
+                whisperInstallStatus.platform === 'macos' &&
+                !isInstallingHomebrew &&
+                !isInstallingWhisper && (
+                  <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Homebrew (macOS package manager) is needed to install Whisper.
+                      {whisperInstallStatus.arch === 'x86_64' && (
+                        <span className="block mt-1 text-warning">
+                          Note: On Intel Macs, Homebrew installation may require your password.
+                        </span>
+                      )}
+                    </p>
+                    <Button onClick={installHomebrew} className="w-full" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Install Homebrew
+                    </Button>
+                  </div>
+                )}
 
               {/* Installing Homebrew */}
               {isInstallingHomebrew && (
@@ -591,14 +612,14 @@ function ModelRow({
         isActive
           ? 'border-primary/50 bg-primary/5'
           : model.isDownloaded
-            ? 'border-[#8BB7A3]/30 bg-[#8BB7A3]/5'
+            ? 'border-success/30 bg-success/5'
             : 'border-border'
       }`}
     >
       {/* Icon */}
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
         {model.isDownloaded ? (
-          <HardDrive className="h-4 w-4 text-[#8BB7A3]" />
+          <HardDrive className="h-4 w-4 text-success" />
         ) : (
           <Globe className="h-4 w-4 text-muted-foreground" />
         )}

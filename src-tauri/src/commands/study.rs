@@ -20,6 +20,9 @@ use crate::srs::strategy::create_strategy;
 use crate::srs::types::{Algorithm, CardProgress, CardState, Rating};
 use crate::study::config::{build_default_config, preset_activities, preset_weights, LOCAL_USER};
 use crate::study::constants::{score_to_confidence, SRS_WRITE_THRESHOLD};
+use crate::study::insights::{
+    self, AttemptRow, ForecastDay, SessionInsights, FORECAST_DAYS, SHADOW_DAILY_CAP_SECONDS,
+};
 use crate::study::plan_builder::{build_daily_plan, BuildPlanArgs, DeckMetaInput, DueCardInput};
 use crate::study::proficiency::{apply_result, self_rating_to_evidence, ApplyResultInput};
 use crate::study::types::*;
@@ -68,7 +71,8 @@ fn ai_available(conn: &Conn, config: &PracticeConfig) -> bool {
     if s.provider == "ollama" {
         true
     } else {
-        s.api_key.is_some()
+        // An OpenAI-compatible server on a custom address may need no key.
+        s.api_key.is_some() || (s.provider == "openai" && s.base_url.is_some())
     }
 }
 
@@ -86,6 +90,18 @@ fn deck_language(conn: &Conn, card_id: &str) -> String {
         |r| r.get::<_, String>(0),
     )
     .unwrap_or_else(|_| "en".to_string())
+}
+
+/// The language the deck's meanings are written in, when the deck names one.
+fn deck_native_language(conn: &Conn, card_id: &str) -> Option<String> {
+    conn.query_row(
+        "SELECT d.native_language FROM deck_cards dc JOIN decks d ON d.id = dc.deck_id WHERE dc.id = ?1",
+        rusqlite::params![card_id],
+        |r| r.get::<_, Option<String>>(0),
+    )
+    .ok()
+    .flatten()
+    .filter(|v| !v.trim().is_empty())
 }
 
 // ── Response envelopes (mirror the front's practiceSessionApi types) ────────
@@ -151,6 +167,10 @@ pub struct CardMetaOut {
     pub deck_id: String,
     pub deck_title: String,
     pub notes: Option<serde_json::Value>,
+    /// The language the deck's words are written in — picks the voice and the dictionary.
+    pub deck_language: String,
+    /// The language the meanings are written in, when the deck names one.
+    pub deck_native_language: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -204,6 +224,10 @@ pub struct SessionSummaryResponse {
     /// XP awarded for this session (also written to `xp_log` for the dashboard).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub xp_earned: Option<i64>,
+    /// The per-card view of the session — see `study::insights`. Best-effort: a
+    /// failure to build it omits it and the screen falls back to the plain card.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_insights: Option<SessionInsights>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -254,6 +278,9 @@ pub struct SubmitResponse {
     pub activity: PracticeActivityOut,
     pub proficiency: CardProficiency,
     pub coaching: Option<serde_json::Value>,
+    /// The answer judge's scorecard for a written sentence; `None` when no
+    /// model graded it (the structural check and `ai_feedback` stand in).
+    pub judgement: Option<serde_json::Value>,
 }
 
 // ── Config ──────────────────────────────────────────────────
@@ -597,6 +624,65 @@ fn get_upcoming_cards(
     collect(rows)
 }
 
+/// Random cards: every card of the decks, whatever its schedule — the shuffle scope.
+fn get_random_cards(
+    conn: &Conn,
+    deck_ids: &Option<Vec<String>>,
+    limit: i64,
+) -> Result<Vec<DueCardInput>, String> {
+    let (clause, mut ids) = deck_filter_clause(deck_ids);
+    let limit_ph = format!("?{}", ids.len() + 1);
+    let sql = format!(
+        "SELECT dc.id, dc.deck_id FROM deck_cards dc WHERE 1=1 {clause}
+         ORDER BY RANDOM() LIMIT {limit_ph}"
+    );
+    ids.push(limit.to_string());
+    let mut stmt = conn.prepare(&sql).map_err(|e| format!("random query: {e}"))?;
+    let rows = stmt
+        .query_map(params_from(&ids).as_slice(), |row| {
+            Ok(DueCardInput {
+                card_id: row.get(0)?,
+                deck_id: row.get(1)?,
+                days_overdue: 0.0,
+                is_leech: false,
+            })
+        })
+        .map_err(|e| format!("random map: {e}"))?;
+    collect(rows)
+}
+
+/// Leech cards: the ones that keep slipping (stage `leech`, or four lapses).
+fn get_leech_cards(
+    conn: &Conn,
+    deck_ids: &Option<Vec<String>>,
+    limit: i64,
+) -> Result<Vec<DueCardInput>, String> {
+    let (clause, mut ids) = deck_filter_clause(deck_ids);
+    let limit_ph = format!("?{}", ids.len() + 1);
+    let sql = format!(
+        "SELECT dc.id, dc.deck_id
+         FROM deck_cards dc
+         LEFT JOIN srs_progress sp ON sp.card_id = dc.id
+         LEFT JOIN pr_card_proficiency pr ON pr.card_id = dc.id
+         WHERE (COALESCE(pr.learning_stage = 'leech', 0) OR COALESCE(sp.lapses, 0) >= 4) {clause}
+         ORDER BY COALESCE(sp.lapses, 0) DESC
+         LIMIT {limit_ph}"
+    );
+    ids.push(limit.to_string());
+    let mut stmt = conn.prepare(&sql).map_err(|e| format!("leech query: {e}"))?;
+    let rows = stmt
+        .query_map(params_from(&ids).as_slice(), |row| {
+            Ok(DueCardInput {
+                card_id: row.get(0)?,
+                deck_id: row.get(1)?,
+                days_overdue: 0.0,
+                is_leech: true,
+            })
+        })
+        .map_err(|e| format!("leech map: {e}"))?;
+    collect(rows)
+}
+
 /// Weak cards: lowest total proficiency across the 5 dimensions.
 fn get_weak_cards(
     conn: &Conn,
@@ -663,6 +749,8 @@ fn build_plan_items(
 
     let all_due: Vec<DueCardInput> = match scope {
         Some("weak") => get_weak_cards(conn, &deck_ids, if study_ahead { 200 } else { 50 })?,
+        Some("random") => get_random_cards(conn, &deck_ids, if study_ahead { 200 } else { 50 })?,
+        Some("leech") => get_leech_cards(conn, &deck_ids, 100)?,
         Some("new") => {
             get_new_cards(conn, &deck_ids, if study_ahead { 200 } else { 30 })?
         }
@@ -1450,6 +1538,8 @@ pub async fn study_next_activity(
         ai: bool,
         settings: AiSettings,
         language: String,
+        deck_language: String,
+        deck_native_language: Option<String>,
     }
 
     let prep = {
@@ -1490,6 +1580,7 @@ pub async fn study_next_activity(
         let ai = ai_available(&conn, &config);
         let settings = read_ai_settings(&conn);
         let language = deck_language(&conn, &item.card_id);
+        let deck_native_language = deck_native_language(&conn, &item.card_id);
         let srs_algorithm = deck_algorithm(&conn, &item.card_id);
         let progress = card_progress_snapshot(&conn, &item.card_id);
 
@@ -1505,7 +1596,9 @@ pub async fn study_next_activity(
             ready,
             ai,
             settings,
+            deck_language: language.clone(),
             language,
+            deck_native_language,
         }
     };
 
@@ -1598,6 +1691,8 @@ pub async fn study_next_activity(
     Ok(NextActivityResponse {
         activity,
         card_meta: Some(CardMetaOut {
+            deck_language: prep.deck_language,
+            deck_native_language: prep.deck_native_language,
             card_id: prep.card.id,
             front_text: prep.card.front_text,
             back_text: prep.card.back_text,
@@ -1702,6 +1797,7 @@ struct Graded {
     score: f64,
     feedback: Option<String>,
     coaching: Option<serde_json::Value>,
+    judgement: Option<serde_json::Value>,
 }
 
 /// Benefit of the doubt when no model can be reached — mirrors the cloud
@@ -1712,6 +1808,7 @@ fn grading_unavailable() -> Graded {
         score: 0.7,
         feedback: Some("Graded automatically.".to_string()),
         coaching: None,
+        judgement: None,
     }
 }
 
@@ -1757,6 +1854,64 @@ fn normalize_coaching(v: &serde_json::Value) -> Option<serde_json::Value> {
     }))
 }
 
+const SPELLINGS: [&str; 3] = ["ok", "accents", "typos"];
+const REGISTERS: [&str; 3] = ["formal", "neutral", "informal"];
+const ERROR_TYPES: [&str; 8] = [
+    "gender_agreement",
+    "verb_conjugation",
+    "word_order",
+    "preposition_or_article",
+    "spelling_or_accent",
+    "negation",
+    "wrong_word",
+    "avoir_expression",
+];
+
+/// Shape the model's scorecard into the one the screen draws (the website's
+/// `Scorecard`): `{ accepted, score 0-100, criteria { meaning, grammar, spelling,
+/// elision }, hints { register?, natural?, errorType? } }`. Anything the model got
+/// wrong about the shape is dropped rather than shown; with no usable criteria
+/// there is no scorecard at all. The hints never change the verdict.
+fn normalize_judgement(v: Option<&serde_json::Value>, accepted: bool) -> Option<serde_json::Value> {
+    let v = v?.as_object()?;
+    let meaning = v.get("meaning").and_then(|x| x.as_bool())?;
+    let grammar = v.get("grammar").and_then(|x| x.as_bool())?;
+    let spelling = v
+        .get("spelling")
+        .and_then(|x| x.as_str())
+        .filter(|x| SPELLINGS.contains(x))
+        .unwrap_or("ok");
+    let elision = v.get("elision").and_then(|x| x.as_bool());
+    let score = v
+        .get("score")
+        .and_then(|x| x.as_f64())
+        .map(|x| x.round().clamp(0.0, 100.0) as i64)
+        .unwrap_or(if accepted { 85 } else { 30 });
+
+    let mut hints = serde_json::Map::new();
+    if let Some(r) = v.get("register").and_then(|x| x.as_str()).filter(|x| REGISTERS.contains(x)) {
+        hints.insert("register".into(), json!(r));
+    }
+    if let Some(n) = v.get("natural").and_then(|x| x.as_bool()) {
+        hints.insert("natural".into(), json!(n));
+    }
+    if let Some(e) = v.get("error_type").and_then(|x| x.as_str()).filter(|x| ERROR_TYPES.contains(x)) {
+        hints.insert("errorType".into(), json!(e));
+    }
+
+    Some(json!({
+        "accepted": accepted,
+        "score": score,
+        "criteria": {
+            "meaning": meaning,
+            "grammar": grammar,
+            "spelling": spelling,
+            "elision": elision,
+        },
+        "hints": hints,
+    }))
+}
+
 /// Layer 2: ask the local model whether the sentence is acceptable and collect coaching.
 async fn grade_use_in_sentence(
     target: &str,
@@ -1772,6 +1927,7 @@ async fn grade_use_in_sentence(
             score,
             feedback: Some(feedback),
             coaching: None,
+            judgement: None,
         };
     }
     if !ai {
@@ -1816,6 +1972,7 @@ async fn grade_use_in_sentence(
         score,
         feedback: None,
         coaching: normalize_coaching(&v),
+        judgement: normalize_judgement(v.get("judgement"), acceptable),
     }
 }
 
@@ -1849,21 +2006,23 @@ pub async fn study_submit_activity(
         let config = read_config(&conn)?;
         let ai = ai_available(&conn, &config);
         let settings = read_ai_settings(&conn);
-        let native = setting(&conn, "native_language").unwrap_or_else(|| "en".to_string());
+        let native = deck_native_language(&conn, &card_id)
+            .or_else(|| setting(&conn, "native_language"))
+            .unwrap_or_else(|| "en".to_string());
         let learning = deck_language(&conn, &card_id);
         (activity_type, payload, card_id, deck_id, ai, settings, native, learning)
     };
 
     // ─── Phase B: grading (may call the model; no DB guard held). ────────────
-    let (is_correct, score, ai_feedback, coaching) = match (&activity_type, &body.user_response) {
+    let (is_correct, score, ai_feedback, coaching, judgement) = match (&activity_type, &body.user_response) {
         (ActivityType::UseInSentence, Some(response)) => {
             let target = payload_target(&payload);
             let g = grade_use_in_sentence(&target, response, ai, &settings, &native, &learning).await;
-            (g.is_correct, g.score, g.feedback, g.coaching)
+            (g.is_correct, g.score, g.feedback, g.coaching, g.judgement)
         }
         _ => {
             let (c, s) = resolve_evidence(activity_type, &payload, &body);
-            (c, s, None, None)
+            (c, s, None, None, None)
         }
     };
 
@@ -1955,6 +2114,7 @@ pub async fn study_submit_activity(
         activity,
         proficiency: prof,
         coaching,
+        judgement,
     })
 }
 
@@ -2284,11 +2444,16 @@ pub fn study_end(state: State<'_, AppState>, body: EndBody) -> Result<SessionSum
     )
     .ok();
 
-    let xp = session.activities_correct * 10;
-    if xp > 0 {
-        crate::dashboard::analytics::log_xp(&conn, "study", "session", xp, "{}").ok();
+    let graded_xp = session.activities_correct * 10;
+    if graded_xp > 0 {
+        crate::dashboard::analytics::log_xp(&conn, "study", "session", graded_xp, "{}").ok();
     }
+    // Shadowing's time XP was already written to the dashboard as it accrued; the
+    // report only adds it to this session's number.
+    let xp = graded_xp + shadow_session_xp(&conn, &body.session_id);
     crate::dashboard::streaks::check_streak(&conn).ok();
+
+    let session_insights = build_session_insights(&conn, &body.session_id);
 
     Ok(SessionSummaryResponse {
         session,
@@ -2298,7 +2463,293 @@ pub fn study_end(state: State<'_, AppState>, body: EndBody) -> Result<SessionSum
         recommendations: vec![],
         srs_stats: Some(srs_stats),
         xp_earned: Some(xp),
+        session_insights,
     })
+}
+
+// ── the per-card report ─────────────────────────────────────
+
+/// Cards due on each of today .. +7 days (local days). Best-effort: a failed
+/// count is a zero, never an error.
+fn due_forecast(conn: &Conn) -> Vec<ForecastDay> {
+    (0..=FORECAST_DAYS)
+        .map(|d| ForecastDay {
+            day_offset: d,
+            count: conn
+                .query_row(
+                    "SELECT COUNT(*) FROM srs_progress
+                     WHERE date(due_date, 'localtime') = date('now', 'localtime', ?1)",
+                    rusqlite::params![format!("+{d} day")],
+                    |r| r.get::<_, i64>(0),
+                )
+                .unwrap_or(0),
+        })
+        .collect()
+}
+
+/// The end-of-session report's data, counted per CARD (see `study::insights`).
+/// `None` when nothing was graded or any read fails — a report is not worth
+/// failing the end-session call over.
+fn build_session_insights(conn: &Conn, session_id: &str) -> Option<SessionInsights> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT pa.card_id, pa.is_correct, pa.response_time_ms, COALESCE(dc.front, ''), dc.notes
+             FROM pr_activity pa LEFT JOIN deck_cards dc ON dc.id = pa.card_id
+             WHERE pa.session_id = ?1 ORDER BY pa.rowid ASC",
+        )
+        .ok()?;
+    let rows: Vec<AttemptRow> = stmt
+        .query_map(rusqlite::params![session_id], |r| {
+            let notes: Option<String> = r.get(4)?;
+            let level = notes
+                .and_then(|n| serde_json::from_str::<serde_json::Value>(&n).ok())
+                .and_then(|v| v.get("cefr_level").and_then(|l| l.as_str().map(String::from)));
+            Ok(AttemptRow {
+                card_id: r.get(0)?,
+                is_correct: r.get::<_, Option<i64>>(1)?.map(|c| c != 0),
+                response_time_ms: r.get(2)?,
+                front: r.get(3)?,
+                level,
+            })
+        })
+        .ok()?
+        .filter_map(|r| r.ok())
+        .collect();
+    insights::fold_attempts(&rows, due_forecast(conn))
+}
+
+// ── shadowing: the cards of a run, and what a run earns ─────
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SessionCardOut {
+    pub card_id: String,
+    pub deck_id: String,
+    pub front_text: String,
+    pub back_text: String,
+    pub notes: Option<serde_json::Value>,
+    /// The language the front is written in (the deck's).
+    pub language: String,
+    /// The language the meaning is written in, when the deck names one.
+    pub native_language: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SessionCardsResponse {
+    pub cards: Vec<SessionCardOut>,
+    pub total: i64,
+}
+
+/// Every card of a session in plan order, each word once. With `full` the run
+/// widens from the session's PLAN to the session's DECKS: plan cards still come
+/// first (the scheduler's judgement of what is worth practising survives), the
+/// rest of the deck follows in deck order. Nothing is consumed — a shadowing
+/// pass leaves a graded session exactly where it was.
+fn session_cards(conn: &Conn, session_id: &str, full: bool) -> Result<Vec<SessionCardOut>, String> {
+    let (queue_json, deck_json): (Option<String>, String) = conn
+        .query_row(
+            "SELECT card_queue, deck_ids FROM pr_session WHERE id = ?1",
+            rusqlite::params![session_id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .map_err(|_| "SESSION_NOT_FOUND".to_string())?;
+
+    let queue: Vec<serde_json::Value> = queue_json.as_deref().map(|s| from_json(s, Vec::new())).unwrap_or_default();
+    let mut seen: HashSet<String> = HashSet::new();
+    let mut ordered: Vec<String> = Vec::new();
+    for item in &queue {
+        if let Some(id) = item.get("card_id").and_then(|v| v.as_str()) {
+            if seen.insert(id.to_string()) {
+                ordered.push(id.to_string());
+            }
+        }
+    }
+    let deck_ids: Vec<String> = from_json(&deck_json, Vec::new());
+    if full && !deck_ids.is_empty() {
+        let (clause, ids) = deck_filter_clause(&Some(deck_ids));
+        let sql = format!(
+            "SELECT dc.id FROM deck_cards dc WHERE 1=1 {clause} ORDER BY dc.added_at ASC, dc.id ASC LIMIT 1000"
+        );
+        let mut stmt = conn.prepare(&sql).map_err(|e| format!("deck cards: {e}"))?;
+        let rows = stmt
+            .query_map(params_from(&ids).as_slice(), |r| r.get::<_, String>(0))
+            .map_err(|e| format!("deck cards map: {e}"))?;
+        for id in collect(rows)? {
+            if seen.insert(id.clone()) {
+                ordered.push(id);
+            }
+        }
+    }
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT dc.id, dc.deck_id, dc.front, dc.back, dc.notes, d.language, d.native_language
+             FROM deck_cards dc JOIN decks d ON d.id = dc.deck_id WHERE dc.id = ?1",
+        )
+        .map_err(|e| format!("card query: {e}"))?;
+    let mut out = Vec::with_capacity(ordered.len());
+    for id in ordered {
+        let row = stmt.query_row(rusqlite::params![id], |r| {
+            let notes: Option<String> = r.get(4)?;
+            Ok(SessionCardOut {
+                card_id: r.get(0)?,
+                deck_id: r.get(1)?,
+                front_text: r.get(2)?,
+                back_text: r.get(3)?,
+                notes: notes.and_then(|n| serde_json::from_str(&n).ok()),
+                language: r.get(5)?,
+                native_language: r.get::<_, Option<String>>(6)?.filter(|v| !v.trim().is_empty()),
+            })
+        });
+        if let Ok(card) = row {
+            if !card.front_text.trim().is_empty() {
+                out.push(card);
+            }
+        }
+    }
+    Ok(out)
+}
+
+#[tauri::command]
+pub fn study_session_cards(
+    state: State<'_, AppState>,
+    session_id: String,
+    full: Option<bool>,
+) -> Result<SessionCardsResponse, String> {
+    let conn = lock_db(&state)?;
+    let cards = session_cards(&conn, &session_id, full.unwrap_or(false))?;
+    let total = cards.len() as i64;
+    Ok(SessionCardsResponse { cards, total })
+}
+
+/// The three small tables shadowing keeps. Created on first use so nothing in the
+/// shared schema file has to change: what a card was heard for, the day's playback
+/// ledger (the XP ceiling), and what each session earned.
+fn ensure_shadow_tables(conn: &Conn) -> Result<(), String> {
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS pr_shadow_view (
+             card_id        TEXT PRIMARY KEY,
+             view_count     INTEGER NOT NULL DEFAULT 0,
+             last_viewed_at TEXT
+         );
+         CREATE TABLE IF NOT EXISTS pr_shadow_ledger (
+             day     TEXT PRIMARY KEY,
+             seconds INTEGER NOT NULL DEFAULT 0
+         );
+         CREATE TABLE IF NOT EXISTS pr_shadow_session (
+             session_id TEXT PRIMARY KEY,
+             seconds    INTEGER NOT NULL DEFAULT 0,
+             xp         INTEGER NOT NULL DEFAULT 0
+         );
+         CREATE TABLE IF NOT EXISTS pr_shadow_heard (
+             session_id TEXT NOT NULL,
+             card_id    TEXT NOT NULL,
+             PRIMARY KEY (session_id, card_id)
+         );",
+    )
+    .map_err(|e| format!("shadow tables: {e}"))
+}
+
+fn shadow_session_xp(conn: &Conn, session_id: &str) -> i64 {
+    ensure_shadow_tables(conn).ok();
+    conn.query_row(
+        "SELECT xp FROM pr_shadow_session WHERE session_id = ?1",
+        rusqlite::params![session_id],
+        |r| r.get::<_, i64>(0),
+    )
+    .unwrap_or(0)
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct ShadowProgressBody {
+    pub session_id: String,
+    #[serde(default)]
+    pub card_ids: Vec<String>,
+    #[serde(default)]
+    pub played_seconds: f64,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct ShadowProgressOut {
+    pub cards_viewed: i64,
+    pub seconds_reported: i64,
+    pub seconds_credited: i64,
+    pub seconds_used_today: i64,
+    pub daily_cap_seconds: i64,
+    pub xp_earned: i64,
+}
+
+/// Record a stretch of shadowing. Deliberately does NOT grade: a pass has no
+/// answer and no rating, and an invented score would push a word the learner
+/// merely HEARD months into the future. What it writes instead is the two honest
+/// things: the cards were seen (view count only — the schedule is untouched), and
+/// time XP for the seconds actually played, under a daily ceiling.
+fn record_shadow_progress(conn: &Conn, body: &ShadowProgressBody) -> Result<ShadowProgressOut, String> {
+    ensure_shadow_tables(conn)?;
+    let reported = (body.played_seconds.max(0.0).floor() as i64).min(insights::SHADOW_MAX_REPORT_SECONDS);
+
+    // A card heard three times in a pass is still one card looked at.
+    let mut seen = HashSet::new();
+    let cards: Vec<&String> = body
+        .card_ids
+        .iter()
+        .filter(|id| !id.is_empty() && seen.insert(id.as_str()))
+        .take(500)
+        .collect();
+    for id in &cards {
+        conn.execute(
+            "INSERT INTO pr_shadow_view (card_id, view_count, last_viewed_at) VALUES (?1, 1, ?2)
+             ON CONFLICT(card_id) DO UPDATE SET view_count = view_count + 1, last_viewed_at = ?2",
+            rusqlite::params![id, now_iso()],
+        )
+        .map_err(|e| format!("shadow view: {e}"))?;
+        conn.execute(
+            "INSERT OR IGNORE INTO pr_shadow_heard (session_id, card_id) VALUES (?1, ?2)",
+            rusqlite::params![body.session_id, id],
+        )
+        .map_err(|e| format!("shadow heard: {e}"))?;
+    }
+
+    let day = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let used_before: i64 = conn
+        .query_row("SELECT seconds FROM pr_shadow_ledger WHERE day = ?1", rusqlite::params![day], |r| r.get(0))
+        .unwrap_or(0);
+    let granted = insights::shadow_granted_seconds(used_before, reported);
+    let xp = insights::shadow_time_xp(used_before, granted);
+    if granted > 0 {
+        conn.execute(
+            "INSERT INTO pr_shadow_ledger (day, seconds) VALUES (?1, ?2)
+             ON CONFLICT(day) DO UPDATE SET seconds = seconds + ?2",
+            rusqlite::params![day, granted],
+        )
+        .map_err(|e| format!("shadow ledger: {e}"))?;
+        conn.execute(
+            "INSERT INTO pr_shadow_session (session_id, seconds, xp) VALUES (?1, ?2, ?3)
+             ON CONFLICT(session_id) DO UPDATE SET seconds = seconds + ?2, xp = xp + ?3",
+            rusqlite::params![body.session_id, granted, xp],
+        )
+        .map_err(|e| format!("shadow session: {e}"))?;
+        if xp > 0 {
+            crate::dashboard::analytics::log_xp(conn, "study", "shadowing", xp, "{}").ok();
+        }
+    }
+
+    Ok(ShadowProgressOut {
+        cards_viewed: cards.len() as i64,
+        seconds_reported: reported,
+        seconds_credited: granted,
+        seconds_used_today: used_before + granted,
+        daily_cap_seconds: SHADOW_DAILY_CAP_SECONDS,
+        xp_earned: xp,
+    })
+}
+
+#[tauri::command]
+pub fn study_report_shadow_progress(
+    state: State<'_, AppState>,
+    body: ShadowProgressBody,
+) -> Result<ShadowProgressOut, String> {
+    let conn = lock_db(&state)?;
+    record_shadow_progress(&conn, &body)
 }
 
 /// Session SRS summary, derived from this session's activities + the schedule
@@ -2807,5 +3258,123 @@ mod tests {
             )
             .unwrap();
         assert_eq!(due, 0, "a freshly-scheduled card is not due yet");
+    }
+
+    fn session_with_queue(conn: &rusqlite::Connection, id: &str, cards: &[&str]) {
+        let queue: Vec<serde_json::Value> = cards.iter().map(|c| json!({ "card_id": c })).collect();
+        conn.execute(
+            "INSERT INTO pr_session (id, deck_ids, card_queue) VALUES (?1, '[\"d1\"]', ?2)",
+            rusqlite::params![id, serde_json::to_string(&queue).unwrap()],
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn session_cards_list_each_word_once_in_plan_order_and_widen_to_the_deck() {
+        let conn = setup();
+        session_with_queue(&conn, "s1", &["c2", "c2", "c1"]);
+        let plan: Vec<String> = session_cards(&conn, "s1", false).unwrap().into_iter().map(|c| c.card_id).collect();
+        assert_eq!(plan, vec!["c2", "c1"]);
+        let all = session_cards(&conn, "s1", true).unwrap();
+        let ids: Vec<&str> = all.iter().map(|c| c.card_id.as_str()).collect();
+        assert_eq!(&ids[..2], &["c2", "c1"], "plan cards still come first");
+        assert_eq!(ids.len(), 3, "the rest of the deck follows");
+        assert_eq!(all[0].language, "en");
+        assert!(session_cards(&conn, "nope", false).is_err());
+    }
+
+    #[test]
+    fn shadow_progress_counts_cards_once_and_pays_time_under_the_daily_ceiling() {
+        let conn = setup();
+        session_with_queue(&conn, "s1", &["c1"]);
+        let body = |secs: f64, ids: &[&str]| ShadowProgressBody {
+            session_id: "s1".into(),
+            card_ids: ids.iter().map(|s| s.to_string()).collect(),
+            played_seconds: secs,
+        };
+        let a = record_shadow_progress(&conn, &body(90.0, &["c1", "c1", "c2"])).unwrap();
+        assert_eq!(a.cards_viewed, 2);
+        assert_eq!(a.seconds_credited, 90);
+        assert_eq!(a.xp_earned, 0);
+        let b = record_shadow_progress(&conn, &body(45.5, &[])).unwrap();
+        assert_eq!(b.seconds_credited, 45, "whole seconds are reported; the fraction is not invented");
+        assert_eq!(b.xp_earned, 1, "crossing the two-minute mark pays on the running total");
+        assert_eq!(shadow_session_xp(&conn, "s1"), 1);
+        let views: i64 = conn
+            .query_row("SELECT view_count FROM pr_shadow_view WHERE card_id='c1'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(views, 1);
+        let capped = record_shadow_progress(&conn, &body(5_000.0, &[])).unwrap();
+        assert_eq!(capped.seconds_used_today, SHADOW_DAILY_CAP_SECONDS);
+        let after = record_shadow_progress(&conn, &body(60.0, &[])).unwrap();
+        assert_eq!(after.seconds_credited, 0);
+        assert_eq!(after.xp_earned, 0);
+    }
+
+    #[test]
+    fn the_report_reads_attempts_per_card_with_levels_from_the_notes() {
+        let conn = setup();
+        session_with_queue(&conn, "s1", &["c1"]);
+        conn.execute("UPDATE deck_cards SET notes = '{\"cefr_level\":\"b2\"}' WHERE id = 'c2'", []).unwrap();
+        for (card, ok, ms) in [("c1", 0, 900), ("c1", 0, 900), ("c1", 1, 900), ("c2", 1, 600)] {
+            conn.execute(
+                "INSERT INTO pr_activity (session_id, card_id, activity_type, is_correct, response_time_ms)
+                 VALUES ('s1', ?1, 'recall', ?2, ?3)",
+                rusqlite::params![card, ok, ms],
+            )
+            .unwrap();
+        }
+        // One card due tomorrow shows up in the forecast.
+        conn.execute(
+            "INSERT INTO srs_progress (card_id, algorithm, due_date) VALUES ('c3', 'fsrs', datetime('now', '+1 day'))",
+            [],
+        )
+        .unwrap();
+        let i = build_session_insights(&conn, "s1").unwrap();
+        assert_eq!((i.unique_cards, i.attempts, i.first_try_correct, i.ended_correct), (2, 4, 1, 2));
+        assert_eq!(i.struggles.len(), 1);
+        assert_eq!(i.struggles[0].front_text, "ephemeral");
+        assert!(i.struggles[0].ended_correct);
+        assert_eq!(i.by_level.len(), 1);
+        assert_eq!(i.by_level[0].level, "B2");
+        assert_eq!(i.forecast.len() as i64, FORECAST_DAYS + 1);
+        assert_eq!(i.forecast[1].count, 1);
+        assert!(build_session_insights(&conn, "missing").is_none());
+    }
+
+    #[test]
+    fn the_judge_scorecard_is_reshaped_and_never_trusts_a_bad_shape() {
+        let good = json!({
+            "score": 91.6, "meaning": true, "grammar": false, "spelling": "accents",
+            "elision": null, "register": "formal", "natural": true, "error_type": "word_order"
+        });
+        let card = normalize_judgement(Some(&good), true).unwrap();
+        assert_eq!(card["score"], 92);
+        assert_eq!(card["criteria"]["spelling"], "accents");
+        assert!(card["criteria"]["elision"].is_null());
+        assert_eq!(card["hints"]["errorType"], "word_order");
+        assert_eq!(card["hints"]["register"], "formal");
+        let odd = json!({ "score": 400, "meaning": true, "grammar": true, "spelling": "wat", "register": "rude", "error_type": "x" });
+        let card = normalize_judgement(Some(&odd), false).unwrap();
+        assert_eq!(card["score"], 100);
+        assert_eq!(card["criteria"]["spelling"], "ok");
+        assert!(card["hints"].as_object().unwrap().is_empty());
+        assert!(normalize_judgement(Some(&json!({ "meaning": true })), true).is_none());
+        assert!(normalize_judgement(None, true).is_none());
+    }
+
+    #[test]
+    fn random_and_leech_scopes_draw_from_the_decks() {
+        let conn = setup();
+        assert_eq!(get_random_cards(&conn, &None, 2).unwrap().len(), 2);
+        assert!(get_leech_cards(&conn, &None, 10).unwrap().is_empty());
+        conn.execute(
+            "INSERT INTO srs_progress (card_id, algorithm, lapses) VALUES ('c2', 'fsrs', 5)",
+            [],
+        )
+        .unwrap();
+        let leech = get_leech_cards(&conn, &Some(vec!["d1".into()]), 10).unwrap();
+        assert_eq!(leech.len(), 1);
+        assert_eq!(leech[0].card_id, "c2");
     }
 }

@@ -22,7 +22,7 @@ interface StagedInsight {
   isStatusLoading: boolean;
   limitReached: boolean;
   retry: (skill: InsightSkill) => void;
-  origin: 'cloud' | 'local';
+  origin: InsightProvider['origin'];
 }
 
 /**

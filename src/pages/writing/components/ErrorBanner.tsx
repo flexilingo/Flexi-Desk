@@ -1,9 +1,21 @@
 import { AlertCircle, X } from 'lucide-react';
 import { useWritingStore } from '../stores/writingStore';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { isAiSetupError } from '@/lib/aiSource';
 
 export function ErrorBanner() {
-  const { error, clearError } = useWritingStore();
+  const { error, clearError, evaluateWriting } = useWritingStore();
   if (!error) return null;
+  // The user's own AI is not ready: set it up here; the essay is then graded automatically.
+  if (isAiSetupError(error))
+    return (
+      <AiSetupCard
+        onReady={() => {
+          clearError();
+          void evaluateWriting();
+        }}
+      />
+    );
 
   return (
     <div className="flex items-start gap-3 rounded-lg border border-error/30 bg-error/5 p-4">

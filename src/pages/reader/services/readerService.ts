@@ -1,6 +1,7 @@
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import type {
   ReaderDocument,
+  ReaderPage,
   ReaderInspectedPath,
   ReaderMark,
   ReaderMarkKind,
@@ -55,6 +56,19 @@ export const importReaderBytes = (
   if (meta.title) headers['x-title'] = encodeURIComponent(meta.title);
   return invoke<ReaderDocument>('reader_import_bytes', bytes, { headers });
 };
+
+// ── Text documents: a pasted text or a web page, stored as pages on this computer ─
+
+export const importReaderText = (input: { text: string; title?: string; language?: string }) =>
+  invoke<ReaderDocument>('reader_import_text', { input });
+
+/** Fetches the page from this computer and keeps its prose. */
+export const importReaderUrl = (input: { url: string; title?: string; language?: string }) =>
+  invoke<ReaderDocument>('reader_import_url', { input });
+
+/** One page of a text document; a page past the end opens the last one. */
+export const getReaderTextPage = (documentId: string, page: number) =>
+  invoke<ReaderPage>('reader_text_page', { input: { document_id: documentId, page } });
 
 // ── Documents ────────────────────────────────────────────────────────────────
 

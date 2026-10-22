@@ -125,7 +125,7 @@ export function ResultsView() {
         {/* Best score */}
         {activeSession.bestScore != null && attempts.length > 1 && (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Trophy className="h-4 w-4 text-[#C58C6E]" />
+            <Trophy className="h-4 w-4 text-warning" />
             Best:{' '}
             <span className={`font-medium ${scoreColor(activeSession.bestScore)}`}>
               {Math.round(activeSession.bestScore)}%

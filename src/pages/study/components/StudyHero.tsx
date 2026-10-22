@@ -1,10 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, CheckCircle2, Clock, RefreshCw, Plus, Info, Flame } from 'lucide-react';
+import {
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  RefreshCw,
+  Plus,
+  Info,
+  AlertTriangle,
+  Play,
+  Mic,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStudyStore } from '../stores/studyStore';
 import { FocusChips } from './FocusChips';
+import { StudyModePicker } from './StudyModePicker';
+import { useStudyMode } from '../lib/viewPrefs';
 
 interface Props {
   /** Runs today's full mix (no deck scope). */
@@ -12,6 +24,8 @@ interface Props {
   starting: boolean;
   /** Opens Settings → Activities (the per-exercise editor behind the Custom chip). */
   onCustomize: () => void;
+  /** Starts the stuck-cards (leech) rescue scope. */
+  onStuckCards: () => void;
 }
 
 /**
@@ -19,7 +33,7 @@ interface Props {
  * web app: loading / done (all caught up) / active. The Focus chips write weight
  * presets straight into the study config, so Start just runs today's mix.
  */
-export function StudyHero({ onStart, starting, onCustomize }: Props) {
+export function StudyHero({ onStart, starting, onCustomize, onStuckCards }: Props) {
   const { t } = useTranslation('study');
   const navigate = useNavigate();
 
@@ -28,6 +42,8 @@ export function StudyHero({ onStart, starting, onCustomize }: Props) {
   const decks = useStudyStore((s) => s.deckStatus);
   const deckLoading = useStudyStore((s) => s.loadingDecks);
   const regeneratePlan = useStudyStore((s) => s.regeneratePlan);
+  const [mode, setMode] = useStudyMode();
+  const shadowing = mode === 'shadowing';
 
   // True after a "check for new cards" rebuild that surfaced nothing new — so the
   // click isn't a silent no-op.
@@ -142,21 +158,36 @@ export function StudyHero({ onStart, starting, onCustomize }: Props) {
               </div>
             </div>
 
-            <Button size="lg" onClick={onStart} disabled={starting}>
-              <Sparkles className="h-4 w-4" />
+            {/* Start names the mode it opens, so the pick below is never a guess. */}
+            <Button size="lg" variant="accent" onClick={onStart} loading={starting}>
+              {shadowing ? <Mic className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
               {starting
                 ? t('landing.preparing')
-                : consumed > 0
-                  ? t('runner.continueAnother')
-                  : t('landing.startSmart')}
+                : shadowing
+                  ? t('landing.startShadowing')
+                  : consumed > 0
+                    ? t('runner.continueAnother')
+                    : t('landing.startSmart')}
             </Button>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold text-foreground">
-              {t('landing.focusLabel')}
-            </span>
-            <FocusChips disabled={starting} onCustomize={onCustomize} />
+          {/* The mode, and Focus together: the tour's "how you study" stop. */}
+          <div className="flex flex-col gap-3">
+            <StudyModePicker
+              mode={mode}
+              onChange={setMode}
+              disabled={starting}
+              tourId="hero-shortcuts"
+            />
+            {/* Focus weighs the exercise mix, which only normal study has. */}
+            {!shadowing && (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-semibold text-foreground">
+                  {t('landing.focusLabel')}
+                </span>
+                <FocusChips disabled={starting} onCustomize={onCustomize} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -174,10 +205,17 @@ export function StudyHero({ onStart, starting, onCustomize }: Props) {
             </span>
             <div className="flex items-center gap-2">
               {totalLeech > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-error/40 bg-error/10 px-1.5 py-0.5 font-semibold text-error">
-                  <Flame className="h-2.5 w-2.5" />
-                  {t('deckList.leech', { count: totalLeech })}
-                </span>
+                <button
+                  type="button"
+                  onClick={onStuckCards}
+                  disabled={starting}
+                  title={t('landing.stuckCardsHint')}
+                  className="group inline-flex items-center gap-1.5 rounded-full border border-warning/30 bg-warning/10 px-2.5 py-0.5 text-[11px] font-semibold text-foreground transition-colors hover:border-warning/50 hover:bg-warning/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <AlertTriangle className="h-3 w-3 shrink-0 text-warning" />
+                  {t('landing.stuckCards', { count: totalLeech })}
+                  <Play className="h-2.5 w-2.5 shrink-0 text-foreground/30 transition-colors group-hover:text-foreground rtl:rotate-180" />
+                </button>
               )}
               <span>{progressPct}%</span>
             </div>

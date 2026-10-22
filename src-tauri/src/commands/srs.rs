@@ -20,6 +20,15 @@ pub struct DeckWithStats {
     pub is_public: bool,
     pub original_deck_id: Option<String>,
     pub cloud_deck_id: Option<String>,
+    /// Language the meanings are written in. `None` for decks made before V037; the
+    /// deck's `language` alone then stands for the whole pair.
+    pub native_language: Option<String>,
+    pub source_url: Option<String>,
+    pub source_type: Option<String>,
+    /// The owner lets viewers of the public deck open `source_url`.
+    pub source_public: bool,
+    pub cover_url: Option<String>,
+    pub total_clones: i64,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -85,7 +94,9 @@ const DECK_SELECT: &str = "
             WHERE dc.deck_id = d.id AND sp.state = 'new') AS new_cards,
            (SELECT COUNT(*) FROM deck_cards dc
             JOIN srs_progress sp ON sp.card_id = dc.id
-            WHERE dc.deck_id = d.id AND sp.state = 'review' AND sp.interval_days >= 7) AS mastered
+            WHERE dc.deck_id = d.id AND sp.state = 'review' AND sp.interval_days >= 7) AS mastered,
+           d.native_language, d.source_url, d.source_type,
+           COALESCE(d.source_public, 0), d.cover_url, COALESCE(d.total_clones, 0)
     FROM decks d";
 
 fn map_deck(row: &rusqlite::Row) -> rusqlite::Result<DeckWithStats> {
@@ -105,7 +116,22 @@ fn map_deck(row: &rusqlite::Row) -> rusqlite::Result<DeckWithStats> {
         due_today: row.get(12)?,
         new_cards: row.get(13)?,
         mastered: row.get(14)?,
+        native_language: row.get(15)?,
+        source_url: row.get(16)?,
+        source_type: row.get(17)?,
+        source_public: row.get::<_, i64>(18)? != 0,
+        cover_url: row.get(19)?,
+        total_clones: row.get(20)?,
     })
+}
+
+/// One deck with its stats. Shared by every command that hands a deck back.
+pub(crate) fn fetch_deck(conn: &rusqlite::Connection, id: &str) -> Result<DeckWithStats, String> {
+    let mut stmt = conn
+        .prepare(&format!("{DECK_SELECT} WHERE d.id = ?1"))
+        .map_err(|e| format!("Query error: {e}"))?;
+    stmt.query_row(rusqlite::params![id], map_deck)
+        .map_err(|e| format!("Fetch error: {e}"))
 }
 
 /// Cards of one deck.
@@ -126,6 +152,7 @@ pub(crate) const DECK_CARDS_SQL: &str = "
     LEFT JOIN srs_progress sp ON sp.card_id = dc.id
     WHERE dc.deck_id = ?1
       AND (?2 IS NULL OR dc.front LIKE '%' || ?2 || '%' OR dc.back LIKE '%' || ?2 || '%')
+      AND (?5 IS NULL OR EXISTS (SELECT 1 FROM json_each(dc.tags) WHERE value = ?5))
     ORDER BY dc.order_index ASC, dc.added_at DESC
     LIMIT ?3 OFFSET ?4";
 
@@ -187,6 +214,7 @@ pub fn srs_create_deck(
     description: Option<String>,
     tags: Option<Vec<String>>,
     is_public: Option<bool>,
+    native_language: Option<String>,
 ) -> Result<DeckWithStats, String> {
     let conn = lock_db(&state)?;
 
@@ -196,8 +224,8 @@ pub fn srs_create_deck(
     // inside one second handed back the wrong deck.
     let id: String = conn
         .query_row(
-            "INSERT INTO decks (id, name, description, language, algorithm, tags, is_public)
-             VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6)
+            "INSERT INTO decks (id, name, description, language, algorithm, tags, is_public, native_language)
+             VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6, ?7)
              RETURNING id",
             rusqlite::params![
                 name,
@@ -206,16 +234,13 @@ pub fn srs_create_deck(
                 algorithm,
                 dump_tags(&tags.unwrap_or_default()),
                 i64::from(is_public.unwrap_or(false)),
+                native_language,
             ],
             |row| row.get(0),
         )
         .map_err(|e| format!("Insert error: {e}"))?;
 
-    let mut stmt = conn
-        .prepare(&format!("{DECK_SELECT} WHERE d.id = ?1"))
-        .map_err(|e| format!("Query error: {e}"))?;
-    stmt.query_row(rusqlite::params![id], map_deck)
-        .map_err(|e| format!("Fetch error: {e}"))
+    fetch_deck(&conn, &id)
 }
 
 #[tauri::command]
@@ -227,6 +252,9 @@ pub fn srs_update_deck(
     algorithm: Option<String>,
     tags: Option<Vec<String>>,
     is_public: Option<bool>,
+    language: Option<String>,
+    native_language: Option<String>,
+    source_public: Option<bool>,
 ) -> Result<DeckWithStats, String> {
     let conn = lock_db(&state)?;
 
@@ -235,12 +263,15 @@ pub fn srs_update_deck(
     // also why clearing a description needs an empty string, not null.
     conn.execute(
         "UPDATE decks SET
-             name        = COALESCE(?2, name),
-             description = COALESCE(?3, description),
-             algorithm   = COALESCE(?4, algorithm),
-             tags        = COALESCE(?5, tags),
-             is_public   = COALESCE(?6, is_public),
-             updated_at  = datetime('now')
+             name            = COALESCE(?2, name),
+             description     = COALESCE(?3, description),
+             algorithm       = COALESCE(?4, algorithm),
+             tags            = COALESCE(?5, tags),
+             is_public       = COALESCE(?6, is_public),
+             language        = COALESCE(?7, language),
+             native_language = COALESCE(?8, native_language),
+             source_public   = COALESCE(?9, source_public),
+             updated_at      = datetime('now')
          WHERE id = ?1",
         rusqlite::params![
             id,
@@ -249,15 +280,14 @@ pub fn srs_update_deck(
             algorithm,
             tags.as_deref().map(dump_tags),
             is_public.map(i64::from),
+            language,
+            native_language,
+            source_public.map(i64::from),
         ],
     )
     .map_err(|e| format!("Update error: {e}"))?;
 
-    let mut stmt = conn
-        .prepare(&format!("{DECK_SELECT} WHERE d.id = ?1"))
-        .map_err(|e| format!("Query error: {e}"))?;
-    stmt.query_row(rusqlite::params![id], map_deck)
-        .map_err(|e| format!("Fetch error: {e}"))
+    fetch_deck(&conn, &id)
 }
 
 #[tauri::command]
@@ -286,8 +316,23 @@ pub fn srs_add_card(
     cefr_level: Option<String>,
     example_sentence: Option<String>,
     notes: Option<String>,
+    tags: Option<Vec<String>>,
 ) -> Result<CardFull, String> {
     let conn = lock_db(&state)?;
+
+    // A card the deck already has is refused with a code the UI translates, the way the
+    // website answers 409 CARD_DUPLICATE. Matching on the front text (not the vocabulary
+    // id) is what catches it: every add below creates a fresh vocabulary row.
+    let already: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM deck_cards WHERE deck_id = ?1 AND lower(front) = lower(?2)",
+            rusqlite::params![deck_id, word.trim()],
+            |row| row.get(0),
+        )
+        .map_err(|e| format!("Duplicate check error: {e}"))?;
+    if already > 0 {
+        return Err("CARD_DUPLICATE".to_string());
+    }
 
     // Upsert vocabulary
     conn.execute(
@@ -318,12 +363,22 @@ pub fn srs_add_card(
 
     let back = translation.clone().unwrap_or_default();
     let front = word.clone();
+    let tags = tags.unwrap_or_default();
+
+    // New cards go to the end of the deck.
+    let order_index: i64 = conn
+        .query_row(
+            "SELECT COALESCE(MAX(order_index) + 1, 0) FROM deck_cards WHERE deck_id = ?1",
+            rusqlite::params![deck_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
 
     // Insert deck_card
     conn.execute(
-        "INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back, notes)
-         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5)",
-        rusqlite::params![deck_id, vocab_id, front, back, notes],
+        "INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back, notes, tags, order_index)
+         VALUES (lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        rusqlite::params![deck_id, vocab_id, front, back, notes, dump_tags(&tags), order_index],
     )
     .map_err(|e| format!("Card insert error: {e}"))?;
 
@@ -359,8 +414,8 @@ pub fn srs_add_card(
         front,
         back,
         notes,
-        tags: Vec::new(),
-        order_index: 0,
+        tags,
+        order_index,
         word,
         language,
         translation,
@@ -386,11 +441,13 @@ pub fn srs_get_deck_cards(
     page: Option<i64>,
     page_size: Option<i64>,
     search: Option<String>,
+    tag: Option<String>,
 ) -> Result<Vec<CardFull>, String> {
     let conn = lock_db(&state)?;
     let limit = page_size.unwrap_or(50);
-    let offset = (page.unwrap_or(1) - 1) * limit;
-    let search = search.filter(|s| !s.trim().is_empty());
+    let offset = (page.unwrap_or(1).max(1) - 1) * limit;
+    let search = search.map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    let tag = tag.filter(|t| !t.trim().is_empty());
 
     let mut stmt = conn
         .prepare(DECK_CARDS_SQL)
@@ -398,7 +455,7 @@ pub fn srs_get_deck_cards(
 
     let rows = stmt
         .query_map(
-            rusqlite::params![deck_id, search, limit, offset],
+            rusqlite::params![deck_id, search, limit, offset, tag],
             map_card,
         )
         .map_err(|e| format!("Query error: {e}"))?;
@@ -417,15 +474,18 @@ pub fn srs_count_deck_cards(
     state: State<'_, AppState>,
     deck_id: String,
     search: Option<String>,
+    tag: Option<String>,
 ) -> Result<i64, String> {
     let conn = lock_db(&state)?;
-    let search = search.filter(|s| !s.trim().is_empty());
+    let search = search.map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    let tag = tag.filter(|t| !t.trim().is_empty());
 
     conn.query_row(
         "SELECT COUNT(*) FROM deck_cards dc
          WHERE dc.deck_id = ?1
-           AND (?2 IS NULL OR dc.front LIKE '%' || ?2 || '%' OR dc.back LIKE '%' || ?2 || '%')",
-        rusqlite::params![deck_id, search],
+           AND (?2 IS NULL OR dc.front LIKE '%' || ?2 || '%' OR dc.back LIKE '%' || ?2 || '%')
+           AND (?3 IS NULL OR EXISTS (SELECT 1 FROM json_each(dc.tags) WHERE value = ?3))",
+        rusqlite::params![deck_id, search, tag],
         |row| row.get(0),
     )
     .map_err(|e| format!("Count error: {e}"))
@@ -549,8 +609,14 @@ pub fn srs_merge_decks(
     conn.execute(
         "UPDATE deck_cards SET deck_id = ?1
          WHERE deck_id = ?2
-         AND vocabulary_id NOT IN (
-             SELECT vocabulary_id FROM deck_cards WHERE deck_id = ?1
+         AND (
+             (vocabulary_id IS NOT NULL AND vocabulary_id NOT IN (
+                 SELECT vocabulary_id FROM deck_cards
+                 WHERE deck_id = ?1 AND vocabulary_id IS NOT NULL
+             ))
+             OR (vocabulary_id IS NULL AND lower(front) NOT IN (
+                 SELECT lower(front) FROM deck_cards WHERE deck_id = ?1
+             ))
          )",
         rusqlite::params![target_deck_id, source_deck_id],
     )
@@ -600,12 +666,7 @@ pub fn srs_merge_decks(
     }
 
     // Return updated target deck
-    let mut stmt = conn
-        .prepare(&format!("{DECK_SELECT} WHERE d.id = ?1"))
-        .map_err(|e| format!("Query error: {e}"))?;
-
-    stmt.query_row(rusqlite::params![target_deck_id], map_deck)
-        .map_err(|e| format!("Fetch error: {e}"))
+    fetch_deck(&conn, &target_deck_id)
 }
 
 // ── Session History & Stats Commands ──────────────────────
@@ -808,9 +869,172 @@ pub fn srs_add_vocabulary(
     }
 }
 
+// ── Tags, history and list-level stats ────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TagCount {
+    pub tag: String,
+    pub count: i64,
+}
+
+/// Every tag used by a deck's cards, most used first — the card tag filter's options
+/// (the website's `get-available-card-tags`).
+pub(crate) fn deck_card_tags(conn: &rusqlite::Connection, deck_id: &str) -> Result<Vec<TagCount>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT j.value, COUNT(*) AS n
+             FROM deck_cards dc, json_each(dc.tags) j
+             WHERE dc.deck_id = ?1 AND TRIM(j.value) != ''
+             GROUP BY j.value
+             ORDER BY n DESC, j.value ASC",
+        )
+        .map_err(|e| format!("Query error: {e}"))?;
+    let rows = stmt
+        .query_map(rusqlite::params![deck_id], |row| {
+            Ok(TagCount { tag: row.get(0)?, count: row.get(1)? })
+        })
+        .map_err(|e| format!("Query error: {e}"))?;
+    rows.map(|r| r.map_err(|e| format!("Row error: {e}"))).collect()
+}
+
+#[tauri::command]
+pub fn srs_deck_card_tags(state: State<'_, AppState>, deck_id: String) -> Result<Vec<TagCount>, String> {
+    let conn = lock_db(&state)?;
+    deck_card_tags(&conn, &deck_id)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DeckSession {
+    pub id: String,
+    /// `completed`, `active` or `abandoned`.
+    pub status: String,
+    pub started_at: String,
+    pub completed: i64,
+    pub total: i64,
+    pub correct: i64,
+    pub seconds: i64,
+}
+
+/// Past study sessions that touched this deck, newest first. Both the Study module's
+/// sessions (`pr_session`, matched by the deck ids it was started with) and the older
+/// review runner's (`review_sessions`).
+pub(crate) fn deck_sessions(conn: &rusqlite::Connection, deck_id: &str, limit: i64) -> Result<Vec<DeckSession>, String> {
+    let mut stmt = conn
+        .prepare(
+            r#"SELECT id, status, started_at, completed, total, correct, seconds FROM (
+                 SELECT id,
+                        CASE status WHEN 'in_progress' THEN 'active' ELSE status END AS status,
+                        started_at,
+                        reviewed_cards AS completed, total_cards AS total,
+                        correct_count AS correct, COALESCE(duration_seconds, 0) AS seconds
+                 FROM review_sessions WHERE deck_id = ?1
+                 UNION ALL
+                 SELECT id, status, started_at,
+                        activities_total AS completed,
+                        MAX(activities_total, COALESCE(json_array_length(card_queue), 0)) AS total,
+                        activities_correct AS correct, COALESCE(total_seconds, 0) AS seconds
+                 FROM pr_session
+                 WHERE deck_ids LIKE '%"' || ?1 || '"%' AND activities_total > 0
+             )
+             ORDER BY started_at DESC LIMIT ?2"#,
+        )
+        .map_err(|e| format!("Query error: {e}"))?;
+    let rows = stmt
+        .query_map(rusqlite::params![deck_id, limit], |row| {
+            Ok(DeckSession {
+                id: row.get(0)?,
+                status: row.get(1)?,
+                started_at: row.get(2)?,
+                completed: row.get(3)?,
+                total: row.get(4)?,
+                correct: row.get(5)?,
+                seconds: row.get(6)?,
+            })
+        })
+        .map_err(|e| format!("Query error: {e}"))?;
+    rows.map(|r| r.map_err(|e| format!("Row error: {e}"))).collect()
+}
+
+#[tauri::command]
+pub fn srs_deck_history(
+    state: State<'_, AppState>,
+    deck_id: String,
+    limit: Option<i64>,
+) -> Result<Vec<DeckSession>, String> {
+    let conn = lock_db(&state)?;
+    deck_sessions(&conn, &deck_id, limit.unwrap_or(50).clamp(1, 200))
+}
+
+/// The four numbers above the decks list.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DecksOverview {
+    pub total_reviewed: i64,
+    pub total_mastered: i64,
+    /// Share of correct answers over the last 7 days, 0–100, one decimal.
+    pub rolling_accuracy: f64,
+    pub current_streak: i64,
+    pub longest_streak: i64,
+}
+
+pub(crate) fn decks_overview(conn: &rusqlite::Connection) -> Result<DecksOverview, String> {
+    let total_reviewed: i64 = conn
+        .query_row("SELECT COALESCE(SUM(review_count), 0) FROM srs_progress", [], |r| r.get(0))
+        .map_err(|e| format!("Query error: {e}"))?;
+    let total_mastered: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM srs_progress WHERE state = 'review' AND interval_days >= 7",
+            [],
+            |r| r.get(0),
+        )
+        .map_err(|e| format!("Query error: {e}"))?;
+
+    // Study answers first; the older runner's ratings only when there are none.
+    let (answered, correct): (i64, i64) = conn
+        .query_row(
+            "SELECT COUNT(*), COALESCE(SUM(is_correct), 0) FROM pr_activity
+             WHERE is_correct IS NOT NULL AND created_at >= datetime('now', '-7 days')",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .map_err(|e| format!("Query error: {e}"))?;
+    let (answered, correct) = if answered > 0 {
+        (answered, correct)
+    } else {
+        conn.query_row(
+            "SELECT COUNT(*), COALESCE(SUM(rating != 'again'), 0) FROM review_logs
+             WHERE created_at >= datetime('now', '-7 days')",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .map_err(|e| format!("Query error: {e}"))?
+    };
+    let rolling_accuracy = if answered > 0 {
+        ((correct as f64 / answered as f64) * 1000.0).round() / 10.0
+    } else {
+        0.0
+    };
+
+    let (current_streak, longest_streak): (i64, i64) = conn
+        .query_row(
+            "SELECT COALESCE(current_streak, 0), COALESCE(longest_streak, 0) FROM streaks ORDER BY rowid LIMIT 1",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .unwrap_or((0, 0));
+
+    Ok(DecksOverview { total_reviewed, total_mastered, rolling_accuracy, current_streak, longest_streak })
+}
+
+#[tauri::command]
+pub fn srs_decks_overview(state: State<'_, AppState>) -> Result<DecksOverview, String> {
+    let conn = lock_db(&state)?;
+    decks_overview(&conn)
+}
+
 #[cfg(test)]
 mod cloned_card_visibility_tests {
-    use crate::commands::deck_hub::{CLOUD_PUSH_SQL, QUIZLET_EXPORT_SQL};
+    use crate::commands::deck_cloud::snapshot;
+    use crate::commands::deck_hub::QUIZLET_EXPORT_SQL;
     use crate::commands::srs::DECK_CARDS_SQL;
     use crate::db::schema::run_migrations;
     use crate::export::anki::DECK_EXPORT_SQL;
@@ -867,7 +1091,7 @@ mod cloned_card_visibility_tests {
     fn deck_card_list_shows_cloned_cards() {
         let conn = deck_with_one_word_card_and_one_cloned_card();
         let none: Option<String> = None;
-        let n = count(&conn, DECK_CARDS_SQL, rusqlite::params![&"d1", &none, &50i64, &0i64]);
+        let n = count(&conn, DECK_CARDS_SQL, rusqlite::params![&"d1", &none, &50i64, &0i64, &none]);
         assert_eq!(n, 2, "a cloned card must appear in its own deck");
     }
 
@@ -878,7 +1102,7 @@ mod cloned_card_visibility_tests {
         let mut stmt = conn.prepare(DECK_CARDS_SQL).unwrap();
         let none: Option<String> = None;
         let words: Vec<String> = stmt
-            .query_map(rusqlite::params![&"d1", &none, &50i64, &0i64], |r| {
+            .query_map(rusqlite::params![&"d1", &none, &50i64, &0i64, &none], |r| {
                 r.get::<_, String>("word")
             })
             .unwrap()
@@ -893,7 +1117,7 @@ mod cloned_card_visibility_tests {
         let n = count(
             &conn,
             DECK_CARDS_SQL,
-            rusqlite::params![&"d1", &Some("cloned"), &50i64, &0i64],
+            rusqlite::params![&"d1", &Some("cloned"), &50i64, &0i64, &None::<String>],
         );
         assert_eq!(n, 1, "search matches a card with no vocabulary row");
     }
@@ -917,6 +1141,124 @@ mod cloned_card_visibility_tests {
     fn quizlet_and_cloud_push_include_cloned_cards() {
         let conn = deck_with_one_word_card_and_one_cloned_card();
         assert_eq!(count(&conn, QUIZLET_EXPORT_SQL, rusqlite::params![&"d1"]), 2);
-        assert_eq!(count(&conn, CLOUD_PUSH_SQL, rusqlite::params![&"d1"]), 2);
+        assert_eq!(snapshot(&conn, "d1").unwrap().cards.len(), 2);
+    }
+}
+
+#[cfg(test)]
+mod deck_page_queries_tests {
+    use super::*;
+    use crate::db::schema::run_migrations;
+    use rusqlite::Connection;
+
+    fn db() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations(&conn).unwrap();
+        conn.execute("INSERT INTO decks (id, name, language, native_language, tags, is_public) VALUES ('d1', 'Deck', 'fr', 'en', '[\"x\",\"y\"]', 1)", [])
+            .unwrap();
+        for (id, front, tags) in [
+            ("c1", "un", r#"["verbs","travel"]"#),
+            ("c2", "deux", r#"["verbs"]"#),
+            ("c3", "trois", "[]"),
+        ] {
+            conn.execute(
+                "INSERT INTO deck_cards (id, deck_id, vocabulary_id, front, back, tags, order_index) VALUES (?1, 'd1', NULL, ?2, 'b', ?3, 0)",
+                rusqlite::params![id, front, tags],
+            )
+            .unwrap();
+        }
+        conn
+    }
+
+    #[test]
+    fn deck_carries_its_pair_tags_and_public_flag() {
+        let conn = db();
+        let d = fetch_deck(&conn, "d1").unwrap();
+        assert_eq!((d.language.as_str(), d.native_language.as_deref()), ("fr", Some("en")));
+        assert_eq!(d.tags, vec!["x", "y"]);
+        assert!(d.is_public && !d.source_public);
+        assert_eq!(d.total_clones, 0);
+    }
+
+    #[test]
+    fn card_tags_are_counted_most_used_first() {
+        let conn = db();
+        let tags = deck_card_tags(&conn, "d1").unwrap();
+        assert_eq!(
+            tags,
+            vec![
+                TagCount { tag: "verbs".into(), count: 2 },
+                TagCount { tag: "travel".into(), count: 1 }
+            ]
+        );
+    }
+
+    #[test]
+    fn tag_filter_narrows_the_card_list() {
+        let conn = db();
+        let mut stmt = conn.prepare(DECK_CARDS_SQL).unwrap();
+        let none: Option<String> = None;
+        let mut n = |tag: Option<&str>| {
+            stmt.query_map(rusqlite::params![&"d1", &none, &50i64, &0i64, &tag], |r| r.get::<_, String>(0))
+                .unwrap()
+                .count()
+        };
+        assert_eq!(n(None), 3);
+        assert_eq!(n(Some("verbs")), 2);
+        assert_eq!(n(Some("travel")), 1);
+        assert_eq!(n(Some("missing")), 0);
+    }
+
+    #[test]
+    fn history_lists_both_runners_newest_first() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO review_sessions (id, deck_id, algorithm, status, total_cards, reviewed_cards, correct_count, started_at)
+             VALUES ('old', 'd1', 'fsrs', 'completed', 10, 10, 8, '2026-01-01 10:00:00')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO pr_session (id, deck_ids, started_at, status, activities_total, activities_correct, card_queue, total_seconds)
+             VALUES ('new', '[\"d1\",\"other\"]', '2026-02-01 10:00:00', 'completed', 4, 3, '[1,2,3,4,5,6]', 90),
+                    ('elsewhere', '[\"other\"]', '2026-03-01 10:00:00', 'completed', 4, 3, '[]', 10),
+                    ('empty', '[\"d1\"]', '2026-04-01 10:00:00', 'abandoned', 0, 0, '[]', 0)",
+            [],
+        )
+        .unwrap();
+        let h = deck_sessions(&conn, "d1", 50).unwrap();
+        let ids: Vec<&str> = h.iter().map(|s| s.id.as_str()).collect();
+        assert_eq!(ids, vec!["new", "old"], "other decks' and zero-answer sessions are left out");
+        assert_eq!((h[0].completed, h[0].total, h[0].correct, h[0].seconds), (4, 6, 3, 90));
+        assert_eq!(h[1].status, "completed");
+    }
+
+    #[test]
+    fn overview_reports_mastery_accuracy_and_streaks() {
+        let conn = db();
+        conn.execute("INSERT INTO srs_progress (id, card_id, algorithm, state, interval_days, review_count) VALUES ('p1', 'c1', 'fsrs', 'review', 10, 4)", []).unwrap();
+        conn.execute("INSERT INTO srs_progress (id, card_id, algorithm, state, interval_days, review_count) VALUES ('p2', 'c2', 'fsrs', 'learning', 1, 2)", []).unwrap();
+        conn.execute("INSERT INTO streaks (current_streak, longest_streak) VALUES (3, 9)", []).unwrap();
+        conn.execute("INSERT INTO pr_session (id) VALUES ('s')", []).unwrap();
+        for (i, ok) in [(1, 1), (2, 1), (3, 0), (4, 1)] {
+            conn.execute(
+                "INSERT INTO pr_activity (id, session_id, activity_type, is_correct) VALUES (?1, 's', 'recall', ?2)",
+                rusqlite::params![format!("a{i}"), ok],
+            )
+            .unwrap();
+        }
+        let o = decks_overview(&conn).unwrap();
+        assert_eq!((o.total_reviewed, o.total_mastered), (6, 1));
+        assert_eq!(o.rolling_accuracy, 75.0);
+        assert_eq!((o.current_streak, o.longest_streak), (3, 9));
+    }
+
+    #[test]
+    fn overview_of_an_empty_library_is_zeroes() {
+        let conn = Connection::open_in_memory().unwrap();
+        run_migrations(&conn).unwrap();
+        let o = decks_overview(&conn).unwrap();
+        assert_eq!((o.total_reviewed, o.total_mastered, o.rolling_accuracy), (0, 0, 0.0));
     }
 }

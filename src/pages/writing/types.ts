@@ -272,7 +272,7 @@ export const ERROR_TYPE_LABELS: Record<CorrectionErrorType, string> = {
 
 export const SEVERITY_COLORS: Record<CorrectionSeverity, { text: string; bg: string }> = {
   minor: { text: 'text-muted-foreground', bg: 'bg-muted' },
-  major: { text: 'text-[#C58C6E]', bg: 'bg-[#C58C6E]/10' },
+  major: { text: 'text-warning', bg: 'bg-warning/10' },
   critical: { text: 'text-error', bg: 'bg-error/10' },
 };
 
@@ -283,13 +283,13 @@ export function formatElapsed(seconds: number): string {
 }
 
 export function scoreColor(score: number): string {
-  if (score >= 80) return 'text-[#8BB7A3]';
-  if (score >= 60) return 'text-[#C58C6E]';
+  if (score >= 80) return 'text-success';
+  if (score >= 60) return 'text-warning';
   return 'text-error';
 }
 
 export function scoreBg(score: number): string {
-  if (score >= 80) return 'bg-[#8BB7A3]/10';
-  if (score >= 60) return 'bg-[#C58C6E]/10';
+  if (score >= 80) return 'bg-success/10';
+  if (score >= 60) return 'bg-warning/10';
   return 'bg-error/10';
 }

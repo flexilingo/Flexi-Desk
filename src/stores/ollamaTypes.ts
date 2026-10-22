@@ -214,3 +214,6 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedOllamaModel[] = [
     accuracy: 'Excellent',
   },
 ];
+
+/** i18n key for a model name (`llama3.1:8b` becomes `llama3_1_8b`). */
+export const modelKey = (name: string) => name.replace(/[.:-]/g, '_');

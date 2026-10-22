@@ -1,0 +1,424 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "greetingNoName": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "streak_one": "{{count, number}} day in a row",
+    "streak_other": "{{count, number}} days in a row",
+    "streakNone": "Start a streak today",
+    "level": "Level {{level, number}}",
+    "achievements_exact0": "No achievements yet",
+    "achievements_one": "{{count, number}} achievement",
+    "achievements_other": "{{count, number}} achievements",
+    "loadError": "Some of your numbers could not be loaded. Refresh the page to try again.",
+    "duration": {
+      "hours": "{{h, number}} h {{m, number}} min",
+      "minutes": "{{m, number}} min"
+    },
+    "next": {
+      "eyebrowExam": "Next step · {{exam}}",
+      "eyebrowMinutes_one": "Next step · about {{count, number}} minute",
+      "eyebrowMinutes_other": "Next step · about {{count, number}} minutes",
+      "eyebrowMinutesLeft_one": "Next step · {{count, number}} minute left",
+      "eyebrowMinutesLeft_other": "Next step · {{count, number}} minutes left",
+      "eyebrowReading": "Next step · keep reading",
+      "eyebrowFirst": "First step · 5 minutes",
+      "error": "Something went wrong. Please try again.",
+      "practice": {
+        "title": "A short {{skill}} practice",
+        "whyLowest": "Your lowest part in your last practices — a short slice, scored at once.",
+        "whyUntried": "You have not tried this part yet — a short slice, scored at once.",
+        "cta": "Start practice"
+      },
+      "review": {
+        "title_one": "{{count, number}} card is waiting for review",
+        "title_other": "{{count, number}} cards are waiting for review",
+        "why": "Words you have already caught, brought back just before you would forget them.",
+        "cta": "Start review"
+      },
+      "episode": {
+        "title": "Finish {{title}}",
+        "why": "Pick up where you stopped. Tap any word you don't know to see its meaning and keep it.",
+        "cta": "Keep listening"
+      },
+      "book": {
+        "title": "Keep reading {{title}}",
+        "page": "You are on page {{page, number}} of {{total, number}}.",
+        "pageOnly": "You are on page {{page, number}}.",
+        "cta": "Keep reading"
+      },
+      "start": {
+        "title": "Listen to a short episode and tap every word you don't know",
+        "why": "You see the meaning right there, and the word is kept in My Vocabulary. FlexiLingo then turns it into a review card.",
+        "cta": "Pick an episode"
+      },
+      "after": "Then:",
+      "chip": {
+        "practice": "Short {{skill}} practice",
+        "review_one": "{{count, number}} card to review",
+        "review_other": "{{count, number}} cards to review",
+        "episode": "{{title}} · {{count, number}} min left",
+        "book": "Keep reading {{title}}",
+        "library": "Or read an easy book",
+        "exam": "Preparing for an exam?"
+      }
+    },
+    "week": {
+      "title": "Last 7 days",
+      "year": "Whole year",
+      "caption": "review and study time",
+      "emptyBody": "Every minute you review, or log by hand, becomes a bar here. Ten minutes a day is enough to feel the difference within a week.",
+      "goal": "Daily goal {{count, number}} min",
+      "today": "Today",
+      "activeDays": "Active on {{count, number}} of the last 7 days",
+      "best_one": "Best streak: {{count, number}} day",
+      "best_other": "Best streak: {{count, number}} days"
+    },
+    "path": {
+      "title": "Your learning path",
+      "lead": "What you listen to and read becomes words, review keeps those words in your head, and in the end they show up in your exam.",
+      "here": "Your next step is here",
+      "listen": {
+        "title": "Listen and read",
+        "emptyTitle": "Nothing yet",
+        "emptyBody": "Podcasts and ready-made books at your level, all with the full text. Tap any word you don't know.",
+        "unitHours": "hours of listening, last 30 days",
+        "unitMinutes": "minutes of listening, last 30 days",
+        "episodes": "Episodes you started",
+        "followed": "Podcasts you follow",
+        "books": "Books and files",
+        "link": "Podcasts"
+      },
+      "words": {
+        "title": "Catch words",
+        "emptyTitle": "No words yet",
+        "emptyBody": "Wherever you meet a word you don't know, tap it. You see its meaning, pronunciation and an example, and the word is kept here.",
+        "unit": "words caught",
+        "thisWeek": "+{{count, number}} this week",
+        "suggested": "Seen often, not a card yet",
+        "notes": "Notes",
+        "link": "My vocabulary"
+      },
+      "review": {
+        "title": "Review",
+        "emptyTitle": "No cards yet",
+        "emptyBody": "The words you catch become cards, and each card comes back just before you would forget it.",
+        "emptyLink": "Ready-made decks",
+        "unit": "cards learned",
+        "due_one": "{{count, number}} card due today",
+        "due_other": "{{count, number}} cards due today",
+        "noneDue": "Nothing due today",
+        "learned": "Learned",
+        "reviewing": "Reviewing",
+        "unseen": "Not seen yet",
+        "decks": "Decks",
+        "accuracy": "Correct answers",
+        "link": "Decks"
+      },
+      "exam": {
+        "title": "Test yourself",
+        "emptyTitle": "No exam chosen yet",
+        "emptyBody": "Preparing for CELPIP or TCF? A 10-minute practice shows where you stand.",
+        "emptyBodyNone": "Not preparing for an exam — that's fine. If you ever are, a 10-minute practice shows where you stand.",
+        "emptyLink": "See the exams",
+        "daysUnit_one": "day to {{exam}}",
+        "daysUnit_other": "days to {{exam}}",
+        "takenUnit": "{{exam}} practices taken",
+        "weekProgress": "{{done, number}} of {{target, number}} practices this week",
+        "weakest": "Your lowest part",
+        "scale": "Average of your last practices, in {{label}}",
+        "noScores": "No scores yet. Take a short practice to see where you stand.",
+        "taken": "Practices taken",
+        "addDate": "Add your exam date"
+      }
+    },
+    "shelf": {
+      "title": "Pick up where you left off",
+      "starterTitle": "Books to start with, at your level",
+      "library": "Library",
+      "allPodcasts": "Podcasts",
+      "minLeft": "{{count, number}} min left",
+      "page": "Page {{page, number}} of {{total, number}}",
+      "pageOnly": "Page {{page, number}}",
+      "examTitle": "{{exam}} practice",
+      "examMeta": "Not finished yet",
+      "due_one": "{{count, number}} card due today",
+      "due_other": "{{count, number}} cards due today",
+      "level": "Level {{level}}",
+      "kind": {
+        "podcast": "Podcast",
+        "book": "Book",
+        "file": "File",
+        "exam": "Exam",
+        "deck": "Deck"
+      }
+    }
+  },
+  "examGoal": {
+    "title": "What are you preparing for?",
+    "subtitle": "Pick one and start a short practice now. You can change it later in Settings.",
+    "celpip": "CELPIP",
+    "celpipHint": "English · Canada",
+    "tcf": "TCF Canada",
+    "tcfHint": "French · Canada",
+    "tcfQuebec": "TCF Québec",
+    "tcfQuebecHint": "French · Québec",
+    "none": "No exam",
+    "noneHint": "I just want to improve",
+    "dateLabel": "When is your exam? (optional)",
+    "ctaCelpip": "Start a 10-minute Reading practice",
+    "ctaTcf": "Start a 10-question listening practice",
+    "ctaNone": "Explore podcasts",
+    "celpipNote": "Reading Part 1 · about 10 minutes · CLB estimate",
+    "tcfNote": "Compréhension orale, questions 1–10 · about 10 minutes · no microphone needed",
+    "notNow": "Not now",
+    "error": "Something went wrong. Please try again.",
+    "nudgeTitle": "Preparing for CELPIP or TCF?",
+    "nudgeBody": "Pick your exam and start a short practice.",
+    "nudgeCta": "Choose your exam",
+    "nudgeClose": "Close",
+    "ctaSave": "Save my exam",
+    "webOnlyNote": "Practice for this exam opens on the website for now. Your choice is saved to your account."
+  },
+  "examResult": {
+    "title": "How did your {{exam}} go?",
+    "subtitle": "Enter your official scores — even one skill helps. We compare them with our estimates so you know how far to trust them.",
+    "notOutYet": "Results not out yet",
+    "notTakenYet": "I haven't taken it yet",
+    "newDate": "New exam date",
+    "saveDate": "Save date",
+    "save": "Save my scores",
+    "enterOne": "Enter at least one score.",
+    "outOfRange": "{{skill}} must be between {{min}} and {{max}}.",
+    "thanks": "Thank you — your scores are saved. They help every learner here know how close our estimates are.",
+    "error": "Something went wrong. Please try again.",
+    "skills": {
+      "listening": "Listening",
+      "reading": "Reading",
+      "writing": "Writing",
+      "speaking": "Speaking"
+    }
+  },
+  "examWeek": {
+    "title": "Your {{exam}} this week",
+    "daysLeft_one": "{{count, number}} day to your exam",
+    "daysLeft_other": "{{count, number}} days to your exam",
+    "today": "Your exam is today — good luck!",
+    "addDate": "Add your exam date",
+    "progress": "{{done}} of {{target}} practices this week",
+    "practiceTitle": "Practise {{skill}}",
+    "practiceWhyUntried": "You have not tried this part yet — a short slice, scored at once.",
+    "practiceWhyLowest": "Your lowest part lately — a short slice, scored at once.",
+    "practiceCta": "Start",
+    "listenTitleEn": "Listen to a podcast in English",
+    "listenTitleFr": "Listen to a podcast in French",
+    "listenWhy": "15 minutes with the transcript — the listening part rewards exactly this.",
+    "listenCta": "Choose an episode",
+    "readTitle": "Read a few pages",
+    "readWhy": "Your own book or one from the library — tap any word you do not know.",
+    "readCta": "Open the Reader",
+    "error": "Something went wrong. Please try again.",
+    "skills": {
+      "celpip": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "writing": "Writing",
+        "speaking": "Speaking"
+      },
+      "tcf": {
+        "listening": "Compréhension orale",
+        "reading": "Compréhension écrite",
+        "writing": "Expression écrite",
+        "speaking": "Expression orale"
+      }
+    }
+  },
+  "pendingReviews": {
+    "title": "Pending Reviews",
+    "totalDue": "{{count}} cards due",
+    "dueOf": "{{due}} due of {{total}} cards",
+    "moreDecks": "+{{count}} more decks",
+    "startReview": "Review",
+    "allCaughtUp": "All caught up!",
+    "allCaughtUpDesc": "No cards due for review right now. Great work!"
+  },
+  "statusBar": {
+    "streakDays": "day streak",
+    "bestStreak": "Best: {{count}}",
+    "levelShort": "Lv.{{level}}",
+    "today": "Today",
+    "minutesToday": "{{minutes}} min",
+    "xpToday": "{{xp}} XP"
+  },
+  "goalSuggestion": {
+    "increaseTitle": "Great job! Time to level up your goal",
+    "decreaseTitle": "Goal Adjustment Suggestion",
+    "increaseDescription": "You've hit your goal {{days}} days in a row! Current: {{current}} words. Suggested: {{suggested}} words",
+    "decreaseDescription": "Your current goal seems challenging. You've only met it {{days}} out of 7 days. Suggested: {{suggested}} words",
+    "accept": "Accept ({{goal}} words)",
+    "dismiss": "Maybe later"
+  },
+  "xp": {
+    "toNextLevel": "{{xp}} XP to next level",
+    "maxLevel": "Max level reached!"
+  },
+  "heatmap": {
+    "title": "Study Streak Calendar",
+    "consecutiveDays": "consecutive days",
+    "clickToEdit": "Click on any day to record or edit manual study time",
+    "loading": "Loading...",
+    "days": {
+      "sat": "S",
+      "sun": "S",
+      "mon": "M",
+      "tue": "T",
+      "wed": "W",
+      "thu": "T",
+      "fri": "F"
+    },
+    "less": "Less",
+    "more": "More",
+    "manualTime": "Manual time recorded",
+    "futureDate": "Future date",
+    "cardsReviewed": "Cards reviewed:",
+    "autoTime": "Auto time:",
+    "manualTimeLabel": "Manual time:",
+    "total": "Total:",
+    "minutes": "minutes",
+    "activeDays": "Active days:",
+    "addManualTime": "Add Manual Time",
+    "ringLegend": "Ring = manual study logged",
+    "studyLabel": "Study:",
+    "listenLabel": "Listening:",
+    "readLabel": "Reading:"
+  },
+  "manualStudy": {
+    "title": "Record Manual Study Time",
+    "description": "Record your study time manually to track your progress",
+    "date": "Date",
+    "studyTime": "Study Time (minutes)",
+    "placeholder": "e.g., 90 for one and a half hours",
+    "equivalent": "Equivalent:",
+    "error": "Error",
+    "invalidMinutes": "Minutes must be between 0 and 600",
+    "invalidDate": "Invalid date",
+    "futureDate": "Cannot record study time for future dates",
+    "errorSaving": "Error saving study time",
+    "errorDeleting": "Error deleting study time",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "close": "Close",
+    "hours": "hour",
+    "minutes": "minutes",
+    "and": "and",
+    "zeroMinutes": "0 minutes",
+    "dayTotal": "Day Summary",
+    "activityTime": "Activity",
+    "manualTime": "Manual",
+    "total": "Total",
+    "cloudError": "Saved on this computer, but it could not be saved to your account. Try again."
+  },
+  "achievements": {
+    "title": "Achievements",
+    "unlocked": "Unlocked",
+    "noAchievements": "No achievements yet",
+    "startLearning": "Start learning to unlock your first achievement!",
+    "showAll": "Show all ({{count}})",
+    "showLess": "Show less",
+    "levelUp": "Level Up",
+    "levelUnlocked": "Level {{level}}",
+    "maxed": "Maxed Out",
+    "locked": "Locked",
+    "levels": "Levels",
+    "classic": "Classic",
+    "nextLevel": "Next:",
+    "progress": "Progress",
+    "detailTitle": "Achievement Details",
+    "currentProgress": "Current Progress",
+    "levelsList": "Levels",
+    "goAction": "Let's Go!",
+    "pointsLabel": "{{points}} XP",
+    "thresholdLabel": "{{threshold}}",
+    "nextUnlock": "Next Unlock",
+    "nextUnlockProgress": "{{current}} / {{total}} · {{pct}}% complete",
+    "tier": {
+      "streak_master": "{{n, number}}-day streak",
+      "word_scholar": "{{n, number}} words",
+      "card_master": "{{n, number}} reviews",
+      "time_investor": "{{n, number}} minutes",
+      "episode_explorer": "{{n, number}} episodes",
+      "bookworm": "{{n, number}} documents",
+      "steady_learner": "{{n, number}} active days"
+    },
+    "groups": {
+      "streak_master": {
+        "name": "Streak Master",
+        "hint": "Study on consecutive days. Every day in a row counts.",
+        "action": "Study today"
+      },
+      "word_scholar": {
+        "name": "Word Scholar",
+        "hint": "Save the words you meet while listening and reading.",
+        "action": "Find new words"
+      },
+      "card_master": {
+        "name": "Card Master",
+        "hint": "Review your cards when they come due.",
+        "action": "Start a review"
+      },
+      "time_investor": {
+        "name": "Time Investor",
+        "hint": "Minutes of studying, listening and reading add up.",
+        "action": "Keep going"
+      },
+      "episode_explorer": {
+        "name": "Episode Explorer",
+        "hint": "Start podcast episodes and listen.",
+        "action": "Pick an episode"
+      },
+      "bookworm": {
+        "name": "Bookworm",
+        "hint": "Open books and your own files in the Reader.",
+        "action": "Open the Reader"
+      },
+      "steady_learner": {
+        "name": "Steady Learner",
+        "hint": "Be active on different days. They do not have to be in a row.",
+        "action": "Study today"
+      }
+    }
+  },
+  "desk": {
+    "signIn": "Sign in",
+    "retry": "Try again",
+    "cardError": "This part could not be loaded.",
+    "close": "Close",
+    "loadErrorSome": "Some of your numbers could not be loaded.",
+    "examSignedOutTitle": "Preparing for CELPIP or TCF?",
+    "examSignedOutBody": "Sign in to choose your exam and date, see your practice progress, and keep them the same on the website.",
+    "streakMilestone": "{{n, number}}-day streak!",
+    "streakMilestoneBody": "Keep it going. See you tomorrow.",
+    "unlockedToast": "Achievement unlocked",
+    "dismiss": "Dismiss",
+    "pendingSignedOut": "Your cards are on this computer."
+  },
+  "goal": {
+    "set": "Set a daily goal",
+    "title": "Daily study goal",
+    "body": "Minutes a day you want to study. It draws the dashed line on your week.",
+    "minutes": "Minutes per day",
+    "save": "Save",
+    "remove": "Remove goal",
+    "error": "The goal could not be saved.",
+    "invalid": "Enter a number from 5 to 600."
+  }
+}

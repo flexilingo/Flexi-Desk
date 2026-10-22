@@ -19,7 +19,7 @@ export function HotEpisodesSection({ episodes, isLoading, openingId, onOpen }: P
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <Flame className="h-5 w-5 text-[#f97316]" />
+        <Flame className="h-5 w-5 text-accent" />
         <h2 className="text-base font-bold text-foreground">{t('podcast.hotEpisodesTitle')}</h2>
       </div>
 

@@ -8,6 +8,7 @@
 pub mod activity_selector;
 pub mod config;
 pub mod constants;
+pub mod insights;
 pub mod plan_builder;
 pub mod proficiency;
 pub mod rng;

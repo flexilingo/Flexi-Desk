@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Plus,
   Rss,
@@ -21,15 +21,16 @@ import { useDiscoverStore } from '../../stores/discoverStore';
 import { usePodcastStore } from '../../stores/podcastStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useImportAndPlay } from '../../hooks/useImportAndPlay';
+import { getCuratedList } from '../../services/podcastCloud';
+import {
+  readPodcastQuery,
+  semanticSearch,
+  type PodcastReading,
+  type SemanticHit,
+} from '../../services/podcastSearch';
 import { HorizontalSection } from './HorizontalSection';
 import { PodcastCardCompact } from './PodcastCardCompact';
-import type {
-  CefrLevel,
-  CuratedPodcast,
-  PodcastFeed,
-  PodcastIndexFeed,
-  TopicCategory,
-} from '../../types';
+import type { CuratedPodcast, PodcastFeed, PodcastIndexFeed } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 
 import { PodcastHubHero } from '../hub/PodcastHubHero';
@@ -38,9 +39,24 @@ import { FeaturedPodcastCard } from '../hub/FeaturedPodcastCard';
 import { EpisodeLevelGrid } from '../hub/EpisodeLevelGrid';
 import { HotEpisodesSection } from '../hub/HotEpisodesSection';
 import { NewEpisodesListSection } from '../hub/NewEpisodesListSection';
+import { HubViewList } from '../hub/HubViewList';
+import { SemanticEpisodeResults } from '../hub/SemanticEpisodeResults';
+import {
+  EPISODE_VIEWS,
+  HUB_PAGE_SIZE,
+  applyReading,
+  effectiveView,
+  parseHubParams,
+  serializeHubParams,
+  DURATION_MAX_MINUTES,
+  type HubParams,
+} from '../../utils/hubParams';
+import { exactTitleFirst } from '../../utils/exactTitle';
+import { keepSemanticHits, laneOrder, planSearchLanes } from '../../utils/semantic';
 
 /** Matches front's hub page size. */
-const FILTER_PAGE_SIZE = 24; // 24 per page
+const FILTER_PAGE_SIZE = HUB_PAGE_SIZE;
+const PI_PAGE_SIZE = 20;
 
 const CATEGORY_CONFIG: { cat: string; slug: string; labelKey: string; icon: LucideIcon }[] = [
   { cat: 'Education', slug: 'education', labelKey: 'podcast.catEducation', icon: GraduationCap },
@@ -53,6 +69,7 @@ const CATEGORY_CONFIG: { cat: string; slug: string; labelKey: string; icon: Luci
 
 export function DiscoverView() {
   const { t } = useTranslation('common');
+  const { t: tp } = useTranslation('podcastUi');
   const session = useAuthStore((s) => s.session);
 
   const {
@@ -91,6 +108,7 @@ export function DiscoverView() {
   const {
     playEpisodeByLevel,
     playCuratedEpisode,
+    playSemanticHit,
     importingId,
     error: importError,
   } = useImportAndPlay();
@@ -105,95 +123,258 @@ export function DiscoverView() {
 
   const [feedUrl, setFeedUrl] = useState('');
 
-  // Filter state
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [cefr, setCefr] = useState<CefrLevel | undefined>();
-  const [topic, setTopic] = useState<TopicCategory | undefined>();
-  const [language, setLanguage] = useState<string | undefined>();
-  const [page, setPage] = useState(1);
+  // Every filter, the view and the page live in the URL, so Back from a show or an episode returns to
+  // the same list, and a refresh opens exactly this one.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const params = useMemo(() => parseHubParams(searchParams), [searchParams]);
+  const paramsRef = useRef<HubParams>(params);
+  useEffect(() => {
+    paramsRef.current = params;
+  });
+  const update = useCallback(
+    (patch: Partial<HubParams>) => {
+      // A filter or search change starts the list over; an explicit page in the patch wins.
+      const next = { ...paramsRef.current, page: 1, ...patch };
+      paramsRef.current = next;
+      setSearchParams(serializeHubParams(next), { replace: true });
+    },
+    [setSearchParams],
+  );
 
-  // Debounce search
+  const [searchInput, setSearchInput] = useState(params.q);
+  // The input follows the URL when something else changes it (Back, a menu link).
+  useEffect(() => {
+    setSearchInput((cur) => (cur.trim() === params.q.trim() ? cur : params.q));
+  }, [params.q]);
+  // Debounce: the URL (and so every request) takes the typed text 400 ms after the last keystroke.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      setPage(1);
+      if (searchInput !== paramsRef.current.q) update({ q: searchInput });
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, update]);
+
+  const { q: debouncedSearch, cefr, topic, language, duration, page } = params;
+  const view = effectiveView(params);
+  const searching = debouncedSearch.trim() !== '';
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
-  const hasFilters = !!cefr || !!topic || !!language || !!debouncedSearch;
-
-  /**
-   * A level or topic selects EPISODES via the v2 `episodes-by-level` endpoint,
-   * which only scores English audio — so a non-English language filter falls back
-   * to the podcast-level `curated-list`.
-   */
-  const isEpisodeMode = (!!cefr || !!topic) && (!language || language === 'en');
-
-  // Episodes: level / topic / search
+  // READ THE SENTENCE FIRST, in the one place the whole product reads it ("podcasts for kids" is a
+  // category, "beginner" means A2). Checked against the query it answers: a reading of the last
+  // thing typed must not decide how THIS text is searched.
+  const [reading, setReading] = useState<{ q: string; read: PodcastReading } | null>(null);
   useEffect(() => {
-    if (!isEpisodeMode && !debouncedSearch) return;
+    if (!searching) {
+      setReading(null);
+      return;
+    }
+    let cancelled = false;
+    readPodcastQuery(debouncedSearch)
+      .then((r) => {
+        if (!cancelled) setReading({ q: debouncedSearch, read: r.interpreted });
+      })
+      .catch(() => {
+        // The reading is an enrichment; without it the sentence is searched as a name.
+        if (!cancelled) setReading(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [searching, debouncedSearch]);
+  const read = reading?.q === debouncedSearch ? reading.read : undefined;
+  const eff = useMemo(() => applyReading(params, read), [params, read]);
+  const plan = planSearchLanes(debouncedSearch, eff);
+
+  // A browse category (kids, business, true crime) has its own page; the language goes with it.
+  useEffect(() => {
+    if (!eff.section) return;
+    const lang = eff.language ? `?language=${encodeURIComponent(eff.language)}` : '';
+    navigate(`/podcast/browse/${eff.section}${lang}`);
+  }, [eff.section, eff.language, navigate]);
+
+  // The pills' view total, reported by the view itself.
+  const [viewTotal, setViewTotal] = useState<number | undefined>();
+  const [piMax, setPiMax] = useState(PI_PAGE_SIZE);
+  useEffect(() => {
+    setPiMax(PI_PAGE_SIZE);
+  }, [debouncedSearch, language]);
+
+  // Episodes lane: every search runs it.
+  useEffect(() => {
+    if (!plan.episodes) return;
     fetchEpisodesByLevel({
-      level: cefr,
-      topic,
-      search: debouncedSearch || undefined,
+      level: eff.level,
+      topic: eff.topic,
+      search: eff.searchTerm,
+      maxDuration: eff.duration,
       page,
       limit: FILTER_PAGE_SIZE,
     });
-  }, [isEpisodeMode, cefr, topic, debouncedSearch, page, fetchEpisodesByLevel]);
+  }, [
+    plan.episodes,
+    eff.level,
+    eff.topic,
+    eff.searchTerm,
+    eff.duration,
+    page,
+    fetchEpisodesByLevel,
+  ]);
 
-  // Podcasts: language filter, or a search term. Skipped for a pure level/topic pick.
+  // Shows lane. The level applies to a DESCRIBED query and not to a name: someone typing a title
+  // wants that show, not whatever in their band resembles it.
   useEffect(() => {
-    if (!hasFilters) return;
-    if (isEpisodeMode && !debouncedSearch) return;
+    if (!plan.podcasts) return;
     fetchFilteredResults({
-      // When searching, the level pill shouldn't also narrow the podcast list —
-      // the episode grid below already applies it.
-      cefr: debouncedSearch ? undefined : cefr,
-      topic,
-      language,
-      search: debouncedSearch || undefined,
+      cefr: eff.described ? eff.level : undefined,
+      topic: eff.topic,
+      language: eff.language,
+      search: eff.searchTerm,
       sort: 'score',
       page,
       limit: FILTER_PAGE_SIZE,
     });
   }, [
-    hasFilters,
-    isEpisodeMode,
-    debouncedSearch,
-    cefr,
-    topic,
-    language,
+    plan.podcasts,
+    eff.described,
+    eff.level,
+    eff.topic,
+    eff.language,
+    eff.searchTerm,
     page,
     fetchFilteredResults,
   ]);
 
-  // PodcastIndex discovery runs alongside the curated search.
+  // PodcastIndex discovery: titles only, so only ever an answer to a name.
   useEffect(() => {
-    if (!debouncedSearch) return;
-    searchPodcastIndex(debouncedSearch, language, 20);
-  }, [debouncedSearch, language, searchPodcastIndex]);
+    if (!plan.discover || !eff.searchTerm) return;
+    searchPodcastIndex(eff.searchTerm, eff.language, piMax);
+  }, [plan.discover, eff.searchTerm, eff.language, piMax, searchPodcastIndex]);
 
-  // Don't re-list a podcast that already appeared in the curated results.
+  // Don't re-list a podcast that already appeared in the curated results, and apply the language to
+  // the results: PodcastIndex takes a language parameter and ignores it.
   const curatedFeedIds = useMemo(
     () => new Set(filterResults.map((p) => ('feed_id' in p ? p.feed_id : p.id))),
     [filterResults],
   );
-  const piDeduped = useMemo(
-    () => piSearchResults.filter((f) => !curatedFeedIds.has(f.id)),
-    [piSearchResults, curatedFeedIds],
+  const piDeduped = useMemo(() => {
+    const want = eff.language?.toLowerCase();
+    return piSearchResults
+      .filter((f) => !curatedFeedIds.has(f.id))
+      .filter((f) => !want || (f.language ?? '').toLowerCase().split('-')[0] === want);
+  }, [piSearchResults, curatedFeedIds, eff.language]);
+  const hasMorePi = piSearchResults.length >= piMax;
+
+  // Semantic lane: runs for EVERY search; episodes matched by what is said inside them.
+  const [semantic, setSemantic] = useState<{ q: string; hits: SemanticHit[] } | null>(null);
+  const [semanticLoading, setSemanticLoading] = useState(false);
+  useEffect(() => {
+    if (!plan.semantic) {
+      setSemantic(null);
+      setSemanticLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setSemanticLoading(true);
+    semanticSearch({
+      q: debouncedSearch,
+      types: ['podcast_episode'],
+      levels: eff.level ? [eff.level] : undefined,
+      languages: eff.language ? [eff.language] : undefined,
+      limit: 12,
+    })
+      .then((res) => {
+        if (!cancelled) setSemantic({ q: debouncedSearch, hits: res.results ?? [] });
+      })
+      .catch(() => {
+        // The lane is an extra: failing means it is absent, never an error over the other lanes.
+        if (!cancelled) setSemantic(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSemanticLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [plan.semantic, debouncedSearch, eff.level, eff.language]);
+  const semanticHits = useMemo(
+    () => (semantic?.q === debouncedSearch ? keepSemanticHits(semantic.hits) : []),
+    [semantic, debouncedSearch],
   );
 
-  const totalPages = Math.ceil(filterTotal / FILTER_PAGE_SIZE);
-  const isSearching =
-    !!debouncedSearch && (isFilterLoading || isEpisodesByLevelLoading || isPiSearchLoading);
+  const nothingFound =
+    searching &&
+    !isFilterLoading &&
+    !isEpisodesByLevelLoading &&
+    !isPiSearchLoading &&
+    !semanticLoading &&
+    filterResults.length === 0 &&
+    episodesByLevel.length === 0 &&
+    piDeduped.length === 0 &&
+    semanticHits.length === 0;
 
-  const resetPage = () => setPage(1);
+  // Never a bare dead end: an empty search answers with what we would recommend anyway.
+  const [rescue, setRescue] = useState<CuratedPodcast[]>([]);
+  useEffect(() => {
+    if (!nothingFound) {
+      setRescue([]);
+      return;
+    }
+    let cancelled = false;
+    getCuratedList({
+      cefr: eff.level,
+      topic: eff.topic,
+      language: eff.language,
+      sort: 'score',
+      page: 1,
+      limit: 12,
+    })
+      .then((res) => {
+        if (!cancelled) setRescue(res.podcasts ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setRescue([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [nothingFound, eff.level, eff.topic, eff.language]);
+
+  // The show titled exactly as searched goes to the front of its lane; a discovery lane holding it
+  // goes above the other two.
+  const curatedRanked = useMemo(
+    () => exactTitleFirst(filterResults, (p) => p.title, eff.searchTerm),
+    [filterResults, eff.searchTerm],
+  );
+  const piRanked = useMemo(
+    () => exactTitleFirst(piDeduped, (f) => f.title, eff.searchTerm),
+    [piDeduped, eff.searchTerm],
+  );
+  const exactInDiscover = !curatedRanked.found && piRanked.found;
+
+  const isSearching =
+    searching && (isFilterLoading || isEpisodesByLevelLoading || isPiSearchLoading);
+  const readingLabel = useMemo(() => {
+    if (!read || read.as !== 'filters') return '';
+    const u = read.understood;
+    return [
+      u.level ?? undefined,
+      u.topic
+        ? t(`podcast.topic${u.topic.charAt(0).toUpperCase()}${u.topic.slice(1)}`, {
+            defaultValue: u.topic,
+          })
+        : undefined,
+      u.language ?? undefined,
+      u.duration
+        ? tp('filterDurationUnder', { minutes: DURATION_MAX_MINUTES[u.duration] })
+        : undefined,
+      u.section ?? undefined,
+    ]
+      .filter(Boolean)
+      .join(' \u00B7 ');
+  }, [read, t, tp]);
 
   const handleAddFeed = async () => {
     if (!feedUrl.trim()) return;
@@ -217,6 +398,78 @@ export function DiscoverView() {
   // Smart featured: prefer most-listened, fall back to top curated
   const featured = popularPodcasts[0] ?? curatedRow[0];
   const restCurated = curatedRow.slice(1);
+
+  const totalPages = Math.ceil(filterTotal / FILTER_PAGE_SIZE);
+
+  const podcastsLane = (isFilterLoading || filterResults.length > 0) && plan.podcasts && (
+    <section key="podcasts" className="space-y-3">
+      <h2 className="text-sm font-bold text-foreground">
+        {tp('searchPodcastsSection')}
+        {filterTotal > 0 ? ` (${filterTotal})` : ''}
+      </h2>
+      {isFilterLoading ? (
+        <div className="flex min-h-40 items-center justify-center">
+          <Loader2 className="h-7 w-7 animate-spin text-primary" />
+        </div>
+      ) : (
+        <PodcastGrid
+          results={curatedRanked.items}
+          source={filterSource}
+          followedFeedIds={followedFeedIds}
+          followingFeedId={followingFeedId}
+          onFollow={session ? followPodcast : undefined}
+          onClick={handleCloudPodcastClick}
+        />
+      )}
+    </section>
+  );
+  const episodesLane = (
+    <div key="episodes">
+      <EpisodeLevelGrid
+        episodes={episodesByLevel}
+        total={episodesByLevelTotal}
+        isLoading={isEpisodesByLevelLoading}
+        page={page}
+        pageSize={FILTER_PAGE_SIZE}
+        onPageChange={(p) => update({ page: p })}
+        onPlay={playEpisodeByLevel}
+        onOpenPodcast={openPodcastRoute}
+        heading={`${tp('searchEpisodesSection')}${episodesByLevelTotal > 0 ? ` (${episodesByLevelTotal})` : ''}`}
+        hideWhenEmpty
+      />
+    </div>
+  );
+  const discoverLane = (isPiSearchLoading || piDeduped.length > 0) && plan.discover && (
+    <section key="discover" className="space-y-3">
+      <h2 className="text-sm font-bold text-foreground">
+        {tp('searchDiscoverSection')}
+        {!isPiSearchLoading && piDeduped.length > 0 && (
+          <span className="ml-1 font-normal text-muted-foreground">({piDeduped.length})</span>
+        )}
+      </h2>
+      <PodcastGrid
+        results={piRanked.items}
+        source="podcastindex"
+        followedFeedIds={followedFeedIds}
+        followingFeedId={followingFeedId}
+        onFollow={session ? followPodcast : undefined}
+        onClick={handleCloudPodcastClick}
+      />
+      {hasMorePi && !isPiSearchLoading && (
+        <div className="flex justify-center pt-1">
+          <Button variant="outline" size="sm" onClick={() => setPiMax((n) => n + PI_PAGE_SIZE)}>
+            {tp('loadMore')}
+          </Button>
+        </div>
+      )}
+      {isPiSearchLoading && piMax > PI_PAGE_SIZE && (
+        <div className="flex justify-center pt-1">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      )}
+    </section>
+  );
+  const lanes = { podcasts: podcastsLane, episodes: episodesLane, discover: discoverLane };
 
   return (
     <div className="space-y-6">
@@ -248,163 +501,115 @@ export function DiscoverView() {
         </Button>
       </div>
 
-      {/* Filter pills — the hub's single filter bar */}
+      {/* The hub's single filter bar */}
       <PodcastFilterPills
         searchQuery={searchInput}
-        onSearchChange={setSearchInput}
+        onSearchChange={(q) => {
+          setSearchInput(q);
+          // Clearing is immediate; typing waits for the debounce.
+          if (q === '') update({ q: '' });
+        }}
         isSearching={isSearching}
         selectedCefr={cefr}
-        onCefrChange={(v) => {
-          setCefr(v);
-          resetPage();
-        }}
+        onCefrChange={(v) => update({ cefr: v })}
         selectedTopic={topic}
-        onTopicChange={(v) => {
-          setTopic(v);
-          resetPage();
-        }}
+        onTopicChange={(v) => update({ topic: v })}
         selectedLanguage={language}
-        onLanguageChange={(v) => {
-          setLanguage(v);
-          resetPage();
-        }}
+        onLanguageChange={(v) => update({ language: v })}
+        selectedDuration={duration}
+        onDurationChange={(v) => update({ duration: v })}
+        // Episode length only means something where the results ARE episodes.
+        showDuration={searching || EPISODE_VIEWS.includes(view)}
+        view={searching ? undefined : view}
+        onViewChange={(v) => update({ view: v })}
+        resultCount={searching || view === 'overview' ? undefined : viewTotal}
+        resultKind={EPISODE_VIEWS.includes(view) ? 'episodes' : 'podcasts'}
       />
 
-      {debouncedSearch ? (
-        /* ===== Search mode: podcasts + scored episodes ===== */
+      {searching ? (
+        /* ===== Search mode: the lanes, then what is said inside episodes ===== */
         <div className="space-y-8">
-          <section className="space-y-3">
-            <h2 className="text-sm font-bold text-foreground">
-              {t('podcast.searchPodcastsHeading', { count: filterTotal })}
-            </h2>
-            {isFilterLoading ? (
-              <div className="flex min-h-40 items-center justify-center">
-                <Loader2 className="h-7 w-7 animate-spin text-primary" />
-              </div>
-            ) : filterResults.length > 0 ? (
-              <PodcastGrid
-                results={filterResults}
-                source={filterSource}
-                followedFeedIds={followedFeedIds}
-                followingFeedId={followingFeedId}
-                onFollow={session ? followPodcast : undefined}
-                onClick={handleCloudPodcastClick}
-              />
-            ) : null}
-          </section>
-
-          <EpisodeLevelGrid
-            episodes={episodesByLevel}
-            total={episodesByLevelTotal}
-            isLoading={isEpisodesByLevelLoading}
-            page={page}
-            pageSize={FILTER_PAGE_SIZE}
-            onPageChange={setPage}
-            onPlay={playEpisodeByLevel}
-            onOpenPodcast={openPodcastRoute}
-            heading={t('podcast.searchEpisodesHeading', { count: episodesByLevelTotal })}
-          />
-
-          {piDeduped.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="text-sm font-bold text-foreground">
-                {t('podcast.searchDiscoverMore')}
-              </h2>
-              <PodcastGrid
-                results={piDeduped}
-                source="podcastindex"
-                followedFeedIds={followedFeedIds}
-                followingFeedId={followingFeedId}
-                onFollow={session ? followPodcast : undefined}
-                onClick={handleCloudPodcastClick}
-              />
-            </section>
+          {(eff.described || eff.browsing) && (
+            <p className="text-sm text-muted-foreground">
+              {eff.browsing ? tp('readAsBrowse') : tp('readAs', { filters: readingLabel })}
+            </p>
           )}
+          {laneOrder(exactInDiscover).map((key) => lanes[key])}
 
-          {!isFilterLoading &&
-            !isEpisodesByLevelLoading &&
-            !isPiSearchLoading &&
-            filterResults.length === 0 &&
-            episodesByLevel.length === 0 &&
-            piDeduped.length === 0 && <NoResults />}
-        </div>
-      ) : isEpisodeMode ? (
-        /* ===== Episode mode: a CEFR level and/or topic (v2 per-episode difficulty) ===== */
-        <EpisodeLevelGrid
-          episodes={episodesByLevel}
-          total={episodesByLevelTotal}
-          isLoading={isEpisodesByLevelLoading}
-          page={page}
-          pageSize={FILTER_PAGE_SIZE}
-          onPageChange={setPage}
-          onPlay={playEpisodeByLevel}
-          onOpenPodcast={openPodcastRoute}
-          heading={
-            cefr
-              ? t('podcast.levelEpisodeCountAt', { count: episodesByLevelTotal, level: cefr })
-              : t('podcast.levelEpisodeCount', { count: episodesByLevelTotal })
-          }
-        />
-      ) : hasFilters ? (
-        /* ===== Podcast mode: language filter (episodes-by-level is English-only) ===== */
-        <div>
-          {isFilterLoading ? (
-            <div className="flex min-h-75 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          {totalPages > 1 && plan.podcasts && !isFilterLoading && filterResults.length > 0 && (
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => update({ page: Math.max(1, page - 1) })}
+                disabled={page <= 1}
+                className="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+              >
+                {t('podcast.previous')}
+              </button>
+              <span className="px-3 text-sm tabular-nums text-muted-foreground">
+                {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => update({ page: Math.min(totalPages, page + 1) })}
+                disabled={page >= totalPages}
+                className="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+              >
+                {t('podcast.next')}
+              </button>
             </div>
-          ) : filterResults.length > 0 ? (
-            <>
-              <p className="mb-4 text-sm text-muted-foreground">
-                {t('podcast.searchPodcastsHeading', { count: filterTotal })}
-              </p>
-              <PodcastGrid
-                results={filterResults}
-                source={filterSource}
-                followedFeedIds={followedFeedIds}
-                followingFeedId={followingFeedId}
-                onFollow={session ? followPodcast : undefined}
-                onClick={handleCloudPodcastClick}
-              />
+          )}
 
-              {totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                    className="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-                  >
-                    {t('podcast.previous')}
-                  </button>
-                  <span className="px-3 text-sm tabular-nums text-muted-foreground">
-                    {page} / {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                    className="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-                  >
-                    {t('podcast.next')}
-                  </button>
-                </div>
+          {nothingFound && (
+            <div className="space-y-5">
+              <NoResults />
+              {rescue.length > 0 && (
+                <section className="space-y-3">
+                  <h2 className="text-sm font-bold text-foreground">{tp('readAsBrowse')}</h2>
+                  <PodcastGrid
+                    results={rescue}
+                    source="db"
+                    followedFeedIds={followedFeedIds}
+                    followingFeedId={followingFeedId}
+                    onFollow={session ? followPodcast : undefined}
+                    onClick={handleCloudPodcastClick}
+                  />
+                </section>
               )}
-            </>
-          ) : (
-            <NoResults />
+            </div>
+          )}
+
+          {plan.semantic && (
+            <SemanticEpisodeResults
+              hits={semanticHits}
+              isLoading={semanticLoading}
+              query={debouncedSearch}
+              openingId={importingId}
+              onOpen={(hit, startAt) => playSemanticHit(hit, startAt)}
+            />
           )}
         </div>
+      ) : view !== 'overview' ? (
+        /* ===== A view (Just analyzed, New podcasts, Latest, Most popular, Curated) narrowed by the bar ===== */
+        <HubViewList
+          view={view}
+          cefr={cefr}
+          topic={topic}
+          language={language}
+          duration={duration}
+          page={page}
+          onPageChange={(p) => update({ page: p })}
+          onTotalChange={setViewTotal}
+        />
       ) : (
-        /* ===== Discovery Mode ===== */
+        /* ===== Overview: desk's discovery page (subscriptions, trending, categories) ===== */
         <div className="space-y-8">
           {/* Starter podcasts for brand-new users */}
           {localFeeds.length === 0 && !isLoadingFeeds && starterPodcasts.length > 0 && (
             <div className="space-y-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                Get Started — Top Language Learning Podcasts
-              </h3>
+              <h3 className="text-sm font-semibold text-foreground">{tp('starterTitle')}</h3>
               {isStarterLoading ? (
                 <div className="flex items-center gap-2 py-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-xs">Loading podcasts…</span>
+                  <span className="text-xs">{tp('starterLoading')}</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -474,7 +679,7 @@ export function DiscoverView() {
                       </p>
                     )}
                     <p className="text-[10px] text-muted-foreground">
-                      {feed.episodeCount} episodes
+                      {tp('episodesCount', { count: feed.episodeCount })}
                     </p>
                   </div>
                 </button>

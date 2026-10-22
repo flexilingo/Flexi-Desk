@@ -10,12 +10,12 @@ import { ReadingToolbar } from './ReadingToolbar';
 import type { Token } from '../types';
 
 const cefrColors: Record<string, string> = {
-  A1: 'bg-emerald-100 dark:bg-emerald-900/30',
-  A2: 'bg-green-100 dark:bg-green-900/30',
-  B1: 'bg-yellow-100 dark:bg-yellow-900/30',
-  B2: 'bg-orange-100 dark:bg-orange-900/30',
-  C1: 'bg-red-100 dark:bg-red-900/30',
-  C2: 'bg-purple-100 dark:bg-purple-900/30',
+  A1: 'bg-cefr-a1/15',
+  A2: 'bg-cefr-a2/15',
+  B1: 'bg-cefr-b1/15',
+  B2: 'bg-cefr-b2/15',
+  C1: 'bg-cefr-c1/15',
+  C2: 'bg-cefr-c2/15',
 };
 
 interface Props {
@@ -23,8 +23,14 @@ interface Props {
 }
 
 export function InteractiveReader({ onBack }: Props) {
-  const { activeDocument, highlights, updateProgress, selectedTokenIndex, selectToken, cefrHighlight } =
-    useReadingStore();
+  const {
+    activeDocument,
+    highlights,
+    updateProgress,
+    selectedTokenIndex,
+    selectToken,
+    cefrHighlight,
+  } = useReadingStore();
   const readerRef = useRef<HTMLDivElement>(null);
   const [popoverState, setPopoverState] = useState<{
     token: Token;
@@ -105,9 +111,10 @@ export function InteractiveReader({ onBack }: Props) {
     const needsSpace =
       i > 0 && isWord && prevToken && prevToken.text !== '(' && prevToken.text !== '"';
 
-    const cefrClass = cefrHighlight && token.cefr_level && !token.is_stop
-      ? cefrColors[token.cefr_level] ?? ''
-      : '';
+    const cefrClass =
+      cefrHighlight && token.cefr_level && !token.is_stop
+        ? (cefrColors[token.cefr_level] ?? '')
+        : '';
 
     return (
       <span key={token.index}>
@@ -123,7 +130,11 @@ export function InteractiveReader({ onBack }: Props) {
                   ? 'bg-accent/15 text-accent underline decoration-accent/30 decoration-dotted underline-offset-4'
                   : cefrClass || 'hover:bg-muted hover:text-foreground',
             )}
-            title={cefrHighlight && token.cefr_level ? `${token.pos ?? ''} · ${token.cefr_level}` : undefined}
+            title={
+              cefrHighlight && token.cefr_level
+                ? `${token.pos ?? ''} · ${token.cefr_level}`
+                : undefined
+            }
           >
             {token.text}
           </span>

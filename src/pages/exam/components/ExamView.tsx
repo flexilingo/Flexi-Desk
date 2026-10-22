@@ -160,9 +160,9 @@ export function ExamView() {
 
       {/* Time expired warning */}
       {timeExpired && (
-        <div className="flex items-center gap-2 rounded-lg border border-[#C58C6E]/30 bg-[#C58C6E]/5 px-4 py-2">
-          <AlertCircle className="h-4 w-4 text-[#C58C6E]" />
-          <p className="text-sm text-[#C58C6E]">Time limit reached. Submit your exam.</p>
+        <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/5 px-4 py-2">
+          <AlertCircle className="h-4 w-4 text-warning" />
+          <p className="text-sm text-warning">Time limit reached. Submit your exam.</p>
         </div>
       )}
 
@@ -175,7 +175,7 @@ export function ExamView() {
               onClick={() => setCurrentQuestion(i)}
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-medium transition-colors
                 ${i === currentQuestionIndex ? 'bg-primary text-primary-foreground' : ''}
-                ${q.userAnswer != null && i !== currentQuestionIndex ? 'bg-[#8BB7A3]/20 text-[#8BB7A3]' : ''}
+                ${q.userAnswer != null && i !== currentQuestionIndex ? 'bg-success/20 text-success' : ''}
                 ${q.userAnswer == null && i !== currentQuestionIndex ? 'bg-muted text-muted-foreground hover:bg-muted/80' : ''}
               `}
             >
@@ -199,7 +199,7 @@ export function ExamView() {
                 </Badge>
               </div>
               {currentQuestion.userAnswer != null && (
-                <CheckCircle2 className="h-4 w-4 text-[#8BB7A3]" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
               )}
             </div>
           </CardHeader>

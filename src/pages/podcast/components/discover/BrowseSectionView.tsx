@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   Flame,
@@ -10,12 +11,17 @@ import {
   FlaskConical,
   Globe,
   Cpu,
-  Headphones,
+  Briefcase,
+  BookOpen,
+  Trophy,
+  Music,
+  Laugh,
+  Baby,
+  ShieldAlert,
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDiscoverStore } from '../../stores/discoverStore';
-import { usePodcastStore } from '../../stores/podcastStore';
 import { useAuthStore } from '@/stores/authStore';
 import { PodcastCardCompact } from './PodcastCardCompact';
 import type { LucideIcon } from 'lucide-react';
@@ -23,19 +29,28 @@ import type { LucideIcon } from 'lucide-react';
 const PAGE_SIZE = 24;
 
 interface SectionConfig {
-  title: string;
+  /** Namespace-qualified i18n key of the heading. */
+  titleKey: string;
   icon: LucideIcon;
 }
 
 const SECTION_MAP: Record<string, SectionConfig> = {
-  trending: { title: 'Trending Now', icon: Flame },
-  followed: { title: 'My Followed Podcasts', icon: Heart },
-  education: { title: 'Education', icon: GraduationCap },
-  news: { title: 'News', icon: Newspaper },
-  arts: { title: 'Arts', icon: Palette },
-  science: { title: 'Science', icon: FlaskConical },
-  society: { title: 'Society & Culture', icon: Globe },
-  technology: { title: 'Technology', icon: Cpu },
+  trending: { titleKey: 'common:podcast.trendingNow', icon: Flame },
+  followed: { titleKey: 'podcastUi:myFollowedPodcasts', icon: Heart },
+  education: { titleKey: 'common:podcast.catEducation', icon: GraduationCap },
+  news: { titleKey: 'common:podcast.catNews', icon: Newspaper },
+  arts: { titleKey: 'common:podcast.catArts', icon: Palette },
+  science: { titleKey: 'common:podcast.catScience', icon: FlaskConical },
+  society: { titleKey: 'common:podcast.catSocietyCulture', icon: Globe },
+  technology: { titleKey: 'common:podcast.catTechnology', icon: Cpu },
+  business: { titleKey: 'podcastUi:catBusiness', icon: Briefcase },
+  history: { titleKey: 'podcastUi:catHistory', icon: BookOpen },
+  sports: { titleKey: 'podcastUi:catSports', icon: Trophy },
+  music: { titleKey: 'podcastUi:catMusic', icon: Music },
+  comedy: { titleKey: 'podcastUi:catComedy', icon: Laugh },
+  health: { titleKey: 'podcastUi:catHealthFitness', icon: Heart },
+  kids: { titleKey: 'podcastUi:catKidsFamily', icon: Baby },
+  'true-crime': { titleKey: 'podcastUi:catTrueCrime', icon: ShieldAlert },
 };
 
 export function BrowseSectionView() {
@@ -53,7 +68,10 @@ export function BrowseSectionView() {
 
   const { section } = useParams<{ section: string }>();
   const navigate = useNavigate();
-  const { addFeed, loadFeed } = usePodcastStore();
+  const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  // A described search ("podcasts for kids in French") lands here with its language.
+  const language = searchParams.get('language') ?? undefined;
 
   const [page, setPage] = useState(1);
 
@@ -69,19 +87,12 @@ export function BrowseSectionView() {
 
   useEffect(() => {
     if (slug) {
-      fetchBrowseSection(slug, page);
+      fetchBrowseSection(slug, page, language);
     }
-  }, [slug, page, fetchBrowseSection]);
+  }, [slug, page, language, fetchBrowseSection]);
 
-  const handleCloudPodcastClick = async (_feedId: number, rssUrl?: string) => {
-    if (!rssUrl) return;
-    await addFeed(rssUrl);
-    const newFeed = usePodcastStore.getState().feeds[0];
-    if (newFeed) {
-      loadFeed(newFeed);
-      navigate(`/podcast/feed/${newFeed.id}`);
-    }
-  };
+  // A click opens the podcast's own page; it never subscribes the whole feed just to look at it.
+  const handleCloudPodcastClick = (feedId: number) => navigate(`/podcast/show/${feedId}`);
 
   if (!config) return null;
 
@@ -109,13 +120,13 @@ export function BrowseSectionView() {
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Discover
+        {t('podcastUi:backToDiscover')}
       </button>
 
       {/* Page header */}
       <div className="flex items-center gap-2">
         <SectionIcon className="w-6 h-6 text-accent" />
-        <h1 className="text-xl font-bold text-foreground">{config.title}</h1>
+        <h1 className="text-xl font-bold text-foreground">{t(config.titleKey)}</h1>
       </div>
 
       {/* Content */}
@@ -123,17 +134,21 @@ export function BrowseSectionView() {
         <div className="min-h-[300px] flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-12 w-12 animate-spin text-primary/40" />
-            <span className="text-muted-foreground">Loading…</span>
+            <span className="text-muted-foreground">{t('podcastUi:loading')}</span>
           </div>
         </div>
       ) : !hasItems ? (
         <div className="text-center py-20">
           <SectionIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-          <p className="text-muted-foreground">No podcasts found</p>
+          <p className="text-muted-foreground">{t('podcastUi:noResults')}</p>
         </div>
       ) : (
         <>
-          {total > 0 && <p className="text-sm text-muted-foreground">Showing {total} podcasts</p>}
+          {total > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {t('podcastUi:matchCountPodcasts', { count: total })}
+            </p>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {isFollowed
@@ -168,7 +183,7 @@ export function BrowseSectionView() {
                 onClick={() => handlePageChange(Math.max(1, page - 1))}
                 disabled={page <= 1}
               >
-                Previous
+                {t('common:podcast.previous')}
               </Button>
               <span className="text-sm text-muted-foreground px-4">
                 {page} / {totalPages}
@@ -179,7 +194,7 @@ export function BrowseSectionView() {
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}
               >
-                Next
+                {t('common:podcast.next')}
               </Button>
             </div>
           )}

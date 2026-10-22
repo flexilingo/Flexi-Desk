@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { Sparkles, RefreshCw, Lock, ChevronRight } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Sparkles, RefreshCw, Lock, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ExamInsight, InsightSkillState, InsightOrigin } from '../types';
-import { CLB_WIDTH, clbTextColor, clbBarColor, SECTION_META } from './shared';
+import { CLB_SCALE, clbTextColor, clbBarColor, SECTION_META, type ScoreScale } from './shared';
 import { HeroScoreCard, VsAvgBadge } from './HeroScoreCard';
 import { SummaryCard, ImprovementPlanCard } from './InsightSections';
 import { InsightOriginBadge } from './SkillInsightPanel';
@@ -27,6 +28,27 @@ interface OverviewTabProps {
   onRetryFailed?: () => void;
   onRetrySummary: () => void;
   vsAvgT: (key: 'vsAvgPositive' | 'vsAvgNegative' | 'vsAvgEqual', val?: string) => string;
+  /** Exam profile scale; defaults to CLB out of 12. */
+  scale?: ScoreScale;
+  /** Raw score per section, shown beside the band (TCF /699 and /20). */
+  rawScores?: Record<string, number | null>;
+  /** A practice slice of CO/CE items: right answers out of the items sat, in place of a band. */
+  correctCounts?: Partial<Record<string, { correct: number; total: number }>>;
+  correctLabel?: string;
+  /** False for exams with no AI insight (TCF): the summary area is left out. */
+  insightEnabled?: boolean;
+  /** One quiet note under the scores (the TCF estimate note). */
+  note?: string;
+  /** Caption over the big number. Defaults to the CELPIP one. */
+  overallLabel?: string;
+  /** Sections still in the scoring queue. */
+  pendingSkills?: string[];
+  /** Québec points card, and the "your next step" card (TCF). */
+  quebecPoints?: ReactNode;
+  nextSteps?: ReactNode;
+  /** Opens "how is this scored?"; the (i) on the ring shows only when set. */
+  onScoringInfo?: () => void;
+  scoringInfoLabel?: string;
 }
 
 /**
@@ -56,8 +78,29 @@ export function OverviewTab({
   onRetryFailed,
   onRetrySummary,
   vsAvgT,
+  scale = CLB_SCALE,
+  rawScores,
+  correctCounts,
+  correctLabel,
+  insightEnabled = true,
+  note,
+  overallLabel,
+  pendingSkills = [],
+  quebecPoints,
+  nextSteps,
+  onScoringInfo,
+  scoringInfoLabel,
 }: OverviewTabProps) {
   const { t } = useTranslation('celpip');
+  // A practice slice of items only (no band anywhere): the ring shows the count.
+  const countEntries = Object.entries(correctCounts ?? {}).filter(([, c]) => c && c.total > 0);
+  const overallCount = countEntries.length
+    ? {
+        correct: countEntries.reduce((n, [, c]) => n + (c?.correct ?? 0), 0),
+        total: countEntries.reduce((n, [, c]) => n + (c?.total ?? 0), 0),
+        label: correctLabel ?? '',
+      }
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5">
@@ -67,8 +110,13 @@ export function OverviewTab({
           score={mScore}
           avg={mScoreAvg}
           totalTimeSec={totalTimeSec}
-          mScoreLabel={t('mScoreLabel')}
-          aiAnalyzedLabel={t('aiAnalyzed')}
+          mScoreLabel={overallLabel ?? t('mScoreLabel')}
+          aiAnalyzedLabel={insightEnabled ? t('aiAnalyzed') : undefined}
+          scale={scale}
+          count={overallCount}
+          pendingLabel={pendingSkills.length > 0 ? t('scoringInProgress') : undefined}
+          onInfo={onScoringInfo}
+          infoLabel={scoringInfoLabel}
           levelLabel={levelLabel}
           vsAvgPositive={(d) => t('vsAvgPositive', { delta: d })}
           vsAvgNegative={(d) => t('vsAvgNegative', { delta: d })}
@@ -83,6 +131,11 @@ export function OverviewTab({
               const meta = SECTION_META[key];
               const score = sectionScores[key];
               const Icon = meta.icon;
+              const tone = scale.toneScore(score);
+              const raw = rawScores?.[key] ?? null;
+              const rawMax = scale.rawMax[key] ?? null;
+              const count = correctCounts?.[key];
+              const isPending = pendingSkills.includes(key);
               return (
                 <button
                   key={key}
@@ -91,23 +144,50 @@ export function OverviewTab({
                 >
                   <div className="flex items-center justify-between">
                     <Icon className={`w-5 h-5 ${meta.color}`} />
-                    <VsAvgBadge score={score} avg={sectionAvgs[key]} t={vsAvgT} />
+                    <VsAvgBadge
+                      score={scale.bandKind === 'level' ? null : score}
+                      avg={sectionAvgs[key]}
+                      t={vsAvgT}
+                    />
                   </div>
                   <div className="mt-2 mb-1">
-                    <div
-                      className={`text-[24px] font-extrabold leading-none tabular-nums ${clbTextColor(score)}`}
-                    >
-                      {score ?? '–'}
-                    </div>
+                    {isPending && score == null ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-accent" />
+                    ) : count && score == null ? (
+                      <div className="text-[24px] font-extrabold leading-none tabular-nums text-foreground">
+                        <bdi dir="ltr">
+                          {count.correct}/{count.total}
+                        </bdi>
+                      </div>
+                    ) : (
+                      <div
+                        className={`text-[24px] font-extrabold leading-none tabular-nums ${clbTextColor(tone)}`}
+                      >
+                        {score != null ? scale.format(score) : '–'}
+                      </div>
+                    )}
                     <div className="text-[10px] text-muted-foreground tabular-nums uppercase tracking-wider mt-0.5">
-                      / 12 CLB
+                      {count && score == null ? (
+                        correctLabel
+                      ) : scale.bandKind === 'level' ? (
+                        scale.bandLabel
+                      ) : (
+                        <bdi dir="ltr">
+                          / {scale.bandMax} {scale.bandLabel}
+                        </bdi>
+                      )}
                     </div>
+                    {rawMax != null && raw != null && (
+                      <div className="text-[10.5px] text-muted-foreground tabular-nums mt-0.5">
+                        <bdi dir="ltr">
+                          {raw} / {rawMax}
+                        </bdi>
+                      </div>
+                    )}
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden mt-2">
                     <div
-                      className={`h-full rounded-full ${clbBarColor(score)} ${
-                        score != null ? (CLB_WIDTH[score] ?? 'w-0') : 'w-0'
-                      }`}
+                      className={`h-full rounded-full ${clbBarColor(tone)} ${scale.bandWidth(score)}`}
                     />
                   </div>
                   <p
@@ -122,8 +202,13 @@ export function OverviewTab({
         </div>
       </div>
 
-      {/* AI summary area */}
-      {summaryState === 'ready' && insight.summary ? (
+      {note && <p className="text-[12px] leading-relaxed text-muted-foreground">{note}</p>}
+
+      {quebecPoints}
+      {nextSteps}
+
+      {/* AI summary area — none for exams without insight (TCF) */}
+      {!insightEnabled ? null : summaryState === 'ready' && insight.summary ? (
         <>
           {/* Quiet provenance sits at the head of the finished insight. */}
           <div className="flex items-center justify-end">

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "FlexiDesk",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "identifier": "com.flexilingo.desk",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -23,10 +23,12 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: asset: http://asset.localhost; media-src 'self' blob: https:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost https:",
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: asset: http://asset.localhost; media-src 'self' blob: https:; font-src 'self' data:; worker-src 'self' blob:; frame-src https://www.youtube.com https://www.youtube-nocookie.com; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost https:",
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPDATA/reader/**"]
+        "scope": [
+          "$APPDATA/reader/**"
+        ]
       }
     }
   },
@@ -42,6 +44,18 @@
     ],
     "macOS": {
       "signingIdentity": null
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVEMEIwQTJGOUE5MDZDOQpSV1RKQnFuNW9yRFFEbGF1SEtHS3lBM3M5WWwzWTkyTVF2SnNUTURWL0ppZmlZVTRyYkFVenF0TQo=",
+      "endpoints": [
+        "https://github.com/flexilingo/Flexi-Desk/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

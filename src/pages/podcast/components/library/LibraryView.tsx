@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Rss, Bookmark, History, Search } from 'lucide-react';
+import { Rss, Bookmark, Heart, History, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { FeedListView } from '../FeedListView';
+import { SavedEpisodesTab } from './SavedEpisodesTab';
 import { SavedPodcastsTab } from './SavedPodcastsTab';
 import { HistoryTab } from './HistoryTab';
 
-type Tab = 'local' | 'saved' | 'history';
+type Tab = 'local' | 'saved' | 'episodes' | 'history';
 
 const TABS: { value: Tab; labelKey: string; icon: typeof Rss }[] = [
-  { value: 'local', labelKey: 'podcast.tabLocal', icon: Rss },
-  { value: 'saved', labelKey: 'podcast.tabSaved', icon: Bookmark },
-  { value: 'history', labelKey: 'podcast.tabHistory', icon: History },
+  { value: 'local', labelKey: 'common:podcast.tabLocal', icon: Rss },
+  { value: 'saved', labelKey: 'common:podcast.tabSaved', icon: Bookmark },
+  { value: 'episodes', labelKey: 'podcastUi:tabSavedEpisodes', icon: Heart },
+  { value: 'history', labelKey: 'common:podcast.tabHistory', icon: History },
 ];
 
 /**
@@ -29,7 +31,8 @@ export function LibraryView() {
   // Remember the last tab within a session so navigating back doesn't reset it.
   useEffect(() => {
     const saved = sessionStorage.getItem('podcast.libraryTab');
-    if (saved === 'local' || saved === 'saved' || saved === 'history') setTab(saved);
+    if (saved === 'local' || saved === 'saved' || saved === 'episodes' || saved === 'history')
+      setTab(saved);
   }, []);
   useEffect(() => {
     sessionStorage.setItem('podcast.libraryTab', tab);
@@ -66,6 +69,7 @@ export function LibraryView() {
 
       {tab === 'local' && <FeedListView />}
       {tab === 'saved' && <SavedPodcastsTab />}
+      {tab === 'episodes' && <SavedEpisodesTab />}
       {tab === 'history' && <HistoryTab />}
     </div>
   );

@@ -3,7 +3,7 @@ use tauri::State;
 use crate::ai::json_extractor::extract_json;
 use crate::ai::provider::{chat_completion, read_ai_settings, ChatMessage};
 use crate::caption::{audio, whisper};
-use crate::celpip::{prompts, InsightSkill};
+use crate::celpip::{prompts, ExamKind, InsightSkill};
 use crate::AppState;
 
 fn lock_db<'a>(
@@ -162,6 +162,99 @@ pub fn celpip_record_stop(
     })
 }
 
+/// Live loudness of the recording in progress, in dBFS (-100 when nothing is
+/// being recorded). Polled by the page while a Speaking answer is recorded, to
+/// warn when the microphone is too quiet to transcribe.
+#[tauri::command]
+pub fn celpip_record_level(state: State<'_, AppState>) -> Result<f64, String> {
+    let guard = state
+        .celpip_recording
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
+    Ok(guard
+        .as_ref()
+        .map(|(handle, _)| handle.recent_dbfs())
+        .unwrap_or(audio::LEVEL_FLOOR_DBFS))
+}
+
+/// Opens the microphone and keeps the capture in the shared recording slot with
+/// nothing saved, so the page can read its level (`celpip_record_level`): the
+/// microphone test before Speaking, and the OS permission check. Refuses while
+/// a real recording is active.
+#[tauri::command]
+pub fn celpip_mic_probe_start(state: State<'_, AppState>) -> Result<(), String> {
+    let mut slot = state
+        .celpip_recording
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
+    if slot.is_some() {
+        return Err("RECORDING_ALREADY_ACTIVE".to_string());
+    }
+    let path = std::env::temp_dir().join(format!("flexilingo-mic-probe-{}.wav", std::process::id()));
+    let handle = audio::start_recording(None, path.clone())?;
+    *slot = Some((handle, path));
+    Ok(())
+}
+
+/// Ends the probe (or any capture left in the slot) and deletes its scratch file.
+#[tauri::command]
+pub fn celpip_mic_probe_stop(state: State<'_, AppState>) -> Result<(), String> {
+    let taken = state
+        .celpip_recording
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?
+        .take();
+    if let Some((handle, path)) = taken {
+        let _ = handle.stop();
+        let _ = std::fs::remove_file(path);
+    }
+    Ok(())
+}
+
+/// Opens the operating system's microphone privacy page (macOS / Windows), where
+/// a blocked microphone is switched back on. Other systems have no such page.
+#[tauri::command]
+pub fn celpip_open_mic_settings() -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    let spawned = std::process::Command::new("open")
+        .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")
+        .spawn();
+    #[cfg(target_os = "windows")]
+    let spawned = std::process::Command::new("cmd")
+        .args(["/C", "start", "", "ms-settings:privacy-microphone"])
+        .spawn();
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    let spawned: std::io::Result<std::process::Child> =
+        Err(std::io::Error::new(std::io::ErrorKind::Unsupported, "no settings page"));
+    spawned.map(|_| ()).map_err(|e| format!("Cannot open settings: {e}"))
+}
+
+/// Downloads the learner's own recording of a past answer (private
+/// `user-recordings` bucket, their own session) as raw bytes for the results
+/// page player. The path must be under the signed-in user's own folder.
+#[tauri::command]
+pub async fn celpip_fetch_recording(
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<tauri::ipc::Response, String> {
+    let session = crate::auth::stored_session(&state).ok_or("UNAUTHORIZED")?;
+    if !is_own_recording_path(&session.user_id, &path) {
+        return Err("RECORDING_NOT_FOUND".to_string());
+    }
+    let bytes = crate::auth::storage_download(&session.access_token, "user-recordings", &path).await?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+/// A recording path is `{user_id}/{exam folder}/{session}/{file}`: only the
+/// signed-in user's own folder, with no way to climb out of it.
+fn is_own_recording_path(user_id: &str, path: &str) -> bool {
+    !user_id.is_empty()
+        && path.starts_with(&format!("{user_id}/"))
+        && !path.contains("..")
+        && !path.contains('\\')
+        && !path.contains("//")
+}
+
 /// Cancels an in-flight recording without saving it (mic error, user aborted).
 #[tauri::command]
 pub fn celpip_record_cancel(state: State<'_, AppState>) -> Result<(), String> {
@@ -187,6 +280,7 @@ pub async fn celpip_transcribe_recording(
     state: State<'_, AppState>,
     session_id: String,
     task_key: String,
+    language: Option<String>,
 ) -> Result<String, String> {
     let (local_path, binary, model) = {
         let conn = lock_db(&state)?;
@@ -216,9 +310,13 @@ pub async fn celpip_transcribe_recording(
         (local_path, binary, model)
     };
 
-    // CELPIP is an English exam; pinning the language beats auto-detection on
-    // short, accented answers.
-    let segments = whisper::transcribe_file(&binary, &model, &local_path, "en").await?;
+    // Pinning the exam's language beats auto-detection on short, accented
+    // answers: CELPIP is English, the TCF family is French.
+    let lang = match language.as_deref() {
+        Some("fr") => "fr",
+        _ => "en",
+    };
+    let segments = whisper::transcribe_file(&binary, &model, &local_path, lang).await?;
     let transcript = segments
         .iter()
         .map(|s| s.text.trim())
@@ -239,15 +337,22 @@ pub async fn celpip_transcribe_recording(
 /// Uploads a speaking answer to the `user-recordings` bucket and returns its
 /// public URL, which goes into `submit_section` as the task's answer.
 ///
-/// Path layout matches web and mobile exactly: `{user_id}/celpip/{session_id}/…`.
+/// Path layout matches web and mobile exactly: `{user_id}/{celpip|tcf|tcf_quebec|tcf_irn}/{session_id}/…`.
 /// Storage RLS only permits writes under the caller's own user id.
 #[tauri::command]
 pub async fn celpip_upload_recording(
     state: State<'_, AppState>,
     session_id: String,
     task_key: String,
+    segment: Option<String>,
 ) -> Result<String, String> {
     let session = crate::auth::stored_session(&state).ok_or("UNAUTHORIZED")?;
+    // Storage folder per exam type (the web's `recordingSegment`). Only the
+    // known folders are accepted so a caller cannot write elsewhere.
+    let segment = match segment.as_deref() {
+        Some(s @ ("tcf" | "tcf_quebec" | "tcf_irn")) => s,
+        _ => "celpip",
+    };
 
     let local_path: String = {
         let conn = lock_db(&state)?;
@@ -269,8 +374,8 @@ pub async fn celpip_upload_recording(
         .map_err(|e| format!("Clock error: {e}"))?
         .as_millis();
     let object_path = format!(
-        "{}/celpip/{}/{}_{}.wav",
-        session.user_id, session_id, task_key, stamp
+        "{}/{}/{}/{}_{}.wav",
+        session.user_id, segment, session_id, task_key, stamp
     );
 
     let url = crate::auth::storage_upload(
@@ -357,8 +462,11 @@ pub async fn celpip_generate_local_insight(
     skill: String,
     context: String,
     clb_score: Option<f64>,
+    exam_type: Option<String>,
+    level_note: Option<String>,
 ) -> Result<String, String> {
     let skill_enum = InsightSkill::parse(&skill)?;
+    let kind = ExamKind::parse(exam_type.as_deref());
 
     // Phase 1: cached? Read settings. Drop the guard before the await.
     let settings = {
@@ -394,11 +502,11 @@ pub async fn celpip_generate_local_insight(
     let messages = vec![
         ChatMessage {
             role: "system".into(),
-            content: prompts::system_prompt().to_string(),
+            content: prompts::system_prompt_for(kind).to_string(),
         },
         ChatMessage {
             role: "user".into(),
-            content: prompts::user_prompt(skill_enum, &context, clb_score),
+            content: prompts::user_prompt_for(kind, skill_enum, &context, clb_score, level_note.as_deref()),
         },
     ];
 
@@ -441,5 +549,20 @@ pub async fn celpip_generate_local_insight(
             .ok();
             Err(err)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_own_recording_path;
+
+    #[test]
+    fn only_the_signed_in_users_own_folder_may_be_downloaded() {
+        assert!(is_own_recording_path("u1", "u1/tcf/s1/task_0_1.wav"));
+        assert!(!is_own_recording_path("u1", "u2/tcf/s1/task_0_1.wav"));
+        assert!(!is_own_recording_path("u1", "u1/../u2/x.wav"));
+        assert!(!is_own_recording_path("u1", "u1//x.wav"));
+        assert!(!is_own_recording_path("", "/x.wav"));
+        assert!(!is_own_recording_path("u1", "u10/x.wav"));
     }
 }

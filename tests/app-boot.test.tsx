@@ -23,7 +23,7 @@ vi.mock('@tauri-apps/plugin-shell', () => ({ open: vi.fn() }), { virtual: true }
 describe('app boot', () => {
   it('imports the root App module without throwing', async () => {
     await expect(import('@/App')).resolves.toBeDefined();
-  });
+  }, 30000); // the whole page tree loads; 5 s is too tight when the suite runs in parallel
 
   it('imports the Shell layout without throwing', async () => {
     await expect(import('@/components/layout/Shell')).resolves.toBeDefined();

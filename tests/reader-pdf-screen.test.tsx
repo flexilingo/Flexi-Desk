@@ -136,10 +136,3 @@ describe('/reader/pdf/:documentId', () => {
     expect(invoke).not.toHaveBeenCalledWith('reader_set_position', expect.anything());
   });
 });
-
-describe('/reader placeholders', () => {
-  it('answers a book route instead of a 404', async () => {
-    mount('/reader/book/b1');
-    expect(await screen.findByText('soon.book.title')).toBeInTheDocument();
-  });
-});

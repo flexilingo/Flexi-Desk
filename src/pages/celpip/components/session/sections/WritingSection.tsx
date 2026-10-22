@@ -9,13 +9,8 @@ import { LookupText } from '../WordLookup';
 import { ExamText } from '../ExamText';
 import { useExamFontScale } from '../ExamSettingsContext';
 import type { WritingPrompts } from '../../../types';
-import {
-  saveDraft,
-  loadDraft,
-  clearDraft,
-  elapsedSince,
-  remainingFrom,
-} from '../../../services/examDraft';
+import { saveDraft, loadDraft, elapsedSince, remainingFrom } from '../../../services/examDraft';
+import { restoreWriting } from '../../../utils/writingResume';
 
 interface WritingSectionProps {
   sessionId: string;
@@ -24,6 +19,8 @@ interface WritingSectionProps {
   isSubmitting: boolean;
   /** Untimed relaxed mode: no countdown, prompts word-clickable */
   learningMode?: boolean;
+  /** Practice: a task's clock counts only the time spent on it, not the time away. */
+  pauseClockWhileAway?: boolean;
 }
 
 export function WritingSection({
@@ -32,6 +29,7 @@ export function WritingSection({
   onSubmit,
   isSubmitting,
   learningMode = false,
+  pauseClockWhileAway = false,
 }: WritingSectionProps) {
   const { t } = useTranslation('celpip');
   const [loaded, setLoaded] = useState(false);
@@ -42,6 +40,8 @@ export function WritingSection({
   const [showConfirm, setShowConfirm] = useState(false);
   const startTime = useRef<number>(0);
   const taskStartedAt = useRef<number>(0);
+  // Seconds the current task's clock has run (practice: carried across a return).
+  const activeSecRef = useRef(0);
 
   const currentTask = prompts.tasks[taskIndex];
 
@@ -62,41 +62,46 @@ export function WritingSection({
   });
   const hasWordCountWarning = allTasksWordCount.some((task) => task.over);
 
-  // Restore draft on mount (per-task timer reconstructs from taskStartedAt).
+  // Restore draft on mount. The section opens straight from the draft (task,
+  // answers, clock) behind the spinner; nothing here ever submits, so an empty
+  // reopened page is never handed in by a clock check.
   useEffect(() => {
     let cancelled = false;
     loadDraft(sessionId, 'writing').then((draft) => {
       if (cancelled) return;
-      if (draft) {
-        const restoredTaskIndex = draft.taskIndex ?? 0;
-        setTaskIndex(restoredTaskIndex);
-        setAnswers(draft.answers as Record<string, string>);
-        startTime.current = draft.sectionStartedAt;
-        taskStartedAt.current = draft.taskStartedAt ?? draft.sectionStartedAt;
-        const task = prompts.tasks[restoredTaskIndex];
-        setTimeLeft(task ? remainingFrom(taskStartedAt.current, task.time_limit_minutes * 60) : 0);
-      } else {
-        startTime.current = Date.now();
-        taskStartedAt.current = Date.now();
-        setTimeLeft((prompts.tasks[0]?.time_limit_minutes ?? 0) * 60);
-      }
+      const restored = restoreWriting(draft, prompts.tasks, pauseClockWhileAway, Date.now());
+      setTaskIndex(restored.taskIndex);
+      setAnswers(restored.answers);
+      setTimeLeft(restored.timeLeft);
+      activeSecRef.current = restored.activeSec;
+      startTime.current = draft?.sectionStartedAt || Date.now();
+      taskStartedAt.current = draft?.taskStartedAt ?? draft?.sectionStartedAt ?? Date.now();
       setLoaded(true);
     });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, prompts.tasks]);
 
-  // Per-task countdown — recomputed from the task's epoch start. NO auto-submit:
-  // writing is always finished manually. Learning mode is untimed.
+  // Per-task countdown. NO auto-submit: writing is always finished manually.
+  // A full sitting recomputes from the task's epoch start (a suspended app never
+  // gains free time); a practice counts only the seconds spent. Learning mode is untimed.
   useEffect(() => {
     if (learningMode || !loaded) return;
     const interval = setInterval(() => {
       const task = prompts.tasks[taskIndex];
-      if (task) setTimeLeft(remainingFrom(taskStartedAt.current, task.time_limit_minutes * 60));
+      if (!task) return;
+      const limit = task.time_limit_minutes * 60;
+      if (pauseClockWhileAway) {
+        activeSecRef.current = Math.min(limit, activeSecRef.current + 1);
+        setTimeLeft(limit - activeSecRef.current);
+      } else {
+        setTimeLeft(remainingFrom(taskStartedAt.current, limit));
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, [learningMode, loaded, taskIndex, prompts.tasks]);
+  }, [learningMode, loaded, taskIndex, prompts.tasks, pauseClockWhileAway]);
 
   // Save draft on state changes.
   useEffect(() => {
@@ -108,6 +113,7 @@ export function WritingSection({
       answers,
       sectionStartedAt: startTime.current,
       taskStartedAt: taskStartedAt.current,
+      activeSec: activeSecRef.current,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskIndex, answers, loaded]);
@@ -126,13 +132,14 @@ export function WritingSection({
     setTaskIndex(nextIndex);
     // A new task restarts the per-task clock.
     taskStartedAt.current = Date.now();
+    activeSecRef.current = 0;
     const nextTask = prompts.tasks[nextIndex];
     if (nextTask) setTimeLeft(nextTask.time_limit_minutes * 60);
   };
 
   const handleSubmit = () => {
     const timeSpent = elapsedSince(startTime.current);
-    clearDraft(sessionId, 'writing');
+    // The draft stays until the server holds the answers (the store clears it).
     onSubmit(answers, timeSpent);
     setShowConfirm(false);
   };

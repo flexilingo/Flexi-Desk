@@ -1,0 +1,435 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "Bonjour, {{name}}",
+      "afternoon": "Bon après-midi, {{name}}",
+      "evening": "Bonsoir, {{name}}"
+    },
+    "greetingNoName": {
+      "morning": "Bonjour",
+      "afternoon": "Bon après-midi",
+      "evening": "Bonsoir"
+    },
+    "streak_one": "{{count, number}} jour d'affilée",
+    "streak_many": "{{count, number}} jours d'affilée",
+    "streak_other": "{{count, number}} jours d'affilée",
+    "streakNone": "Commencez une série aujourd'hui",
+    "level": "Niveau {{level, number}}",
+    "achievements_exact0": "Aucun succès pour l'instant",
+    "achievements_one": "{{count, number}} succès",
+    "achievements_many": "{{count, number}} succès",
+    "achievements_other": "{{count, number}} succès",
+    "loadError": "Certains de vos chiffres n'ont pas pu être chargés. Rechargez la page pour réessayer.",
+    "duration": {
+      "hours": "{{h, number}} h {{m, number}} min",
+      "minutes": "{{m, number}} min"
+    },
+    "next": {
+      "eyebrowExam": "Prochaine étape · {{exam}}",
+      "eyebrowMinutes_one": "Prochaine étape · environ {{count, number}} minute",
+      "eyebrowMinutes_many": "Prochaine étape · environ {{count, number}} minutes",
+      "eyebrowMinutes_other": "Prochaine étape · environ {{count, number}} minutes",
+      "eyebrowMinutesLeft_one": "Prochaine étape · encore {{count, number}} minute",
+      "eyebrowMinutesLeft_many": "Prochaine étape · encore {{count, number}} minutes",
+      "eyebrowMinutesLeft_other": "Prochaine étape · encore {{count, number}} minutes",
+      "eyebrowReading": "Prochaine étape · continuer la lecture",
+      "eyebrowFirst": "Première étape · 5 minutes",
+      "error": "Un problème est survenu. Veuillez réessayer.",
+      "practice": {
+        "title": "Un court entraînement : {{skill}}",
+        "whyLowest": "Votre épreuve la plus faible dans vos derniers entraînements — un court extrait, noté tout de suite.",
+        "whyUntried": "Vous n'avez pas encore essayé cette épreuve — un court extrait, noté tout de suite.",
+        "cta": "Commencer l'entraînement"
+      },
+      "review": {
+        "title_one": "{{count, number}} carte attend d'être révisée",
+        "title_many": "{{count, number}} cartes attendent d'être révisées",
+        "title_other": "{{count, number}} cartes attendent d'être révisées",
+        "why": "Des mots que vous avez déjà récoltés, revus juste avant que vous ne les oubliiez.",
+        "cta": "Commencer la révision"
+      },
+      "episode": {
+        "title": "Finir {{title}}",
+        "why": "Reprenez là où vous vous êtes arrêté. Cliquez sur un mot inconnu pour voir son sens et le garder.",
+        "cta": "Continuer l'écoute"
+      },
+      "book": {
+        "title": "Continuer {{title}}",
+        "page": "Vous êtes à la page {{page, number}} sur {{total, number}}.",
+        "pageOnly": "Vous êtes à la page {{page, number}}.",
+        "cta": "Continuer la lecture"
+      },
+      "start": {
+        "title": "Écoutez un court épisode et cliquez sur chaque mot inconnu",
+        "why": "Le sens s'affiche aussitôt et le mot est gardé dans « Mon vocabulaire ». FlexiLingo en fait ensuite une carte de révision.",
+        "cta": "Choisir un épisode"
+      },
+      "after": "Ensuite :",
+      "chip": {
+        "practice": "Court entraînement : {{skill}}",
+        "review_one": "{{count, number}} carte à réviser",
+        "review_many": "{{count, number}} cartes à réviser",
+        "review_other": "{{count, number}} cartes à réviser",
+        "episode": "{{title}} · encore {{count, number}} min",
+        "book": "Continuer {{title}}",
+        "library": "Ou lire un livre facile",
+        "exam": "Vous préparez un examen ?"
+      }
+    },
+    "week": {
+      "title": "7 derniers jours",
+      "year": "Toute l'année",
+      "caption": "temps de révision et d'étude",
+      "emptyBody": "Chaque minute de révision, ou ajoutée à la main, devient ici une barre. Dix minutes par jour suffisent pour sentir la différence en une semaine.",
+      "goal": "Objectif quotidien {{count, number}} min",
+      "today": "Aujourd'hui",
+      "activeDays": "Actif {{count, number}} jours sur les 7 derniers",
+      "best_one": "Meilleure série : {{count, number}} jour",
+      "best_many": "Meilleure série : {{count, number}} jours",
+      "best_other": "Meilleure série : {{count, number}} jours"
+    },
+    "path": {
+      "title": "Votre parcours",
+      "lead": "Ce que vous écoutez et lisez devient des mots, la révision garde ces mots en tête, et à la fin cela se voit à l'examen.",
+      "here": "Votre prochaine étape est ici",
+      "listen": {
+        "title": "Écouter et lire",
+        "emptyTitle": "Rien pour l'instant",
+        "emptyBody": "Des podcasts et des livres prêts à lire à votre niveau, tous avec le texte complet. Cliquez sur les mots inconnus.",
+        "unitHours": "heures d'écoute, 30 derniers jours",
+        "unitMinutes": "minutes d'écoute, 30 derniers jours",
+        "episodes": "Épisodes commencés",
+        "followed": "Podcasts suivis",
+        "books": "Livres et fichiers",
+        "link": "Podcasts"
+      },
+      "words": {
+        "title": "Récolter des mots",
+        "emptyTitle": "Aucun mot pour l'instant",
+        "emptyBody": "Partout où vous croisez un mot inconnu, cliquez dessus. Vous voyez son sens, sa prononciation et un exemple, et le mot est gardé ici.",
+        "unit": "mots récoltés",
+        "thisWeek": "+{{count, number}} cette semaine",
+        "suggested": "Vus souvent, pas encore en carte",
+        "notes": "Notes",
+        "link": "Mon vocabulaire"
+      },
+      "review": {
+        "title": "Réviser",
+        "emptyTitle": "Aucune carte pour l'instant",
+        "emptyBody": "Les mots que vous récoltez deviennent des cartes, et chaque carte revient juste avant que vous ne l'oubliiez.",
+        "emptyLink": "Decks prêts à l'emploi",
+        "unit": "cartes apprises",
+        "due_one": "{{count, number}} carte à revoir aujourd'hui",
+        "due_many": "{{count, number}} cartes à revoir aujourd'hui",
+        "due_other": "{{count, number}} cartes à revoir aujourd'hui",
+        "noneDue": "Rien à revoir aujourd'hui",
+        "learned": "Apprises",
+        "reviewing": "En révision",
+        "unseen": "Pas encore vues",
+        "decks": "Decks",
+        "accuracy": "Bonnes réponses",
+        "link": "Decks"
+      },
+      "exam": {
+        "title": "Évaluez-vous",
+        "emptyTitle": "Aucun examen choisi",
+        "emptyBody": "Vous préparez le CELPIP ou le TCF ? Un entraînement de 10 minutes montre où vous en êtes.",
+        "emptyBodyNone": "Pas d'examen en vue — aucun souci. Si un jour c'est le cas, un entraînement de 10 minutes montre où vous en êtes.",
+        "emptyLink": "Voir les examens",
+        "daysUnit_one": "jour avant le {{exam}}",
+        "daysUnit_many": "jours avant le {{exam}}",
+        "daysUnit_other": "jours avant le {{exam}}",
+        "takenUnit": "entraînements {{exam}} faits",
+        "weekProgress": "{{done, number}} sur {{target, number}} entraînements cette semaine",
+        "weakest": "Votre épreuve la plus faible",
+        "scale": "Moyenne de vos derniers entraînements, en {{label}}",
+        "noScores": "Pas encore de note. Faites un court entraînement pour voir où vous en êtes.",
+        "taken": "Entraînements faits",
+        "addDate": "Ajouter la date de l'examen"
+      }
+    },
+    "shelf": {
+      "title": "Reprendre là où vous en étiez",
+      "starterTitle": "Des livres pour commencer, à votre niveau",
+      "library": "Bibliothèque",
+      "allPodcasts": "Podcasts",
+      "minLeft": "encore {{count, number}} min",
+      "page": "Page {{page, number}} sur {{total, number}}",
+      "pageOnly": "Page {{page, number}}",
+      "examTitle": "Entraînement {{exam}}",
+      "examMeta": "Pas encore terminé",
+      "due_one": "{{count, number}} carte à revoir aujourd'hui",
+      "due_many": "{{count, number}} cartes à revoir aujourd'hui",
+      "due_other": "{{count, number}} cartes à revoir aujourd'hui",
+      "level": "Niveau {{level}}",
+      "kind": {
+        "podcast": "Podcast",
+        "book": "Livre",
+        "file": "Fichier",
+        "exam": "Examen",
+        "deck": "Deck"
+      }
+    }
+  },
+  "examGoal": {
+    "title": "Vous préparez quel examen ?",
+    "subtitle": "Choisissez-en un et commencez un court entraînement maintenant. Vous pourrez le changer dans les paramètres.",
+    "celpip": "CELPIP",
+    "celpipHint": "Anglais · Canada",
+    "tcf": "TCF Canada",
+    "tcfHint": "Français · Canada",
+    "tcfQuebec": "TCF Québec",
+    "tcfQuebecHint": "Français · Québec",
+    "none": "Pas d'examen",
+    "noneHint": "Je veux juste progresser",
+    "dateLabel": "Quand passez-vous l'examen ? (facultatif)",
+    "ctaCelpip": "Commencer 10 minutes de Reading",
+    "ctaTcf": "Commencer 10 questions de compréhension orale",
+    "ctaNone": "Découvrir les podcasts",
+    "celpipNote": "Reading, partie 1 · environ 10 minutes · estimation CLB",
+    "tcfNote": "Compréhension orale, questions 1 à 10 · environ 10 minutes · sans micro",
+    "notNow": "Plus tard",
+    "error": "Un problème est survenu. Réessayez.",
+    "nudgeTitle": "Vous préparez le CELPIP ou le TCF ?",
+    "nudgeBody": "Choisissez votre examen et commencez un court entraînement.",
+    "nudgeCta": "Choisir mon examen",
+    "nudgeClose": "Fermer",
+    "ctaSave": "Enregistrer mon examen",
+    "webOnlyNote": "L'entraînement à cet examen s'ouvre pour l'instant sur le site. Votre choix est enregistré dans votre compte."
+  },
+  "examResult": {
+    "title": "Comment s'est passé votre {{exam}} ?",
+    "subtitle": "Entrez vos notes officielles — même une seule compétence aide. Nous les comparons à nos estimations pour que vous sachiez à quel point leur faire confiance.",
+    "notOutYet": "Résultats pas encore reçus",
+    "notTakenYet": "Je ne l'ai pas encore passé",
+    "newDate": "Nouvelle date d'examen",
+    "saveDate": "Enregistrer la date",
+    "save": "Enregistrer mes notes",
+    "enterOne": "Entrez au moins une note.",
+    "outOfRange": "{{skill}} doit être entre {{min}} et {{max}}.",
+    "thanks": "Merci, vos notes sont enregistrées. Elles aident chaque apprenant ici à savoir si nos estimations sont justes.",
+    "error": "Un problème est survenu. Réessayez.",
+    "skills": {
+      "listening": "Compréhension orale / Listening",
+      "reading": "Compréhension écrite / Reading",
+      "writing": "Expression écrite / Writing",
+      "speaking": "Expression orale / Speaking"
+    }
+  },
+  "examWeek": {
+    "title": "Votre {{exam}} cette semaine",
+    "daysLeft_one": "{{count, number}} jour avant l'examen",
+    "daysLeft_many": "{{count, number}} jours avant l'examen",
+    "daysLeft_other": "{{count, number}} jours avant l'examen",
+    "today": "Votre examen, c'est aujourd'hui — bonne chance !",
+    "addDate": "Ajoutez la date de votre examen",
+    "progress": "{{done}} entraînements sur {{target}} cette semaine",
+    "practiceTitle": "S'entraîner : {{skill}}",
+    "practiceWhyUntried": "Vous n'avez pas encore essayé cette épreuve — un court extrait, noté tout de suite.",
+    "practiceWhyLowest": "Votre épreuve la plus faible en ce moment — un court extrait, noté tout de suite.",
+    "practiceCta": "Commencer",
+    "listenTitleEn": "Écouter un podcast en anglais",
+    "listenTitleFr": "Écouter un podcast en français",
+    "listenWhy": "15 minutes avec la transcription — c'est exactement ce que l'épreuve d'écoute récompense.",
+    "listenCta": "Choisir un épisode",
+    "readTitle": "Lire quelques pages",
+    "readWhy": "Votre livre ou un livre de la bibliothèque — cliquez sur les mots inconnus.",
+    "readCta": "Ouvrir le lecteur",
+    "error": "Un problème est survenu. Réessayez.",
+    "skills": {
+      "celpip": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "writing": "Writing",
+        "speaking": "Speaking"
+      },
+      "tcf": {
+        "listening": "Compréhension orale",
+        "reading": "Compréhension écrite",
+        "writing": "Expression écrite",
+        "speaking": "Expression orale"
+      }
+    }
+  },
+  "pendingReviews": {
+    "title": "Révisions en attente",
+    "totalDue": "{{count}} cartes en attente",
+    "dueOf": "{{due}} en attente sur {{total}} cartes",
+    "moreDecks": "+{{count}} autres paquets",
+    "startReview": "Réviser",
+    "allCaughtUp": "Tout est à jour !",
+    "allCaughtUpDesc": "Aucune carte à réviser pour le moment. Bravo !"
+  },
+  "statusBar": {
+    "streakDays": "jours de série",
+    "bestStreak": "Meilleur : {{count}}",
+    "levelShort": "Niv.{{level}}",
+    "today": "Aujourd'hui",
+    "minutesToday": "{{minutes}} min",
+    "xpToday": "{{xp}} XP"
+  },
+  "goalSuggestion": {
+    "increaseTitle": "Excellent! Il est temps d'augmenter votre objectif",
+    "decreaseTitle": "Suggestion d'Ajustement d'Objectif",
+    "increaseDescription": "Vous avez atteint votre objectif {{days}} jours de suite! Actuel: {{current}} mots. Suggéré: {{suggested}} mots",
+    "decreaseDescription": "Votre objectif actuel semble difficile. Vous l'avez atteint seulement {{days}} jours sur 7. Suggéré: {{suggested}} mots",
+    "accept": "Accepter ({{goal}} mots)",
+    "dismiss": "Peut-être plus tard"
+  },
+  "xp": {
+    "toNextLevel": "{{xp}} XP pour le niveau suivant",
+    "maxLevel": "Niveau maximum atteint!"
+  },
+  "heatmap": {
+    "title": "Calendrier de Série d'Étude",
+    "consecutiveDays": "jours consécutifs",
+    "clickToEdit": "Cliquez sur un jour pour enregistrer ou modifier le temps d'étude manuel",
+    "loading": "Chargement...",
+    "days": {
+      "sat": "S",
+      "sun": "D",
+      "mon": "L",
+      "tue": "M",
+      "wed": "M",
+      "thu": "J",
+      "fri": "V"
+    },
+    "less": "Moins",
+    "more": "Plus",
+    "manualTime": "Temps manuel enregistré",
+    "futureDate": "Date future",
+    "cardsReviewed": "Cartes révisées:",
+    "autoTime": "Temps auto:",
+    "manualTimeLabel": "Temps saisi :",
+    "total": "Total:",
+    "minutes": "minutes",
+    "activeDays": "Jours actifs :",
+    "addManualTime": "Ajouter du temps manuel",
+    "ringLegend": "Anneau = temps d'étude manuel enregistré",
+    "studyLabel": "Étude :",
+    "listenLabel": "Écoute :",
+    "readLabel": "Lecture :"
+  },
+  "manualStudy": {
+    "title": "Enregistrer le Temps d'Étude Manuel",
+    "description": "Enregistrez manuellement votre temps d'étude pour suivre votre progression",
+    "date": "Date",
+    "studyTime": "Temps d'Étude (minutes)",
+    "placeholder": "ex: 90 pour une heure et demie",
+    "equivalent": "Équivalent:",
+    "error": "Erreur",
+    "invalidMinutes": "Les minutes doivent être entre 0 et 600",
+    "invalidDate": "Date invalide",
+    "futureDate": "Impossible d'enregistrer pour des dates futures",
+    "errorSaving": "Erreur lors de l'enregistrement",
+    "errorDeleting": "Erreur lors de la suppression",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "close": "Fermer",
+    "hours": "heure",
+    "minutes": "minutes",
+    "and": "et",
+    "zeroMinutes": "0 minute",
+    "dayTotal": "Résumé du jour",
+    "activityTime": "Activité",
+    "manualTime": "Manuel",
+    "total": "Total",
+    "cloudError": "Enregistré sur cet ordinateur, mais pas dans votre compte. Réessayez."
+  },
+  "achievements": {
+    "title": "Succès",
+    "unlocked": "Débloqués",
+    "noAchievements": "Pas encore de succès",
+    "startLearning": "Commencez à apprendre pour débloquer votre premier succès!",
+    "showAll": "Voir tout ({{count}})",
+    "showLess": "Voir moins",
+    "levelUp": "Niveau supérieur",
+    "levelUnlocked": "Niveau {{level}}",
+    "maxed": "Maximum",
+    "locked": "Verrouillé",
+    "levels": "Niveaux",
+    "classic": "Classique",
+    "nextLevel": "Suivant :",
+    "progress": "Progression",
+    "detailTitle": "Détails du succès",
+    "currentProgress": "Progression actuelle",
+    "levelsList": "Niveaux",
+    "goAction": "C'est parti !",
+    "pointsLabel": "{{points}} XP",
+    "thresholdLabel": "{{threshold}}",
+    "nextUnlock": "Prochain déblocage",
+    "nextUnlockProgress": "{{current}} / {{total}} · {{pct}}% complété",
+    "tier": {
+      "streak_master": "{{n, number}} jours d'affilée",
+      "word_scholar": "{{n, number}} mots",
+      "card_master": "{{n, number}} révisions",
+      "time_investor": "{{n, number}} minutes",
+      "episode_explorer": "{{n, number}} épisodes",
+      "bookworm": "{{n, number}} documents",
+      "steady_learner": "{{n, number}} jours actifs"
+    },
+    "groups": {
+      "streak_master": {
+        "name": "Maître de la série",
+        "hint": "Étudiez plusieurs jours de suite. Chaque jour d'affilée compte.",
+        "action": "Étudier aujourd'hui"
+      },
+      "word_scholar": {
+        "name": "Érudit des mots",
+        "hint": "Gardez les mots rencontrés en écoutant et en lisant.",
+        "action": "Trouver de nouveaux mots"
+      },
+      "card_master": {
+        "name": "Maître des cartes",
+        "hint": "Révisez vos cartes quand elles reviennent.",
+        "action": "Commencer une révision"
+      },
+      "time_investor": {
+        "name": "Investisseur de temps",
+        "hint": "Les minutes d'étude, d'écoute et de lecture s'additionnent.",
+        "action": "Continuer"
+      },
+      "episode_explorer": {
+        "name": "Explorateur d'épisodes",
+        "hint": "Lancez des épisodes de podcast et écoutez-les.",
+        "action": "Choisir un épisode"
+      },
+      "bookworm": {
+        "name": "Rat de bibliothèque",
+        "hint": "Ouvrez des livres et vos propres fichiers dans le Lecteur.",
+        "action": "Ouvrir le Lecteur"
+      },
+      "steady_learner": {
+        "name": "Apprenant régulier",
+        "hint": "Soyez actif sur des jours différents, pas forcément d'affilée.",
+        "action": "Étudier aujourd'hui"
+      }
+    }
+  },
+  "desk": {
+    "signIn": "Se connecter",
+    "retry": "Réessayer",
+    "cardError": "Cette partie n'a pas pu être chargée.",
+    "close": "Fermer",
+    "loadErrorSome": "Certains de vos chiffres n'ont pas pu être chargés.",
+    "examSignedOutTitle": "Vous préparez le CELPIP ou le TCF ?",
+    "examSignedOutBody": "Connectez-vous pour choisir votre examen et sa date, suivre vos entraînements et retrouver la même chose sur le site.",
+    "streakMilestone": "{{n, number}} jours d'affilée !",
+    "streakMilestoneBody": "Continuez. À demain.",
+    "unlockedToast": "Succès débloqué",
+    "dismiss": "Fermer",
+    "pendingSignedOut": "Vos cartes sont sur cet ordinateur."
+  },
+  "goal": {
+    "set": "Fixer un objectif quotidien",
+    "title": "Objectif d'étude quotidien",
+    "body": "Les minutes par jour que vous voulez étudier. Elles tracent la ligne pointillée de votre semaine.",
+    "minutes": "Minutes par jour",
+    "save": "Enregistrer",
+    "remove": "Supprimer l'objectif",
+    "error": "L'objectif n'a pas pu être enregistré.",
+    "invalid": "Saisissez un nombre de 5 à 600."
+  }
+}

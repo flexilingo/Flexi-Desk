@@ -110,6 +110,8 @@ export interface CuratedEpisodeLite {
   cefr_level: CefrLevel | null;
   speech_rate_wpm: number | null;
   status: string;
+  /** `UNSUPPORTED_LANGUAGE…` when the pipeline cannot transcribe the episode's language. */
+  error_message?: string | null;
   video_id: string | null;
   podcast_title?: string;
   podcast_image?: string;
@@ -200,6 +202,10 @@ export interface PodcastEpisode {
   transcriptLang?: string;
   /** Episode artwork; the feed's cover is the fallback. */
   imageUrl?: string;
+  /** Set for a catalogue VIDEO: it plays in the YouTube surface, not the audio element. */
+  youtubeId?: string;
+  /** The catalogue's id for that video — the watch page's route param. */
+  catalogueVideoId?: string;
 }
 
 export interface PodcastBookmark {
@@ -682,6 +688,8 @@ export interface EpisodesByLevelParams {
   topic?: string;
   search?: string;
   sort?: 'easiest' | 'hardest' | 'newest';
+  /** Episode length ceiling in MINUTES. */
+  maxDuration?: number;
   page?: number;
   limit?: number;
 }
@@ -690,6 +698,10 @@ export interface BrowseEpisodesParams {
   sort?: string;
   difficulty?: string;
   accent?: string;
+  language?: string;
+  topic?: string;
+  /** Episode length ceiling in MINUTES. */
+  maxDuration?: number;
   page?: number;
   limit?: number;
 }

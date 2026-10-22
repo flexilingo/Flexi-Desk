@@ -397,7 +397,7 @@ export function SelectionActionBar({
 
   return (
     <div
-      className="absolute flex items-center gap-2 px-3 py-2 bg-slate-700 border border-white/10 rounded-xl shadow-lg z-[100] whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 duration-150"
+      className="absolute flex items-center gap-2 px-3 py-2 bg-popover text-popover-foreground border border-border rounded-xl shadow-xl z-[100] whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 duration-150"
       style={{
         bottom: 'calc(100% + 12px)',
         left: '50%',
@@ -406,13 +406,13 @@ export function SelectionActionBar({
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <span className="text-sm font-medium text-slate-200 max-w-[200px] truncate px-2 py-1 bg-slate-600 rounded-lg">
+      <span className="text-sm font-medium text-foreground max-w-[200px] truncate px-2 py-1 bg-muted rounded-lg">
         &quot;{displayText}&quot;
       </span>
       <div className="w-px h-5 bg-white/10" />
       <button
         type="button"
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium border-0 cursor-pointer hover:bg-emerald-700 transition-colors duration-150"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium border-0 cursor-pointer hover:bg-primary/88 transition-colors duration-150"
         onClick={handleAddToDeck}
       >
         <span className="text-base">+</span>
@@ -420,14 +420,14 @@ export function SelectionActionBar({
       </button>
       <button
         type="button"
-        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-600 text-slate-300 rounded-lg text-sm border-0 cursor-pointer hover:bg-slate-500 transition-colors duration-150"
+        className="flex items-center gap-1 px-2.5 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm border-0 cursor-pointer hover:bg-muted/70 hover:text-foreground transition-colors duration-150"
         onClick={handleTranslate}
       >
         {t('podcast.translate')}
       </button>
       <button
         type="button"
-        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-600 text-slate-300 rounded-lg text-sm border-0 cursor-pointer hover:bg-slate-500 transition-colors duration-150"
+        className="flex items-center gap-1 px-2.5 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm border-0 cursor-pointer hover:bg-muted/70 hover:text-foreground transition-colors duration-150"
         onClick={handleNote}
       >
         {t('podcast.note')}
@@ -435,7 +435,9 @@ export function SelectionActionBar({
       <button
         type="button"
         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm border-0 cursor-pointer transition-colors duration-150 ${
-          copied ? 'bg-emerald-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+          copied
+            ? 'bg-success text-success-foreground'
+            : 'bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground'
         }`}
         onClick={handleCopy}
       >
@@ -446,7 +448,7 @@ export function SelectionActionBar({
           <div className="w-px h-5 bg-white/10" />
           <button
             type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8BB7A3]/20 text-[#8BB7A3] hover:bg-[#8BB7A3]/30 rounded-lg text-sm font-medium border-0 cursor-pointer transition-colors duration-150"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-success/15 text-success hover:bg-success/25 rounded-lg text-sm font-medium border-0 cursor-pointer transition-colors duration-150"
             onClick={handleAskLena}
           >
             <MessageCircle size={14} />
@@ -457,13 +459,13 @@ export function SelectionActionBar({
       <button
         type="button"
         aria-label="Clear selection"
-        className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-600 text-slate-400 hover:bg-slate-500 hover:text-slate-200 border-0 cursor-pointer transition-colors duration-150"
+        className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground border-0 cursor-pointer transition-colors duration-150"
         onClick={() => onClear()}
       >
         <X className="h-3 w-3" />
       </button>
       <div
-        className="absolute bg-slate-700 border-r border-b border-white/10"
+        className="absolute bg-popover border-r border-b border-border"
         style={{
           bottom: '-5px',
           left: '50%',

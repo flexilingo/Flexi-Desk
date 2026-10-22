@@ -17,12 +17,14 @@ import {
   Target,
 } from 'lucide-react';
 import { listen } from '@tauri-apps/api/event';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useOllamaStore } from '@/stores/ollamaStore';
 import {
   RECOMMENDED_OLLAMA_MODELS,
+  modelKey,
   mapOllamaPullProgress,
   mapOllamaInstallProgress,
   type RawOllamaPullProgress,
@@ -32,6 +34,7 @@ import {
 } from '@/stores/ollamaTypes';
 
 export function OllamaModelManager() {
+  const { t } = useTranslation('ai');
   const {
     isConnected,
     version,
@@ -98,11 +101,9 @@ export function OllamaModelManager() {
   };
 
   // Figure out which recommended models are not installed
-  const installedNames = new Set(
-    installedModels.map((m) => m.name.replace(/:latest$/, ''))
-  );
+  const installedNames = new Set(installedModels.map((m) => m.name.replace(/:latest$/, '')));
   const notInstalledRecommended = RECOMMENDED_OLLAMA_MODELS.filter(
-    (r) => !installedNames.has(r.name) && !installedNames.has(r.name + ':latest')
+    (r) => !installedNames.has(r.name) && !installedNames.has(r.name + ':latest'),
   );
 
   // Filter logic
@@ -114,7 +115,7 @@ export function OllamaModelManager() {
 
   const filteredInstalled = installedModels.filter((m) => filterFn(m.name));
   const filteredRecommended = notInstalledRecommended.filter(
-    (m) => filterFn(m.name) || filterFn(m.displayName) || filterFn(m.description)
+    (m) => filterFn(m.name) || filterFn(m.displayName) || filterFn(m.description),
   );
 
   return (
@@ -123,8 +124,8 @@ export function OllamaModelManager() {
       {error && (
         <div className="flex items-center justify-between rounded-md bg-error/10 px-3 py-2 text-sm text-error">
           <span className="truncate">{error}</span>
-          <button onClick={clearError} className="ml-2 shrink-0 text-xs underline">
-            Dismiss
+          <button onClick={clearError} className="ms-2 shrink-0 text-xs underline">
+            {t('engine.dismiss')}
           </button>
         </div>
       )}
@@ -137,22 +138,19 @@ export function OllamaModelManager() {
             <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <WifiOff className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Ollama is not installed</span>
+                <span className="text-sm font-medium">{t('engine.notInstalledTitle')}</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Ollama is a free, open-source AI engine that runs on your machine.
-                Click below to download and install it automatically.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('engine.notInstalledDesc')}</p>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-[10px]">
                   {installStatus.platform === 'macos' ? 'macOS' : 'Linux'}{' '}
                   {installStatus.arch === 'aarch64' ? 'ARM64' : 'x64'}
                 </Badge>
-                <span className="text-[10px] text-muted-foreground">~120 MB download</span>
+                <span className="text-[10px] text-muted-foreground">{t('engine.download')}</span>
               </div>
-              <Button onClick={installOllama} className="w-full">
-                <Download className="h-4 w-4 mr-2" />
-                Install Ollama
+              <Button onClick={installOllama}>
+                <Download className="h-4 w-4" />
+                {t('engine.install')}
               </Button>
             </div>
           )}
@@ -162,14 +160,17 @@ export function OllamaModelManager() {
             <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm font-medium">Installing Ollama...</span>
+                <span className="text-sm font-medium">{t('engine.installing')}</span>
               </div>
               {installProgress && (
                 <ProgressBar
                   percent={installProgress.percent}
                   status={
                     installProgress.status === 'downloading'
-                      ? `Downloading... ${formatSize(installProgress.downloadedBytes)} / ${formatSize(installProgress.totalBytes)}`
+                      ? t('engine.downloadingBytes', {
+                          done: formatSize(installProgress.downloadedBytes),
+                          total: formatSize(installProgress.totalBytes),
+                        })
                       : installProgress.status
                   }
                 />
@@ -178,32 +179,36 @@ export function OllamaModelManager() {
           )}
 
           {/* State B: Installed but serve not running */}
-          {installStatus && installStatus.isInstalled && !installStatus.isServeRunning && !isInstalling && !isStartingServe && (
-            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <WifiOff className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Ollama is installed but not running</span>
+          {installStatus &&
+            installStatus.isInstalled &&
+            !installStatus.isServeRunning &&
+            !isInstalling &&
+            !isStartingServe && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <WifiOff className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{t('engine.notRunningTitle')}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {installStatus.isSystemInstall
+                    ? t('engine.foundAtSystem', { path: installStatus.binaryPath })
+                    : t('engine.foundAt', { path: installStatus.binaryPath })}
+                </p>
+                <Button onClick={startServe}>
+                  <Play className="h-4 w-4" />
+                  {t('engine.start')}
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {installStatus.isSystemInstall
-                  ? `System installation found at ${installStatus.binaryPath}`
-                  : `Installed at ${installStatus.binaryPath}`}
-              </p>
-              <Button onClick={startServe} className="w-full">
-                <Play className="h-4 w-4 mr-2" />
-                Start Ollama
-              </Button>
-            </div>
-          )}
+            )}
 
           {/* Starting serve spinner */}
           {isStartingServe && (
             <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm font-medium">Starting Ollama...</span>
+                <span className="text-sm font-medium">{t('engine.starting')}</span>
               </div>
-              <p className="text-xs text-muted-foreground">Waiting for Ollama to become ready...</p>
+              <p className="text-xs text-muted-foreground">{t('engine.waiting')}</p>
             </div>
           )}
 
@@ -211,7 +216,7 @@ export function OllamaModelManager() {
           {isCheckingConnection && !installStatus && (
             <div className="flex items-center gap-2 py-4 justify-center">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Checking Ollama status...</span>
+              <span className="text-sm text-muted-foreground">{t('engine.checking')}</span>
             </div>
           )}
         </>
@@ -223,15 +228,19 @@ export function OllamaModelManager() {
           {/* Connection Status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 text-sm text-[#8BB7A3]">
+              <div className="flex items-center gap-1.5 text-sm text-success">
                 <Wifi className="h-4 w-4" />
-                Connected{version && ` (v${version})`}
+                {version ? t('engine.connectedVersion', { version }) : t('engine.connected')}
               </div>
               {installStatus?.isSystemInstall && (
-                <Badge variant="outline" className="text-[10px]">System</Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  {t('engine.system')}
+                </Badge>
               )}
               {installStatus?.isManaged && (
-                <Badge variant="outline" className="text-[10px]">Managed</Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  {t('engine.managed')}
+                </Badge>
               )}
             </div>
             <div className="flex items-center gap-1">
@@ -241,7 +250,8 @@ export function OllamaModelManager() {
                   size="icon"
                   className="h-7 w-7"
                   onClick={stopServe}
-                  title="Stop Ollama"
+                  title={t('engine.stop')}
+                  aria-label={t('engine.stop')}
                 >
                   <Square className="h-3 w-3" />
                 </Button>
@@ -250,22 +260,28 @@ export function OllamaModelManager() {
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                onClick={() => { checkConnection(); checkInstallStatus(); }}
+                onClick={() => {
+                  checkConnection();
+                  checkInstallStatus();
+                }}
                 disabled={isCheckingConnection}
+                aria-label={t('engine.refresh')}
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isCheckingConnection ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isCheckingConnection ? 'animate-spin' : ''}`}
+                />
               </Button>
             </div>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={modelSearch}
               onChange={(e) => setModelSearch(e.target.value)}
-              placeholder="Search models..."
-              className="pl-8 h-8 text-sm"
+              placeholder={t('engine.search')}
+              className="ps-8 h-8 text-sm"
             />
           </div>
 
@@ -279,7 +295,7 @@ export function OllamaModelManager() {
               {filteredInstalled.length > 0 && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Installed Models
+                    {t('engine.installedModels')}
                   </label>
                   <div className="space-y-1.5">
                     {filteredInstalled.map((model) => (
@@ -297,7 +313,7 @@ export function OllamaModelManager() {
 
               {installedModels.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-3">
-                  No models installed yet. Download one below to get started.
+                  {t('engine.noModels')}
                 </p>
               )}
             </>
@@ -307,7 +323,7 @@ export function OllamaModelManager() {
           {filteredRecommended.length > 0 && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Recommended Models
+                {t('engine.recommended')}
               </label>
               <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
                 {filteredRecommended.map((model) => (
@@ -315,9 +331,7 @@ export function OllamaModelManager() {
                     key={model.name}
                     model={model}
                     isPulling={isPulling && pullingModelName === model.name}
-                    pullProgress={
-                      pullingModelName === model.name ? pullProgress : null
-                    }
+                    pullProgress={pullingModelName === model.name ? pullProgress : null}
                     onPull={() => pullModel(model.name)}
                     disabled={isPulling}
                   />
@@ -329,13 +343,13 @@ export function OllamaModelManager() {
           {/* Custom Model Pull */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Pull Custom Model
+              {t('engine.custom')}
             </label>
             <div className="flex gap-2">
               <Input
                 value={customModelName}
                 onChange={(e) => setCustomModelName(e.target.value)}
-                placeholder="e.g. codellama:7b"
+                placeholder={t('engine.customPlaceholder')}
                 className="flex-1 h-8 text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleCustomPull()}
               />
@@ -350,15 +364,18 @@ export function OllamaModelManager() {
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
                   <>
-                    <Download className="h-3 w-3 mr-1" />
-                    Pull
+                    <Download className="h-3 w-3" />
+                    {t('engine.pull')}
                   </>
                 )}
               </Button>
             </div>
-            {isPulling && pullingModelName && !RECOMMENDED_OLLAMA_MODELS.some(r => r.name === pullingModelName) && pullProgress && (
-              <ProgressBar percent={pullProgress.percent} status={pullProgress.status} />
-            )}
+            {isPulling &&
+              pullingModelName &&
+              !RECOMMENDED_OLLAMA_MODELS.some((r) => r.name === pullingModelName) &&
+              pullProgress && (
+                <ProgressBar percent={pullProgress.percent} status={pullProgress.status} />
+              )}
           </div>
         </>
       )}
@@ -379,16 +396,15 @@ function InstalledModelRow({
   onSelect: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation('ai');
   return (
     <div
       className={`flex items-center gap-3 rounded-lg border p-2.5 transition-colors ${
-        isActive
-          ? 'border-primary/50 bg-primary/5'
-          : 'border-border hover:bg-muted/50'
+        isActive ? 'border-primary/50 bg-primary/5' : 'border-border hover:bg-muted/50'
       }`}
     >
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
-        <HardDrive className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-[#8BB7A3]'}`} />
+        <HardDrive className={`h-3.5 w-3.5 ${isActive ? 'text-primary' : 'text-success'}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -396,8 +412,8 @@ function InstalledModelRow({
           <span className="text-xs text-muted-foreground">{formatSize(model.size)}</span>
           {isActive && (
             <Badge className="text-[10px] px-1.5 py-0 bg-primary text-primary-foreground">
-              <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
-              Active
+              <CheckCircle2 className="h-2.5 w-2.5" />
+              {t('engine.active')}
             </Badge>
           )}
         </div>
@@ -407,11 +423,11 @@ function InstalledModelRow({
             <div className="flex items-center gap-2 mt-0.5">
               <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
                 <Zap className="h-3 w-3" />
-                {rec.speed}
+                {t(`engine.speed.${rec.speed.replace(/\s/g, '')}`)}
               </span>
               <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
                 <Target className="h-3 w-3" />
-                {rec.accuracy}
+                {t(`engine.accuracy.${rec.accuracy.replace(/\s/g, '')}`)}
               </span>
             </div>
           ) : null;
@@ -420,8 +436,8 @@ function InstalledModelRow({
       <div className="flex items-center gap-1">
         {!isActive && (
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onSelect}>
-            <Monitor className="h-3 w-3 mr-1" />
-            Use
+            <Monitor className="h-3 w-3" />
+            {t('engine.use')}
           </Button>
         )}
         <Button
@@ -430,6 +446,7 @@ function InstalledModelRow({
           className="h-7 px-1.5"
           onClick={onDelete}
           disabled={isActive}
+          aria-label={t('engine.delete')}
         >
           <Trash2 className="h-3.5 w-3.5 text-error" />
         </Button>
@@ -453,6 +470,7 @@ function RecommendedModelRow({
   onPull: () => void;
   disabled: boolean;
 }) {
+  const { t } = useTranslation('ai');
   return (
     <div className="flex items-center gap-3 rounded-lg border border-border p-2.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
@@ -466,15 +484,17 @@ function RecommendedModelRow({
           </Badge>
           <span className="text-xs text-muted-foreground">{formatSizeMb(model.sizeMb)}</span>
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+          {t(`engine.models.${modelKey(model.name)}`, { defaultValue: model.description })}
+        </p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
             <Zap className="h-3 w-3" />
-            {model.speed}
+            {t(`engine.speed.${model.speed.replace(/\s/g, '')}`)}
           </span>
           <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
             <Target className="h-3 w-3" />
-            {model.accuracy}
+            {t(`engine.accuracy.${model.accuracy.replace(/\s/g, '')}`)}
           </span>
         </div>
         {isPulling && pullProgress && (
@@ -492,8 +512,8 @@ function RecommendedModelRow({
           <Loader2 className="h-3 w-3 animate-spin" />
         ) : (
           <>
-            <Download className="h-3 w-3 mr-1" />
-            Pull
+            <Download className="h-3 w-3" />
+            {t('engine.pull')}
           </>
         )}
       </Button>
@@ -507,12 +527,11 @@ function ProgressBar({ percent, status }: { percent: number; status: string }) {
   return (
     <div className="mt-1.5">
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-300"
-            style={{ width: `${Math.min(percent, 100)}%` }}
-          />
-        </div>
+        <progress
+          max={100}
+          value={Math.min(percent, 100)}
+          className="block h-1.5 flex-1 appearance-none overflow-hidden rounded-full bg-muted [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-primary"
+        />
         <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
           {Math.round(percent)}%
         </span>

@@ -7,8 +7,8 @@ import type { CorrectionType, GrammarCorrection, VocabSuggestion } from '../type
 
 const borderColorByType: Record<CorrectionType, string> = {
   grammar: 'border-l-primary',
-  spelling: 'border-l-[#C58C6E]',
-  word_choice: 'border-l-[#8BB7A3]',
+  spelling: 'border-l-warning',
+  word_choice: 'border-l-success',
   word_order: 'border-l-muted',
 };
 
@@ -40,7 +40,8 @@ export function ConversationDetail() {
   }
 
   // Calculate scores (same logic as VoiceSession/SessionSummary)
-  const grammarScore = allCorrections.length === 0 ? 100 : Math.max(0, 100 - allCorrections.length * 10);
+  const grammarScore =
+    allCorrections.length === 0 ? 100 : Math.max(0, 100 - allCorrections.length * 10);
   const vocabScore = Math.min(100, allVocab.length * 15);
   const fluencyScore = Math.min(100, userMessages.length * 12);
   const overallScore = Math.round(grammarScore * 0.4 + vocabScore * 0.3 + fluencyScore * 0.3);
@@ -50,7 +51,13 @@ export function ConversationDetail() {
   const lastMsg = chatMessages[chatMessages.length - 1];
   const durationMinutes =
     firstMsg && lastMsg
-      ? Math.max(1, Math.round((new Date(lastMsg.createdAt).getTime() - new Date(firstMsg.createdAt).getTime()) / 60000))
+      ? Math.max(
+          1,
+          Math.round(
+            (new Date(lastMsg.createdAt).getTime() - new Date(firstMsg.createdAt).getTime()) /
+              60000,
+          ),
+        )
       : 0;
 
   const isActive = conv.status === 'active';
@@ -77,11 +84,7 @@ export function ConversationDetail() {
           </div>
         </div>
         {isActive && (
-          <Button
-            size="sm"
-            onClick={() => openConversation(conv.id)}
-            className="gap-1.5"
-          >
+          <Button size="sm" onClick={() => openConversation(conv.id)} className="gap-1.5">
             <Mic className="h-3.5 w-3.5" />
             Resume
           </Button>
@@ -135,12 +138,8 @@ export function ConversationDetail() {
                     <p className="text-sm text-muted-foreground line-through">
                       ❌ {correction.original}
                     </p>
-                    <p className="text-sm font-medium text-foreground">
-                      ✅ {correction.corrected}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      💡 {correction.explanation}
-                    </p>
+                    <p className="text-sm font-medium text-foreground">✅ {correction.corrected}</p>
+                    <p className="text-sm text-muted-foreground">💡 {correction.explanation}</p>
                   </div>
                 ))}
               </div>
@@ -197,7 +196,10 @@ export function ConversationDetail() {
                         msg.role === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground'
                       }`}
                     >
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </p>
                   </div>
                 </div>

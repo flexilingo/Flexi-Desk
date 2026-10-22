@@ -1,14 +1,34 @@
 import { useTranslation } from 'react-i18next';
-import { Volume2, Lightbulb, BookOpen, Sparkles, TriangleAlert, Landmark } from 'lucide-react';
+import {
+  Volume2,
+  Lightbulb,
+  BookOpen,
+  Sparkles,
+  TriangleAlert,
+  Landmark,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSpeak } from '../../hooks/useSpeak';
 import type { CardNotes } from '../../types';
 import { ClickableText } from './ClickableText';
+import { ConjugationPanel } from '../ConjugationPanel';
+import { groupsFromNotes, isFrenchVerbCard } from '../../lib/conjugation';
 
 interface Props {
   notes: CardNotes;
   /** Word lookup for any token in an example sentence. */
   onLookup?: (word: string, sentence: string) => void;
+  /** False on the flashcard, whose own face carries the examples (with audio and masks). */
+  showExamples?: boolean;
+  /** With the meaning masked, what gives it away (the definition, the verb table's glosses) hides behind the same eye. */
+  meaningRevealed?: boolean;
+  onToggleMeaning?: () => void;
+  /** The word itself, read when the IPA's speaker is pressed. */
+  word?: string;
+  /** A French verb card gets its conjugation table. */
+  conjugation?: { front: string; language: string };
 }
 
 const CEFR_CLS: Record<string, string> = {
@@ -57,17 +77,30 @@ function Chips({ items, tone }: { items: string[]; tone: string }) {
  * front's `study-shared/InsightsPanel`. Every field is optional; hand-made cards
  * with no AI notes render nothing.
  */
-export function InsightsPanel({ notes, onLookup }: Props) {
+export function InsightsPanel({
+  notes,
+  onLookup,
+  showExamples = true,
+  meaningRevealed = true,
+  onToggleMeaning,
+  word,
+  conjugation,
+}: Props) {
   const { t } = useTranslation('study');
   const { speak } = useSpeak();
 
-  const examples = Array.isArray(notes.examples) ? notes.examples.slice(0, 3) : [];
+  const examples = showExamples && Array.isArray(notes.examples) ? notes.examples.slice(0, 3) : [];
   const synonyms = Array.isArray(notes.synonyms) ? notes.synonyms.slice(0, 8) : [];
   const antonyms = Array.isArray(notes.antonyms) ? notes.antonyms.slice(0, 6) : [];
   const collocations = Array.isArray(notes.collocations) ? notes.collocations.slice(0, 6) : [];
   const mistakes = Array.isArray(notes.common_mistakes) ? notes.common_mistakes.slice(0, 3) : [];
 
+  const hasConjugation =
+    !!conjugation &&
+    (groupsFromNotes(notes).length > 0 ||
+      isFrenchVerbCard(notes, conjugation.language, conjugation.front));
   const hasContent =
+    hasConjugation ||
     notes.definition ||
     notes.memory_hook ||
     notes.ipa ||
@@ -95,7 +128,7 @@ export function InsightsPanel({ notes, onLookup }: Props) {
               {notes.ipa}
               <button
                 type="button"
-                onClick={() => speak(String(notes.ipa))}
+                onClick={() => speak(word ?? String(notes.ipa))}
                 className="rounded p-0.5 hover:bg-muted"
                 title={t('runner.listen')}
               >
@@ -118,7 +151,44 @@ export function InsightsPanel({ notes, onLookup }: Props) {
         </div>
       )}
 
-      {notes.definition && <p className="leading-snug text-foreground">{notes.definition}</p>}
+      {notes.definition &&
+        (meaningRevealed ? (
+          <p className="flex items-start gap-1.5 leading-snug text-foreground">
+            <span className="flex-1">{notes.definition}</span>
+            {onToggleMeaning && (
+              <button
+                type="button"
+                onClick={onToggleMeaning}
+                aria-label={t('runner.hideMeaning')}
+                title={t('runner.hideMeaning')}
+                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-caption transition-colors hover:text-accent"
+              >
+                <EyeOff className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onToggleMeaning}
+            aria-label={t('runner.revealMeaning')}
+            className="flex w-full items-center gap-1.5 text-start text-caption transition-colors hover:text-accent"
+          >
+            <span className="min-w-0 flex-1 select-none overflow-hidden whitespace-nowrap tracking-wide">
+              {'•'.repeat(40)}
+            </span>
+            <Eye className="h-3.5 w-3.5 shrink-0" />
+          </button>
+        ))}
+
+      {hasConjugation && conjugation && (
+        <ConjugationPanel
+          notes={notes}
+          front={conjugation.front}
+          language={conjugation.language}
+          showGlosses={meaningRevealed}
+        />
+      )}
 
       {notes.memory_hook && (
         <Section icon={Lightbulb} title={t('insights.memoryHook')}>

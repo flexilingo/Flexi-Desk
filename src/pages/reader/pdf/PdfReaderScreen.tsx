@@ -16,6 +16,7 @@ import {
   saveReaderMark,
   saveReaderNote,
   saveReaderTextBox,
+  setReaderLanguage,
   setReaderPageCount,
   setReaderPosition,
   startReaderSession,
@@ -34,12 +35,20 @@ import { PdfNoteDialog, type EditingNote } from './PdfNoteDialog';
 import { PdfNotesPanel } from './PdfNotesPanel';
 import { PdfWordsPanel } from './PdfWordsPanel';
 import { PdfWritingPanel } from './PdfWritingPanel';
+import {
+  CheatsheetPanel,
+  CHEATSHEET_PANEL_START,
+  type CheatsheetPanelState,
+} from '@/pages/cheatsheet';
+import { CHEATSHEET_LANGS } from '@/pages/cheatsheet/lib/types';
 import { PdfEditorBar } from './PdfEditorBar';
 import { ReaderDeckButton } from '../components/ReaderDeckButton';
 import { anchorSelection, type NoteAnchor } from '../lib/note-anchor';
 import { TextBoxStore } from '../lib/text-box-store';
 import { MarkStore } from '../lib/mark-store';
 import { usePageText } from '../lib/use-page-text';
+import { useLanguageCorrection } from '../lib/use-language-correction';
+import { LanguageNote } from '../components/LanguageNote';
 
 // PHASE F: audio, video, cheatsheet, edition picker and the
 // `useAudioHold` / `usePlayerKeys` hooks (ported in `../lib`, wired with the audio panel).
@@ -187,7 +196,10 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
   );
 
   // One panel at a time: they sit in the same column.
-  const [panel, setPanel] = useState<'notes' | 'words' | 'written' | null>(null);
+  const [panel, setPanel] = useState<'notes' | 'words' | 'written' | 'cheatsheet' | null>(null);
+  // The cheatsheet remembers where the reader was (page, search) across close and reopen.
+  const [cheatsheetState, setCheatsheetState] =
+    useState<CheatsheetPanelState>(CHEATSHEET_PANEL_START);
   const [editing, setEditing] = useState<(EditingNote & { anchor?: NoteAnchor | null }) | null>(
     null,
   );
@@ -506,6 +518,25 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
 
   const pageText = usePageText(pdf, documentId, currentPage);
 
+  // The language the reader picks is the document's own from then on, and everything that
+  // depends on it (lookup, voice, levels) reads the same state, so it follows at once.
+  const changeLanguage = useCallback(
+    (code: string) => {
+      setPickedLanguage(code);
+      setReaderLanguage({ document_id: documentId, language: code }).catch(() => {
+        // Kept for this sitting even if it could not be saved.
+      });
+    },
+    [documentId],
+  );
+  // A document stored under the wrong default language is corrected once, from its own text.
+  const correction = useLanguageCorrection({
+    documentId,
+    language,
+    pageText,
+    onCorrected: setPickedLanguage,
+  });
+
   const notes = useMemo<PdfNoteMark[]>(
     () =>
       notesData.map((note) => ({
@@ -598,12 +629,18 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
         writtenCount={writtenCount}
         writtenOpen={panel === 'written'}
         onToggleWritten={() => setPanel((open) => (open === 'written' ? null : 'written'))}
-        // PHASE F: onToggleAudio / onToggleVideo / onToggleCheatsheet / editions /
+        cheatsheetOpen={panel === 'cheatsheet'}
+        onToggleCheatsheet={
+          (CHEATSHEET_LANGS as readonly string[]).includes(language)
+            ? () => setPanel((open) => (open === 'cheatsheet' ? null : 'cheatsheet'))
+            : undefined
+        }
+        // PHASE F: onToggleAudio / onToggleVideo / editions /
         // onEditionChange. Omitted handlers hide their buttons.
         onZoomChange={changeZoom}
         tapToSpeak={tapToSpeak}
         onTapToSpeakChange={setTapToSpeak}
-        onLanguageChange={setPickedLanguage}
+        onLanguageChange={changeLanguage}
         onGoToPage={(pageNumber) => viewHandle.current?.scrollToPage(pageNumber)}
       >
         <ReaderDeckButton
@@ -613,6 +650,14 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
           language={language}
         />
       </ReaderToolbar>
+
+      {correction.note && (
+        <LanguageNote
+          code={correction.note.code}
+          onPick={changeLanguage}
+          onDismiss={correction.dismiss}
+        />
+      )}
 
       {writing && <PdfEditorBar store={boxStore} marks={markStore} onDone={toggleWriting} />}
 
@@ -703,7 +748,15 @@ export function PdfReaderScreen({ documentId, title }: { documentId: string; tit
             onClose={() => setPanel(null)}
           />
         )}
-        {/* PHASE F: the audio, video and cheatsheet panels open here too. */}
+        {panel === 'cheatsheet' && (
+          <CheatsheetPanel
+            lang={language}
+            state={cheatsheetState}
+            onStateChange={setCheatsheetState}
+            onClose={() => setPanel(null)}
+          />
+        )}
+        {/* PHASE F: the audio and video panels open here too. */}
       </div>
 
       {editing && (

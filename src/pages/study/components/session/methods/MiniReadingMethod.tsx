@@ -12,6 +12,7 @@ export function MiniReadingMethod({
   onSubmit,
   onNext,
   onLookup,
+  advancing,
 }: MethodProps) {
   const { t } = useTranslation('study');
   const [picked, setPicked] = useState<number | null>(null);
@@ -91,7 +92,11 @@ export function MiniReadingMethod({
           {result !== null && (
             <AnswerFeedback isCorrect={result} expected={choices[correctIndex]} />
           )}
-          {result !== null && <Button onClick={onNext}>{t('runner.next')}</Button>}
+          {result !== null && (
+            <Button onClick={onNext} loading={advancing}>
+              {t('runner.next')}
+            </Button>
+          )}
         </>
       )}
 

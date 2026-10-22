@@ -26,8 +26,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useReviewStore } from '@/pages/review/stores/reviewStore';
 import { targetLanguages, getLanguageByCode } from '@/config/languages';
-import type { AIWordAnalysis } from '@/pages/podcast/components/WordDialog/types';
+import type { AIWordAnalysis } from '@/components/WordDialog/types';
 import { useLanguageSettings } from '@/hooks/useLanguageSettings';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { useAiSource } from '@/stores/aiSourceStore';
+import { isAiSetupError } from '@/lib/aiSource';
 
 export interface AddToDeckItem {
   word: string;
@@ -56,6 +59,12 @@ interface Props {
    * one-click "create" row and prefilled in the new-deck dialog.
    */
   defaultDeckName?: string;
+  /** A deck to preselect when no `defaultDeckName` matches (the deck last saved into). */
+  preferredDeckId?: string;
+  /** Called after a successful add with the deck and mode used, so a caller can remember them. */
+  onSaved?: (info: { deckId: string; mode: AddMode }) => void;
+  /** Mode the sheet opens in (the one last used). Defaults to basic. */
+  defaultMode?: AddMode;
 }
 
 export function AddToDeckSheet({
@@ -66,6 +75,9 @@ export function AddToDeckSheet({
   sourceLanguage,
   onAdded,
   defaultDeckName,
+  preferredDeckId,
+  onSaved,
+  defaultMode,
 }: Props) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
@@ -94,6 +106,8 @@ export function AddToDeckSheet({
   const [progressCurrent, setProgressCurrent] = useState(0);
   const [progressWord, setProgressWord] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [needsAiSetup, setNeedsAiSetup] = useState(false);
+  const { own: ownAi } = useAiSource();
   const [success, setSuccess] = useState(false);
   const [addedCount, setAddedCount] = useState(0);
   const [enrichedCount, setEnrichedCount] = useState(0);
@@ -103,7 +117,7 @@ export function AddToDeckSheet({
   // Full state reset on every open, then load decks + preferred target language.
   useEffect(() => {
     if (!open) return;
-    setMode('basic');
+    setMode(defaultMode ?? 'basic');
     setSelectedDeckId('');
     setShowCreateDeck(false);
     setNewDeckName('');
@@ -121,7 +135,7 @@ export function AddToDeckSheet({
     // The user's translation language is one global choice, shared with the word
     // dictionary and the subtitle bar. An explicit `defaultLanguage` prop wins.
     setTargetLanguage(defaultLanguage ?? (getLanguageByCode(nativeLang) ? nativeLang : 'en'));
-  }, [open, defaultLanguage, nativeLang, fetchDecks]);
+  }, [open, defaultLanguage, nativeLang, fetchDecks, defaultMode]);
 
   // Auto-select the deck named `defaultDeckName` if there is one, else the first.
   const namedDeck = defaultDeckName
@@ -129,13 +143,14 @@ export function AddToDeckSheet({
     : undefined;
   useEffect(() => {
     if (open && decks.length > 0 && !selectedDeckId) {
-      setSelectedDeckId((namedDeck ?? decks[0]).id);
+      const preferred = preferredDeckId ? decks.find((d) => d.id === preferredDeckId) : undefined;
+      setSelectedDeckId((namedDeck ?? preferred ?? decks[0]).id);
     }
-  }, [open, decks, selectedDeckId, namedDeck]);
+  }, [open, decks, selectedDeckId, namedDeck, preferredDeckId]);
 
   const resolveErrorCode = (e: unknown): string => {
     const s = String(e);
-    if (s.includes('OLLAMA_NOT_RUNNING')) return 'OLLAMA_NOT_RUNNING';
+    if (isAiSetupError(s)) return 'AI_NOT_READY';
     return 'UNKNOWN_ERROR';
   };
 
@@ -219,7 +234,7 @@ export function AddToDeckSheet({
             enriched++;
           } catch (e) {
             // Model unreachable dooms the whole batch — abort with a clear code.
-            if (resolveErrorCode(e) === 'OLLAMA_NOT_RUNNING') throw e;
+            if (resolveErrorCode(e) === 'AI_NOT_READY') throw e;
             // Any other single-word failure: fall back to basic fields, keep going.
             analysis = null;
           }
@@ -241,8 +256,11 @@ export function AddToDeckSheet({
       setSuccess(true);
       setProcessing(false);
       onAdded?.(added);
+      if (added > 0) onSaved?.({ deckId: selectedDeckId, mode });
     } catch (e) {
-      setError(errorMessage(resolveErrorCode(e)));
+      // The user's own AI is not ready: show the setup card, never a cloud fallback.
+      if (resolveErrorCode(e) === 'AI_NOT_READY') setNeedsAiSetup(true);
+      else setError(errorMessage(resolveErrorCode(e)));
       setProcessing(false);
     }
   };
@@ -383,6 +401,9 @@ export function AddToDeckSheet({
         <p className="text-xs text-muted-foreground leading-snug px-0.5">
           {mode === 'basic' ? t('deck.modeBasicDesc') : t('deck.modeSmartDesc')}
         </p>
+        {mode === 'smart' && (needsAiSetup || ownAi.kind === 'unconfigured') && (
+          <AiSetupCard compact onReady={() => setNeedsAiSetup(false)} />
+        )}
       </div>
 
       {/* Target language (only meaningful for Smart, but always visible) */}

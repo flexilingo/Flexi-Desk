@@ -10,7 +10,7 @@ interface Props {
 /**
  * Splits text into tappable word tokens (desk's answer to the front's `LookupText`),
  * so any word the learner reads during an activity can be looked up in the shared
- * DictionarySheet. Punctuation and whitespace stay inert.
+ * the word dialog. Punctuation and whitespace stay inert.
  */
 export function ClickableText({ text, onWordClick, className }: Props) {
   if (!text) return null;

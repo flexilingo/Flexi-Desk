@@ -179,15 +179,15 @@ export function mapProgress(raw: RawPronunciationProgress): PronunciationProgres
 }
 
 export function scoreColor(score: number): string {
-  if (score >= 90) return 'text-[#8BB7A3]';
-  if (score >= 70) return 'text-[#C58C6E]';
-  if (score >= 50) return 'text-yellow-500';
+  if (score >= 90) return 'text-success';
+  if (score >= 70) return 'text-warning';
+  if (score >= 50) return 'text-warning';
   return 'text-error';
 }
 
 export function scoreBg(score: number): string {
-  if (score >= 90) return 'bg-[#8BB7A3]/15';
-  if (score >= 70) return 'bg-[#C58C6E]/15';
-  if (score >= 50) return 'bg-yellow-500/15';
+  if (score >= 90) return 'bg-success/15';
+  if (score >= 70) return 'bg-warning/15';
+  if (score >= 50) return 'bg-warning/15';
   return 'bg-error/15';
 }

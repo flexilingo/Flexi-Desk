@@ -2,13 +2,16 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { supabaseCall } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
+import { CLOUD_AI_TIERS } from '@/lib/aiSource';
 
 /**
- * The user's FlexiLingo subscription, used to decide where AI work runs.
+ * The user's FlexiLingo subscription.
  *
- * Desk is local-first and works signed-out, so this is always allowed to be
- * unknown: a null subscription simply means "not Pro", which routes AI analysis
- * to the on-device model instead of FlexiLingo's.
+ * A paid plan does NOT decide where AI runs: desk always uses the user's own AI
+ * unless they switch FlexiLingo's cloud AI on (see `src/lib/aiSource.ts`). The plan
+ * only decides whether that switch is available.
+ *
+ * Desk is local-first and works signed-out, so this is always allowed to be unknown.
  */
 
 /** Mirrors front's `UserSubscription` (`GET /subscription`). */
@@ -22,8 +25,8 @@ export interface UserSubscription {
   hasStripeSubscription: boolean;
 }
 
-/** Exactly the tiers front treats as paid — keep in lockstep. */
-export const PAID_TIERS = ['pro', 'lifetime', 'pro_max', 'trial'] as const;
+/** Exactly the tiers front treats as paid — one list, shared with the AI policy. */
+export const PAID_TIERS = CLOUD_AI_TIERS;
 
 interface SubscriptionState {
   subscription: UserSubscription | null;
@@ -83,18 +86,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
   })),
 );
 
-/** Whether FlexiLingo's cloud AI is available to this user. */
+/** Whether this tier is a paid plan. */
 export function isPaidTier(tier: string | undefined | null): boolean {
   return (PAID_TIERS as readonly string[]).includes(tier ?? '');
-}
-
-/**
- * Where AI analysis should run for this user.
- *
- * `cloud` — FlexiLingo's models (Pro tiers).
- * `local` — the on-device model configured in Settings (ollama by default).
- */
-export function useAiRoute(): 'cloud' | 'local' {
-  const subscription = useSubscriptionStore((s) => s.subscription);
-  return isPaidTier(subscription?.tier) ? 'cloud' : 'local';
 }

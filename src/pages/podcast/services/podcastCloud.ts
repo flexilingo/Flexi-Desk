@@ -60,10 +60,22 @@ export const getPopularPodcasts = (limit = 12, days?: number) =>
     `/podcast?${qs({ action: 'popular-podcasts', limit, days })}`,
   );
 
-export const getPopularEpisodes = (limit = 6, days?: number) =>
+export const getPopularEpisodes = (
+  limit = 6,
+  days?: number,
+  filters: { difficulty?: string; language?: string; topic?: string; maxDuration?: number } = {},
+) =>
   supabaseCall<PopularEpisodesResponse>(
     'GET',
-    `/podcast?${qs({ action: 'popular-episodes', limit, days })}`,
+    `/podcast?${qs({
+      action: 'popular-episodes',
+      limit,
+      days,
+      difficulty: filters.difficulty,
+      language: filters.language,
+      topic: filters.topic,
+      max_duration: filters.maxDuration,
+    })}`,
   );
 
 export const getPublicStats = () =>
@@ -75,8 +87,10 @@ export const getCuratedList = (params: {
   difficulty?: string;
   topic?: string;
   language?: string;
+  cefr?: string;
   search?: string;
   sort?: string;
+  has_transcriptions?: 'true';
   page?: number;
   limit?: number;
 }) =>
@@ -101,7 +115,17 @@ export const getCuratedEpisodes = (
 export const browseEpisodes = (params: BrowseEpisodesParams = {}) =>
   supabaseCall<AllEpisodesResponse>(
     'GET',
-    `/podcast?${qs({ action: 'browse-episodes', ...params })}`,
+    `/podcast?${qs({
+      action: 'browse-episodes',
+      sort: params.sort,
+      difficulty: params.difficulty,
+      accent: params.accent,
+      language: params.language,
+      topic: params.topic,
+      max_duration: params.maxDuration,
+      page: params.page,
+      limit: params.limit,
+    })}`,
   );
 
 /** v2 per-episode difficulty browse — the real "study at my level" surface. */
@@ -116,6 +140,7 @@ export const getEpisodesByLevel = (params: EpisodesByLevelParams) =>
       topic: params.topic,
       search: params.search,
       sort: params.sort,
+      max_duration: params.maxDuration,
       page: params.page ?? 1,
       limit: params.limit ?? 24,
     })}`,

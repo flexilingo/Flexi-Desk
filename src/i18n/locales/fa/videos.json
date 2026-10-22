@@ -1,0 +1,116 @@
+{
+  "subscribe": "عضویت در کانال",
+  "title": "ویدیوها",
+  "searchPlaceholder": "جستجوی ویدیو…",
+  "pinned": "پین‌شده",
+  "empty": {
+    "title": "ویدیویی پیدا نشد",
+    "subtitle": "یک فیلتر را بردارید یا عبارت دیگری جستجو کنید."
+  },
+  "resultCount": "{{count}} ویدیو",
+  "matchCountNone": "هیچ ویدیویی با این فیلترها نیست",
+  "matchCount_other": "{{count}} ویدیو با این فیلترها",
+  "matchCount": "{{count}} ویدیو با این فیلترها",
+  "removeFilter": "حذف فیلتر: {{name}}",
+  "minutes": "{{count}} دقیقه",
+  "backToCatalogue": "بازگشت به ویدیوها",
+  "notFound": {
+    "title": "ویدیو پیدا نشد",
+    "subtitle": "ممکن است از فهرست حذف شده باشد."
+  },
+  "subtitle": "ویدیوهای واقعی با زیرنویس تعاملی. روی هر کلمه بزنید تا معنی‌اش را ببینید و مستقیم به دک اضافه‌اش کنید.",
+  "views": {
+    "newest": "جدیدترین",
+    "newestHint": "تازه‌ترین ویدیوهایی که اضافه شده‌اند.",
+    "shortest": "کوتاه‌ها",
+    "shortestHint": "ویدیوهای کوتاه — مناسب وقتی چند دقیقه وقت دارید.",
+    "longest": "بلندها",
+    "longestHint": "ویدیوهای بلندتر برای وقتی که حوصله دارید."
+  },
+  "browseByTopic": "مرور بر اساس موضوع",
+  "channels": {
+    "heading": "کانال‌ها",
+    "videoCount": "{{count}} ویدیو",
+    "totalCount": "{{count}} کانال",
+    "searchPlaceholder": "جستجوی کانال…",
+    "allLanguages": "همه",
+    "clear": "پاک کردن",
+    "empty": "کانالی با این مشخصات پیدا نشد."
+  },
+  "channel": {
+    "videoCount": "{{count}} ویدیو",
+    "openOnYoutube": "باز کردن در یوتیوب"
+  },
+  "categories": {
+    "learning": "آموزشی",
+    "stories": "داستان",
+    "podcast": "پادکست",
+    "news": "اخبار",
+    "culture": "فرهنگ",
+    "music": "موسیقی",
+    "other": "سایر"
+  },
+  "filters": {
+    "category": "دسته",
+    "allCategories": "همه‌ی دسته‌ها"
+  },
+  "music": {
+    "signInTitle": "بخش موسیقی مخصوص کاربران وارد شده است",
+    "signInBody": "با آهنگ‌های واقعی زبان یاد بگیرید و متن را کلمه‌به‌کلمه دنبال کنید. برای دیدن بخش موسیقی وارد شوید یا یک حساب رایگان بسازید.",
+    "signIn": "ورود"
+  },
+  "player": {
+    "openOnYoutube": "تماشا در یوتیوب",
+    "openChannel": "رفتن به کانال",
+    "openChannelNamed": "رفتن به {{channel}}"
+  },
+  "upNext": {
+    "heading": "ویدیوی بعدی",
+    "sub": "از همین کانال و هم‌سطح شما",
+    "empty": "هنوز ویدیوی دیگری برای پیشنهاد نیست."
+  },
+  "podcasts": {
+    "filterAllLevels": "همه سطوح",
+    "cefrBeginner": "مبتدی",
+    "cefrElementary": "ابتدایی",
+    "cefrIntermediate": "متوسط",
+    "cefrUpperIntermediate": "متوسط بالا",
+    "cefrAdvanced": "پیشرفته",
+    "cefrProficiency": "مهارت",
+    "filterByLanguage": "زبان",
+    "filterAllLanguages": "همه زبان‌ها",
+    "clearFilters": "پاک کردن",
+    "filterView": "نمایش",
+    "filterTopic": "موضوع",
+    "filterAllTopics": "همه موضوع‌ها",
+    "filterDuration": "مدت",
+    "filterAnyDuration": "هر مدتی",
+    "filterDurationUnder": "زیر {{minutes}} دقیقه",
+    "clearAllFilters": "پاک کردن همه",
+    "seeAll": "مشاهده همه",
+    "videoUnavailableTitle": "این ویدیو اینجا باز نمی‌شود",
+    "videoUnavailableBody": "در حال حاضر YouTube از اینترنت شما در دسترس نیست. دوباره امتحان کنید یا آن را در YouTube ببینید — متن ویدیو و واژه‌هایش همچنان اینجا در دسترس است.",
+    "videoUnavailableRetry": "دوباره امتحان کنید",
+    "videoUnavailableOpen": "تماشا در YouTube",
+    "expandPlayer": "بزرگ کردن",
+    "closePlayer": "بستن",
+    "play": "پخش",
+    "pause": "توقف"
+  },
+  "loading": "در حال بارگذاری…",
+  "retry": "تلاش دوباره",
+  "loadError": "ویدیوها بارگذاری نشدند. اتصال خود را بررسی کنید و دوباره تلاش کنید.",
+  "pagination": {
+    "previous": "قبلی",
+    "next": "بعدی",
+    "page": "صفحهٔ {{page}} از {{total}}"
+  },
+  "watch": {
+    "startHint": "برای شروع، دکمهٔ پخش روی خود ویدیو را بزنید. پس از آن، کنترل‌های پایین هم کار می‌کنند.",
+    "preparing": "در حال باز کردن ویدیو…",
+    "importFailed": "این ویدیو باز نشد. دوباره تلاش کنید.",
+    "noTranscript": "این ویدیو هنوز زیرنویس تعاملی ندارد.",
+    "replay": "دوباره تماشا کن"
+  },
+  "watchWithSubtitles": "تماشا با زیرنویس"
+}

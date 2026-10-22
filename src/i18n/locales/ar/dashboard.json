@@ -1,0 +1,423 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "صباح الخير، {{name}}",
+      "afternoon": "طاب يومك، {{name}}",
+      "evening": "مساء الخير، {{name}}"
+    },
+    "greetingNoName": {
+      "morning": "صباح الخير",
+      "afternoon": "طاب يومك",
+      "evening": "مساء الخير"
+    },
+    "streak_zero": "{{count, number}} يومًا متتاليًا",
+    "streak_one": "يوم واحد متتالٍ",
+    "streak_two": "يومان متتاليان",
+    "streak_few": "{{count, number}} أيام متتالية",
+    "streak_many": "{{count, number}} يومًا متتاليًا",
+    "streak_other": "{{count, number}} يومًا متتاليًا",
+    "streakNone": "ابدأ سلسلة أيامك اليوم",
+    "level": "المستوى {{level, number}}",
+    "achievements_exact0": "لا إنجازات بعد",
+    "achievements_zero": "{{count, number}} إنجازًا",
+    "achievements_one": "إنجاز واحد",
+    "achievements_two": "إنجازان",
+    "achievements_few": "{{count, number}} إنجازات",
+    "achievements_many": "{{count, number}} إنجازًا",
+    "achievements_other": "{{count, number}} إنجازًا",
+    "loadError": "تعذّر تحميل بعض أرقامك. أعد تحميل الصفحة للمحاولة مجددًا.",
+    "duration": {
+      "hours": "{{h, number}} س {{m, number}} د",
+      "minutes": "{{m, number}} د"
+    },
+    "next": {
+      "eyebrowExam": "الخطوة التالية · {{exam}}",
+      "eyebrowMinutes": "الخطوة التالية · نحو {{count, number}} دقيقة",
+      "eyebrowMinutesLeft": "الخطوة التالية · بقيت {{count, number}} دقيقة",
+      "eyebrowReading": "الخطوة التالية · تابع القراءة",
+      "eyebrowFirst": "الخطوة الأولى · 5 دقائق",
+      "error": "حدث خطأ ما. حاول مرة أخرى.",
+      "practice": {
+        "title": "تدريب قصير: {{skill}}",
+        "whyLowest": "أضعف قسم لديك في تدريباتك الأخيرة — تدريب قصير بنتيجة فورية.",
+        "whyUntried": "لم تجرّب هذا القسم بعد — تدريب قصير بنتيجة فورية.",
+        "cta": "ابدأ التدريب"
+      },
+      "review": {
+        "title": "{{count, number}} بطاقة بانتظار المراجعة",
+        "why": "كلمات التقطتها من قبل، تعود إليك قبيل أن تنساها.",
+        "cta": "ابدأ المراجعة"
+      },
+      "episode": {
+        "title": "أكمل {{title}}",
+        "why": "تابع من حيث توقفت. انقر على أي كلمة لا تعرفها لترى معناها وتحتفظ بها.",
+        "cta": "تابع الاستماع"
+      },
+      "book": {
+        "title": "تابع قراءة {{title}}",
+        "page": "أنت في الصفحة {{page, number}} من {{total, number}}.",
+        "pageOnly": "أنت في الصفحة {{page, number}}.",
+        "cta": "تابع القراءة"
+      },
+      "start": {
+        "title": "استمع إلى حلقة قصيرة وانقر على كل كلمة لا تعرفها",
+        "why": "يظهر المعنى في مكانه، وتُحفظ الكلمة في «مفرداتي». ثم يحوّلها FlexiLingo إلى بطاقة مراجعة.",
+        "cta": "اختر حلقة"
+      },
+      "after": "بعد ذلك:",
+      "chip": {
+        "practice": "تدريب قصير: {{skill}}",
+        "review": "{{count, number}} بطاقة للمراجعة",
+        "episode": "{{title}} · بقيت {{count, number}} د",
+        "book": "تابع {{title}}",
+        "library": "أو اقرأ كتابًا سهلًا",
+        "exam": "هل تستعد لامتحان؟"
+      }
+    },
+    "week": {
+      "title": "آخر 7 أيام",
+      "year": "السنة كاملة",
+      "caption": "وقت المراجعة والدراسة",
+      "emptyBody": "كل دقيقة تراجع فيها أو تسجّلها يدويًا تصبح هنا عمودًا. عشر دقائق يوميًا تكفي لتشعر بالفرق خلال أسبوع.",
+      "goal": "الهدف اليومي {{count, number}} د",
+      "today": "اليوم",
+      "activeDays": "نشط في {{count, number}} من آخر 7 أيام",
+      "best": "أفضل سلسلة: {{count, number}} يوم"
+    },
+    "path": {
+      "title": "مسار تعلّمك",
+      "lead": "ما تستمع إليه وتقرأه يصبح كلمات، والمراجعة تُبقي هذه الكلمات في ذهنك، وفي النهاية يظهر ذلك في امتحانك.",
+      "here": "خطوتك التالية هنا",
+      "listen": {
+        "title": "استمع واقرأ",
+        "emptyTitle": "لا شيء بعد",
+        "emptyBody": "بودكاست وكتب جاهزة بمستواك، كلها بالنص الكامل. انقر على أي كلمة لا تعرفها.",
+        "unitHours": "ساعات استماع، آخر 30 يومًا",
+        "unitMinutes": "دقائق استماع، آخر 30 يومًا",
+        "episodes": "حلقات بدأتها",
+        "followed": "بودكاست تتابعها",
+        "books": "كتب وملفات",
+        "link": "البودكاست"
+      },
+      "words": {
+        "title": "التقط الكلمات",
+        "emptyTitle": "لا كلمات بعد",
+        "emptyBody": "أينما صادفت كلمة لا تعرفها، انقر عليها. ترى معناها ونطقها ومثالًا، وتُحفظ الكلمة هنا.",
+        "unit": "كلمة التقطتها",
+        "thisWeek": "+{{count, number}} هذا الأسبوع",
+        "suggested": "تكررت كثيرًا، ليست بطاقة بعد",
+        "notes": "الملاحظات",
+        "link": "مفرداتي"
+      },
+      "review": {
+        "title": "راجع",
+        "emptyTitle": "لا بطاقات بعد",
+        "emptyBody": "الكلمات التي تلتقطها تصبح بطاقات، وكل بطاقة تعود قبيل أن تنساها.",
+        "emptyLink": "مجموعات جاهزة",
+        "unit": "بطاقة تعلّمتها",
+        "due": "{{count, number}} بطاقة مستحقة اليوم",
+        "noneDue": "لا شيء مستحق اليوم",
+        "learned": "تعلّمتها",
+        "reviewing": "قيد المراجعة",
+        "unseen": "لم تُرَ بعد",
+        "decks": "المجموعات",
+        "accuracy": "إجابات صحيحة",
+        "link": "المجموعات"
+      },
+      "exam": {
+        "title": "اختبر نفسك",
+        "emptyTitle": "لم تختر امتحانًا بعد",
+        "emptyBody": "هل تستعد لـ CELPIP أو TCF؟ تدريب مدته 10 دقائق يُظهر أين تقف.",
+        "emptyBodyNone": "لا تستعد لامتحان — لا بأس. وإن استعددت يومًا، فتدريب مدته 10 دقائق يُظهر أين تقف.",
+        "emptyLink": "عرض الامتحانات",
+        "daysUnit": "يوم حتى {{exam}}",
+        "takenUnit": "تدريب {{exam}} أنجزته",
+        "weekProgress": "{{done, number}} من {{target, number}} تدريبات هذا الأسبوع",
+        "weakest": "أضعف قسم لديك",
+        "scale": "متوسط تدريباتك الأخيرة، بمقياس {{label}}",
+        "noScores": "لا درجات بعد. أجرِ تدريبًا قصيرًا لترى أين تقف.",
+        "taken": "تدريبات أنجزتها",
+        "addDate": "أضف تاريخ امتحانك"
+      }
+    },
+    "shelf": {
+      "title": "تابع من حيث توقفت",
+      "starterTitle": "كتب للبداية، بمستواك",
+      "library": "المكتبة",
+      "allPodcasts": "البودكاست",
+      "minLeft": "بقيت {{count, number}} د",
+      "page": "الصفحة {{page, number}} من {{total, number}}",
+      "pageOnly": "الصفحة {{page, number}}",
+      "examTitle": "تدريب {{exam}}",
+      "examMeta": "لم يكتمل بعد",
+      "due": "{{count, number}} بطاقة اليوم",
+      "level": "المستوى {{level}}",
+      "kind": {
+        "podcast": "بودكاست",
+        "book": "كتاب",
+        "file": "ملف",
+        "exam": "امتحان",
+        "deck": "مجموعة"
+      }
+    }
+  },
+  "examGoal": {
+    "title": "لأي امتحان تستعد؟",
+    "subtitle": "اختر واحدًا وابدأ تدريبًا قصيرًا الآن. يمكنك تغييره لاحقًا من الإعدادات.",
+    "celpip": "CELPIP",
+    "celpipHint": "الإنجليزية · كندا",
+    "tcf": "TCF Canada",
+    "tcfHint": "الفرنسية · كندا",
+    "tcfQuebec": "TCF Québec",
+    "tcfQuebecHint": "الفرنسية · كيبيك",
+    "none": "لا امتحان",
+    "noneHint": "أريد فقط أن أتحسّن",
+    "dateLabel": "متى امتحانك؟ (اختياري)",
+    "ctaCelpip": "ابدأ تدريب Reading لمدة ١٠ دقائق",
+    "ctaTcf": "ابدأ تدريب استماع من ١٠ أسئلة",
+    "ctaNone": "استكشف البودكاست",
+    "celpipNote": "Reading الجزء ١ · نحو ١٠ دقائق · تقدير CLB",
+    "tcfNote": "Compréhension orale، الأسئلة ١–١٠ · نحو ١٠ دقائق · دون ميكروفون",
+    "notNow": "ليس الآن",
+    "error": "حدث خطأ ما. حاول مرة أخرى.",
+    "nudgeTitle": "هل تستعد لـ CELPIP أو TCF؟",
+    "nudgeBody": "اختر امتحانك وابدأ تدريبًا قصيرًا.",
+    "nudgeCta": "اختر امتحانك",
+    "nudgeClose": "إغلاق",
+    "ctaSave": "احفظ امتحاني",
+    "webOnlyNote": "التمرين على هذا الامتحان يُفتح حاليًا على الموقع. يُحفظ اختيارك في حسابك."
+  },
+  "examResult": {
+    "title": "كيف كان امتحان {{exam}}؟",
+    "subtitle": "أدخل درجاتك الرسمية — ولو مهارة واحدة تفيد. نقارنها بتقديراتنا لتعرف إلى أي حد يمكن الوثوق بها.",
+    "notOutYet": "لم تصدر النتائج بعد",
+    "notTakenYet": "لم أقدّم الامتحان بعد",
+    "newDate": "موعد الامتحان الجديد",
+    "saveDate": "احفظ الموعد",
+    "save": "احفظ درجاتي",
+    "enterOne": "أدخل درجة واحدة على الأقل.",
+    "outOfRange": "يجب أن تكون {{skill}} بين {{min}} و{{max}}.",
+    "thanks": "شكرًا، حُفظت درجاتك. هذا يساعد كل المتعلمين هنا على معرفة مدى دقة تقديراتنا.",
+    "error": "حدث خطأ ما. حاول مرة أخرى.",
+    "skills": {
+      "listening": "Listening",
+      "reading": "Reading",
+      "writing": "Writing",
+      "speaking": "Speaking"
+    }
+  },
+  "examWeek": {
+    "title": "{{exam}} هذا الأسبوع",
+    "daysLeft": "{{count}} يومًا حتى امتحانك",
+    "today": "امتحانك اليوم — بالتوفيق!",
+    "addDate": "أضف موعد امتحانك",
+    "progress": "{{done}} من {{target}} تدريبات هذا الأسبوع",
+    "practiceTitle": "تدرّب على {{skill}}",
+    "practiceWhyUntried": "لم تجرّب هذا القسم بعد — تدريب قصير بنتيجة فورية.",
+    "practiceWhyLowest": "أضعف قسم لديك مؤخرًا — تدريب قصير بنتيجة فورية.",
+    "practiceCta": "ابدأ",
+    "listenTitleEn": "استمع إلى بودكاست بالإنجليزية",
+    "listenTitleFr": "استمع إلى بودكاست بالفرنسية",
+    "listenWhy": "١٥ دقيقة مع النص — قسم الاستماع يكافئ هذا بالضبط.",
+    "listenCta": "اختر حلقة",
+    "readTitle": "اقرأ بضع صفحات",
+    "readWhy": "كتابك أو كتاب من المكتبة — انقر على أي كلمة لا تعرفها.",
+    "readCta": "افتح القارئ",
+    "error": "حدث خطأ ما. حاول مرة أخرى.",
+    "skills": {
+      "celpip": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "writing": "Writing",
+        "speaking": "Speaking"
+      },
+      "tcf": {
+        "listening": "Compréhension orale",
+        "reading": "Compréhension écrite",
+        "writing": "Expression écrite",
+        "speaking": "Expression orale"
+      }
+    }
+  },
+  "pendingReviews": {
+    "title": "المراجعات المعلقة",
+    "totalDue": "{{count}} بطاقات مستحقة",
+    "dueOf": "{{due}} مستحقة من {{total}} بطاقة",
+    "moreDecks": "+{{count}} مجموعة أخرى",
+    "startReview": "مراجعة",
+    "allCaughtUp": "أنجزت الكل!",
+    "allCaughtUpDesc": "لا توجد بطاقات مستحقة للمراجعة الآن. عمل رائع!"
+  },
+  "statusBar": {
+    "streakDays": "يوم متتابع",
+    "bestStreak": "الأفضل: {{count}}",
+    "levelShort": "المستوى {{level}}",
+    "today": "اليوم",
+    "minutesToday": "{{minutes}} دقيقة",
+    "xpToday": "{{xp}} XP"
+  },
+  "goalSuggestion": {
+    "increaseTitle": "ممتاز! حان الوقت لرفع هدفك",
+    "decreaseTitle": "اقتراح تعديل الهدف",
+    "increaseDescription": "لقد حققت هدفك {{days}} يوم متتالي! الحالي: {{current}} كلمة. المقترح: {{suggested}} كلمة",
+    "decreaseDescription": "يبدو هدفك الحالي صعباً. لقد حققته {{days}} من 7 أيام فقط. المقترح: {{suggested}} كلمة",
+    "accept": "قبول ({{goal}} كلمة)",
+    "dismiss": "ربما لاحقاً"
+  },
+  "xp": {
+    "toNextLevel": "{{xp}} XP للمستوى التالي",
+    "maxLevel": "وصلت للحد الأقصى!"
+  },
+  "heatmap": {
+    "title": "تقويم سلسلة الدراسة",
+    "consecutiveDays": "أيام متتالية",
+    "clickToEdit": "انقر على أي يوم لتسجيل أو تعديل وقت الدراسة اليدوي",
+    "loading": "جاري التحميل...",
+    "days": {
+      "sat": "س",
+      "sun": "ح",
+      "mon": "ن",
+      "tue": "ث",
+      "wed": "ر",
+      "thu": "خ",
+      "fri": "ج"
+    },
+    "less": "أقل",
+    "more": "أكثر",
+    "manualTime": "الوقت اليدوي المسجل",
+    "futureDate": "تاريخ مستقبلي",
+    "cardsReviewed": "البطاقات المراجعة:",
+    "autoTime": "الوقت التلقائي:",
+    "manualTimeLabel": "وقت يدوي:",
+    "total": "الإجمالي:",
+    "minutes": "دقيقة",
+    "activeDays": "الأيام النشطة:",
+    "addManualTime": "إضافة وقت يدوي",
+    "ringLegend": "الحلقة = وقت دراسة يدوي مسجّل",
+    "studyLabel": "الدراسة:",
+    "listenLabel": "الاستماع:",
+    "readLabel": "القراءة:"
+  },
+  "manualStudy": {
+    "title": "تسجيل وقت الدراسة اليدوي",
+    "description": "سجل وقت دراستك يدوياً لتتبع تقدمك",
+    "date": "التاريخ",
+    "studyTime": "وقت الدراسة (دقيقة)",
+    "placeholder": "مثال: 90 لساعة ونصف",
+    "equivalent": "ما يعادل:",
+    "error": "خطأ",
+    "invalidMinutes": "يجب أن تكون الدقائق بين 0 و 600",
+    "invalidDate": "تاريخ غير صالح",
+    "futureDate": "لا يمكن تسجيل وقت دراسة لتواريخ مستقبلية",
+    "errorSaving": "خطأ في حفظ وقت الدراسة",
+    "errorDeleting": "خطأ في حذف وقت الدراسة",
+    "delete": "حذف",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "close": "إغلاق",
+    "hours": "ساعة",
+    "minutes": "دقيقة",
+    "and": "و",
+    "zeroMinutes": "0 دقيقة",
+    "dayTotal": "ملخص اليوم",
+    "activityTime": "النشاط",
+    "manualTime": "يدوي",
+    "total": "المجموع",
+    "cloudError": "حُفظ على هذا الحاسوب لكن تعذّر حفظه في حسابك. حاول مرة أخرى."
+  },
+  "achievements": {
+    "title": "الإنجازات",
+    "unlocked": "مفتوحة",
+    "noAchievements": "لا توجد إنجازات بعد",
+    "startLearning": "ابدأ التعلم لفتح أول إنجاز!",
+    "showAll": "عرض الكل ({{count}})",
+    "showLess": "عرض أقل",
+    "levelUp": "ترقية المستوى",
+    "levelUnlocked": "المستوى {{level}}",
+    "maxed": "الحد الأقصى",
+    "locked": "مقفل",
+    "levels": "المستويات",
+    "classic": "كلاسيكي",
+    "nextLevel": "التالي:",
+    "progress": "التقدم",
+    "detailTitle": "تفاصيل الإنجاز",
+    "currentProgress": "التقدم الحالي",
+    "levelsList": "المستويات",
+    "goAction": "هيا بنا!",
+    "pointsLabel": "{{points}} XP",
+    "thresholdLabel": "{{threshold}}",
+    "nextUnlock": "الفتح التالي",
+    "nextUnlockProgress": "{{current}} / {{total}} · {{pct}}% مكتمل",
+    "tier": {
+      "streak_master": "{{n, number}} يومًا متتاليًا",
+      "word_scholar": "{{n, number}} كلمة",
+      "card_master": "{{n, number}} مراجعة",
+      "time_investor": "{{n, number}} دقيقة",
+      "episode_explorer": "{{n, number}} حلقة",
+      "bookworm": "{{n, number}} مستند",
+      "steady_learner": "{{n, number}} يوم نشاط"
+    },
+    "groups": {
+      "streak_master": {
+        "name": "سيد الاستمرار",
+        "hint": "ادرس في أيام متتالية. كل يوم متتالٍ يُحتسب.",
+        "action": "ادرس اليوم"
+      },
+      "word_scholar": {
+        "name": "عالِم الكلمات",
+        "hint": "احفظ الكلمات التي تصادفها أثناء الاستماع والقراءة.",
+        "action": "اعثر على كلمات جديدة"
+      },
+      "card_master": {
+        "name": "سيد البطاقات",
+        "hint": "راجع بطاقاتك عندما يحين موعدها.",
+        "action": "ابدأ مراجعة"
+      },
+      "time_investor": {
+        "name": "مستثمر الوقت",
+        "hint": "دقائق الدراسة والاستماع والقراءة تتراكم.",
+        "action": "واصل"
+      },
+      "episode_explorer": {
+        "name": "مستكشف الحلقات",
+        "hint": "ابدأ حلقات البودكاست واستمع إليها.",
+        "action": "اختر حلقة"
+      },
+      "bookworm": {
+        "name": "دودة الكتب",
+        "hint": "افتح الكتب وملفاتك الخاصة في القارئ.",
+        "action": "افتح القارئ"
+      },
+      "steady_learner": {
+        "name": "متعلّم منتظم",
+        "hint": "كن نشيطًا في أيام مختلفة. لا يلزم أن تكون متتالية.",
+        "action": "ادرس اليوم"
+      }
+    }
+  },
+  "desk": {
+    "signIn": "تسجيل الدخول",
+    "retry": "حاول مرة أخرى",
+    "cardError": "تعذّر تحميل هذا الجزء.",
+    "close": "إغلاق",
+    "loadErrorSome": "تعذّر تحميل بعض أرقامك.",
+    "examSignedOutTitle": "هل تستعد لـ CELPIP أو TCF؟",
+    "examSignedOutBody": "سجّل الدخول لاختيار امتحانك وموعده ومتابعة تقدّمك في التمارين، وليبقى كل شيء متطابقًا على الموقع.",
+    "streakMilestone": "{{n, number}} يومًا متتاليًا!",
+    "streakMilestoneBody": "واصل. نراك غدًا.",
+    "unlockedToast": "إنجاز جديد",
+    "dismiss": "إخفاء",
+    "pendingSignedOut": "بطاقاتك موجودة على هذا الحاسوب."
+  },
+  "goal": {
+    "set": "حدّد هدفًا يوميًا",
+    "title": "هدف الدراسة اليومي",
+    "body": "عدد الدقائق التي تريد دراستها كل يوم. يرسم الخط المتقطع على أسبوعك.",
+    "minutes": "دقائق في اليوم",
+    "save": "حفظ",
+    "remove": "إزالة الهدف",
+    "error": "تعذّر حفظ الهدف.",
+    "invalid": "أدخل رقمًا من 5 إلى 600."
+  }
+}

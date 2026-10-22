@@ -5,7 +5,8 @@
     "signIn": "Se connecter",
     "retry": "Réessayer",
     "libraryFailed": "La bibliothèque n'a pas pu être chargée pour le moment. Vos documents ne sont pas touchés.",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "kindText": "Texte"
   },
   "errors": {
     "PDF_PASSWORD_PROTECTED": "Ce PDF est protégé par un mot de passe.",
@@ -29,10 +30,24 @@
     "DOCUMENT_CREATE_FAILED": "Le fichier n'a pas pu être enregistré sur cet ordinateur.",
     "INVALID_FILE": "Cette photo n'a pas pu être lue.",
     "OCR_ENGINE_FAILED": "Le moteur de lecture n'a pas pu démarrer sur cet ordinateur.",
-    "OCR_LANGUAGE_DOWNLOAD_FAILED": "Les données de lecture de cette langue n'ont pas pu être téléchargées. Vérifiez la connexion et réessayez."
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "Les données de lecture de cette langue n'ont pas pu être téléchargées. Vérifiez la connexion et réessayez.",
+    "BOOK_NOT_FOUND": "Ce livre est introuvable.",
+    "PAGE_NOT_FOUND": "Cette page est introuvable.",
+    "PAGE_FETCH_FAILED": "Cette page n'a pas pu être chargée.",
+    "EMPTY_TEXT": "Il n'y a aucun texte à ajouter.",
+    "TEXT_TOO_LONG": "Ce texte est trop long pour être ajouté. Découpez-le en plusieurs parties.",
+    "INVALID_URL": "Ce n'est pas une adresse web. Elle doit commencer par https://",
+    "URL_FETCH_FAILED": "La page n'a pas pu être récupérée. Vérifiez l'adresse et votre connexion.",
+    "URL_NOT_TEXT": "Cette adresse n'est pas une page web avec du texte.",
+    "URL_TOO_LARGE": "Cette page est trop volumineuse pour être ajoutée.",
+    "URL_NO_TEXT": "Aucun texte lisible n'a été trouvé sur cette page."
   },
   "upload": {
-    "hint": "PDF, JPG, PNG ou WebP. Aucune limite de taille.",
+    "hint": {
+      "file": "PDF, JPG, PNG ou WebP. Aucune limite de taille.",
+      "text": "Collez le texte que vous voulez lire. Il est découpé en pages et reste sur cet ordinateur.",
+      "url": "Collez l'adresse d'une page web. Son texte est récupéré et conservé sur cet ordinateur."
+    },
     "filterName": "PDF et photos",
     "privacy": "Reste sur cet ordinateur. Rien n'est envoyé en ligne.",
     "submitting": "Ajout en cours...",
@@ -40,17 +55,23 @@
     "dropHere": "Déposez pour l'ajouter à vos lectures",
     "duplicate": {
       "again": "Ajouter une nouvelle copie"
-    }
-  },
-  "soon": {
-    "book": {
-      "title": "Livres de la bibliothèque"
     },
-    "library": {
-      "title": "La bibliothèque"
+    "mode": {
+      "file": "Fichier",
+      "text": "Coller un texte",
+      "url": "Depuis une page web"
     },
-    "body": "La lecture des livres de la bibliothèque sur le bureau arrive dans une prochaine mise à jour. Vos propres documents fonctionnent déjà.",
-    "back": "Retour à vos lectures"
+    "text": {
+      "label": "Texte",
+      "placeholder": "Collez ou saisissez le texte ici",
+      "title": "Titre (facultatif)",
+      "titlePlaceholder": "Pris dans la première ligne s'il est vide"
+    },
+    "url": {
+      "label": "Adresse de la page web",
+      "autoLanguage": "Détecter d'après la page"
+    },
+    "privacyUrl": "La page est récupérée par cet ordinateur et conservée ici."
   },
   "ocr": {
     "downloading": "Téléchargement des données de lecture pour {{language}}… {{percent}} %",
@@ -64,5 +85,27 @@
     "list": "Liste à puces",
     "preview": "Aperçu",
     "write": "Modifier"
+  },
+  "library": {
+    "level": "Niveau",
+    "levelName": {
+      "A1": "Débutant",
+      "A2": "Élémentaire",
+      "B1": "Intermédiaire",
+      "B2": "Intermédiaire supérieur",
+      "C1": "Avancé",
+      "C2": "Maîtrise"
+    },
+    "clearAll": "Tout effacer",
+    "pages": "Pages",
+    "prevPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "pageN": "Page {{n}}"
+  },
+  "language": {
+    "set": "Langue définie sur {{language}}",
+    "change": "Modifier",
+    "dismiss": "Fermer",
+    "detected": "Détectée d'après le texte : {{language}}"
   }
 }

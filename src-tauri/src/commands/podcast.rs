@@ -284,6 +284,8 @@ pub fn podcast_update_progress(
     is_played: Option<bool>,
 ) -> Result<(), String> {
     let conn = lock_db(&state)?;
+    // Overview dashboard: listening time per day + last-played, from the step since the last save.
+    crate::commands::overview::record_listen(&conn, &episode_id, position);
 
     if let Some(played) = is_played {
         conn.execute(
@@ -2828,7 +2830,7 @@ pub async fn podcast_fetch_cloud_transcript(
     episode_id: String,
 ) -> Result<Vec<PodcastTranscriptSegment>, String> {
     // Phase 1: read what we need, then drop the guard before any `.await`.
-    let (video_id, access_token) = {
+    let video_id = {
         let conn = lock_db(&state)?;
         let video_id: Option<String> = conn
             .query_row(
@@ -2841,7 +2843,7 @@ pub async fn podcast_fetch_cloud_transcript(
             .filter(|v| !v.is_empty())
             .ok_or("NO_CLOUD_TRANSCRIPT")?;
         drop(conn);
-        (video_id, crate::auth::stored_access_token(&state))
+        video_id
     };
 
     // Phase 2: network. `get-content-status` accepts a plaintext video_id and
@@ -2850,7 +2852,7 @@ pub async fn podcast_fetch_cloud_transcript(
         "/get-content-status?video_id={}",
         urlencoding::encode(&video_id)
     );
-    let json = crate::auth::call_edge_function(access_token, "GET", &path, None)
+    let json = crate::auth::call_edge_function_authed(&state.db, "GET", &path, None)
         .await
         .map_err(|e| format!("Cloud transcript request failed: {e}"))?;
 

@@ -101,6 +101,7 @@ interface WritingState {
   fetchStats: (language: string) => Promise<void>;
 
   clearError: () => void;
+  evaluateWriting: () => Promise<void>;
 }
 
 export interface CorrectionInput {
@@ -293,54 +294,74 @@ export const useWritingStore = create<WritingState>()(
           if (idx >= 0) s.sessions[idx] = updated;
         });
 
-        // After writing_submit succeeds, evaluate locally via AI
-        set((s) => { s.isEvaluating = true; });
-
-        try {
-          const aiResult = await invoke<Record<string, unknown>>('ai_evaluate_writing', {
-            essayText: editorText,
-            examType: activeSession.taskType,
-            promptText: activeSession.promptText || '',
-          });
-
-          // Parse corrections array from AI result
-          const corrections = Array.isArray(aiResult.corrections) ? aiResult.corrections : [];
-
-          // Save the AI evaluation results
-          await invoke('writing_save_corrections', {
-            id: activeSession.id,
-            correctedText: (aiResult.corrected_text as string) || '',
-            corrections,
-            overallScore: (aiResult.overall_score as number) || null,
-            grammarScore: (aiResult.grammar_score as number) || null,
-            vocabularyScore: (aiResult.vocabulary_score as number) || null,
-            coherenceScore: (aiResult.coherence_score as number) || null,
-            taskScore: (aiResult.task_score as number) || null,
-            bandScore: (aiResult.overall_score != null ? String(aiResult.overall_score) : null) as string | null,
-            feedbackJson: JSON.stringify(aiResult.feedback || {}),
-            grammarPatternsJson: JSON.stringify(aiResult.vocabulary_analysis || {}),
-            cefrLevel: (aiResult.cefr_level as string) || null,
-          });
-
-          // Refresh session to reflect scored status
-          const scoredRaw = await invoke<RawWritingSession>('writing_get_session', { id: activeSession.id });
-          const scored = mapSession(scoredRaw);
-          set((s) => {
-            s.activeSession = scored;
-            s.view = 'results';
-            const idx = s.sessions.findIndex((sess) => sess.id === scored.id);
-            if (idx >= 0) s.sessions[idx] = scored;
-          });
-          get().fetchCorrections(activeSession.id);
-        } catch (err) {
-          set((s) => { s.error = String(err); });
-        } finally {
-          set((s) => { s.isEvaluating = false; });
-        }
+        // After writing_submit succeeds, evaluate with the user's own AI.
+        await get().evaluateWriting();
       } catch (err) {
         set((s) => {
           s.error = String(err);
           s.isSubmitting = false;
+        });
+      }
+    },
+
+    /**
+     * Grades the submitted essay with the user's own AI. Also what runs again, with no
+     * resubmission by the user, once the setup card finishes after a "not set up" failure.
+     */
+    evaluateWriting: async () => {
+      const { activeSession, editorText } = get();
+      if (!activeSession) return;
+      set((s) => {
+        s.isEvaluating = true;
+      });
+
+      try {
+        const aiResult = await invoke<Record<string, unknown>>('ai_evaluate_writing', {
+          essayText: editorText,
+          examType: activeSession.taskType,
+          promptText: activeSession.promptText || '',
+        });
+
+        // Parse corrections array from AI result
+        const corrections = Array.isArray(aiResult.corrections) ? aiResult.corrections : [];
+
+        // Save the AI evaluation results
+        await invoke('writing_save_corrections', {
+          id: activeSession.id,
+          correctedText: (aiResult.corrected_text as string) || '',
+          corrections,
+          overallScore: (aiResult.overall_score as number) || null,
+          grammarScore: (aiResult.grammar_score as number) || null,
+          vocabularyScore: (aiResult.vocabulary_score as number) || null,
+          coherenceScore: (aiResult.coherence_score as number) || null,
+          taskScore: (aiResult.task_score as number) || null,
+          bandScore: (aiResult.overall_score != null ? String(aiResult.overall_score) : null) as
+            | string
+            | null,
+          feedbackJson: JSON.stringify(aiResult.feedback || {}),
+          grammarPatternsJson: JSON.stringify(aiResult.vocabulary_analysis || {}),
+          cefrLevel: (aiResult.cefr_level as string) || null,
+        });
+
+        // Refresh session to reflect scored status
+        const scoredRaw = await invoke<RawWritingSession>('writing_get_session', {
+          id: activeSession.id,
+        });
+        const scored = mapSession(scoredRaw);
+        set((s) => {
+          s.activeSession = scored;
+          s.view = 'results';
+          const idx = s.sessions.findIndex((sess) => sess.id === scored.id);
+          if (idx >= 0) s.sessions[idx] = scored;
+        });
+        get().fetchCorrections(activeSession.id);
+      } catch (err) {
+        set((s) => {
+          s.error = String(err);
+        });
+      } finally {
+        set((s) => {
+          s.isEvaluating = false;
         });
       }
     },

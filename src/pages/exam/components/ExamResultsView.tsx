@@ -85,7 +85,7 @@ export function ExamResultsView() {
               <span className="text-xs text-muted-foreground mt-1">Answered</span>
             </div>
             <div className="flex flex-col items-center rounded-lg border border-border p-4">
-              <span className="text-2xl font-bold text-[#8BB7A3]">{correct.length}</span>
+              <span className="text-2xl font-bold text-success">{correct.length}</span>
               <span className="text-xs text-muted-foreground mt-1">Correct</span>
             </div>
             <div className="flex flex-col items-center rounded-lg border border-border p-4">
@@ -117,7 +117,7 @@ export function ExamResultsView() {
                 key={q.id}
                 className={`rounded-lg border p-3 ${
                   q.isCorrect === true
-                    ? 'border-[#8BB7A3]/30 bg-[#8BB7A3]/5'
+                    ? 'border-success/30 bg-success/5'
                     : q.isCorrect === false
                       ? 'border-error/30 bg-error/5'
                       : 'border-border'
@@ -126,7 +126,7 @@ export function ExamResultsView() {
                 <div className="flex items-start gap-2">
                   <div className="mt-0.5">
                     {q.isCorrect === true ? (
-                      <CheckCircle2 className="h-4 w-4 text-[#8BB7A3]" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                     ) : q.isCorrect === false ? (
                       <XCircle className="h-4 w-4 text-error" />
                     ) : (
@@ -156,7 +156,7 @@ export function ExamResultsView() {
                     {q.isCorrect === false && q.correctAnswer && (
                       <p className="text-sm">
                         <span className="text-muted-foreground">Correct: </span>
-                        <span className="text-[#8BB7A3] font-medium">{q.correctAnswer}</span>
+                        <span className="text-success font-medium">{q.correctAnswer}</span>
                       </p>
                     )}
                     {q.feedback && (

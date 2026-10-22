@@ -1,12 +1,16 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route, useParams } from 'react-router-dom';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { ENABLED_MODULES } from '@/config/features';
+import { isSupportedExamType } from '../examProfiles';
 import { CelpipLandingPage } from './CelpipLandingPage';
 import { CelpipResultsPage } from './CelpipResultsPage';
 import { ExamEngine } from './session/ExamEngine';
 
 /**
- * CELPIP routes.
+ * Exam routes — `/exam/:examType/*` for every exam (celpip, tcf, tcf_quebec,
+ * tcf_irn); `/celpip/*` is kept as an alias for CELPIP so old links and the
+ * dashboard's shortcuts keep working.
  *
  * The exam itself is a FlexiLingo service — this app never assembles or scores
  * one. What desk adds is the analysis path: a Pro user's insight comes from
@@ -15,12 +19,20 @@ import { ExamEngine } from './session/ExamEngine';
  * than on the results screen, where a slow answer would flip the UI mid-render.
  */
 export function CelpipPage() {
+  // `/celpip/*` has no :examType; the exam routes do.
+  const { examType: routeExamType } = useParams<{ examType?: string }>();
+  const examType = routeExamType ?? 'celpip';
   const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
   const hasResolved = useSubscriptionStore((s) => s.hasResolved);
 
   useEffect(() => {
     if (!hasResolved) void fetchSubscription();
   }, [hasResolved, fetchSubscription]);
+
+  // An unknown exam type, or a TCF exam while its sidebar flag is off, goes home.
+  if (!isSupportedExamType(examType) || (examType !== 'celpip' && !ENABLED_MODULES.tcf)) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <Routes>
@@ -33,8 +45,11 @@ export function CelpipPage() {
         element={
           <div className="min-w-0 max-w-full">
             <Routes>
-              <Route index element={<CelpipLandingPage />} />
-              <Route path="results/:sessionId" element={<CelpipResultsPage />} />
+              <Route index element={<CelpipLandingPage examType={examType} />} />
+              <Route
+                path="results/:sessionId"
+                element={<CelpipResultsPage examType={examType} />}
+              />
             </Routes>
           </div>
         }

@@ -263,9 +263,9 @@ pub fn get_streak_calendar(conn: &Connection, days: i64) -> Result<Vec<StreakDay
     let cutoff = format!("-{days} days");
     let mut stmt = conn
         .prepare(
-            "SELECT date(created_at) as d, COUNT(*) as cnt
+            "SELECT date(created_at, 'localtime') as d, COUNT(*) as cnt
              FROM activity_log
-             WHERE created_at >= datetime('now', ?1)
+             WHERE date(created_at, 'localtime') >= date('now', 'localtime', ?1)
              GROUP BY d
              ORDER BY d",
         )
@@ -287,9 +287,9 @@ pub fn get_streak_calendar(conn: &Connection, days: i64) -> Result<Vec<StreakDay
     // XP per day
     let mut xp_stmt = conn
         .prepare(
-            "SELECT date(created_at) as d, SUM(xp_amount)
+            "SELECT date(created_at, 'localtime') as d, SUM(xp_amount)
              FROM xp_log
-             WHERE created_at >= datetime('now', ?1)
+             WHERE date(created_at, 'localtime') >= date('now', 'localtime', ?1)
              GROUP BY d",
         )
         .map_err(|e| format!("XP query error: {e}"))?;
@@ -539,6 +539,30 @@ mod tests {
         let calendar = get_streak_calendar(&conn, 7).unwrap();
         let today = calendar.last().unwrap(); // last entry is today
         assert_eq!(today.xp_earned, 30);
+    }
+
+    /// 23:00 local today is stored as tomorrow in UTC for zones behind UTC.
+    /// Run with TZ=America/Toronto to exercise this.
+    #[test]
+    fn test_get_streak_calendar_counts_late_evening_local_xp() {
+        let conn = setup();
+        let late = chrono::Local::now()
+            .date_naive()
+            .and_hms_opt(23, 0, 0)
+            .unwrap()
+            .and_local_timezone(chrono::Local)
+            .single()
+            .unwrap()
+            .with_timezone(&chrono::Utc)
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string();
+        conn.execute(
+            "INSERT INTO xp_log (module, action, xp_amount, created_at) VALUES ('review', 'card', 30, ?1)",
+            rusqlite::params![late],
+        )
+        .unwrap();
+        let calendar = get_streak_calendar(&conn, 7).unwrap();
+        assert_eq!(calendar.last().unwrap().xp_earned, 30);
     }
 }
 

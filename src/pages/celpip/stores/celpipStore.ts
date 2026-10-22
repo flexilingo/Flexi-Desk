@@ -9,7 +9,8 @@ import {
   startPractice,
   submitSection,
 } from '../services/celpipCloud';
-import { clearAllDrafts } from '../services/examDraft';
+import { clearAllDrafts, clearDraft } from '../services/examDraft';
+import { SubmitRetryQueue, classifySubmitError, type SubmitOutcome } from '../utils/submitRetry';
 import type {
   AssembleExamPayload,
   ExamResults,
@@ -39,6 +40,21 @@ export function errorCodeOf(err: unknown): string {
   }
 }
 
+/**
+ * A request that never got an answer is named, not hidden behind UNKNOWN_ERROR:
+ * on 10-05 one learner pressed Start six times in 20 s and none of the requests
+ * arrived. `NETWORK_ERROR` is resolved through `errors.*` like any backend code.
+ */
+export function startErrorCodeOf(err: unknown): string {
+  const code = errorCodeOf(err);
+  if (code !== 'UNKNOWN_ERROR') return code;
+  const outcome = classifySubmitError(
+    err,
+    typeof navigator === 'undefined' ? undefined : navigator.onLine,
+  );
+  return outcome.kind === 'offline' || outcome.kind === 'unreachable' ? 'NETWORK_ERROR' : code;
+}
+
 interface CelpipState {
   sessions: ExamSession[];
   isSessionsLoading: boolean;
@@ -55,6 +71,11 @@ interface CelpipState {
 
   /** A backend error CODE (SCREAMING_SNAKE_CASE), resolved via i18n. */
   error: string | null;
+  /**
+   * A submit that never reached the server is kept and sent again by itself; this
+   * says why the page is waiting. The answers stay in the section's draft.
+   */
+  submitNotice: 'offline' | 'unreachable' | null;
 
   fetchSessions: (examType: string) => Promise<void>;
   fetchDetail: (sessionId: string) => Promise<void>;
@@ -70,6 +91,94 @@ interface CelpipState {
   clearDetail: () => void;
 }
 
+// ── Submitting a section when the connection comes and goes ──────────────────
+//
+// One request at a time. A submit that never got an answer keeps its payload and
+// goes again by itself (backoff, back online, window back in view). The section's
+// draft is cleared ONLY once the server holds the answers: sections used to clear
+// it before submitting, so a submit lost offline plus a restart threw every
+// answer away.
+
+const submitWaiters: Array<(ok: boolean) => void> = [];
+let queue: SubmitRetryQueue<SubmitSectionPayload> | null = null;
+
+function settleWaiters(ok: boolean) {
+  submitWaiters.splice(0).forEach((resolve) => resolve(ok));
+}
+
+async function attemptSubmit(payload: SubmitSectionPayload): Promise<SubmitOutcome> {
+  try {
+    const res = await submitSection(payload);
+    useCelpipStore.setState((st) => {
+      if (st.detail) {
+        // Keep the local copy in step so the engine advances immediately.
+        Object.assign(st.detail.session, res.session);
+        const idx = st.detail.section_results.findIndex(
+          (r) => r.section_type === (payload.section_type as SectionType),
+        );
+        if (idx >= 0) Object.assign(st.detail.section_results[idx], res.section_result);
+      }
+    });
+    return { kind: 'sent' };
+  } catch (err) {
+    const outcome = classifySubmitError(
+      err,
+      typeof navigator === 'undefined' ? undefined : navigator.onLine,
+    );
+    // A refusal carries the backend's own code; keep it for the message.
+    if (outcome.kind === 'rejected' && !outcome.code)
+      return { kind: 'rejected', code: errorCodeOf(err) };
+    return outcome;
+  }
+}
+
+function onSubmitSettled(outcome: SubmitOutcome, payload: SubmitSectionPayload) {
+  const set = useCelpipStore.setState;
+  if (outcome.kind === 'sent' || outcome.kind === 'held') {
+    void clearDraft(payload.session_id, payload.section_type as SectionType);
+    set((st) => {
+      st.isSubmitting = false;
+      st.submitNotice = null;
+    });
+    // The server already holds this section (a reply was lost, or a second submit
+    // raced the first): re-read the session so the exam moves on.
+    if (outcome.kind === 'held') void useCelpipStore.getState().fetchDetail(payload.session_id);
+    settleWaiters(true);
+    return;
+  }
+  if (outcome.kind === 'offline' || outcome.kind === 'unreachable') {
+    // Still waiting: the spinner stays, the page says why.
+    set((st) => {
+      st.submitNotice = outcome.kind;
+    });
+    return;
+  }
+  set((st) => {
+    st.isSubmitting = false;
+    st.submitNotice = null;
+    st.error = outcome.code || 'UNKNOWN_ERROR';
+  });
+  settleWaiters(false);
+}
+
+function submitQueue(): SubmitRetryQueue<SubmitSectionPayload> {
+  if (!queue) {
+    queue = new SubmitRetryQueue<SubmitSectionPayload>({
+      attempt: attemptSubmit,
+      onSettled: onSubmitSettled,
+    });
+    if (typeof window !== 'undefined') {
+      // Back online, or the window back in view: try at once instead of waiting out the pause.
+      const retry = () => queue?.retryNow();
+      window.addEventListener('online', retry);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') retry();
+      });
+    }
+  }
+  return queue;
+}
+
 export const useCelpipStore = create<CelpipState>()(
   immer((set) => ({
     sessions: [],
@@ -82,6 +191,7 @@ export const useCelpipStore = create<CelpipState>()(
     isSubmitting: false,
     isCompleting: false,
     error: null,
+    submitNotice: null,
 
     fetchSessions: async (examType) => {
       set((s) => {
@@ -156,7 +266,7 @@ export const useCelpipStore = create<CelpipState>()(
       } catch (err) {
         set((s) => {
           s.isStarting = false;
-          s.error = errorCodeOf(err);
+          s.error = startErrorCodeOf(err);
         });
         return null;
       }
@@ -176,41 +286,21 @@ export const useCelpipStore = create<CelpipState>()(
       } catch (err) {
         set((s) => {
           s.isStarting = false;
-          s.error = errorCodeOf(err);
+          s.error = startErrorCodeOf(err);
         });
         return null;
       }
     },
 
-    submit: async (payload) => {
-      set((s) => {
-        s.isSubmitting = true;
-        s.error = null;
-      });
-      try {
-        const res = await submitSection(payload);
-        set((s) => {
-          s.isSubmitting = false;
-          if (s.detail) {
-            // Keep the local copy in step so the engine advances immediately.
-            Object.assign(s.detail.session, res.session);
-            const idx = s.detail.section_results.findIndex(
-              (r) => r.section_type === (payload.section_type as SectionType),
-            );
-            if (idx >= 0) {
-              Object.assign(s.detail.section_results[idx], res.section_result);
-            }
-          }
+    submit: (payload) =>
+      new Promise<boolean>((resolve) => {
+        set((st) => {
+          st.isSubmitting = true;
+          st.error = null;
         });
-        return true;
-      } catch (err) {
-        set((s) => {
-          s.isSubmitting = false;
-          s.error = errorCodeOf(err);
-        });
-        return false;
-      }
-    },
+        submitWaiters.push(resolve);
+        submitQueue().submit(payload);
+      }),
 
     complete: async (sessionId, force) => {
       set((s) => {
@@ -274,6 +364,32 @@ export function isResumable(session: ExamSession, ttlMs: number): boolean {
   const started = session.started_at ?? session.created_at;
   if (!started) return false;
   return Date.now() - new Date(started).getTime() < ttlMs;
+}
+
+/**
+ * Is there still a section to sit? A session whose every section is submitted
+ * stays `in_progress` until detached AI scoring finalizes it; offering "Resume"
+ * for it (Section 5 of 4) in place of Start meant a learner could not begin
+ * another test. A practice walks its own `sections_order`, not the canonical four.
+ */
+export function hasSectionLeft(session: ExamSession): boolean {
+  const order = session.practice_config?.sections_order;
+  return order && order.length > 0
+    ? order.includes(session.current_section)
+    : session.current_section < 4;
+}
+
+/** Every section submitted, the score still being made: neither resumable nor completed. */
+export function isScoringSession(session: ExamSession): boolean {
+  return session.status === 'in_progress' && !hasSectionLeft(session);
+}
+
+/** Where the learner is within the sections THIS session holds (practice carries only what was picked). */
+export function sessionProgress(session: ExamSession): { current: number; total: number } {
+  const order = session.practice_config?.sections_order;
+  if (!order || order.length === 0) return { current: session.current_section + 1, total: 4 };
+  const position = order.indexOf(session.current_section);
+  return { current: (position >= 0 ? position : order.length - 1) + 1, total: order.length };
 }
 
 export function getCelpipState() {

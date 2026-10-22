@@ -10,6 +10,7 @@ import {
   reportCloudProgress,
 } from '../services/cloudProgress';
 import { loadPlayerPrefs, savePlayerPrefs, type PlayerPrefs } from '../services/playerPrefs';
+import { youtubeMedia, type MediaLike } from '@/pages/videos/player/YouTubeMedia';
 
 // ── Singleton Audio Element ────────────────────────────
 
@@ -22,6 +23,27 @@ function getAudio(): HTMLAudioElement {
   }
   return audioEl;
 }
+
+/** The audio element, for the Listening Program's clip player (audio episodes only). */
+export const getPlayerAudio = (): HTMLAudioElement => getAudio();
+
+// While a practice program drives the playhead (seeking back and forth over a short clip), the
+// position-derived writes - local resume position and the account heartbeat - are held back, so a
+// drill does not become "where you stopped listening".
+let progressSuppressed = false;
+export function setProgressSuppressed(on: boolean): void {
+  progressSuppressed = on;
+}
+
+// The media the transport drives: the audio element, or — for a catalogue video — the YouTube
+// surface. Both speak the same small interface, so every transport action below is shared.
+let activeMedia: MediaLike | null = null;
+
+function getMedia(): MediaLike {
+  return activeMedia ?? getAudio();
+}
+
+const isVideoEpisode = (ep: PodcastEpisode | null | undefined): boolean => !!ep?.youtubeId;
 
 // ── Timers ──────────────────────────────────────────────
 
@@ -166,6 +188,73 @@ export const usePlayerStore = create<PlayerState>()(
       });
     });
 
+    // The video surface reports through the same handlers, plus the two things only a video can do
+    // on its own: start from YouTube's own button, and be paused by a click on the picture.
+    const video = youtubeMedia;
+    video.addEventListener('timeupdate', () => get()._onTimeUpdate(video.currentTime));
+    video.addEventListener('durationchange', () => {
+      if (video.duration > 0) get()._onDurationChange(video.duration);
+    });
+    video.addEventListener('ended', () => get()._onEnded());
+    video.addEventListener('error', () => {
+      set((s) => {
+        s.isPlaying = false;
+        s.playError = video.error?.message ?? 'VIDEO_ERROR';
+      });
+    });
+    video.addEventListener('waiting', () => {
+      set((s) => {
+        s.isBuffering = true;
+      });
+    });
+    video.addEventListener('canplay', () => {
+      set((s) => {
+        s.isBuffering = false;
+      });
+    });
+    video.addEventListener('playing', () => {
+      set((s) => {
+        s.isBuffering = false;
+        s.isPlaying = true;
+      });
+    });
+    video.addEventListener('pause', () => {
+      set((s) => {
+        s.isPlaying = false;
+      });
+    });
+
+    // A catalogue video: load it into the YouTube surface and show it — but never start it. The first
+    // play of every video is YouTube's own button (that is what counts as a view); after that the
+    // control bar drives it. The same video again changes nothing, so coming back never restarts it.
+    const playVideoEpisode = (episode: PodcastEpisode, feed?: PodcastFeed) => {
+      if (get().currentEpisode?.id === episode.id && activeMedia === youtubeMedia) {
+        if (youtubeMedia.hasStarted) youtubeMedia.play().catch(() => {});
+        return;
+      }
+      getAudio().pause();
+      stopProgressSaving();
+      endCloudProgress();
+      activeMedia = youtubeMedia;
+      set((s) => {
+        s.currentEpisode = episode;
+        s.currentFeed = feed ?? null;
+        s.isPlaying = false;
+        s.playError = null;
+        s.abRepeat = null;
+        s.activeSegmentIndex = -1;
+        s.currentTime = 0;
+        s.duration = episode.durationSeconds > 0 ? episode.durationSeconds : 0;
+        s.wordsClicked = 0;
+        s.wordsAddedToDeck = 0;
+        s.activeTimeSpent = 0;
+        s.showCompleteOverlay = false;
+      });
+      youtubeMedia.playbackRate = get().playbackRate;
+      youtubeMedia.volume = get().volume;
+      youtubeMedia.load(episode.youtubeId as string);
+    };
+
     return {
       currentEpisode: null,
       currentFeed: null,
@@ -194,6 +283,17 @@ export const usePlayerStore = create<PlayerState>()(
       play: (episode, feed) => {
         const audio = getAudio();
         const state = get();
+
+        if (episode.youtubeId) {
+          playVideoEpisode(episode, feed);
+          return;
+        }
+        // An audio episode takes over from a video: one thing plays at a time.
+        if (activeMedia) {
+          youtubeMedia.pause();
+          youtubeMedia.unload();
+          activeMedia = null;
+        }
 
         // If same episode, just resume
         if (state.currentEpisode?.id === episode.id && audio.src) {
@@ -283,7 +383,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       pause: () => {
-        const audio = getAudio();
+        const audio = getMedia();
         audio.pause();
         set((s) => {
           s.isPlaying = false;
@@ -293,7 +393,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       resume: () => {
-        const audio = getAudio();
+        const audio = getMedia();
         audio
           .play()
           .then(() => {
@@ -321,7 +421,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       seek: (time) => {
-        const audio = getAudio();
+        const audio = getMedia();
         audio.currentTime = time;
         set((s) => {
           s.currentTime = time;
@@ -329,7 +429,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       setPlaybackRate: (rate) => {
-        const audio = getAudio();
+        const audio = getMedia();
         audio.playbackRate = rate;
         set((s) => {
           s.playbackRate = rate;
@@ -337,7 +437,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       setVolume: (vol) => {
-        const audio = getAudio();
+        const audio = getMedia();
         audio.volume = vol;
         set((s) => {
           s.volume = vol;
@@ -345,7 +445,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       skipForward: (seconds = 15) => {
-        const audio = getAudio();
+        const audio = getMedia();
         audio.currentTime = Math.min(audio.currentTime + seconds, audio.duration || 0);
         set((s) => {
           s.currentTime = audio.currentTime;
@@ -353,7 +453,7 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       skipBack: (seconds = 15) => {
-        const audio = getAudio();
+        const audio = getMedia();
         audio.currentTime = Math.max(audio.currentTime - seconds, 0);
         set((s) => {
           s.currentTime = audio.currentTime;
@@ -364,7 +464,7 @@ export const usePlayerStore = create<PlayerState>()(
         set((s) => {
           s.abRepeat = { a, b };
         });
-        const audio = getAudio();
+        const audio = getMedia();
         audio.currentTime = a;
       },
 
@@ -411,6 +511,11 @@ export const usePlayerStore = create<PlayerState>()(
         endCloudProgress();
         audio.pause();
         audio.src = '';
+        if (activeMedia) {
+          youtubeMedia.pause();
+          youtubeMedia.unload();
+          activeMedia = null;
+        }
         stopProgressSaving();
         get().clearSleepTimer();
         set((s) => {
@@ -496,7 +601,7 @@ export const usePlayerStore = create<PlayerState>()(
         const state = get();
         // A-B repeat logic
         if (state.abRepeat && time >= state.abRepeat.b) {
-          const audio = getAudio();
+          const audio = getMedia();
           audio.currentTime = state.abRepeat.a;
           set((s) => {
             s.currentTime = state.abRepeat!.a;
@@ -506,7 +611,7 @@ export const usePlayerStore = create<PlayerState>()(
         set((s) => {
           s.currentTime = time;
         });
-        reportCloudProgress(time, state.duration);
+        if (!progressSuppressed) reportCloudProgress(time, state.duration);
       },
 
       _onDurationChange: (dur) => {
@@ -518,7 +623,8 @@ export const usePlayerStore = create<PlayerState>()(
       _onEnded: () => {
         const state = get();
         saveProgress(state);
-        reportCloudCompletion(state.currentTime);
+        // A video is not an episode: no listening report; the overlay offers "Up next" instead.
+        if (!isVideoEpisode(state.currentEpisode)) reportCloudCompletion(state.currentTime);
         set((s) => {
           s.isPlaying = false;
           s.showCompleteOverlay = true;
@@ -570,9 +676,10 @@ usePlayerStore.subscribe((state, prev) => {
 
 function startProgressSaving(episodeId: string) {
   stopProgressSaving();
+  if (isVideoEpisode(usePlayerStore.getState().currentEpisode)) return;
   progressSaveTimer = setInterval(() => {
     const state = usePlayerStore.getState();
-    if (state.currentEpisode?.id === episodeId) {
+    if (!progressSuppressed && state.currentEpisode?.id === episodeId) {
       const posMs = Math.round(state.currentTime * 1000);
       invoke('podcast_update_progress', {
         episodeId,
@@ -590,7 +697,9 @@ function stopProgressSaving() {
 }
 
 function saveProgress(state: PlayerState) {
-  if (state.currentEpisode) {
+  if (progressSuppressed) return;
+  // A video has no listening position to keep (it is a catalogue row, not a library episode).
+  if (state.currentEpisode && !isVideoEpisode(state.currentEpisode)) {
     const posMs = Math.round(state.currentTime * 1000);
     invoke('podcast_update_progress', {
       episodeId: state.currentEpisode.id,

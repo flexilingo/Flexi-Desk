@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { InlineError } from '@/components/common/InlineError';
 import { useTutorStore } from '../stores/tutorStore';
 import { useOllamaStore } from '@/stores/ollamaStore';
+import { useSeedUserAi } from '@/hooks/useSeedUserAi';
+import { useAiSource } from '@/stores/aiSourceStore';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
 import { ModeCard } from './ModeCard';
 import type { ConversationMode } from '../types';
 
@@ -104,6 +107,9 @@ export function NewConversationWizard() {
   const [cefrLevel, setCefrLevel] = useState('B1');
   const [provider, setProvider] = useState('ollama');
   const [model, setModel] = useState(DEFAULT_MODELS.ollama);
+  // Start on the AI the user set up; never a hard-coded default or the cloud.
+  useSeedUserAi(setProvider, setModel);
+  const { own: ownAi } = useAiSource();
 
   // Step 3 state
   const [topic, setTopic] = useState('');
@@ -132,7 +138,9 @@ export function NewConversationWizard() {
   // Auto-select Ollama model
   useEffect(() => {
     if (provider === 'ollama' && ollamaConnected && installedModels.length > 0) {
-      setModel(installedModels[0].name);
+      setModel((current) =>
+        installedModels.some((m) => m.name === current) ? current : installedModels[0].name,
+      );
     }
   }, [provider, ollamaConnected, installedModels]);
 
@@ -179,12 +187,13 @@ export function NewConversationWizard() {
       const isCustomScenario = scenarioId === CUSTOM_SCENARIO_ID;
       const effectiveScenarioId =
         selectedMode === 'role_play' && scenarioId && !isCustomScenario ? scenarioId : undefined;
-      const effectiveCustomPrompt = [
-        isCustomScenario && customScenario.trim() ? `SCENARIO: ${customScenario.trim()}` : '',
-        customPrompt.trim(),
-      ]
-        .filter(Boolean)
-        .join('\n\n') || undefined;
+      const effectiveCustomPrompt =
+        [
+          isCustomScenario && customScenario.trim() ? `SCENARIO: ${customScenario.trim()}` : '',
+          customPrompt.trim(),
+        ]
+          .filter(Boolean)
+          .join('\n\n') || undefined;
 
       await startConversation({
         title,
@@ -205,8 +214,7 @@ export function NewConversationWizard() {
     }
   };
 
-  const canGoNext =
-    step === 1 ? !!selectedMode : step === 2 ? !!language && !!model.trim() : true;
+  const canGoNext = step === 1 ? !!selectedMode : step === 2 ? !!language && !!model.trim() : true;
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -242,11 +250,11 @@ export function NewConversationWizard() {
           {error && <InlineError message={error} onDismiss={() => setError(null)} />}
 
           {step === 1 && (
-            <StepMode
-              modes={modes}
-              selectedMode={selectedMode}
-              onSelectMode={setSelectedMode}
-            />
+            <StepMode modes={modes} selectedMode={selectedMode} onSelectMode={setSelectedMode} />
+          )}
+
+          {step === 2 && ownAi.kind === 'unconfigured' && provider === 'ollama' && (
+            <AiSetupCard className="mb-4" compact />
           )}
 
           {step === 2 && (
@@ -439,7 +447,11 @@ function StepLevelModel({
       <div className="space-y-2">
         <label className="text-sm font-medium text-foreground">Model</label>
         {provider === 'ollama' && ollamaConnected && installedModels.length > 0 ? (
-          <select value={model} onChange={(e) => setModel(e.target.value)} className={selectClassName}>
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className={selectClassName}
+          >
             {installedModels.map((m) => (
               <option key={m.name} value={m.name}>
                 {m.name} ({(m.size / 1e9).toFixed(1)}GB)
@@ -448,11 +460,21 @@ function StepLevelModel({
           </select>
         ) : provider === 'ollama' && !ollamaConnected ? (
           <div className="space-y-1">
-            <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder={DEFAULT_MODELS[provider]} />
-            <p className="text-xs text-warning">Ollama is not connected. Start Ollama to see downloaded models.</p>
+            <Input
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder={DEFAULT_MODELS[provider]}
+            />
+            <p className="text-xs text-warning">
+              Ollama is not connected. Start Ollama to see downloaded models.
+            </p>
           </div>
         ) : (
-          <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder={DEFAULT_MODELS[provider]} />
+          <Input
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder={DEFAULT_MODELS[provider]}
+          />
         )}
       </div>
     </div>
@@ -486,7 +508,10 @@ function StepTopic({
   setScenarioId: (v: string) => void;
   scenarioSearch: string;
   setScenarioSearch: (v: string) => void;
-  scenariosByCategory: Record<string, { id: string; title: string; description: string; category: string; cefrMin: string }[]>;
+  scenariosByCategory: Record<
+    string,
+    { id: string; title: string; description: string; category: string; cefrMin: string }[]
+  >;
   customScenario: string;
   setCustomScenario: (v: string) => void;
   deckId: string;
@@ -509,7 +534,8 @@ function StepTopic({
           {mode === 'free' && 'Pick a topic or write your own'}
           {mode === 'role_play' && 'Search and select a role-play scenario'}
           {mode === 'deck_practice' && 'Practice vocabulary from your flashcard decks'}
-          {(mode === 'vocab_challenge' || mode === 'escape_room') && 'Add custom instructions if you want'}
+          {(mode === 'vocab_challenge' || mode === 'escape_room') &&
+            'Add custom instructions if you want'}
         </p>
       </div>
 
@@ -518,7 +544,8 @@ function StepTopic({
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              Write your own topic <span className="text-muted-foreground font-normal">(optional)</span>
+              Write your own topic{' '}
+              <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <Input
               value={topic}
@@ -587,7 +614,9 @@ function StepTopic({
                           {s.cefrMin}+
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{s.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                        {s.description}
+                      </p>
                     </button>
                   ))}
                 </div>
@@ -596,10 +625,14 @@ function StepTopic({
 
             {/* Custom scenario option */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Custom</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Custom
+              </h4>
               <button
                 type="button"
-                onClick={() => setScenarioId(scenarioId === CUSTOM_SCENARIO_ID ? '' : CUSTOM_SCENARIO_ID)}
+                onClick={() =>
+                  setScenarioId(scenarioId === CUSTOM_SCENARIO_ID ? '' : CUSTOM_SCENARIO_ID)
+                }
                 className={`w-full text-left rounded-lg p-3 transition-colors ${
                   scenarioId === CUSTOM_SCENARIO_ID
                     ? 'border-2 border-primary bg-primary/5'
@@ -608,9 +641,13 @@ function StepTopic({
               >
                 <div className="flex items-center gap-2">
                   <PenLine className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">Write your own scenario</span>
+                  <span className="text-sm font-medium text-foreground">
+                    Write your own scenario
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">Describe any situation you want to practice</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Describe any situation you want to practice
+                </p>
               </button>
               {scenarioId === CUSTOM_SCENARIO_ID && (
                 <textarea
@@ -633,7 +670,11 @@ function StepTopic({
           {isLoadingDecks ? (
             <p className="text-sm text-muted-foreground">Loading decks...</p>
           ) : decks.length > 0 ? (
-            <select value={deckId} onChange={(e) => setDeckId(e.target.value)} className={selectClassName}>
+            <select
+              value={deckId}
+              onChange={(e) => setDeckId(e.target.value)}
+              className={selectClassName}
+            >
               <option value="">Select a deck...</option>
               {decks.map((d) => (
                 <option key={d.id} value={d.id}>

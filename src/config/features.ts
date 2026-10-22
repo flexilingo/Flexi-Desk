@@ -15,7 +15,8 @@ export const ENABLED_MODULES = {
 
   // Tier 2 — High-value features (enable when tested)
   caption: true,
-  vocabulary: false,
+  // The website's My vocabulary: this computer's words merged with the account's history.
+  vocabulary: true,
 
   // Tier 3 — AI-powered (enable next)
   pronunciation: false,
@@ -32,6 +33,23 @@ export const ENABLED_MODULES = {
   reader: true,
   writing: false,
   plugins: false,
+
+  // The website's menu (see components/layout/sidebarConfig.ts). ON = the page
+  // is ported and complete; OFF = defined in the sidebar, hidden until its port
+  // lands. Flip one to true in the same change that adds its route.
+  // The Reader's book library (/reader/library), complete.
+  library: true,
+  // The website's Videos (catalogue, channels, watch page with the shared player), complete.
+  videos: true,
+  // Public decks (/explore): browse, preview, save into the library — complete.
+  browse: true,
+  // TCF Canada / Québec / IRN: the CELPIP exam engine run on an exam profile — complete.
+  tcf: true,
+  sentences: false,
+  // The website's French cheatsheet: topics, verbs, conjugator, offline copy, reader panel.
+  cheatsheet: true,
+  // The website's Notes: podcast notes, reader notes and the account's notes in one list.
+  notes: true,
 } as const;
 
 export type ModuleKey = keyof typeof ENABLED_MODULES;

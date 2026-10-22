@@ -65,6 +65,11 @@ fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(
         ("V033", V033_TRANSCRIPT_LANG),
         ("V034", V034_BACKFILL_TRANSCRIPT_LANG),
         ("V035", V035_READER),
+        // Special-handled below: widening a CHECK means rebuilding `reader_documents`.
+        ("V036", ""),
+        ("V037", V037_OVERVIEW),
+        ("V038", V038_DECK_PAIR),
+        ("V039", V039_CHEATSHEET_CACHE),
     ];
 
     for (version, sql) in migrations {
@@ -80,6 +85,8 @@ fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(
                 run_v014_caption_live_status(conn)?;
             } else if version == "V032" {
                 run_v032_decks_notes(conn)?;
+            } else if version == "V036" {
+                run_v036_reader_text(conn)?;
             } else if !sql.is_empty() {
                 conn.execute_batch(sql)
                     .map_err(|e| format!("Failed to run migration {version}: {e}"))?;
@@ -1992,6 +1999,223 @@ const V035_READER: &str = "
     );
     CREATE INDEX IF NOT EXISTS idx_reader_marks_doc_page ON reader_marks(document_id, page_number);
 ";
+
+// V036 — text documents. A pasted text or a web page becomes a Reader document of kind
+// `text`, with its pages stored in `reader_text_pages` (there is no file to render).
+// SQLite cannot widen a CHECK in place, so `reader_documents` is rebuilt; every child
+// table references it by name, so the rebuild runs with foreign keys off and the rows
+// of every child table survive untouched.
+const V036_REBUILD: &str = "
+    CREATE TABLE reader_documents_v036 (
+        id                     TEXT PRIMARY KEY,
+        title                  TEXT NOT NULL,
+        original_filename      TEXT NOT NULL,
+        kind                   TEXT NOT NULL DEFAULT 'pdf' CHECK (kind IN ('pdf', 'image', 'text')),
+        file_path              TEXT NOT NULL,
+        size_bytes             INTEGER NOT NULL DEFAULT 0,
+        language               TEXT NOT NULL DEFAULT 'en',
+        page_count             INTEGER,
+        word_count             INTEGER,
+        extraction_method      TEXT CHECK (extraction_method IS NULL OR extraction_method IN ('text', 'ocr', 'mixed')),
+        last_page              INTEGER NOT NULL DEFAULT 1 CHECK (last_page >= 1),
+        last_scroll_pct        INTEGER NOT NULL DEFAULT 0 CHECK (last_scroll_pct BETWEEN 0 AND 100),
+        last_read_at           TEXT,
+        finished_at            TEXT,
+        book_edition           TEXT,
+        text_layer_status      TEXT CHECK (text_layer_status IS NULL OR text_layer_status IN ('pending', 'running', 'ready', 'failed')),
+        text_layer_pages_done  INTEGER,
+        text_layer_pages_total INTEGER,
+        text_layer_error       TEXT,
+        created_at             TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        updated_at             TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    );
+    INSERT INTO reader_documents_v036 (
+        id, title, original_filename, kind, file_path, size_bytes, language, page_count, word_count,
+        extraction_method, last_page, last_scroll_pct, last_read_at, finished_at, book_edition,
+        text_layer_status, text_layer_pages_done, text_layer_pages_total, text_layer_error,
+        created_at, updated_at
+    ) SELECT
+        id, title, original_filename, kind, file_path, size_bytes, language, page_count, word_count,
+        extraction_method, last_page, last_scroll_pct, last_read_at, finished_at, book_edition,
+        text_layer_status, text_layer_pages_done, text_layer_pages_total, text_layer_error,
+        created_at, updated_at
+    FROM reader_documents;
+    DROP TABLE reader_documents;
+    ALTER TABLE reader_documents_v036 RENAME TO reader_documents;
+    CREATE INDEX IF NOT EXISTS idx_reader_documents_created ON reader_documents(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_reader_documents_size    ON reader_documents(size_bytes);
+";
+
+// V039 — the website's Cheatsheet, kept on this computer: every index, topic and verb response
+// the app fetched, as the JSON it arrived as, so a page opened once opens again offline.
+// `key` carries the explain locale (`en`, `en:petits-mots`, `en:prendre`).
+const V039_CHEATSHEET_CACHE: &str = "
+    CREATE TABLE IF NOT EXISTS cheatsheet_cache (
+        lang       TEXT NOT NULL,
+        kind       TEXT NOT NULL,
+        key        TEXT NOT NULL,
+        body       TEXT NOT NULL,
+        fetched_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (lang, kind, key)
+    );
+";
+
+// V038 — decks carry the whole language pair, a cover and the public-source flag, like the
+// website's decks (`language_pair`, `cover_url`, `source_public`). `language` stays the
+// language the cards are written in; `native_language` is the one the meanings are in
+// (NULL on decks made before this, where only `language` is known).
+const V038_DECK_PAIR: &str = "
+    ALTER TABLE decks ADD COLUMN native_language TEXT;
+    ALTER TABLE decks ADD COLUMN cover_url TEXT;
+    ALTER TABLE decks ADD COLUMN source_public INTEGER NOT NULL DEFAULT 0;
+";
+
+// V037 — the Overview dashboard: listening time per day, when each episode was last
+// played, and minutes a learner logs by hand. Reading time is derived from `reader_sessions`.
+const V037_OVERVIEW: &str = "
+    CREATE TABLE IF NOT EXISTS overview_listen_day (
+        date   TEXT PRIMARY KEY,
+        millis INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS overview_listen_last (
+        episode_id     TEXT PRIMARY KEY,
+        last_played_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS overview_manual (
+        date    TEXT PRIMARY KEY,
+        minutes INTEGER NOT NULL DEFAULT 0
+    );
+";
+
+const V036_TEXT_PAGES: &str = "
+    CREATE TABLE IF NOT EXISTS reader_text_pages (
+        document_id TEXT NOT NULL REFERENCES reader_documents(id) ON DELETE CASCADE,
+        page        INTEGER NOT NULL CHECK (page >= 1),
+        content     TEXT NOT NULL,
+        PRIMARY KEY (document_id, page)
+    );
+";
+
+fn run_v036_reader_text(conn: &Connection) -> Result<(), String> {
+    // The pragma is a no-op inside a transaction, so it is toggled out here.
+    let fk_was_on: i64 = conn.query_row("PRAGMA foreign_keys", [], |r| r.get(0)).unwrap_or(0);
+    conn.pragma_update(None, "foreign_keys", "OFF")
+        .map_err(|e| format!("V036: could not disable foreign keys: {e}"))?;
+
+    let result = (|| -> Result<(), String> {
+        let tx = conn.unchecked_transaction().map_err(|e| format!("V036: begin: {e}"))?;
+        // Already wide (a re-run after a crash between steps): nothing to rebuild.
+        let sql: String = tx
+            .query_row(
+                "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'reader_documents'",
+                [],
+                |r| r.get(0),
+            )
+            .map_err(|e| format!("V036: read schema: {e}"))?;
+        if !sql.contains("'image', 'text'") {
+            tx.execute_batch(V036_REBUILD).map_err(|e| format!("V036: rebuild: {e}"))?;
+        }
+        tx.execute_batch(V036_TEXT_PAGES).map_err(|e| format!("V036: pages: {e}"))?;
+
+        let violations: i64 = {
+            let mut stmt = tx
+                .prepare("PRAGMA foreign_key_check")
+                .map_err(|e| format!("V036: foreign_key_check: {e}"))?;
+            let mut rows = stmt.query([]).map_err(|e| format!("V036: fk rows: {e}"))?;
+            let mut n = 0i64;
+            while rows.next().map_err(|e| format!("V036: fk row: {e}"))?.is_some() {
+                n += 1;
+            }
+            n
+        };
+        if violations > 0 {
+            return Err(format!("V036: {violations} foreign-key violations after rebuild; refusing to commit"));
+        }
+        tx.commit().map_err(|e| format!("V036: commit: {e}"))
+    })();
+
+    if fk_was_on != 0 {
+        conn.pragma_update(None, "foreign_keys", "ON")
+            .map_err(|e| format!("V036: could not restore foreign keys: {e}"))?;
+    }
+    result
+}
+
+#[cfg(test)]
+mod v036_reader_text_tests {
+    use super::*;
+
+    fn at_v035() -> Connection {
+        let conn = Connection::open_in_memory().expect("open in-memory db");
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations_through(&conn, "V035").expect("migrations up to V035");
+        conn
+    }
+
+    #[test]
+    fn rebuild_keeps_documents_and_every_child_row() {
+        let conn = at_v035();
+        conn.execute(
+            "INSERT INTO reader_documents (id, title, original_filename, file_path, last_page, language) VALUES ('d1', 'Toronto', 't.pdf', 'd1.pdf', 7, 'fr')",
+            [],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO reader_notes (id, document_id, page_number, body) VALUES ('n1', 'd1', 2, 'hi')", [])
+            .unwrap();
+        conn.execute("INSERT INTO reader_word_log (id, document_id, word, word_key, page) VALUES ('w1', 'd1', 'Maison', 'maison', 2)", [])
+            .unwrap();
+
+        run_migrations(&conn).expect("V036 applies on top of V035");
+
+        let (title, page, lang): (String, i64, String) = conn
+            .query_row("SELECT title, last_page, language FROM reader_documents WHERE id = 'd1'", [], |r| {
+                Ok((r.get(0)?, r.get(1)?, r.get(2)?))
+            })
+            .unwrap();
+        assert_eq!((title.as_str(), page, lang.as_str()), ("Toronto", 7, "fr"));
+        let notes: i64 = conn.query_row("SELECT COUNT(*) FROM reader_notes", [], |r| r.get(0)).unwrap();
+        let words: i64 = conn.query_row("SELECT COUNT(*) FROM reader_word_log", [], |r| r.get(0)).unwrap();
+        assert_eq!((notes, words), (1, 1), "child rows survive the rebuild");
+        let fk: i64 = conn.query_row("SELECT foreign_keys FROM pragma_foreign_keys", [], |r| r.get(0)).unwrap();
+        assert_eq!(fk, 1, "foreign keys are switched back on");
+        let violations = conn.prepare("PRAGMA foreign_key_check").unwrap().query([]).unwrap().next().unwrap().is_some();
+        assert!(!violations);
+    }
+
+    #[test]
+    fn text_kind_is_accepted_other_kinds_are_not_and_pages_cascade() {
+        let conn = at_v035();
+        run_migrations(&conn).unwrap();
+        conn.execute(
+            "INSERT INTO reader_documents (id, title, original_filename, file_path, kind) VALUES ('t1', 'Pasted', 'pasted.txt', '', 'text')",
+            [],
+        )
+        .unwrap();
+        assert!(conn
+            .execute(
+                "INSERT INTO reader_documents (id, title, original_filename, file_path, kind) VALUES ('x', 'T', 't', 'p', 'video')",
+                [],
+            )
+            .is_err());
+        conn.execute("INSERT INTO reader_text_pages (document_id, page, content) VALUES ('t1', 1, 'Hello')", [])
+            .unwrap();
+        conn.execute("DELETE FROM reader_documents WHERE id = 't1'", []).unwrap();
+        let left: i64 = conn.query_row("SELECT COUNT(*) FROM reader_text_pages", [], |r| r.get(0)).unwrap();
+        assert_eq!(left, 0, "deleting a document takes its pages with it");
+        // Indexes came back with the rebuilt table.
+        let idx: i64 = conn
+            .query_row("SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'idx_reader_documents_size'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(idx, 1);
+    }
+
+    #[test]
+    fn running_twice_is_harmless() {
+        let conn = at_v035();
+        run_migrations(&conn).unwrap();
+        run_v036_reader_text(&conn).expect("a second run changes nothing");
+    }
+}
 
 #[cfg(test)]
 mod v035_reader_migration_tests {

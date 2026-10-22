@@ -21,21 +21,21 @@ interface StatsTabProps {
 const CEFR_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 
 const CEFR_BAR_COLORS: Record<string, string> = {
-  A1: 'bg-[#8BB7A3]',
-  A2: 'bg-[#8BB7A3]/70',
-  B1: 'bg-[#C58C6E]',
-  B2: 'bg-[#C58C6E]/70',
-  C1: 'bg-red-500',
-  C2: 'bg-red-500/70',
+  A1: 'bg-success',
+  A2: 'bg-success/70',
+  B1: 'bg-warning',
+  B2: 'bg-warning/70',
+  C1: 'bg-error',
+  C2: 'bg-error/70',
 };
 
 const CEFR_BADGE_COLORS: Record<string, string> = {
-  A1: 'bg-[#8BB7A3]/20 text-[#8BB7A3]',
-  A2: 'bg-[#8BB7A3]/15 text-[#8BB7A3]',
-  B1: 'bg-[#C58C6E]/20 text-[#C58C6E]',
-  B2: 'bg-[#C58C6E]/15 text-[#C58C6E]',
-  C1: 'bg-red-500/20 text-red-400',
-  C2: 'bg-red-500/15 text-red-400',
+  A1: 'bg-success/20 text-success',
+  A2: 'bg-success/15 text-success',
+  B1: 'bg-warning/20 text-warning',
+  B2: 'bg-warning/15 text-warning',
+  C1: 'bg-error/20 text-error',
+  C2: 'bg-error/15 text-error',
 };
 
 function formatTimeMMSS(ms: number): string {
@@ -102,7 +102,7 @@ export function StatsTab({
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#8BB7A3] transition-all duration-500"
+                className="h-full rounded-full bg-success transition-all duration-500"
                 style={{ width: `${knownPercent}%` }}
               />
             </div>
@@ -124,7 +124,7 @@ export function StatsTab({
           </div>
           <div className="rounded-lg border border-border bg-background/50 p-2 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <BookPlus className="h-3 w-3 text-[#C58C6E]" />
+              <BookPlus className="h-3 w-3 text-warning" />
             </div>
             <p className="text-lg font-bold tabular-nums">{wordsAddedToDeck}</p>
             <p className="text-[9px] text-muted-foreground">looked up</p>
@@ -218,7 +218,7 @@ export function StatsTab({
         {onStartQuiz && (
           <Button
             onClick={onStartQuiz}
-            className="w-full bg-[#8BB7A3] hover:bg-[#8BB7A3]/90 text-white"
+            className="w-full bg-success hover:bg-success/90 text-success-foreground"
             size="sm"
           >
             <Brain className="h-4 w-4 mr-1.5" />
@@ -231,7 +231,7 @@ export function StatsTab({
             onClick={onNavigateToVocab}
             className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
           >
-            <BookOpen className="h-4 w-4 text-[#C58C6E]" />
+            <BookOpen className="h-4 w-4 text-warning" />
             Vocabulary
             {uniqueWords != null && (
               <span className="text-[10px] text-muted-foreground ml-1">({uniqueWords} words)</span>

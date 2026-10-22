@@ -5,7 +5,8 @@
     "signIn": "登录",
     "retry": "重试",
     "libraryFailed": "暂时无法加载图书馆。你的文档不受影响。",
-    "cancel": "取消"
+    "cancel": "取消",
+    "kindText": "文本"
   },
   "errors": {
     "PDF_PASSWORD_PROTECTED": "此 PDF 有密码保护。",
@@ -29,10 +30,24 @@
     "DOCUMENT_CREATE_FAILED": "无法将文件保存到这台电脑。",
     "INVALID_FILE": "无法读取这张照片。",
     "OCR_ENGINE_FAILED": "识别引擎无法在此电脑上启动。",
-    "OCR_LANGUAGE_DOWNLOAD_FAILED": "无法下载此语言的识别数据。请检查网络连接后重试。"
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "无法下载此语言的识别数据。请检查网络连接后重试。",
+    "BOOK_NOT_FOUND": "找不到这本书。",
+    "PAGE_NOT_FOUND": "找不到这一页。",
+    "PAGE_FETCH_FAILED": "这一页无法加载。",
+    "EMPTY_TEXT": "没有可添加的文本。",
+    "TEXT_TOO_LONG": "这段文本太长，无法添加。请分成几部分。",
+    "INVALID_URL": "这不是网址。应以 https:// 开头。",
+    "URL_FETCH_FAILED": "无法获取该网页。请检查地址和网络连接。",
+    "URL_NOT_TEXT": "该地址不是包含文字的网页。",
+    "URL_TOO_LARGE": "该网页太大，无法添加。",
+    "URL_NO_TEXT": "在该网页上没有找到可阅读的文字。"
   },
   "upload": {
-    "hint": "PDF、JPG、PNG 或 WebP。不限大小。",
+    "hint": {
+      "file": "PDF、JPG、PNG 或 WebP。不限大小。",
+      "text": "粘贴你想阅读的任何文本。它会被分成页，并保存在这台电脑上。",
+      "url": "粘贴网页地址。网页的文字会被获取并保存在这台电脑上。"
+    },
     "filterName": "PDF 和照片",
     "privacy": "只保存在这台电脑上，不会上传任何内容。",
     "submitting": "正在添加...",
@@ -40,17 +55,23 @@
     "dropHere": "松开即可加入你的阅读",
     "duplicate": {
       "again": "添加新副本"
-    }
-  },
-  "soon": {
-    "book": {
-      "title": "图书馆的书"
     },
-    "library": {
-      "title": "图书馆"
+    "mode": {
+      "file": "文件",
+      "text": "粘贴文本",
+      "url": "来自网页"
     },
-    "body": "在桌面端阅读图书馆的书将在之后的更新中推出。你自己的文档现在就能使用。",
-    "back": "返回你的阅读"
+    "text": {
+      "label": "文本",
+      "placeholder": "在此粘贴或输入文本",
+      "title": "标题（可选）",
+      "titlePlaceholder": "留空时取第一行"
+    },
+    "url": {
+      "label": "网页地址",
+      "autoLanguage": "根据网页自动识别"
+    },
+    "privacyUrl": "网页由这台电脑获取并保存在这里。"
   },
   "ocr": {
     "downloading": "正在下载{{language}}的识别数据… {{percent}}%",
@@ -64,5 +85,27 @@
     "list": "项目符号列表",
     "preview": "预览",
     "write": "编辑"
+  },
+  "library": {
+    "level": "级别",
+    "levelName": {
+      "A1": "入门",
+      "A2": "初级",
+      "B1": "中级",
+      "B2": "中高级",
+      "C1": "高级",
+      "C2": "精通"
+    },
+    "clearAll": "全部清除",
+    "pages": "页码",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "pageN": "第 {{n}} 页"
+  },
+  "language": {
+    "set": "语言已设为{{language}}",
+    "change": "更改",
+    "dismiss": "关闭",
+    "detected": "根据文本识别：{{language}}"
   }
 }

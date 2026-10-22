@@ -1,5 +1,6 @@
 import { CheckSquare, Square, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CefrBadge } from '@/components/common/CefrBadge';
 import type { AnalyzedItem, CEFRLevel } from '../../types';
 
@@ -11,18 +12,25 @@ interface Props {
   onDeselectAll: () => void;
 }
 
-export function AnalyzedItemsList({ items, selectedIndices, onToggle, onSelectAll, onDeselectAll }: Props) {
+export function AnalyzedItemsList({
+  items,
+  selectedIndices,
+  onToggle,
+  onSelectAll,
+  onDeselectAll,
+}: Props) {
+  const { t } = useTranslation('decks');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const allSelected = selectedIndices.size === items.length;
 
   const POS_COLORS: Record<string, string> = {
-    noun: 'bg-blue-500/10 text-blue-600',
-    verb: 'bg-[#C58C6E]/10 text-[#C58C6E]',
-    adjective: 'bg-purple-500/10 text-purple-600',
-    adverb: 'bg-green-500/10 text-green-600',
-    phrase: 'bg-[#8BB7A3]/10 text-[#8BB7A3]',
-    collocation: 'bg-yellow-500/10 text-yellow-600',
-    grammar: 'bg-slate-500/10 text-slate-600',
+    noun: 'bg-primary/10 text-primary',
+    verb: 'bg-warning/10 text-warning',
+    adjective: 'bg-accent/10 text-accent',
+    adverb: 'bg-success/10 text-success',
+    phrase: 'bg-success/10 text-success',
+    collocation: 'bg-warning/10 text-warning',
+    grammar: 'bg-muted text-muted-foreground',
   };
 
   return (
@@ -30,22 +38,23 @@ export function AnalyzedItemsList({ items, selectedIndices, onToggle, onSelectAl
       {/* Controls row */}
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">
-          {selectedIndices.size} of {items.length} selected
+          {t('hub.selectedOf', { selected: selectedIndices.size, total: items.length })}
         </span>
         <button
           onClick={allSelected ? onDeselectAll : onSelectAll}
           className="text-primary hover:underline text-xs"
         >
-          {allSelected ? 'Deselect all' : 'Select all'}
+          {allSelected ? t('hub.deselectAll') : t('hub.selectAll')}
         </button>
       </div>
 
       {/* Item list */}
-      <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+      <div className="space-y-1.5 max-h-[420px] overflow-y-auto pe-1">
         {items.map((item, i) => {
           const selected = selectedIndices.has(i);
           const expanded = expandedIndex === i;
-          const posColor = POS_COLORS[item.pos?.toLowerCase() ?? ''] ?? 'bg-muted text-muted-foreground';
+          const posColor =
+            POS_COLORS[item.pos?.toLowerCase() ?? ''] ?? 'bg-muted text-muted-foreground';
 
           return (
             <div
@@ -59,11 +68,13 @@ export function AnalyzedItemsList({ items, selectedIndices, onToggle, onSelectAl
                 <button
                   onClick={() => onToggle(i)}
                   className="mt-0.5 shrink-0 text-primary"
+                  aria-label={t('hub.toggleItem')}
                 >
-                  {selected
-                    ? <CheckSquare className="w-4 h-4" />
-                    : <Square className="w-4 h-4 text-muted-foreground" />
-                  }
+                  {selected ? (
+                    <CheckSquare className="w-4 h-4" />
+                  ) : (
+                    <Square className="w-4 h-4 text-muted-foreground" />
+                  )}
                 </button>
 
                 {/* Content */}
@@ -74,20 +85,22 @@ export function AnalyzedItemsList({ items, selectedIndices, onToggle, onSelectAl
                       <span className="text-xs text-muted-foreground">/{item.ipa}/</span>
                     )}
                     {item.pos && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${posColor}`}>
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${posColor}`}
+                      >
                         {item.pos}
                       </span>
                     )}
-                    {item.cefrLevel && (
-                      <CefrBadge level={item.cefrLevel as CEFRLevel} />
-                    )}
+                    {item.cefrLevel && <CefrBadge level={item.cefrLevel as CEFRLevel} />}
                   </div>
 
                   {item.translation && (
                     <p className="text-sm text-muted-foreground mt-0.5">{item.translation}</p>
                   )}
                   {item.definition && (
-                    <p className="text-xs text-muted-foreground/80 mt-0.5 line-clamp-1">{item.definition}</p>
+                    <p className="text-xs text-muted-foreground/80 mt-0.5 line-clamp-1">
+                      {item.definition}
+                    </p>
                   )}
                 </div>
 
@@ -97,7 +110,11 @@ export function AnalyzedItemsList({ items, selectedIndices, onToggle, onSelectAl
                     onClick={() => setExpandedIndex(expanded ? null : i)}
                     className="shrink-0 p-0.5 text-muted-foreground hover:text-foreground"
                   >
-                    {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    {expanded ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 )}
               </div>
@@ -107,22 +124,26 @@ export function AnalyzedItemsList({ items, selectedIndices, onToggle, onSelectAl
                 <div className="px-10 pb-3 space-y-2 text-xs text-muted-foreground">
                   {item.examples.length > 0 && (
                     <div>
-                      <span className="font-medium text-foreground/70">Example: </span>
+                      <span className="font-medium text-foreground/70">{t('hub.example')}: </span>
                       {item.examples[0].source}
                       {item.examples[0].target && (
-                        <span className="block text-muted-foreground/60 italic">{item.examples[0].target}</span>
+                        <span className="block text-muted-foreground/60 italic">
+                          {item.examples[0].target}
+                        </span>
                       )}
                     </div>
                   )}
                   {item.memoryHook && (
                     <div>
-                      <span className="font-medium text-foreground/70">Hook: </span>
+                      <span className="font-medium text-foreground/70">{t('hub.hook')}: </span>
                       {item.memoryHook}
                     </div>
                   )}
                   {item.collocations.length > 0 && (
                     <div>
-                      <span className="font-medium text-foreground/70">Collocations: </span>
+                      <span className="font-medium text-foreground/70">
+                        {t('hub.collocations')}:{' '}
+                      </span>
                       {item.collocations.join(', ')}
                     </div>
                   )}

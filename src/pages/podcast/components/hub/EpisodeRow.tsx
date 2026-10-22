@@ -46,7 +46,7 @@ export function EpisodeRow({
   let secondaryRight: React.ReactNode = null;
   if (showListenerCount && episode.listener_count && episode.listener_count > 0) {
     secondaryRight = (
-      <span className="flex items-center gap-1 text-[11px] font-semibold text-[#3d6b58] dark:text-[#a5c7b8]">
+      <span className="flex items-center gap-1 text-[11px] font-semibold text-success">
         <Users className="h-3 w-3" />
         {t('podcast.listenersThisWeek', { count: episode.listener_count })}
       </span>
@@ -69,8 +69,7 @@ export function EpisodeRow({
       <div className="flex h-6 w-6 shrink-0 items-center justify-center">
         {showRank && index <= 3 ? (
           <Flame
-            className="h-4 w-4"
-            style={{ color: index === 1 ? '#f97316' : index === 2 ? '#fb923c' : '#fdba74' }}
+            className={`h-4 w-4 ${index === 1 ? 'text-accent' : index === 2 ? 'text-accent/80' : 'text-accent/60'}`}
           />
         ) : (
           <span className="text-xs font-semibold text-muted-foreground">{index}</span>

@@ -1,0 +1,116 @@
+{
+  "subscribe": "订阅频道",
+  "title": "视频",
+  "searchPlaceholder": "搜索视频…",
+  "pinned": "置顶",
+  "empty": {
+    "title": "未找到视频",
+    "subtitle": "请尝试移除筛选条件或搜索其他内容。"
+  },
+  "resultCount": "{{count}} 个视频",
+  "matchCountNone": "没有匹配的视频",
+  "matchCount_other": "{{count}} 个视频匹配",
+  "matchCount": "{{count}} 个视频匹配",
+  "removeFilter": "移除筛选：{{name}}",
+  "minutes": "{{count}} 分钟",
+  "backToCatalogue": "返回视频",
+  "notFound": {
+    "title": "未找到视频",
+    "subtitle": "它可能已从目录中移除。"
+  },
+  "subtitle": "真实视频，配互动字幕。点击任意单词即可查看释义，并直接加入词组。",
+  "views": {
+    "newest": "最新",
+    "newestHint": "最近添加的视频。",
+    "shortest": "短视频",
+    "shortestHint": "简短的视频——只有几分钟时很合适。",
+    "longest": "长视频",
+    "longestHint": "可以静下心来看的长视频。"
+  },
+  "browseByTopic": "按主题浏览",
+  "channels": {
+    "heading": "频道",
+    "videoCount": "{{count}} 个视频",
+    "totalCount": "{{count}} 个频道",
+    "searchPlaceholder": "搜索频道…",
+    "allLanguages": "全部",
+    "clear": "清除",
+    "empty": "没有匹配的频道。"
+  },
+  "channel": {
+    "videoCount": "{{count}} 个视频",
+    "openOnYoutube": "在 YouTube 打开"
+  },
+  "categories": {
+    "learning": "学习",
+    "stories": "故事",
+    "podcast": "播客",
+    "news": "新闻",
+    "culture": "文化",
+    "music": "音乐",
+    "other": "其他"
+  },
+  "filters": {
+    "category": "分类",
+    "allCategories": "全部分类"
+  },
+  "music": {
+    "signInTitle": "音乐板块仅对已登录用户开放",
+    "signInBody": "用真实的歌曲学习，逐词跟读歌词。登录或免费注册即可打开音乐板块。",
+    "signIn": "登录"
+  },
+  "player": {
+    "openOnYoutube": "在 YouTube 上观看",
+    "openChannel": "打开频道",
+    "openChannelNamed": "打开 {{channel}}"
+  },
+  "upNext": {
+    "heading": "接下来",
+    "sub": "来自本频道及适合你水平的更多视频",
+    "empty": "暂时没有更多可推荐的视频。"
+  },
+  "podcasts": {
+    "filterAllLevels": "所有级别",
+    "cefrBeginner": "初级",
+    "cefrElementary": "基础",
+    "cefrIntermediate": "中级",
+    "cefrUpperIntermediate": "中高级",
+    "cefrAdvanced": "高级",
+    "cefrProficiency": "精通",
+    "filterByLanguage": "语言",
+    "filterAllLanguages": "所有语言",
+    "clearFilters": "清除",
+    "filterView": "视图",
+    "filterTopic": "主题",
+    "filterAllTopics": "所有主题",
+    "filterDuration": "时长",
+    "filterAnyDuration": "任意时长",
+    "filterDurationUnder": "{{minutes}} 分钟以内",
+    "clearAllFilters": "清除全部",
+    "seeAll": "查看全部",
+    "videoUnavailableTitle": "此视频无法在这里加载",
+    "videoUnavailableBody": "你当前的网络无法访问 YouTube。请重试，或在 YouTube 上观看——文字稿和其中的词汇在这里仍然可以使用。",
+    "videoUnavailableRetry": "重试",
+    "videoUnavailableOpen": "在 YouTube 上观看",
+    "expandPlayer": "展开",
+    "closePlayer": "关闭",
+    "play": "播放",
+    "pause": "暂停"
+  },
+  "loading": "加载中…",
+  "retry": "重试",
+  "loadError": "无法加载视频。请检查网络后重试。",
+  "pagination": {
+    "previous": "上一页",
+    "next": "下一页",
+    "page": "第 {{page}} 页，共 {{total}} 页"
+  },
+  "watch": {
+    "startHint": "请点击视频本身的播放按钮开始播放，之后下方的控制按钮才可使用。",
+    "preparing": "正在打开视频…",
+    "importFailed": "无法打开此视频，请重试。",
+    "noTranscript": "此视频暂无互动字幕。",
+    "replay": "再看一遍"
+  },
+  "watchWithSubtitles": "带字幕观看"
+}

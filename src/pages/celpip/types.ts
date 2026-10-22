@@ -62,7 +62,9 @@ export interface ExamSession {
 export interface SectionResult {
   section_type: 'listening' | 'reading' | 'writing' | 'speaking';
   section_index: number;
-  status: 'pending' | 'scoring' | 'scored';
+  status: 'pending' | 'scoring' | 'scored' | 'failed';
+  /** Only on get_results: queued / being analysed / done within the 'scoring' status. */
+  scoring_state?: 'queued' | 'analyzing' | 'done' | 'failed';
   clb_score: number | null;
   raw_score: number | null;
   max_raw_score: number | null;
@@ -70,6 +72,8 @@ export interface SectionResult {
   answers: Record<string, unknown> | null;
   transcripts: Record<string, string> | null;
   ai_feedback: AiFeedback | null;
+  /** Speaking, get_results only: task key -> storage object PATH of the learner's own recording. */
+  recording_paths?: Record<string, string> | null;
 }
 
 export interface AiFeedback {
@@ -79,12 +83,19 @@ export interface AiFeedback {
 
 export interface AiTaskFeedback {
   task_index?: number;
+  /** TCF Canada stores a band per task; Québec / IRN store none (see `score`). */
   clb_score: number;
+  /** TCF: the examiner's score out of 20. */
+  score?: number;
   criteria: Record<string, { score: number; comment: string }>;
   overall_comment?: string;
   comment?: string;
   model_answer?: string;
   transcript?: string;
+  /** Speaking: nothing was heard on the recording (core no-speech) - not a judged answer. */
+  no_speech?: boolean;
+  /** Writing: nothing was written for this task - the minimum, not judged. */
+  no_answer?: boolean;
 }
 
 export interface ExamSetContent {
@@ -183,6 +194,10 @@ export interface SpeakingTask {
   option_b?: SpeakingTaskOption;
   prep_seconds: number;
   speaking_seconds: number;
+  /** TCF: the task instruction (replaces `prompt`). */
+  consigne?: string;
+  /** TCF EO task 1: the examiner's guiding questions. */
+  guiding_questions?: string[];
 }
 
 export interface SpeakingPrompts {
@@ -204,6 +219,185 @@ export interface ExamResults {
   session: ExamSession;
   section_results: SectionResult[];
   exam_set: ExamResultsExamSet | null;
+  /** The prompt and picture each speaking task was answered against (full result only). */
+  speaking_tasks?: SpeakingTaskContent[];
+  /** Not read in full (not Pro, not one of a free account's 2 full results a month): no pictures, no recording paths. */
+  speaking_media_locked?: boolean;
+  /** Speaking task position ("0".."7") -> pre-authored model answers, highest band first. */
+  speaking_model_answers?: Record<string, BandModelAnswer[]>;
+  /** Full result only (both exams): listening part / item position -> its recording. */
+  listening_audio?: Record<string, string>;
+  /** CELPIP only: Writing at CLB 5/7/9 and the steps between bands, by task position. */
+  celpip_model_answers?: CelpipModelAnswers;
+  /** CELPIP: who reads this result in full. */
+  celpip_access?: Pick<TcfAccess, 'full' | 'via' | 'can_translate' | 'free_remaining'>;
+  /** CELPIP only: each Listening/Reading question's explanation, keyed part_<p>_q_<q>. */
+  celpip_explanations?: TcfExplanations;
+  /** TCF only (absent for CELPIP): pre-authored CO/CE explanations; `{locked}` entries for a free account. */
+  tcf_explanations?: TcfExplanations;
+  /** TCF only: EE/EO model answers at NCLC 5 and 7 (7 locked for a free account). */
+  tcf_model_answers?: TcfModelAnswers;
+  /** TCF: who reads this result in full (Pro, or a free account's free monthly result). */
+  tcf_access?: TcfAccess;
+  /** Locked results only: the section whose transcript / text / audio the server withheld. */
+  review_locked?: { listening: boolean; reading: boolean };
+}
+
+/** The prompt and picture a speaking task was answered against. */
+export interface SpeakingTaskContent {
+  task_index: number;
+  type?: string;
+  title?: string;
+  prompt?: string;
+  situation?: string;
+  image_url?: string;
+  option_a_image?: string;
+  option_b_image?: string;
+}
+
+/** get_results tcf_access — Pro, or one of a free account's 2 full results a month. */
+export interface TcfAccess {
+  full: boolean;
+  via: 'pro' | 'free_monthly' | null;
+  can_translate: boolean;
+  free_remaining: number | null;
+  listening_audio_locked?: boolean;
+  recordings_locked?: boolean;
+}
+
+/** One CO/CE item's pre-authored explanation (English, except the verbatim French quote and term). */
+export interface TcfMcqExplanation {
+  /** false on a free account's free full result: translation stays Pro. */
+  can_translate?: boolean;
+  part_id: string;
+  evidence_quote: string | null;
+  why_correct: string | null;
+  how_to_spot_next_time: string | null;
+  skill_tested: string | null;
+  technique: { name: string; how_to_apply: string | null } | null;
+  vocabulary_note: { term: string; gloss: string; why_it_matters: string | null } | null;
+  question_index?: number;
+  /** One entry per WRONG option. */
+  distractors: Array<{ option_index: number; trap_type: string; why_it_fails: string }>;
+}
+
+/** A free account: the explanation exists, its text was not sent. */
+export interface TcfLockedExplanation {
+  locked: true;
+}
+
+export type TcfExplanationEntry = TcfMcqExplanation | TcfLockedExplanation;
+
+export interface TcfExplanations {
+  /** True for free accounts. */
+  locked: boolean;
+  /** Key = the item's POSITION in the session ("0", "1", …). */
+  listening: Record<string, TcfExplanationEntry>;
+  reading: Record<string, TcfExplanationEntry>;
+}
+
+/** One band of a TCF model answer; a locked band carries no text. */
+export interface TcfModelBand {
+  nclc: number;
+  locked?: true;
+  answer?: string;
+  what_sets_this_band?: string;
+}
+
+export interface TcfStepUp {
+  rule: string;
+  from_5: string;
+  in_7: string;
+}
+
+export interface TcfStepUp9 {
+  rule: string;
+  from_7: string;
+  in_9: string;
+}
+
+export interface TcfServedTask {
+  can_translate?: boolean;
+  part_id: string;
+  title?: string;
+  /** NCLC 5, 7 and — once authored — 9, lowest first. 7 and 9 locked for free. */
+  bands: TcfModelBand[];
+  /** 5 → 7. null for free accounts. */
+  steps_up: TcfStepUp[] | null;
+  steps_up_9?: TcfStepUp9[] | null;
+}
+
+/** One CLB band of a CELPIP model answer; a locked band carries no text. */
+export interface CelpipModelBand {
+  clb: number;
+  locked?: true;
+  answer?: string;
+  what_sets_this_band?: string;
+  words?: number;
+}
+
+/** TcfServedTask with CLB bands: same steps, same lock rule, same translation keys. */
+export interface CelpipServedTask {
+  can_translate?: boolean;
+  part_id: string;
+  title?: string;
+  /** CLB 5, 7 and 9, lowest first. 7 and 9 locked unless the result is read in full. */
+  bands: CelpipModelBand[];
+  steps_up: TcfStepUp[] | null;
+  steps_up_9?: TcfStepUp9[] | null;
+}
+
+export interface CelpipModelAnswers {
+  /** Key = the task's POSITION within the section ("0", "1", ...). */
+  writing: Record<string, CelpipServedTask>;
+  speaking: Record<string, CelpipServedTask>;
+}
+
+/** Either exam's served task - what the shared model-answer block renders. */
+export type ServedModelTask = TcfServedTask | CelpipServedTask;
+
+/** One CLB band of a pre-authored speaking model answer (a locked band has no text). */
+export interface BandModelAnswer {
+  clb: number;
+  locked?: boolean;
+  answer?: string;
+  what_sets_this_band?: string;
+  words?: number;
+}
+
+export interface TcfModelAnswers {
+  /** Key = the task's POSITION within the section ("0", "1", "2"). */
+  writing: Record<string, TcfServedTask>;
+  speaking: Record<string, TcfServedTask>;
+}
+
+/** UI languages the explanations can be translated into (not English). */
+export type ExplanationTranslationLocale = 'fa' | 'ar' | 'fr' | 'hi' | 'zh';
+
+export interface TranslateExplanationPayload {
+  kind: 'mcq' | 'model_answer';
+  part_id: string;
+  locale: ExplanationTranslationLocale;
+  question_index?: number;
+  session_id?: string;
+}
+
+export interface TranslateExplanationResponse {
+  texts: Record<string, string>;
+}
+
+/** exam?action=get_scoring_info — the tables behind "how is this scored?". */
+export interface ExamScoringTable {
+  key: 'celpip_mcq' | 'tcf_nclc' | 'tcf_cefr';
+  /** Column ids, in order — translated via exam.scoringInfo.columns.<id>. */
+  columns: string[];
+  /** Display strings, highest level first. */
+  rows: string[][];
+}
+
+export interface ExamScoringInfo {
+  exam_type: string;
+  tables: ExamScoringTable[];
 }
 
 export interface SubmitSectionPayload {
@@ -224,6 +418,23 @@ export interface InsightMcqQuestionAnalysis {
   correct_choice: string;
   why_correct: string;
   strategy_tip: string;
+  // Only on analyses served from the pre-generated catalogue (core question-analysis).
+  why_your_choice_failed?: string | null;
+  trap_type?: string | null;
+  evidence_quote?: string | null;
+  skill_tested?: string | null;
+  technique?: { name: string; how_to_apply: string | null } | null;
+  vocabulary_note?: { term: string; gloss: string; why_it_matters: string } | null;
+  time_budget_seconds?: number | null;
+  _source?: 'pregenerated';
+}
+
+/** Section-level counts over the analyses above (core summarizePatterns). */
+export interface InsightMcqPatterns {
+  top_traps: { trap_type: string; count: number }[];
+  weakest_skills: { skill_tested: string; count: number }[];
+  techniques_to_drill: { technique: string; count: number; how_to_apply: string }[];
+  vocabulary_to_study: { term: string; gloss: string; why_it_matters: string }[];
 }
 
 export interface InsightMcqSection {
@@ -231,6 +442,10 @@ export interface InsightMcqSection {
   total_count: number;
   question_analyses: InsightMcqQuestionAnalysis[];
   section_strategy: string;
+  analyzed_count?: number;
+  patterns?: InsightMcqPatterns;
+  /** Every analysis came from the catalogue; section_strategy is then derived from patterns. */
+  _fully_pregenerated?: boolean;
 }
 
 export interface InsightSentenceCorrection {
@@ -300,6 +515,8 @@ export interface StartPracticePayload {
   sections: Partial<Record<'listening' | 'reading' | 'writing' | 'speaking', number[]>>;
   /** Untimed relaxed session with tap-to-translate — excluded from history */
   learning_mode?: boolean;
+  /** "Take again": re-sit exactly the parts of this earlier practice session. */
+  retake_session_id?: string;
 }
 
 // ── Part Vocabulary Types ────────────────────────────────────────────────────
@@ -344,7 +561,8 @@ export interface ExamPartVocab {
 // ── Desk-only ────────────────────────────────────────────────────────────────
 
 /** Where an AI analysis came from. Free users get the on-device model. */
-export type InsightOrigin = 'cloud' | 'local';
+/** Where an insight was generated: this device's model, the user's own key, or FlexiLingo's cloud (opt-in). */
+export type InsightOrigin = 'device' | 'own_key' | 'cloud';
 
 /**
  * A section draft, persisted so a crash or quit mid-exam loses nothing.
@@ -358,9 +576,13 @@ export interface ExamSectionDraft {
   /** Epoch ms — timers reconstruct remaining time from this on reload. */
   sectionStartedAt: number;
   taskStartedAt?: number;
-  /** Speaking: the user fell back to typing because the mic failed. */
-  typedMode?: boolean;
   audioAnswers?: Record<string, { audio_url: string; duration_sec: number }>;
+  /** Seconds the section clock has run (practice: only this time counts on return). */
+  activeSec?: number;
+  /** TCF listening: seconds the clock stood still because a recording was due or playing. */
+  pausedSec?: number;
+  /** TCF listening: where the current item's recording stood, so a reload resumes it. */
+  audio?: { partIndex: number; pos: number; done: boolean };
 }
 
 export type SectionType = 'listening' | 'reading' | 'writing' | 'speaking';

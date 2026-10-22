@@ -4,18 +4,17 @@ import {
   Clock,
   ChevronRight,
   Mic,
-  MicOff,
   CheckCircle,
   Loader2,
   Headphones,
   BookOpen,
   PenLine,
-  RefreshCw,
-  Keyboard,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMicrophonePermission } from './useMicrophonePermission';
+import { MicAccessPanel } from '@/components/mic/MicAccessPanel';
+import MicLevelCheck from '../speaking/MicLevelCheck';
 import type { SectionType } from '../../types';
 
 interface SectionTone {
@@ -53,49 +52,34 @@ const SECTION_TONES: Record<SectionType, SectionTone> = {
   },
 };
 
-type BrowserKind = 'chrome' | 'safari' | 'firefox' | 'other';
-
-// Order matters: Chrome/Edge UAs also contain "Safari".
-function detectBrowser(): BrowserKind {
-  if (typeof navigator === 'undefined') return 'other';
-  const ua = navigator.userAgent;
-  if (/firefox|fxios/i.test(ua)) return 'firefox';
-  if (/edg\/|chrome|crios/i.test(ua)) return 'chrome';
-  if (/safari/i.test(ua)) return 'safari';
-  return 'other';
-}
-
 interface SectionIntroProps {
   sectionType: SectionType;
   onStart: () => void;
   requiresMic?: boolean;
-  /** Speaking only — start the section in typed-answers mode (no microphone). */
-  onStartTyped?: () => void;
+  /** Practice slice: how many items/tasks this run holds (replaces the full-paper count). */
+  itemCount?: number;
+  /** Where the intro copy lives: `sectionIntro` in `celpip`, `tcf.sectionIntro` in `exam`. */
+  copyPrefix?: string;
+  copyNs?: 'celpip' | 'exam';
 }
 
 export function SectionIntro({
   sectionType,
   onStart,
   requiresMic,
-  onStartTyped,
+  itemCount,
+  copyPrefix = 'sectionIntro',
+  copyNs = 'celpip',
 }: SectionIntroProps) {
   const { t } = useTranslation('celpip');
+  const { t: tx, i18n } = useTranslation(copyNs);
+  const i18nHas = (key: string) => i18n.exists(key, { ns: copyNs });
   const { status, requestPermission } = useMicrophonePermission();
   const [showMicHint, setShowMicHint] = useState(false);
   const tone = SECTION_TONES[sectionType];
   const Icon = tone.icon;
 
   const micReady = !requiresMic || status === 'granted';
-  const browser = detectBrowser();
-  const unblockStep1 = t(
-    browser === 'chrome'
-      ? 'micUnblockStep1Chrome'
-      : browser === 'safari'
-        ? 'micUnblockStep1Safari'
-        : browser === 'firefox'
-          ? 'micUnblockStep1Firefox'
-          : 'micUnblockStep1Generic',
-  );
 
   const handleBegin = () => {
     if (micReady) {
@@ -104,26 +88,6 @@ export function SectionIntro({
       setShowMicHint(true);
     }
   };
-
-  const typedFallbackLink = onStartTyped && (
-    <button
-      onClick={onStartTyped}
-      className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
-    >
-      <Keyboard className="w-3.5 h-3.5" />
-      {t('micTypedFallback')}
-    </button>
-  );
-
-  const tryAgainButton = (
-    <button
-      onClick={requestPermission}
-      className="inline-flex items-center gap-1.5 bg-card border border-error/40 text-error hover:bg-error/10 text-[12px] font-semibold py-1.5 px-3 rounded-[8px] transition-colors"
-    >
-      <RefreshCw className="w-3.5 h-3.5" />
-      {t('micTryAgain')}
-    </button>
-  );
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-6 md:p-8 bg-background">
@@ -134,16 +98,31 @@ export function SectionIntro({
           <Icon className={`w-5 h-5 ${tone.iconColor}`} />
         </div>
         <h2 className="text-[20px] sm:text-[22px] font-extrabold text-foreground tracking-tight leading-tight mb-2">
-          {t(`sectionIntro.${sectionType}.title`)}
+          {tx(`${copyPrefix}.${sectionType}.title`)}
         </h2>
         <p className="text-[13px] text-muted-foreground mb-3 leading-relaxed">
-          {t(`sectionIntro.${sectionType}.description`)}
+          {/* Writing and speaking name a count in their copy, which a practice
+              subset contradicts — those carry a countless variant. */}
+          {itemCount !== undefined &&
+          copyNs === 'exam' &&
+          i18nHas(`${copyPrefix}.${sectionType}.practiceDescription`)
+            ? tx(`${copyPrefix}.${sectionType}.practiceDescription`)
+            : tx(`${copyPrefix}.${sectionType}.description`)}
         </p>
         <div
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[11.5px] font-semibold mb-6 ${tone.chip}`}
         >
           <Clock className="w-3 h-3" />
-          {t(`sectionIntro.${sectionType}.duration`)}
+          {itemCount === undefined || copyNs !== 'exam'
+            ? tx(`${copyPrefix}.${sectionType}.duration`)
+            : tx(
+                sectionType === 'writing' || sectionType === 'speaking'
+                  ? 'practiceTaskCount'
+                  : 'practiceQuestionCount',
+                {
+                  count: itemCount,
+                },
+              )}
         </div>
 
         {requiresMic && (
@@ -164,7 +143,6 @@ export function SectionIntro({
                   <Mic className="w-3.5 h-3.5" />
                   {t('micCheckAllow')}
                 </button>
-                {typedFallbackLink}
               </div>
             )}
 
@@ -184,64 +162,12 @@ export function SectionIntro({
               </div>
             )}
 
-            {status === 'denied' && (
-              <div className="flex flex-col gap-3 p-4 rounded-[12px] bg-error/10 border border-error/40">
-                <div className="flex items-start gap-2.5">
-                  <MicOff className="w-4 h-4 text-error shrink-0 mt-0.5" />
-                  <p className="text-[12.5px] font-bold text-error">{t('micDeniedTitle')}</p>
-                </div>
-                <ol className="flex flex-col gap-1.5 text-[12px] text-muted-foreground leading-relaxed list-none">
-                  {[unblockStep1, t('micUnblockStep2')].map((step, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="shrink-0 min-w-[18px] h-[18px] rounded-full bg-error/15 text-error text-[10.5px] font-bold flex items-center justify-center mt-0.5">
-                        {i + 1}
-                      </span>
-                      {step}
-                    </li>
-                  ))}
-                </ol>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {tryAgainButton}
-                  {typedFallbackLink}
-                </div>
-              </div>
-            )}
+            {/* Say a few words: permission alone does not say the microphone is loud enough. */}
+            {status === 'granted' && <MicLevelCheck />}
 
-            {status === 'no-device' && (
-              <div className="flex flex-col gap-2.5 p-4 rounded-[12px] bg-error/10 border border-error/40">
-                <div className="flex items-start gap-2.5">
-                  <MicOff className="w-4 h-4 text-error shrink-0 mt-0.5" />
-                  <p className="text-[12.5px] text-error">{t('micNoDevice')}</p>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {tryAgainButton}
-                  {typedFallbackLink}
-                </div>
-              </div>
-            )}
-
-            {status === 'in-use' && (
-              <div className="flex flex-col gap-2.5 p-4 rounded-[12px] bg-warning/10 border border-warning/40">
-                <div className="flex items-start gap-2.5">
-                  <MicOff className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                  <p className="text-[12.5px] text-muted-foreground">{t('micInUse')}</p>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {tryAgainButton}
-                  {typedFallbackLink}
-                </div>
-              </div>
-            )}
-
-            {status === 'unsupported' && (
-              <div className="flex flex-col gap-2.5 p-4 rounded-[12px] bg-warning/10 border border-warning/40">
-                <div className="flex items-start gap-2.5">
-                  <MicOff className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                  <p className="text-[12.5px] text-muted-foreground">{t('micUnsupported')}</p>
-                </div>
-                {typedFallbackLink}
-              </div>
-            )}
+            {/* Blocked, no device, in use: what is wrong, the steps for this computer,
+                Try again. Typing is never offered in place of speaking. */}
+            <MicAccessPanel status={status} onRetry={() => void requestPermission()} />
           </div>
         )}
 

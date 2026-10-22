@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { InlineError } from '@/components/common/InlineError';
 import { useTutorStore } from '../stores/tutorStore';
 import { useOllamaStore } from '@/stores/ollamaStore';
+import { useSeedUserAi } from '@/hooks/useSeedUserAi';
+import { useAiSource } from '@/stores/aiSourceStore';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
 import { ModeCard } from './ModeCard';
 import type { ConversationMode } from '../types';
 
@@ -64,6 +67,9 @@ export function ConversationSetup() {
   const [cefrLevel, setCefrLevel] = useState('B1');
   const [provider, setProvider] = useState('ollama');
   const [model, setModel] = useState(DEFAULT_MODELS.ollama);
+  // Start on the AI the user set up; never a hard-coded default or the cloud.
+  useSeedUserAi(setProvider, setModel);
+  const { own: ownAi } = useAiSource();
   const [topic, setTopic] = useState('');
   const [scenarioId, setScenarioId] = useState('');
   const [customScenario, setCustomScenario] = useState('');
@@ -119,14 +125,13 @@ export function ConversationSetup() {
       const isCustomScenario = scenarioId === CUSTOM_SCENARIO_ID;
       const effectiveScenarioId =
         selectedMode === 'role_play' && scenarioId && !isCustomScenario ? scenarioId : undefined;
-      const effectiveCustomPrompt = [
-        isCustomScenario && customScenario.trim()
-          ? `SCENARIO: ${customScenario.trim()}`
-          : '',
-        customPrompt.trim(),
-      ]
-        .filter(Boolean)
-        .join('\n\n') || undefined;
+      const effectiveCustomPrompt =
+        [
+          isCustomScenario && customScenario.trim() ? `SCENARIO: ${customScenario.trim()}` : '',
+          customPrompt.trim(),
+        ]
+          .filter(Boolean)
+          .join('\n\n') || undefined;
 
       await startConversation({
         title,
@@ -148,15 +153,12 @@ export function ConversationSetup() {
   };
 
   // Group scenarios by category
-  const scenariosByCategory = scenarios.reduce<Record<string, typeof scenarios>>(
-    (acc, s) => {
-      const cat = s.category;
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(s);
-      return acc;
-    },
-    {},
-  );
+  const scenariosByCategory = scenarios.reduce<Record<string, typeof scenarios>>((acc, s) => {
+    const cat = s.category;
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(s);
+    return acc;
+  }, {});
 
   const categoryLabels: Record<string, string> = {
     daily_life: 'Daily Life',
@@ -236,6 +238,8 @@ export function ConversationSetup() {
             ))}
           </div>
         </div>
+
+        {ownAi.kind === 'unconfigured' && provider === 'ollama' && <AiSetupCard compact />}
 
         {/* AI Provider */}
         <div className="space-y-2">
@@ -370,7 +374,8 @@ export function ConversationSetup() {
         {/* Custom instructions (all modes) */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            Custom Instructions <span className="text-muted-foreground font-normal">(optional)</span>
+            Custom Instructions{' '}
+            <span className="text-muted-foreground font-normal">(optional)</span>
           </label>
           <textarea
             value={customPrompt}

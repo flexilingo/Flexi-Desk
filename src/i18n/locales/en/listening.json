@@ -1,0 +1,116 @@
+{
+  "confidence": {
+    "level_1": "Lost",
+    "level_2": "Half",
+    "level_3": "Got it",
+    "question": "How much did you get?"
+  },
+  "controls": {
+    "again": "Again",
+    "begin": "Begin",
+    "continue": "Continue",
+    "next": "Next",
+    "resume": "Resume",
+    "skip": "Skip"
+  },
+  "launcher": {
+    "label": "Practice"
+  },
+  "picker": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "minutes": "{{n}} min",
+    "range": "Range",
+    "rangeFrom": "From {{at}} to {{to}}",
+    "resume": "Resume your drill — step {{n}} of {{total}}",
+    "start": "Start",
+    "subtitle": "Pick a short stretch and drill it. Short beats long.",
+    "title": "Practice this podcast"
+  },
+  "programs": {
+    "dictation": {
+      "description": "Type what you hear, checked word by word",
+      "label": "Dictation"
+    },
+    "loopCrack": {
+      "description": "One short chunk on repeat until you hear every word",
+      "label": "Loop until you crack it"
+    },
+    "threePass": {
+      "description": "Blind, then with subtitles, then blind again",
+      "label": "Three passes"
+    }
+  },
+  "rail": {
+    "cycleIdle": "Listening — next drill in a few minutes",
+    "exit": "Exit practice",
+    "stepOf": "{{n}} of {{total}}",
+    "working": "Practice"
+  },
+  "steps": {
+    "blind1": {
+      "body": "Don't try to catch every word. Just get the shape of it.",
+      "title": "First pass — no subtitles"
+    },
+    "blind2": {
+      "body": "Same audio. Notice how much more of it lands.",
+      "title": "Third pass — no subtitles"
+    },
+    "confidence": {
+      "title": "How did that go?"
+    },
+    "dictation": {
+      "check": "Check",
+      "hint": "{{replays}} replays so far. Take as many as you need.",
+      "placeholder": "Type what you heard…",
+      "retry": "Try again",
+      "title": "Write what you hear",
+      "verdict_close": "{{pct}}% — close",
+      "verdict_missed": "{{pct}}% — worth another listen",
+      "verdict_pass": "{{pct}}% — got it"
+    },
+    "dictationBrief": {
+      "body": "You'll hear a short chunk twice. Write down what you hear — replays are free.",
+      "title": "Dictation"
+    },
+    "dictationCheck": {
+      "body": "Same audio at 0.85x with the text visible.",
+      "title": "Hear it again, slower"
+    },
+    "guided": {
+      "body": "Now read along and find what you missed.",
+      "title": "Second pass — with subtitles"
+    },
+    "loop": {
+      "gotIt": "I've got it",
+      "hint": "Repeating until you've got it.",
+      "revealedHint": "Now hear it again with the words in front of you.",
+      "showMe": "Show me",
+      "title": "Listen closely"
+    },
+    "loopBrief": {
+      "body": "A short chunk repeats. Tap when you can hear every word.",
+      "title": "Loop until you crack it"
+    },
+    "preteach": {
+      "body": "Twenty seconds to meet the hard ones before you hear them.",
+      "empty": "Nothing unusual in this stretch — go straight in.",
+      "loading": "Checking word levels…",
+      "startListening": "Start listening",
+      "title": "Words coming up"
+    }
+  },
+  "summary": {
+    "addToDeck": "Add {{n}} words",
+    "delta": "{{from}} to {{to}} — +{{n}} on the same audio",
+    "deltaFlat": "Same score both times",
+    "deltaFlatHint": "This one is worth coming back to tomorrow.",
+    "done": "Done",
+    "keepGoing": "Keep going — drill again in {{n}} min",
+    "missedWords": "Words you missed",
+    "statAccuracy": "Accuracy",
+    "statCracked": "Cracked",
+    "statMinutes": "Minutes",
+    "title": "Session complete"
+  }
+}

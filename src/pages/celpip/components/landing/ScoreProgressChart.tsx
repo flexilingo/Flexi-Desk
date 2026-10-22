@@ -26,8 +26,10 @@ const SERIES: { key: SectionType; letter: string; color: string; chip: string; t
   { key: 'speaking', letter: 'S', color: '#B07A5E', chip: 'bg-warning', text: 'text-warning' },
 ];
 
-const GRID_COLOR = '#e5e2d9'; // border token
-const TICK_COLOR = '#6b705c'; // muted-foreground token
+// Axis and grid draw in the wrapper's text colour (text-caption), so they
+// follow the light and dark themes without a hex per theme.
+const GRID_COLOR = 'currentColor';
+const TICK_COLOR = 'currentColor';
 
 interface ChartPoint {
   attempt: number;
@@ -42,9 +44,15 @@ interface ScoreProgressChartProps {
   /** Ranked sessions, newest first (as the sessions query returns them). */
   sessions: ExamSession[];
   className?: string;
+  /** Top of the exam's band scale (CLB 12, NCLC 10). */
+  bandMax?: number;
 }
 
-export function ScoreProgressChart({ sessions, className = '' }: ScoreProgressChartProps) {
+export function ScoreProgressChart({
+  sessions,
+  className = '',
+  bandMax = 12,
+}: ScoreProgressChartProps) {
   const { t, i18n } = useTranslation('celpip');
 
   const data: ChartPoint[] = useMemo(
@@ -96,26 +104,31 @@ export function ScoreProgressChart({ sessions, className = '' }: ScoreProgressCh
   return (
     <div className={className}>
       {/* A time axis reads left-to-right even in RTL locales. */}
-      <div dir="ltr" className="w-full">
+      <div dir="ltr" className="w-full text-caption">
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={data} margin={{ top: 12, right: 22, left: -26, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 4" stroke={GRID_COLOR} vertical={false} />
+            <CartesianGrid
+              strokeDasharray="3 4"
+              stroke={GRID_COLOR}
+              strokeOpacity={0.35}
+              vertical={false}
+            />
             <XAxis
               dataKey="attempt"
               tick={{ fontSize: 10, fill: TICK_COLOR }}
               tickLine={false}
-              axisLine={{ stroke: GRID_COLOR }}
+              axisLine={{ stroke: GRID_COLOR, strokeOpacity: 0.5 }}
               interval="preserveStartEnd"
             />
             <YAxis
-              domain={[0, 12]}
-              ticks={[0, 3, 6, 9, 12]}
+              domain={[0, bandMax]}
+              ticks={bandMax === 12 ? [0, 3, 6, 9, 12] : [0, 2, 4, 6, 8, 10]}
               tick={{ fontSize: 10, fill: TICK_COLOR }}
               tickLine={false}
               axisLine={false}
             />
             <Tooltip
-              cursor={{ stroke: GRID_COLOR, strokeWidth: 1 }}
+              cursor={{ stroke: GRID_COLOR, strokeOpacity: 0.5, strokeWidth: 1 }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
                 const point = payload[0].payload as ChartPoint;

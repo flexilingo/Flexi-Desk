@@ -5,6 +5,7 @@ import type {
   ExamResults,
   InsightSkill,
   InsightSkillState,
+  InsightOrigin,
   InsightStatus,
   McqItem,
   SectionResult,
@@ -15,12 +16,13 @@ import type {
  * Two homes for CELPIP AI insight, one interface.
  *
  * The exam is always scored by FlexiLingo. Only the *insight* has an alternative:
- * Pro users get FlexiLingo's, everyone else gets one from the model configured in
- * Settings. Both providers speak `InsightStatus`, so `useStagedInsight` and every
- * results component are identical for both.
+ * by default it is written by the AI the user set up (their device or their own
+ * key); FlexiLingo's cloud writes it only when the user switched that on. Both
+ * providers speak `InsightStatus`, so `useStagedInsight` and every results
+ * component are identical for both.
  */
 export interface InsightProvider {
-  readonly origin: 'cloud' | 'local';
+  readonly origin: InsightOrigin;
   fetchStatus(): Promise<InsightStatus>;
   /**
    * Generates one skill. Cloud may answer 202 with no `result` (work claimed,
@@ -71,6 +73,8 @@ function extractCode(err: unknown): string {
     return parsed.code || parsed.error || 'UNKNOWN_ERROR';
   } catch {
     // Rust surfaces bare codes for its own failures.
+    const bare = raw.match(/OLLAMA_NOT_RUNNING|OLLAMA_MODEL_MISSING|AI_KEY_MISSING/);
+    if (bare) return bare[0];
     return /^[A-Z_]+$/.test(raw) ? raw : 'UNKNOWN_ERROR';
   }
 }
@@ -98,6 +102,10 @@ export function buildSkillContext(results: ExamResults, skill: InsightSkill): st
   if (skill === 'summary') {
     const { session } = results;
     return JSON.stringify({
+      exam_type: session.exam_type,
+      raw_scores: Object.fromEntries(
+        results.section_results.map((r) => [r.section_type, r.raw_score]),
+      ),
       overall_clb: session.m_score,
       section_scores: Object.fromEntries(
         results.section_results.map((r) => [r.section_type, r.clb_score]),
@@ -123,6 +131,7 @@ export function buildSkillContext(results: ExamResults, skill: InsightSkill): st
     tasks: (result.ai_feedback?.tasks ?? []).map((task, i) => ({
       task_index: task.task_index ?? i,
       task_clb: task.clb_score,
+      ...(typeof task.score === 'number' ? { score_out_of_20: task.score } : {}),
       response:
         result.transcripts?.[`task_${task.task_index ?? i}`] ??
         task.transcript ??
@@ -139,21 +148,40 @@ function collectWrongAnswers(results: ExamResults, skill: 'listening' | 'reading
   const answers = results.section_results.find((r) => r.section_type === skill)?.answers ?? {};
   const wrong: Record<string, unknown>[] = [];
 
-  for (const part of content?.parts ?? []) {
-    for (const q of part.questions as McqItem[]) {
-      const key = `part_${part.part_index}_q_${q.question_index}`;
+  // Answers are keyed by POSITION in this session (core answer-keys), which is also
+  // how the results screen matches an analysis back to its question.
+  (content?.parts ?? []).forEach((part, pi) => {
+    (part.questions as McqItem[]).forEach((q, qi) => {
+      const key = `part_${pi}_q_${qi}`;
       const picked = answers[key];
-      if (picked === undefined || picked === q.correct_index) continue;
+      if (picked === undefined || picked === q.correct_index) return;
       wrong.push({
-        part_index: part.part_index,
-        question_index: q.question_index,
+        part_index: pi,
+        question_index: qi,
         question_text: q.question,
         user_choice: typeof picked === 'number' ? q.options[picked] : String(picked),
         correct_choice: q.options[q.correct_index],
       });
-    }
-  }
+    });
+  });
   return wrong;
+}
+
+/**
+ * One sentence on the official result of a TCF section, so the feedback cannot
+ * contradict it: an NCLC band for TCF Canada, the raw score for Quebec / IRN (whose
+ * level is a CEFR letter derived on read, never stored).
+ */
+export function tcfLevelNote(results: ExamResults, skill: InsightSkill): string | null {
+  const row = results.section_results.find((r) => r.section_type === skill);
+  if (!row) return null;
+  const parts: string[] = [];
+  if (row.clb_score != null) parts.push(`NCLC ${row.clb_score}`);
+  if (row.raw_score != null) {
+    const max = skill === 'listening' || skill === 'reading' ? 699 : 20;
+    parts.push(`raw score ${row.raw_score} out of ${max}`);
+  }
+  return parts.length ? parts.join(', ') : null;
 }
 
 function clbOf(results: ExamResults, skill: InsightSkill): number | undefined {
@@ -167,11 +195,15 @@ function clbOf(results: ExamResults, skill: InsightSkill): number | undefined {
  * Reads the locally-cached rows and presents them exactly like the cloud's
  * `?skill=status` response, including `not_taken` for skipped sections.
  */
-export function localInsightProvider(sessionId: string, results: ExamResults): InsightProvider {
+export function localInsightProvider(
+  sessionId: string,
+  results: ExamResults,
+  origin: Exclude<InsightOrigin, 'cloud'> = 'device',
+): InsightProvider {
   const taken = takenSectionsOf(results);
 
   return {
-    origin: 'local',
+    origin,
 
     async fetchStatus(): Promise<InsightStatus> {
       const rows = await invoke<LocalInsightRow[]>('celpip_local_insight_all', { sessionId });
@@ -211,6 +243,10 @@ export function localInsightProvider(sessionId: string, results: ExamResults): I
           skill,
           context: buildSkillContext(results, skill),
           clbScore: clbOf(results, skill) ?? null,
+          examType: results.session.exam_type ?? null,
+          levelNote: results.session.exam_type?.startsWith('tcf')
+            ? tcfLevelNote(results, skill)
+            : null,
         });
         return { skill, result: JSON.parse(json) };
       } catch (err) {

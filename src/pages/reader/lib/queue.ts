@@ -2,7 +2,7 @@ import type { LibraryShelfItem, CefrLevel } from '../services/libraryService';
 import type { ReaderDocument } from '../types';
 import { bookReadPath, coverFor } from '../library/format';
 
-export type ReadingKind = 'book' | 'pdf' | 'image';
+export type ReadingKind = 'book' | 'pdf' | 'image' | 'text';
 
 /**
  * One thing the reader can continue — a library book on their shelf or a file
@@ -73,17 +73,17 @@ function fromBook(item: LibraryShelfItem): ReadingItem {
 }
 
 function fromDocument(doc: ReaderDocument): ReadingItem {
-  // A local document is always read as its real pages: there is no extracted
-  // text view on the desk, so there is no second view to offer.
+  // A local PDF is always read as its real pages and a text document as text: each has
+  // exactly one view, so there is no second view to offer.
   const finished = !!doc.finished_at;
   return {
     id: `doc:${doc.id}`,
-    kind: doc.source_kind === 'image' ? 'image' : 'pdf',
+    kind: doc.source_kind === 'image' ? 'image' : doc.source_kind === 'text' ? 'text' : 'pdf',
     title: doc.title,
     language: doc.language,
     cover: null,
     level: null,
-    href: `/reader/pdf/${doc.id}`,
+    href: doc.source_kind === 'text' ? `/reader/text/${doc.id}` : `/reader/pdf/${doc.id}`,
     altHref: null,
     page: doc.last_page,
     pageCount: doc.page_count,

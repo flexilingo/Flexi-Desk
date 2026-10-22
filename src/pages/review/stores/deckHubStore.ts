@@ -2,13 +2,12 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
-import type {
-  AnalyzedItem,
-  RawAnalyzedItem,
-  DeckWithStats,
-  RawDeckWithStats,
-} from '../types';
+import type { AnalyzedItem, RawAnalyzedItem, DeckWithStats, RawDeckWithStats } from '../types';
 import { mapAnalyzedItem, mapDeck } from '../types';
+import { ocrImageLocally } from '../lib/localOcr';
+import { errorCode, publishDeck } from '../lib/deckCloud';
+import { useReviewStore } from './reviewStore';
+import i18n from '@/i18n/config';
 
 interface DeckHubState {
   inputText: string;
@@ -18,6 +17,8 @@ interface DeckHubState {
   ocrText: string;
   ocrConfidence: number;
   isOcrProcessing: boolean;
+  /** The in-app engine is downloading a language's data (first use only). */
+  ocrLoadingLanguage: boolean;
   tesseractInstalled: boolean | null;
 
   analyzedItems: AnalyzedItem[];
@@ -51,6 +52,7 @@ interface DeckHubState {
     language: string,
     algorithm: string,
     description?: string,
+    nativeLanguage?: string,
   ) => Promise<DeckWithStats>;
 
   exportAnki: (deckId: string) => Promise<void>;
@@ -69,6 +71,7 @@ export const useDeckHubStore = create<DeckHubState>()(
     ocrText: '',
     ocrConfidence: 0,
     isOcrProcessing: false,
+    ocrLoadingLanguage: false,
     tesseractInstalled: null,
     analyzedItems: [],
     isAnalyzing: false,
@@ -80,12 +83,25 @@ export const useDeckHubStore = create<DeckHubState>()(
     syncError: null,
     lastSyncResult: null,
 
-    setInputText: (text) => set((s) => { s.inputText = text; }),
-    setSourceLanguage: (lang) => set((s) => { s.sourceLanguage = lang; }),
-    setTargetLanguage: (lang) => set((s) => { s.targetLanguage = lang; }),
+    setInputText: (text) =>
+      set((s) => {
+        s.inputText = text;
+      }),
+    setSourceLanguage: (lang) =>
+      set((s) => {
+        s.sourceLanguage = lang;
+      }),
+    setTargetLanguage: (lang) =>
+      set((s) => {
+        s.targetLanguage = lang;
+      }),
 
     analyzeText: async (text, sourceLang, targetLang) => {
-      set((s) => { s.isAnalyzing = true; s.analysisError = null; s.analyzedItems = []; });
+      set((s) => {
+        s.isAnalyzing = true;
+        s.analysisError = null;
+        s.analyzedItems = [];
+      });
       try {
         const raw = await invoke<RawAnalyzedItem[]>('deck_hub_analyze_text', {
           text,
@@ -99,36 +115,80 @@ export const useDeckHubStore = create<DeckHubState>()(
           s.isAnalyzing = false;
         });
       } catch (e) {
-        set((s) => { s.analysisError = String(e); s.isAnalyzing = false; });
+        set((s) => {
+          s.analysisError = String(e);
+          s.isAnalyzing = false;
+        });
       }
     },
 
     checkTesseract: async () => {
       const installed = await invoke<boolean>('deck_hub_check_tesseract');
-      set((s) => { s.tesseractInstalled = installed; });
+      set((s) => {
+        s.tesseractInstalled = installed;
+      });
     },
 
     installTesseract: async () => {
       const msg = await invoke<string>('deck_hub_install_tesseract');
-      set((s) => { s.tesseractInstalled = true; });
+      set((s) => {
+        s.tesseractInstalled = true;
+      });
       return msg;
     },
 
     ocrImage: async (imagePath, lang) => {
-      set((s) => { s.isOcrProcessing = true; s.analysisError = null; });
+      set((s) => {
+        s.isOcrProcessing = true;
+        s.analysisError = null;
+      });
       try {
-        const result = await invoke<{ text: string; confidence: number }>('deck_hub_ocr_image', {
-          imagePath,
-          language: lang ?? null,
-        });
+        if (get().tesseractInstalled === null)
+          await get()
+            .checkTesseract()
+            .catch(() => {});
+
+        // The tesseract CLI where it exists; the in-app engine everywhere else (Windows).
+        if (get().tesseractInstalled) {
+          try {
+            const result = await invoke<{ text: string; confidence: number }>(
+              'deck_hub_ocr_image',
+              {
+                imagePath,
+                language: lang ?? null,
+              },
+            );
+            set((s) => {
+              s.ocrText = result.text;
+              s.ocrConfidence = result.confidence;
+              s.inputText = result.text;
+              s.isOcrProcessing = false;
+            });
+            return;
+          } catch {
+            // CLI present but unusable (missing language data): use the in-app engine.
+          }
+        }
+
+        const bytes = await invoke<ArrayBuffer>('deck_hub_read_image', { imagePath });
+        const text = await ocrImageLocally(bytes, lang ?? 'en', (status) =>
+          set((s) => {
+            s.ocrLoadingLanguage = status.loadingLanguage;
+          }),
+        );
         set((s) => {
-          s.ocrText = result.text;
-          s.ocrConfidence = result.confidence;
-          s.inputText = result.text;
+          s.ocrText = text;
+          s.ocrConfidence = 0;
+          s.inputText = text;
           s.isOcrProcessing = false;
+          s.ocrLoadingLanguage = false;
         });
       } catch (e) {
-        set((s) => { s.analysisError = String(e); s.isOcrProcessing = false; });
+        set((s) => {
+          s.analysisError = String(e);
+          s.isOcrProcessing = false;
+          s.ocrLoadingLanguage = false;
+        });
       }
     },
 
@@ -141,15 +201,21 @@ export const useDeckHubStore = create<DeckHubState>()(
       }),
 
     selectAll: () =>
-      set((s) => { s.selectedIndices = new Set(s.analyzedItems.map((_, i) => i)); }),
+      set((s) => {
+        s.selectedIndices = new Set(s.analyzedItems.map((_, i) => i));
+      }),
 
     deselectAll: () =>
-      set((s) => { s.selectedIndices = new Set(); }),
+      set((s) => {
+        s.selectedIndices = new Set();
+      }),
 
     updateItem: (index, updates) =>
-      set((s) => { Object.assign(s.analyzedItems[index], updates); }),
+      set((s) => {
+        Object.assign(s.analyzedItems[index], updates);
+      }),
 
-    createDeckFromSelected: async (name, language, algorithm, description) => {
+    createDeckFromSelected: async (name, language, algorithm, description, nativeLanguage) => {
       const { analyzedItems, selectedIndices } = get();
       // Build snake_case payload matching Rust DeckHubCardInput
       const cards = [...selectedIndices]
@@ -176,48 +242,83 @@ export const useDeckHubStore = create<DeckHubState>()(
         algorithm,
         description: description ?? null,
         cards,
+        nativeLanguage: nativeLanguage ?? null,
       });
       return mapDeck(raw);
     },
 
     exportAnki: async (deckId) => {
-      set((s) => { s.isExporting = true; s.exportError = null; });
+      set((s) => {
+        s.isExporting = true;
+        s.exportError = null;
+      });
       try {
         const filePath = await save({
           defaultPath: `deck.apkg`,
           filters: [{ name: 'Anki Package', extensions: ['apkg'] }],
         });
-        if (!filePath) { set((s) => { s.isExporting = false; }); return; }
+        if (!filePath) {
+          set((s) => {
+            s.isExporting = false;
+          });
+          return;
+        }
         await invoke('export_deck_anki', { deckId, filePath });
-        set((s) => { s.isExporting = false; });
+        set((s) => {
+          s.isExporting = false;
+        });
       } catch (e) {
-        set((s) => { s.exportError = String(e); s.isExporting = false; });
+        set((s) => {
+          s.exportError = String(e);
+          s.isExporting = false;
+        });
       }
     },
 
     exportQuizlet: async (deckId) => {
-      set((s) => { s.isExporting = true; s.exportError = null; });
+      set((s) => {
+        s.isExporting = true;
+        s.exportError = null;
+      });
       try {
         const filePath = await save({
           defaultPath: `deck-quizlet.txt`,
           filters: [{ name: 'Text File', extensions: ['txt'] }],
         });
-        if (!filePath) { set((s) => { s.isExporting = false; }); return; }
+        if (!filePath) {
+          set((s) => {
+            s.isExporting = false;
+          });
+          return;
+        }
         await invoke('deck_hub_export_quizlet', { deckId, filePath });
-        set((s) => { s.isExporting = false; });
+        set((s) => {
+          s.isExporting = false;
+        });
       } catch (e) {
-        set((s) => { s.exportError = String(e); s.isExporting = false; });
+        set((s) => {
+          s.exportError = String(e);
+          s.isExporting = false;
+        });
       }
     },
 
     exportCsv: async (deckId) => {
-      set((s) => { s.isExporting = true; s.exportError = null; });
+      set((s) => {
+        s.isExporting = true;
+        s.exportError = null;
+      });
       try {
         const filePath = await save({
           defaultPath: `deck.csv`,
           filters: [{ name: 'CSV', extensions: ['csv'] }],
         });
-        if (!filePath) { set((s) => { s.isExporting = false; }); return; }
+        if (!filePath) {
+          set((s) => {
+            s.isExporting = false;
+          });
+          return;
+        }
         await invoke('export_vocabulary_csv', {
           filePath,
           options: {
@@ -229,29 +330,43 @@ export const useDeckHubStore = create<DeckHubState>()(
             deck_id: deckId,
           },
         });
-        set((s) => { s.isExporting = false; });
+        set((s) => {
+          s.isExporting = false;
+        });
       } catch (e) {
-        set((s) => { s.exportError = String(e); s.isExporting = false; });
+        set((s) => {
+          s.exportError = String(e);
+          s.isExporting = false;
+        });
       }
     },
 
     syncToCloud: async (deckId) => {
-      set((s) => { s.isSyncing = true; s.syncError = null; s.lastSyncResult = null; });
+      set((s) => {
+        s.isSyncing = true;
+        s.syncError = null;
+        s.lastSyncResult = null;
+      });
       try {
-        const result = await invoke<{ cloud_deck_id: string; cards_synced: number; deck_name: string }>(
-          'deck_hub_cloud_push',
-          { deckId },
-        );
+        // The same push Publish / Share does: create or top up the website deck, remember its id.
+        const result = await publishDeck(deckId);
         set((s) => {
           s.lastSyncResult = {
-            cloudDeckId: result.cloud_deck_id,
-            cardsSynced: result.cards_synced,
-            deckName: result.deck_name,
+            cloudDeckId: result.cloudDeckId,
+            cardsSynced: result.cardsAdded,
+            deckName: result.deck.name,
           };
           s.isSyncing = false;
         });
+        void useReviewStore.getState().fetchDecks();
       } catch (e) {
-        set((s) => { s.syncError = String(e); s.isSyncing = false; });
+        const code = errorCode(e);
+        set((s) => {
+          s.syncError = i18n.exists(`decks:errors.${code}`)
+            ? i18n.t(`decks:errors.${code}`)
+            : i18n.t('decks:errors.UNKNOWN_ERROR');
+          s.isSyncing = false;
+        });
       }
     },
 

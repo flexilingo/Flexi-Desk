@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Download, FileText, Cloud, FileSpreadsheet, Loader2, CheckCircle2, X } from 'lucide-react';
+import { Download, FileText, Cloud, FileSpreadsheet, Loader2, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { InlineError } from '@/components/common/InlineError';
 import { useDeckHubStore } from '../../stores/deckHubStore';
 
 interface Props {
@@ -8,16 +10,27 @@ interface Props {
 }
 
 export function ExportHub({ deckId }: Props) {
-  const { isExporting, exportError, isSyncing, syncError, lastSyncResult, exportAnki, exportQuizlet, exportCsv, syncToCloud } = useDeckHubStore();
+  const { t } = useTranslation('decks');
+  const {
+    isExporting,
+    exportError,
+    isSyncing,
+    syncError,
+    lastSyncResult,
+    exportAnki,
+    exportQuizlet,
+    exportCsv,
+    syncToCloud,
+  } = useDeckHubStore();
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const run = async (key: string, action: () => Promise<void>, successText: string) => {
+  const run = async (key: string, action: () => Promise<void>, successText: () => string) => {
     setActiveAction(key);
     setSuccessMsg(null);
     try {
       await action();
-      setSuccessMsg(successText);
+      setSuccessMsg(successText());
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch {
       // error already in store
@@ -27,84 +40,87 @@ export function ExportHub({ deckId }: Props) {
   };
 
   const busy = isExporting || isSyncing;
+  const icon = (key: string, idle: React.ReactNode) =>
+    activeAction === key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : idle;
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-foreground">Export & Sync</h3>
+      <h3 className="text-sm font-semibold text-foreground">{t('exportSync')}</h3>
+      <p className="text-xs text-muted-foreground">{t('export.free')}</p>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
           size="sm"
           disabled={busy}
-          onClick={() => run('anki', () => exportAnki(deckId), 'Exported to Anki')}
-          className="flex items-center gap-2 justify-start"
-        >
-          {activeAction === 'anki'
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <Download className="w-3.5 h-3.5" />
+          onClick={() =>
+            run(
+              'anki',
+              () => exportAnki(deckId),
+              () => t('export.doneAnki'),
+            )
           }
+        >
+          {icon('anki', <Download className="h-3.5 w-3.5" />)}
           Anki (.apkg)
         </Button>
-
         <Button
           variant="outline"
           size="sm"
           disabled={busy}
-          onClick={() => run('csv', () => exportCsv(deckId), 'Exported to CSV')}
-          className="flex items-center gap-2 justify-start"
-        >
-          {activeAction === 'csv'
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <FileSpreadsheet className="w-3.5 h-3.5" />
+          onClick={() =>
+            run(
+              'csv',
+              () => exportCsv(deckId),
+              () => t('export.doneCsv'),
+            )
           }
+        >
+          {icon('csv', <FileSpreadsheet className="h-3.5 w-3.5" />)}
           CSV
         </Button>
-
         <Button
           variant="outline"
           size="sm"
           disabled={busy}
-          onClick={() => run('quizlet', () => exportQuizlet(deckId), 'Exported for Quizlet')}
-          className="flex items-center gap-2 justify-start"
-        >
-          {activeAction === 'quizlet'
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <FileText className="w-3.5 h-3.5" />
+          onClick={() =>
+            run(
+              'quizlet',
+              () => exportQuizlet(deckId),
+              () => t('export.doneQuizlet'),
+            )
           }
+        >
+          {icon('quizlet', <FileText className="h-3.5 w-3.5" />)}
           Quizlet (TSV)
         </Button>
-
         <Button
           variant="outline"
           size="sm"
           disabled={busy}
-          onClick={() => run('cloud', () => syncToCloud(deckId), lastSyncResult ? `Synced ${lastSyncResult.cardsSynced} cards` : 'Synced to cloud')}
-          className="flex items-center gap-2 justify-start"
-        >
-          {activeAction === 'cloud'
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <Cloud className="w-3.5 h-3.5" />
+          onClick={() =>
+            run(
+              'cloud',
+              () => syncToCloud(deckId),
+              () =>
+                lastSyncResult
+                  ? t('export.doneCloud', { count: lastSyncResult.cardsSynced })
+                  : t('export.doneCloudShort'),
+            )
           }
-          Cloud Sync
+        >
+          {icon('cloud', <Cloud className="h-3.5 w-3.5" />)}
+          {t('export.cloudSync')}
         </Button>
       </div>
 
-      {/* Success */}
       {successMsg && (
-        <div className="flex items-center gap-2 text-sm text-[#8BB7A3] bg-[#8BB7A3]/10 rounded-md px-3 py-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
+        <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
           {successMsg}
         </div>
       )}
-
-      {/* Error */}
-      {(exportError || syncError) && (
-        <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
-          <X className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{exportError || syncError}</span>
-        </div>
-      )}
+      <InlineError message={exportError || syncError} />
     </div>
   );
 }

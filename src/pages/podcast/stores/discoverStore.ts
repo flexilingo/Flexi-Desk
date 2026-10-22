@@ -43,6 +43,8 @@ export interface EpisodeFilterParams {
   search?: string;
   language?: string;
   sort?: LevelSort;
+  /** Episode length ceiling in minutes. */
+  maxDuration?: number;
   page?: number;
   limit?: number;
 }
@@ -153,7 +155,7 @@ interface DiscoverState {
   searchPodcastIndex: (q: string, language?: string, max?: number) => Promise<void>;
 
   // Browse section actions
-  fetchBrowseSection: (slug: string, page: number) => Promise<void>;
+  fetchBrowseSection: (slug: string, page: number, language?: string) => Promise<void>;
 
   clearError: () => void;
 }
@@ -350,7 +352,7 @@ export const useDiscoverStore = create<DiscoverState>()(
     fetchEpisodesByLevel: async (params: EpisodeFilterParams) => {
       // The endpoint 400s unless at least one of level/topic/search/max_score is
       // present, so never fire a bare request.
-      if (!params.level && !params.topic && !params.search) {
+      if (!params.level && !params.topic && !params.search && !params.maxDuration) {
         set((s) => {
           s.episodesByLevel = [];
           s.episodesByLevelTotal = 0;
@@ -580,7 +582,7 @@ export const useDiscoverStore = create<DiscoverState>()(
       }
     },
 
-    fetchBrowseSection: async (slug: string, page: number) => {
+    fetchBrowseSection: async (slug: string, page: number, language?: string) => {
       const PAGE_SIZE = 24;
       set((s) => {
         s.browseSectionLoading = true;
@@ -596,11 +598,21 @@ export const useDiscoverStore = create<DiscoverState>()(
           science: 'Science',
           society: 'Society-Culture',
           technology: 'Technology',
+          business: 'Business',
+          history: 'History',
+          sports: 'Sports',
+          music: 'Music',
+          comedy: 'Comedy',
+          health: 'Health-Fitness',
+          kids: 'Kids-Family',
+          'true-crime': 'True-Crime',
         };
 
         if (slug === 'trending' || catMap[slug]) {
           const max = page * PAGE_SIZE;
-          const catParam = catMap[slug] ? `&cat=${encodeURIComponent(catMap[slug])}` : '';
+          const catParam =
+            (catMap[slug] ? `&cat=${encodeURIComponent(catMap[slug])}` : '') +
+            (language ? `&lang=${encodeURIComponent(language)}` : '');
           const res = await supabaseCall<TrendingResponse>(
             'GET',
             `/podcast?action=trending&max=${max}${catParam}`,

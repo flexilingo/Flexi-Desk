@@ -27,9 +27,20 @@ interface StatCardsProps {
   best: number | null;
   avg: number | null;
   lastLabel: string | null;
+  /** Top of the exam's band scale (CLB 12, NCLC 10) — sizes the bars. */
+  bandMax?: number;
+  /** How a band is written (TCF's "< 4"). */
+  formatBand?: (n: number) => string;
 }
 
-export function StatCards({ total, best, avg, lastLabel }: StatCardsProps) {
+export function StatCards({
+  total,
+  best,
+  avg,
+  lastLabel,
+  bandMax = 12,
+  formatBand,
+}: StatCardsProps) {
   const { t } = useTranslation('celpip');
   const never = t('statsNever');
 
@@ -47,9 +58,9 @@ export function StatCards({ total, best, avg, lastLabel }: StatCardsProps) {
         icon={Trophy}
         tone="success"
         title={t('statsBestScore')}
-        value={best ?? never}
+        value={best != null ? (formatBand ? formatBand(best) : best) : never}
         subText={t('statsSubtitleBest')}
-        percent={best != null ? (best / 12) * 100 : 0}
+        percent={best != null ? (best / bandMax) * 100 : 0}
       />
       <StatCard
         icon={Target}
@@ -57,7 +68,7 @@ export function StatCards({ total, best, avg, lastLabel }: StatCardsProps) {
         title={t('statsAvgScore')}
         value={avg ?? never}
         subText={t('statsSubtitleAvg')}
-        percent={avg != null ? (avg / 12) * 100 : 0}
+        percent={avg != null ? (avg / bandMax) * 100 : 0}
       />
       <StatCard
         icon={Clock}

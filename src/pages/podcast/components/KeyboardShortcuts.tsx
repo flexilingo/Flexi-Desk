@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { isTypingTarget, transportAction, type TransportAction } from '../utils/transport';
 
 interface KeyboardShortcutsProps {
   onToggleSubtitles?: () => void;
@@ -11,6 +12,10 @@ interface KeyboardShortcutsProps {
   onHelp?: () => void;
   onExit?: () => void;
   enabled?: boolean;
+  /** Space/K, left/right line, J/L, M, up/down, B, P. Pages that pass none keep the letter keys only. */
+  transport?: Partial<Record<TransportAction, () => void>>;
+  /** Up/down change the volume (off where the arrows scroll something). */
+  volumeKeys?: boolean;
 }
 
 export function KeyboardShortcuts({
@@ -24,13 +29,32 @@ export function KeyboardShortcuts({
   onHelp,
   onExit,
   enabled = true,
+  transport,
+  volumeKeys = true,
 }: KeyboardShortcutsProps) {
+  const transportRef = useRef(transport);
+  useEffect(() => {
+    transportRef.current = transport;
+  });
+
   useEffect(() => {
     if (!enabled) return;
 
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (isTypingTarget(e.target)) return;
+      // Ctrl/Cmd/Alt combos belong to the OS (Cmd+C must copy, not toggle subtitles).
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const handlers = transportRef.current;
+      if (handlers) {
+        const action = transportAction(e, { volumeKeys });
+        const run = action ? handlers[action] : undefined;
+        if (action && run) {
+          e.preventDefault();
+          run();
+          return;
+        }
+      }
 
       switch (e.key.toLowerCase()) {
         case 'c':
@@ -76,6 +100,7 @@ export function KeyboardShortcuts({
     onFocus,
     onHelp,
     onExit,
+    volumeKeys,
   ]);
 
   return null;

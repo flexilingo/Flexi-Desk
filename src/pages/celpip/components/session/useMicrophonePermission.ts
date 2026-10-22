@@ -1,83 +1,58 @@
-import { useState, useEffect, useCallback } from 'react';
-
-// Ported verbatim from front's `src/hooks/useMicrophonePermission.ts`. Lives
-// locally under the session directory because SectionIntro (the speaking gate)
-// is the only desk surface that needs it, and this agent owns that gate.
+import { useState, useCallback } from 'react';
+import {
+  detectOs,
+  looksBlockedBySystem,
+  micFailureOf,
+  readMicLevel,
+  startMicProbe,
+  stopMicProbe,
+} from '../../services/micProbe';
 
 export type MicStatus =
-  | 'idle' // not asked yet (or Permissions API unavailable)
-  | 'pending' // permission prompt / device check in flight
-  | 'granted' // permission granted and a device responded
-  | 'denied' // user (or policy) blocked the permission — needs settings fix
-  | 'no-device' // permission ok but no microphone hardware found
-  | 'in-use' // device exists but another app/tab holds it
-  | 'unsupported'; // no getUserMedia (or insecure context)
+  | 'idle' // not asked yet
+  | 'pending' // device check in flight
+  | 'granted' // the system let us record and a device responded
+  | 'denied' // the system blocks the microphone - needs a settings change
+  | 'no-device' // no microphone hardware found
+  | 'in-use' // another app (or recording) holds it
+  | 'unsupported';
 
 interface UseMicrophonePermissionResult {
   status: MicStatus;
   requestPermission: () => Promise<void>;
 }
 
+const PROBE_READINGS = 4;
+const PROBE_GAP_MS = 150;
+
+/**
+ * Checks the microphone through the native capture the exam really records with
+ * (CPAL). macOS asks for permission on the first capture; a microphone the user
+ * (or the system) blocked either fails to open (Windows) or gives pure silence
+ * (macOS). Never records anything to disk.
+ */
 export function useMicrophonePermission(): UseMicrophonePermissionResult {
-  const [status, setStatus] = useState<MicStatus>(() => {
-    if (typeof navigator === 'undefined') return 'idle';
-    return typeof navigator.mediaDevices?.getUserMedia === 'function' ? 'idle' : 'unsupported';
-  });
-
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) return;
-
-    // Read the current permission state without prompting.
-    if (navigator.permissions) {
-      navigator.permissions
-        .query({ name: 'microphone' as PermissionName })
-        .then((result) => {
-          const apply = () => {
-            if (result.state === 'granted') setStatus('granted');
-            else if (result.state === 'denied') setStatus('denied');
-            else setStatus('idle');
-          };
-          apply();
-          // Recover live when the user flips the OS/webview toggle.
-          result.onchange = apply;
-        })
-        .catch(() => {
-          // Permissions API can't query 'microphone' here — leave 'idle';
-          // requestPermission() will surface the real state.
-        });
-    }
-  }, []);
+  const [status, setStatus] = useState<MicStatus>('idle');
 
   const requestPermission = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setStatus('unsupported');
-      return;
-    }
     setStatus('pending');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Only permission was needed — release the device immediately.
-      stream.getTracks().forEach((track) => track.stop());
-      setStatus('granted');
+      await startMicProbe();
     } catch (err) {
-      // Each failure needs different guidance — don't collapse them.
-      const name = err instanceof DOMException ? err.name : '';
-      if (
-        name === 'NotFoundError' ||
-        name === 'DevicesNotFoundError' ||
-        name === 'OverconstrainedError'
-      ) {
-        setStatus('no-device');
-      } else if (
-        name === 'NotReadableError' ||
-        name === 'TrackStartError' ||
-        name === 'AbortError'
-      ) {
-        setStatus('in-use');
-      } else {
-        // NotAllowedError / PermissionDeniedError / SecurityError
-        setStatus('denied');
+      setStatus(micFailureOf(err));
+      return;
+    }
+    try {
+      let peak = -100;
+      for (let i = 0; i < PROBE_READINGS; i++) {
+        await new Promise((r) => setTimeout(r, PROBE_GAP_MS));
+        peak = Math.max(peak, await readMicLevel());
       }
+      setStatus(looksBlockedBySystem(peak, detectOs()) ? 'denied' : 'granted');
+    } catch {
+      setStatus('denied');
+    } finally {
+      await stopMicProbe();
     }
   }, []);
 

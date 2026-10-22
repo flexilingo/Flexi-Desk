@@ -180,7 +180,7 @@ export function ModelSuggestionDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-[#C58C6E]" />
+            <AlertTriangle className="h-5 w-5 text-warning" />
             Incompatible Whisper Model
           </DialogTitle>
           <DialogDescription>
@@ -207,9 +207,9 @@ export function ModelSuggestionDialog({
               {downloadedModels.map((model) => (
                 <div
                   key={model.id}
-                  className="flex items-center gap-3 rounded-lg border border-[#8BB7A3]/30 bg-[#8BB7A3]/5 p-3"
+                  className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/5 p-3"
                 >
-                  <HardDrive className="h-4 w-4 shrink-0 text-[#8BB7A3]" />
+                  <HardDrive className="h-4 w-4 shrink-0 text-success" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{model.name}</span>

@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Sparkles, RefreshCw, Lock, Info, Cloud, Cpu, ServerCog } from 'lucide-react';
+import { Sparkles, RefreshCw, Lock, Info, Cloud, Cpu, KeyRound } from 'lucide-react';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { useAiSource } from '@/stores/aiSourceStore';
 import { Button } from '@/components/ui/button';
 import type {
   ExamInsight,
@@ -10,49 +12,40 @@ import type {
   InsightSpeakingTask,
   InsightOrigin,
 } from '../types';
-import {
-  McqInsightSection,
-  WritingInsightSection,
-  SpeakingInsightSection,
-} from './InsightSections';
+import { McqInsightSection, TaskCorrections } from './InsightSections';
 
 /**
- * Quiet provenance chip. On desk, insight is NEVER Pro-gated — a free user gets
- * it from the on-device model — so instead of an upsell we simply state where a
- * given analysis came from. It is understated on purpose; it is not a CTA.
- *
- * `FlexiLingo` is a brand name (not translated); "On this device" has no i18n
- * key and the locale files are out of scope for this port, so it is a literal.
+ * Quiet provenance chip: says where an analysis really came from - the AI on this
+ * device, the user's own key, or FlexiLingo's cloud (only when switched on in
+ * Settings). Understated on purpose; it is not a CTA.
  */
 export function InsightOriginBadge({ origin }: { origin: InsightOrigin }) {
-  const isCloud = origin === 'cloud';
-  const Icon = isCloud ? Cloud : Cpu;
+  const { t } = useTranslation('ai');
+  const key = origin === 'own_key' ? 'ownKey' : origin;
+  const Icon = origin === 'cloud' ? Cloud : origin === 'own_key' ? KeyRound : Cpu;
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[10px] font-semibold bg-muted text-muted-foreground border border-border">
+    <span
+      title={t(`originHint.${key}`)}
+      className="inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[10px] font-semibold bg-muted text-muted-foreground border border-border"
+    >
       <Icon className="w-2.5 h-2.5" />
-      {isCloud ? 'FlexiLingo' : 'On this device'}
+      {t(`origin.${key}`)}
     </span>
   );
 }
 
 /**
- * Repurposed from front's `InsightProGate`. The web version was an upsell shown
- * to free users; desk has no paywall on insight, so this instead surfaces the
- * one thing a user must act on: the on-device model isn't runnable. It points at
- * Settings and offers a retry once they've started it.
+ * Shown when an on-device or own-key insight fails. If the cause is that the user's
+ * AI is not set up, it is the shared setup card; otherwise a plain retry. Never a
+ * cloud fallback.
  */
 export function LocalModelGate({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation('celpip');
+  const { own } = useAiSource();
+  if (own.kind === 'unconfigured') return <AiSetupCard onReady={onRetry} />;
   return (
-    <div className="bg-warning/[0.08] border border-warning/30 rounded-[14px] p-5 flex flex-col gap-3">
-      <div className="flex items-start gap-3">
-        <span className="w-9 h-9 rounded-[10px] bg-warning/15 flex items-center justify-center shrink-0">
-          <ServerCog className="w-4 h-4 text-warning" />
-        </span>
-        <p className="text-[13px] text-foreground leading-relaxed flex-1 self-center">
-          {t('errors.OLLAMA_NOT_RUNNING')}
-        </p>
-      </div>
+    <div className="bg-error/[0.06] border border-error/30 rounded-[14px] p-5 flex flex-col gap-3">
+      <p className="text-[13px] text-error font-medium">{t('insightFailed')}</p>
       <div>
         <Button variant="outline" size="md" onClick={onRetry}>
           <RefreshCw className="w-3.5 h-3.5" />
@@ -68,8 +61,15 @@ interface SkillInsightPanelProps {
   state: InsightSkillState;
   insight: Partial<ExamInsight>;
   onRetry: () => void;
-  /** Where this analysis was generated — drives the error path (local ⇒ gate). */
+  /** Where this analysis was generated — drives the error path (own AI ⇒ setup gate). */
   origin: InsightOrigin;
+  /** Writing/speaking: the task whose corrections to show (inside that task's card). */
+  taskIndex?: number;
+  /**
+   * Listening/reading: answer keys `part_<p>_q_<q>` whose explanation is already in the
+   * question's own review card, left out here so nothing is explained twice.
+   */
+  explainedInCard?: Set<string>;
 }
 
 /** The AI-insight block inside a skill tab — one state at a time. */
@@ -79,6 +79,8 @@ export function SkillInsightPanel({
   insight,
   onRetry,
   origin,
+  taskIndex,
+  explainedInCard,
 }: SkillInsightPanelProps) {
   const { t } = useTranslation('celpip');
 
@@ -87,23 +89,20 @@ export function SkillInsightPanel({
   if (state === 'ready') {
     if (skill === 'listening' || skill === 'reading') {
       const data = insight[skill] as InsightMcqSectionData | undefined;
-      return data ? <McqInsightSection data={data} sectionType={skill} /> : null;
+      return data ? (
+        <McqInsightSection data={data} sectionType={skill} explainedInCard={explainedInCard} />
+      ) : null;
     }
-    if (skill === 'writing') {
-      const tasks = (insight.writing ?? []) as InsightWritingTask[];
-      return (
-        <div className="flex flex-col gap-5">
-          {tasks.map((task) => (
-            <WritingInsightSection key={task.task_index} task={task} />
-          ))}
-        </div>
-      );
-    }
-    const tasks = (insight.speaking ?? []) as InsightSpeakingTask[];
+    const tasks = ((skill === 'writing' ? insight.writing : insight.speaking) ?? []) as Array<
+      InsightWritingTask | InsightSpeakingTask
+    >;
+    const shown =
+      taskIndex === undefined ? tasks : tasks.filter((task) => task.task_index === taskIndex);
+    if (shown.length === 0) return null;
     return (
       <div className="flex flex-col gap-5">
-        {tasks.map((task) => (
-          <SpeakingInsightSection key={task.task_index} task={task} />
+        {shown.map((task) => (
+          <TaskCorrections key={task.task_index} task={task} />
         ))}
       </div>
     );
@@ -129,7 +128,7 @@ export function SkillInsightPanel({
   if (state === 'error') {
     // A local failure is almost always the model not being runnable, which the
     // user can fix — send them to the actionable gate rather than a bare retry.
-    if (origin === 'local') return <LocalModelGate onRetry={onRetry} />;
+    if (origin !== 'cloud') return <LocalModelGate onRetry={onRetry} />;
     return (
       <div className="bg-error/[0.06] border border-error/30 rounded-[14px] p-5 flex flex-col gap-3">
         <p className="text-[13px] text-error font-medium">{t('insightFailed')}</p>

@@ -1,0 +1,116 @@
+{
+  "confidence": {
+    "level_1": "Rien",
+    "level_2": "La moitié",
+    "level_3": "Compris",
+    "question": "Vous avez compris combien ?"
+  },
+  "controls": {
+    "again": "Encore",
+    "begin": "Commencer",
+    "continue": "Continuer",
+    "next": "Suivant",
+    "resume": "Reprendre",
+    "skip": "Passer"
+  },
+  "launcher": {
+    "label": "Exercice"
+  },
+  "picker": {
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "minutes": "{{n}} min",
+    "range": "Passage",
+    "rangeFrom": "De {{at}} à {{to}}",
+    "resume": "Reprendre l'exercice — étape {{n}} sur {{total}}",
+    "start": "Commencer",
+    "subtitle": "Choisissez un court passage et travaillez-le. Court vaut mieux que long.",
+    "title": "Travailler ce podcast"
+  },
+  "programs": {
+    "dictation": {
+      "description": "Écrivez ce que vous entendez, corrigé mot à mot",
+      "label": "Dictée"
+    },
+    "loopCrack": {
+      "description": "Un court extrait en boucle jusqu'à entendre chaque mot",
+      "label": "Répéter jusqu'à comprendre"
+    },
+    "threePass": {
+      "description": "Sans sous-titres, puis avec, puis sans de nouveau",
+      "label": "Trois passages"
+    }
+  },
+  "rail": {
+    "cycleIdle": "Écoute — prochain exercice dans quelques minutes",
+    "exit": "Quitter l'exercice",
+    "stepOf": "{{n}} sur {{total}}",
+    "working": "Exercice"
+  },
+  "steps": {
+    "blind1": {
+      "body": "N'essayez pas de tout saisir. Prenez juste le sens général.",
+      "title": "Premier passage — sans sous-titres"
+    },
+    "blind2": {
+      "body": "Le même audio. Voyez combien vous en saisissez de plus.",
+      "title": "Troisième passage — sans sous-titres"
+    },
+    "confidence": {
+      "title": "Alors ?"
+    },
+    "dictation": {
+      "check": "Vérifier",
+      "hint": "{{replays}} répétitions jusqu'ici. Prenez-en autant qu'il faut.",
+      "placeholder": "Tapez ce que vous avez entendu…",
+      "retry": "Réessayer",
+      "title": "Écrivez ce que vous entendez",
+      "verdict_close": "{{pct}} % — presque",
+      "verdict_missed": "{{pct}} % — mérite une autre écoute",
+      "verdict_pass": "{{pct}} % — c'est bon"
+    },
+    "dictationBrief": {
+      "body": "Vous entendrez un court extrait deux fois. Écrivez ce que vous entendez — les répétitions sont libres.",
+      "title": "Dictée"
+    },
+    "dictationCheck": {
+      "body": "Le même audio à 0,85x avec le texte visible.",
+      "title": "Réécoutez, plus lentement"
+    },
+    "guided": {
+      "body": "Lisez en écoutant et repérez ce qui vous a échappé.",
+      "title": "Deuxième passage — avec sous-titres"
+    },
+    "loop": {
+      "gotIt": "J'ai compris",
+      "hint": "En boucle jusqu'à ce que vous l'ayez.",
+      "revealedHint": "Réécoutez maintenant avec le texte sous les yeux.",
+      "showMe": "Montrer",
+      "title": "Écoutez attentivement"
+    },
+    "loopBrief": {
+      "body": "Un court extrait se répète. Appuyez quand vous entendez chaque mot.",
+      "title": "Répéter jusqu'à comprendre"
+    },
+    "preteach": {
+      "body": "Vingt secondes pour découvrir les mots difficiles avant de les entendre.",
+      "empty": "Rien d'inhabituel dans ce passage — allez-y directement.",
+      "loading": "Vérification des niveaux…",
+      "startListening": "Commencer l'écoute",
+      "title": "Mots à venir"
+    }
+  },
+  "summary": {
+    "addToDeck": "Ajouter {{n}} mots",
+    "delta": "De {{from}} à {{to}} — +{{n}} sur le même audio",
+    "deltaFlat": "Même résultat les deux fois",
+    "deltaFlatHint": "Celui-ci mérite d'y revenir demain.",
+    "done": "Terminé",
+    "keepGoing": "Continuer — nouvel exercice dans {{n}} min",
+    "missedWords": "Mots manqués",
+    "statAccuracy": "Précision",
+    "statCracked": "Réussis",
+    "statMinutes": "Minutes",
+    "title": "Séance terminée"
+  }
+}

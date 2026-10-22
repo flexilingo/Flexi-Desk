@@ -22,7 +22,19 @@
     "focusLabel": "Objectif",
     "daysWithoutReview": "{{days}} jours sans révision",
     "settings": "Paramètres",
-    "preparing": "Préparation de votre plan…"
+    "preparing": "Préparation de votre plan…",
+    "mode": {
+      "normal": "Normal",
+      "shadowing": "Répétition"
+    },
+    "modeHint": {
+      "normal": "Des exercices qui vous testent et planifient vos prochaines révisions.",
+      "shadowing": "Les cartes défilent seules : écoutez chaque mot et répétez-le. Sans notation."
+    },
+    "modeLabel": "Mode d'étude",
+    "startShadowing": "Lancer la répétition",
+    "stuckCards": "{{count}} cartes bloquées",
+    "stuckCardsHint": "Retravaillez ces cartes jusqu’à ce qu’elles soient acquises"
   },
   "deckList": {
     "title": "Vos paquets",
@@ -61,7 +73,10 @@
     "focus": "Objectif",
     "force": "Révision intensive (inclure les cartes pas encore dues)",
     "start": "Démarrer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "forceHint": "Avancer les cartes de ce paquet même si elles sont planifiées plus tard.",
+    "random": "Aléatoire",
+    "randomDesc": "Toutes les cartes, mélangées — sans planification"
   },
   "focus": {
     "balanced": "Équilibré",
@@ -138,7 +153,12 @@
     "delayDescription": "Secondes d'attente avant la lecture.",
     "voiceAccent": "Voix",
     "save": "Enregistrer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "deckSearchPlaceholder": "Rechercher des paquets…",
+    "deckSearchNoResults": "Aucun paquet ne correspond à « {{query}} ».",
+    "deckSearchTunedOnly": "Ajustés uniquement",
+    "deckSearchResetAll": "Tout réinitialiser à 1×",
+    "deckSearchClear": "Effacer la recherche"
   },
   "activity": {
     "recall": "Carte mémoire",
@@ -148,7 +168,9 @@
     "speak_test": "Prononcez-le",
     "use_in_sentence": "Utiliser dans une phrase",
     "synonym_discrim": "Choisir le synonyme",
-    "mini_reading": "Mini-lecture"
+    "mini_reading": "Mini-lecture",
+    "fromDeck": "Du paquet {{deck}}",
+    "activityType": "Activité"
   },
   "activityDesc": {
     "recall": "Retournez la carte et évaluez votre réponse.",
@@ -191,7 +213,119 @@
       "learning": "En apprentissage",
       "review": "Révision"
     },
-    "hint": "Indice"
+    "hint": "Indice",
+    "stop": "Arrêter",
+    "elapsed": "Écoulé",
+    "abandonConfirm": "Arrêter cette session ?",
+    "loading": "Chargement…",
+    "preparingSession": "Préparation de la session…",
+    "doneTitle": "Session terminée",
+    "card": "Cartes",
+    "recallRate": "Taux de rappel",
+    "elapsedLabel": "Temps",
+    "feedbackOptimal": "Excellent — vous êtes dans la plage optimale (85–90%).",
+    "feedbackGood": "Bien — ajoutez un peu moins de nouvelles cartes.",
+    "feedbackWeak": "Beaucoup de cartes difficiles — réduisez le nombre de nouvelles.",
+    "feedbackEmpty": "Session terminée sans aucune révision.",
+    "optimalRange": "Plage optimale : 85–90%",
+    "noAttempts": "Aucune carte révisée",
+    "noAttemptsHint": "Cette session s'est terminée sans aucune révision. Lancez-en une autre pour commencer.",
+    "back": "Retour au tableau de bord",
+    "reviewBanner": "Carte précédente — révision uniquement",
+    "continuePractice": "Continuer",
+    "abandonConfirmDesc": "Vos réponses jusqu'à présent sont enregistrées — seules les cartes restantes seront ignorées.",
+    "requeueBadge": "Répétition n° {{count}}",
+    "repeatsAdded": "+{{count}}",
+    "requeueHint": "Les nouvelles cartes et les mauvaises réponses reviennent une fois avant la fin de la session — c'est pourquoi le total augmente.",
+    "settings": "Paramètres",
+    "settingsTitle": {
+      "normal": "Réglages du mode normal",
+      "shadowing": "Réglages de répétition"
+    },
+    "textSize": "Taille du texte",
+    "textSizeOption": {
+      "compact": "Compact",
+      "comfortable": "Confortable",
+      "large": "Grand",
+      "huge": "Très grand"
+    },
+    "focusMode": "Mode focus (plein écran)",
+    "exitFocusMode": "Quitter le mode focus",
+    "shortcuts": {
+      "replayWord": "Rejouer le mot",
+      "prevExample": "Exemple précédent",
+      "playExample": "Lire l'exemple",
+      "exampleOf": "Exemple {{index}}/{{total}}",
+      "showMeaning": "Afficher le sens",
+      "hideMeaning": "Masquer le sens",
+      "layoutExamples": "Exemples d'abord",
+      "layoutMeaning": "Sens d'abord",
+      "flip": "révéler",
+      "grade": "noter",
+      "exitFocus": "quitter",
+      "showExampleMeaning": "Afficher le sens de l'exemple",
+      "hideExampleMeanings": "Masquer le sens des exemples"
+    },
+    "cardView": "Ce que la carte affiche",
+    "cardViewOption": {
+      "showWord": "Afficher le mot",
+      "showMeaning": "Afficher le sens",
+      "showExampleMeanings": "Afficher la traduction des exemples"
+    },
+    "cardViewHint": {
+      "showWord": "Désactivé : écoutez d'abord — la révélation montre le mot et son sens ensemble.",
+      "showMeaning": "Désactivé : le sens reste masqué et les exemples passent en premier.",
+      "showExampleMeanings": "Désactivé : dévoilez vous-même chaque traduction."
+    },
+    "shortcutsTitle": "Raccourcis clavier",
+    "shortcutList": {
+      "flip": "Révéler / masquer la réponse",
+      "grade": "Noter la carte",
+      "nextExample": "Exemple suivant",
+      "exampleMeaning": "Dévoiler le sens d'un exemple",
+      "meaning": "Afficher / masquer le sens",
+      "toggleMeaningPref": "Activer ou désactiver le sens pour toutes les cartes",
+      "moreInFocus": "Le mode focus ajoute d'autres raccourcis."
+    },
+    "viewMenu": "Affichage",
+    "audio": "Audio",
+    "autoPronounce": "Prononciation auto",
+    "autoPronounceHint": "La carte suivante est lue automatiquement",
+    "voiceAccent": "Accent anglais",
+    "voiceAccentHint": "Pour les mots anglais, dans les deux modes.",
+    "voiceAccentOption": {
+      "us": "Américain",
+      "uk": "Britannique"
+    },
+    "exitFocus": "Quitter le plein écran",
+    "reverseCard": "Direction inversée",
+    "reverseCardHint": "Activé : les deux faces de la carte s'inversent — la carte montre le sens et vous retrouvez le mot.",
+    "pronounceWordOnReveal": "Lire le mot au retournement",
+    "pronounceWordOnRevealHint": "Le mot est maintenant au dos — il est lu à voix haute quand vous retournez la carte.",
+    "pronunciationSettings": "Réglages de prononciation",
+    "pronunciationTitle": "Prononciation",
+    "pronunciationSub": "La voix qui lit les mots à voix haute — ici et partout dans FlexiLingo. Choisissez-en une et vous l'entendez aussitôt.",
+    "reverseCardError": "Impossible d'enregistrer ce réglage. Réessayez.",
+    "normalSetupTitle": "Configurez votre révision",
+    "normalSetupSub": "Choisissez ce que la carte affiche, puis appuyez sur Démarrer.",
+    "clickToReveal": "Cliquez ou appuyez sur Espace pour révéler",
+    "hiddenWord": "Mot masqué",
+    "listenThenReveal": "Écoutez, puis cliquez ou appuyez sur Espace",
+    "translationLabel": "Traduction",
+    "hideMeaning": "Masquer le sens",
+    "revealMeaning": "Afficher le sens",
+    "corrections": "Corrections",
+    "grading": "Évaluation…",
+    "useInSentence": "Utilisez ce mot dans une phrase",
+    "kind": {
+      "spelling": "orthographe",
+      "grammar": "grammaire"
+    },
+    "typeIn": "Tapez le mot en {{language}}",
+    "typeWord": "Tapez le mot",
+    "placeholderIn": "Mot en {{language}}…",
+    "nearAccent": "Presque — seul un accent manque.",
+    "nearTypo": "Presque — une seule lettre de différence."
   },
   "complete": {
     "title": "Séance terminée",
@@ -208,7 +342,9 @@
     "newlyMastered": "Maîtrisées",
     "duesReviewed": "Révisions faites",
     "xpEarned": "XP gagnés",
-    "xpHint": "Ajoutés à votre série et à votre objectif du jour."
+    "xpHint": "Ajoutés à votre série et à votre objectif du jour.",
+    "reviewAgain": "Réviser encore",
+    "tomorrowShort": "Demain"
   },
   "errors": {
     "NO_CARDS_FOR_SELECTION": "Aucune carte ne correspond à cette sélection. Essayez une autre portée.",
@@ -224,5 +360,227 @@
     "collocations": "Collocations",
     "commonMistakes": "Erreurs fréquentes",
     "notes": "Notes"
+  },
+  "shadowing": {
+    "empty": "Cette session n'a pas encore de mots à répéter.",
+    "readyTitle": "Configurez votre session",
+    "idle": "Appuyez sur Démarrer — écoutez, puis répétez le mot.",
+    "start": "Démarrer",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "reset": "Réinitialiser",
+    "settings": "Réglages de répétition",
+    "wordCount": "{{count}} mots",
+    "round": "tour {{pass}}",
+    "elapsed": "Temps de lecture",
+    "listenOf": "écoute {{n}} sur {{total}}",
+    "meaning": "sens",
+    "recall": "retrouvez le sens",
+    "shuffle": "Lecture aléatoire",
+    "speakMeaning": "Lire le sens à voix haute",
+    "speakMeaningHint": "Le sens est lu dans la langue dans laquelle il est écrit.",
+    "meaningMode": "Sens",
+    "meaningOption": {
+      "always": "Toujours",
+      "after": "Après la répétition",
+      "hidden": "Masqué"
+    },
+    "meaningHint": {
+      "always": "Le sens s’affiche avec le mot.",
+      "after": "Écoutez le mot, retrouvez son sens pendant la pause, puis voyez-le.",
+      "hidden": "Le mot seul — le sens reste masqué."
+    },
+    "showWordHint": "Désactivé : écoute seule — le mot reste masqué.",
+    "gap": "Pause pour répéter",
+    "gapHint": "Cette pause est l'exercice — assez longue pour répéter le mot avant le suivant.",
+    "gapNone": "Sans pause",
+    "gapOffHint": "Inutilisée pour l’instant : après chaque mot, la séance attend que vous appuyiez sur Suivant.",
+    "autoAdvance": "Passer au suivant tout seul",
+    "autoAdvanceHint": "Désactivé : après chaque mot, la séance attend que vous appuyiez sur Suivant, aussi longtemps qu'il le faut.",
+    "replay": "Réécouter",
+    "next": "Suivant",
+    "repeatEach": "Fois par mot",
+    "repeatEachHint": "Deux fois marche bien : écoutez, répétez, réécoutez pour vous corriger.",
+    "repeatMore": "Répéter davantage",
+    "repeatLess": "Répéter moins",
+    "rounds": "Tours",
+    "roundsInfinite": "Répéter jusqu'à l'arrêt",
+    "hiddenWord": "Mot masqué",
+    "hiddenMeaning": "Sens masqué",
+    "size": "Mots par session",
+    "sizeAll": "Tous",
+    "doneTitle": "Session terminée",
+    "doneSub": "Mots entendus et temps réellement écoulé.",
+    "doneWords": "mots",
+    "doneTime": "durée",
+    "again": "Recommencer",
+    "done": "Terminé",
+    "loadFailed": "Les mots de cette séance n'ont pas pu être chargés.",
+    "retry": "Réessayer",
+    "groupRepeat": "Répétition et pause",
+    "groupRun": "Mots et tours",
+    "gapSeconds": "Pause, en secondes",
+    "secondsUnit": "s",
+    "reportFailed": "La progression de cette série n'a pas pu être enregistrée sur cet ordinateur."
+  },
+  "report": {
+    "headlineMastered": "{{count}} mots sont passés en mémoire à long terme",
+    "headlineRecalled": "{{count}} mots retenus à la fin",
+    "headlinePlain": "{{count}} mots travaillés",
+    "factSeen": "{{count}} vus",
+    "factFirstTry": "{{percent}}% du premier coup",
+    "factActive": "{{time}} de pratique réelle",
+    "durationHm": "{{hours}} h {{minutes}} min",
+    "durationM": "{{minutes}} min",
+    "recallTitle": "Rappel",
+    "firstTry": "Justes du premier coup",
+    "byTheEnd": "Justes à la fin",
+    "attemptsNote": "{{attempts}} tentatives sur {{cards}} mots — {{avg}} par mot",
+    "gapNote": "{{count}} redressés pendant la session",
+    "strugglesTitle": "Ce qui a résisté",
+    "strugglesNote": "{{count}} mots ont demandé 3 essais ou plus",
+    "drillWeak": "Travailler les mots faibles",
+    "forecastTitle": "Quand ils reviennent",
+    "today": "Aujourd'hui",
+    "inDays": "+{{count}} j",
+    "levelsTitle": "Par niveau",
+    "levelsNote": "mots classés uniquement",
+    "missed": "manqués",
+    "decksTitle": "D'où ils viennent"
+  },
+  "tour": {
+    "guideButton": "Guide",
+    "next": "Suivant",
+    "back": "Retour",
+    "skip": "Ignorer",
+    "done": "Terminé",
+    "stepOf": "Étape {{current}} sur {{total}}",
+    "steps": {
+      "intro": {
+        "title": "Bienvenue dans Pratique",
+        "body": "Faisons une visite rapide — ce que fait chaque réglage et comment tirer le meilleur parti de vos sessions."
+      },
+      "hero": {
+        "title": "Révision du jour",
+        "body": "Indique combien de cartes il reste et combien de minutes cela prendra. Appuyez sur « Démarrer la pratique » pour lancer votre mix quotidien intelligent."
+      },
+      "heroShortcuts": {
+        "title": "Votre façon d'étudier",
+        "body": "Normal : des exercices qui vous testent et planifient vos prochaines révisions. Répétition : les cartes défilent seules — écoutez chaque mot et répétez-le, sans notation. « Objectif » règle le mélange d'exercices du mode normal."
+      },
+      "deckList": {
+        "title": "Vos paquets",
+        "body": "Tous les paquets que vous étudiez, avec leur état de santé et leur maîtrise. Utilisez les onglets pour filtrer selon ce qui nécessite de l’attention."
+      },
+      "deckCard": {
+        "title": "Démarrer un seul paquet",
+        "body": "Appuyez sur « Commencer » sur n’importe quel paquet pour choisir exactement quoi étudier."
+      },
+      "scopeOptions": {
+        "title": "Quoi réviser",
+        "body": "Choisissez une portée : tout ce qui est dû, seulement les nouveaux mots, les mots que vous ratez souvent, ou un mélange aléatoire."
+      },
+      "scopeFocus": {
+        "title": "Objectif",
+        "body": "Choisissez sur quel type d’exercices s’appuyer — Écoute, Production, Reconnaissance, ou votre propre mélange personnalisé."
+      },
+      "scopeForce": {
+        "title": "Réviser même si non dû",
+        "body": "Activez cette option pour réviser les cartes d’un paquet même avant leur échéance officielle."
+      },
+      "scopeStart": {
+        "title": "Commencer la révision",
+        "body": "Lance la session avec tout ce que vous avez choisi ci-dessus."
+      },
+      "settingsTabs": {
+        "title": "Paramètres",
+        "body": "Toutes vos préférences de Pratique se trouvent ici, réparties en trois onglets : Rythme & Paquets, Activités, et Préférences."
+      },
+      "settingsDuration": {
+        "title": "Objectif quotidien",
+        "body": "Le nombre de minutes que vous voulez étudier chaque jour — cela détermine combien de cartes votre plan quotidien inclut."
+      },
+      "settingsDeckStrategy": {
+        "title": "Stratégie des paquets",
+        "body": "Mixte étudie tous les paquets ensemble, Paquet unique étudie un seul à la fois, et Rotation choisit le paquet le plus négligé."
+      },
+      "settingsDeckWeights": {
+        "title": "Poids des paquets",
+        "body": "Donnez à un paquet plus ou moins de priorité dans le mix quotidien — plus le nombre est élevé, plus ses cartes apparaissent."
+      },
+      "settingsFocusChips": {
+        "title": "Mix d’activités",
+        "body": "Choisissez un préréglage « Objectif » et observez la barre ci-dessous qui montre exactement comment votre mix de session change."
+      },
+      "settingsActivityList": {
+        "title": "Affiner chaque exercice",
+        "body": "Activez ou désactivez n’importe quel type d’exercice et ajustez son poids — la part à droite indique sa portion du mix."
+      },
+      "settingsSrs": {
+        "title": "Algorithme de répétition espacée",
+        "body": "Choisissez comment les intervalles de révision sont calculés — Leitner, SM-2, ou FSRS (par défaut, et généralement le plus intelligent)."
+      },
+      "settingsAutoRead": {
+        "title": "Lecture automatique",
+        "body": "Chaque carte est lue automatiquement à voix haute, et choisissez une voix américaine ou britannique."
+      },
+      "outro": {
+        "title": "C’est tout !",
+        "body": "Vous connaissez maintenant les rouages de Pratique. Rouvrez cette visite à tout moment depuis le bouton « Guide » à côté de Paramètres."
+      }
+    }
+  },
+  "summary": "Résumé",
+  "mode": "Mode",
+  "scorecard": {
+    "title": "Vérification IA",
+    "criteria": {
+      "meaning": "Sens",
+      "grammar": "Grammaire",
+      "spelling": "Orthographe",
+      "elision": "Élision"
+    },
+    "why": {
+      "meaning": {
+        "pass": "Elle dit ce que la carte demandait.",
+        "fail": "Elle ne dit pas ce que la carte demandait."
+      },
+      "grammar": {
+        "pass": "La grammaire est correcte.",
+        "fail": "Il y a une faute de grammaire."
+      },
+      "spelling": {
+        "pass": "Bien orthographié.",
+        "near": "Bon mot — vérifiez un accent.",
+        "fail": "Une faute d'orthographe."
+      },
+      "elision": {
+        "pass": "Les élisions sont faites.",
+        "fail": "Il manque une élision — un mot qui doit se contracter a été écrit en entier (par exemple me aider au lieu de m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Registre soutenu — pour une lettre ou un inconnu.",
+      "neutral": "Registre courant — convient presque partout.",
+      "informal": "Registre familier — parfait pour un texto à un ami."
+    },
+    "natural": {
+      "yes": "Naturel — un francophone le dirait ainsi.",
+      "no": "Correct, mais un francophone le dirait autrement."
+    },
+    "error": {
+      "gender_agreement": "Sans doute un accord en genre ou en nombre.",
+      "verb_conjugation": "Vérifiez la forme ou le temps du verbe.",
+      "word_order": "Vérifiez l'ordre des mots.",
+      "preposition_or_article": "Vérifiez la préposition ou l'article.",
+      "spelling_or_accent": "Vérifiez l'orthographe.",
+      "negation": "Vérifiez la négation.",
+      "wrong_word": "Un mot ne correspond pas au sens.",
+      "avoir_expression": "Ici le français dit avoir, pas être : j'ai faim, quel âge avez-vous ?"
+    },
+    "needsAi": "Pas de bilan cette fois : configurez votre propre IA dans les réglages pour que vos phrases en reçoivent un."
+  },
+  "conjugation": {
+    "title": "Conjugaison"
   }
 }

@@ -4,17 +4,20 @@ import { Header } from '@/components/layout/Header';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MiniPlayer } from '@/pages/podcast/components/MiniPlayer';
 import { usePlayerStore } from '@/pages/podcast/stores/playerStore';
+import { usePodcastMediaSession } from '@/pages/podcast/hooks/usePodcastMediaSession';
 
 import { useJobEvents } from '@/hooks/useJobEvents';
 import { JobToastStack } from '@/components/job/JobToastStack';
 
 export function Shell() {
   useJobEvents();
+  usePodcastMediaSession();
   const currentEpisode = usePlayerStore((s) => s.currentEpisode);
   const { pathname } = useLocation();
 
   // Hide the mini player while the full player route is open.
-  const fillsPage = pathname.startsWith('/reader/pdf/');
+  // The PDF, text and book readers own their scrolling (pages, side panels).
+  const fillsPage = /^\/reader\/(pdf|text|book)\//.test(pathname);
   const showMiniPlayer = currentEpisode && !pathname.startsWith('/podcast/player/');
 
   return (
@@ -30,7 +33,7 @@ export function Shell() {
           </main>
         ) : (
           <ScrollArea className="flex-1">
-            <main className="p-6 min-w-0 max-w-full">
+            <main className="mx-auto w-full min-w-0 max-w-[1440px] px-8 py-7">
               <Outlet />
             </main>
           </ScrollArea>

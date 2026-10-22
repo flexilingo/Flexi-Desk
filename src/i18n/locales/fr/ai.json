@@ -1,0 +1,149 @@
+{
+  "setup": {
+    "title": "Configurez votre IA",
+    "intro": "Cette fonction a besoin d'une IA. L'application de bureau utilise celle que vous avez configurée vous-même : le travail se fait sur votre ordinateur ou avec votre propre clé.",
+    "own": "L'IA cloud de FlexiLingo n'est jamais utilisée, sauf si vous l'activez dans les réglages.",
+    "deviceButton": "Configurer sur cet ordinateur",
+    "keyButton": "Utiliser ma propre clé",
+    "deviceHint": "Gratuit et privé. Télécharge environ 2 Go une seule fois. Fonctionne mieux avec 8 Go de mémoire ou plus.",
+    "weakMachine": "Cet ordinateur semble modeste. Le modèle local fonctionnera, mais les réponses peuvent être lentes. Une clé personnelle est plus rapide.",
+    "installing": "Installation du moteur d'IA local...",
+    "starting": "Démarrage du moteur d'IA local...",
+    "downloading": "Téléchargement du modèle {{model}}. Cela peut prendre quelques minutes...",
+    "working": "Configuration en cours...",
+    "provider": "Fournisseur",
+    "providers": {
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "compatible": "Autre (compatible OpenAI)"
+    },
+    "baseUrl": "Adresse du serveur",
+    "baseUrlHint": "Pour LM Studio, OpenRouter ou tout serveur compatible OpenAI, par exemple http://localhost:1234",
+    "key": "Clé API",
+    "keyOptional": "Clé API (laissez vide si le serveur n'en demande pas)",
+    "model": "Modèle (facultatif)",
+    "keyPrivacy": "La clé reste sur cet ordinateur et n'est envoyée qu'au fournisseur que vous avez choisi.",
+    "saveAndTest": "Enregistrer et tester",
+    "back": "Retour"
+  },
+  "reason": {
+    "local_not_installed": "Le moteur d'IA local n'est pas encore installé sur cet ordinateur.",
+    "local_not_running": "Le moteur d'IA local est installé mais n'est pas lancé.",
+    "local_no_model": "Le moteur d'IA local est lancé mais n'a pas encore de modèle.",
+    "local_model_missing": "Le modèle sélectionné n'est pas téléchargé sur cet ordinateur.",
+    "key_missing": "Aucune clé API n'est enregistrée pour votre fournisseur d'IA."
+  },
+  "errors": {
+    "OLLAMA_NOT_RUNNING": "Votre IA n'est pas lancée sur cet ordinateur.",
+    "OLLAMA_MODEL_MISSING": "Le modèle sélectionné n'est pas téléchargé sur cet ordinateur.",
+    "AI_KEY_MISSING": "Aucune clé API n'est enregistrée pour votre fournisseur d'IA.",
+    "AI_NOT_READY": "Votre IA n'est pas encore configurée.",
+    "AI_KEY_REJECTED": "Le fournisseur a refusé cette clé. Vérifiez-la et réessayez.",
+    "AI_RATE_LIMITED": "Le fournisseur indique que votre limite est atteinte pour le moment. Réessayez plus tard.",
+    "AI_UNREACHABLE": "Impossible de joindre votre IA. Vérifiez l'adresse et votre connexion.",
+    "UNKNOWN_ERROR": "Un problème est survenu avec votre IA. Réessayez."
+  },
+  "origin": {
+    "device": "Sur cet appareil",
+    "ownKey": "Votre clé",
+    "cloud": "Cloud FlexiLingo"
+  },
+  "originHint": {
+    "device": "Généré par l'IA de votre ordinateur",
+    "ownKey": "Généré avec votre propre clé d'IA",
+    "cloud": "Généré par l'IA cloud de FlexiLingo, que vous avez activée dans les réglages"
+  },
+  "settings": {
+    "title": "Votre IA",
+    "explain": "L'application de bureau utilise votre ordinateur ou votre propre clé pour chaque fonction d'IA : le travail s'exécute sur votre système et ne coûte rien à FlexiLingo. Les scores d'examen et les dictionnaires viennent toujours de FlexiLingo.",
+    "status": {
+      "checking": "Vérification de votre IA...",
+      "device": "Sur cet ordinateur : {{model}}",
+      "openai": "Votre clé OpenAI : {{model}}",
+      "anthropic": "Votre clé Anthropic : {{model}}",
+      "compatible": "Votre serveur {{url}} : {{model}}"
+    },
+    "test": "Tester",
+    "testOk": "Ça fonctionne. {{model}} a répondu : {{reply}}",
+    "modelPicker": "Modèle sur cet ordinateur",
+    "manageModels": "Télécharger ou supprimer des modèles",
+    "hideModels": "Masquer les modèles",
+    "change": "Utiliser une autre IA",
+    "cancelChange": "Annuler",
+    "cloudTitle": "Utiliser l'IA cloud de FlexiLingo",
+    "cloudDesc": "Désactivé par défaut. Une fois activé, l'analyse des mots et l'analyse des examens sont produites par les serveurs de FlexiLingo au lieu de votre IA. Tout le reste continue d'utiliser votre IA.",
+    "cloudNeedsSignIn": "Connectez-vous avec une offre payante pour activer cette option.",
+    "cloudNeedsPaid": "Disponible uniquement avec une offre payante.",
+    "cloudInactive": "Activé mais inactif : il faut être connecté avec une offre payante.",
+    "cloudActive": "Actif pour l'analyse des mots et l'analyse des examens."
+  },
+  "wizard": {
+    "ownKeyLink": "Utiliser plutôt ma propre clé (OpenAI, Anthropic ou un autre serveur)",
+    "ownKeyReady": "Votre propre clé d'IA est configurée. Vous êtes prêt."
+  },
+  "engine": {
+    "checking": "Vérification du moteur d'IA local (Ollama)...",
+    "notInstalledTitle": "Ollama n'est pas installé",
+    "notInstalledDesc": "Ollama est un moteur d'IA gratuit et open source qui fonctionne sur votre ordinateur. Installez-le en un clic.",
+    "download": "Téléchargement d'environ 120 Mo",
+    "install": "Installer Ollama",
+    "installing": "Installation d'Ollama...",
+    "downloadingBytes": "Téléchargement... {{done}} / {{total}}",
+    "notRunningTitle": "Ollama est installé mais n'est pas lancé",
+    "foundAtSystem": "Installation système trouvée dans {{path}}",
+    "foundAt": "Installé dans {{path}}",
+    "notRunningDesc": "Lancez Ollama pour activer les fonctions d'IA.",
+    "start": "Lancer Ollama",
+    "starting": "Démarrage d'Ollama...",
+    "waiting": "En attente qu'Ollama soit prêt...",
+    "connected": "Connecté",
+    "connectedVersion": "Connecté (v{{version}})",
+    "system": "Système",
+    "managed": "Géré",
+    "stop": "Arrêter Ollama",
+    "refresh": "Actualiser",
+    "search": "Rechercher des modèles...",
+    "installedModels": "Modèles installés",
+    "noModels": "Aucun modèle installé pour l'instant. Téléchargez-en un ci-dessous pour commencer.",
+    "recommended": "Modèles recommandés",
+    "custom": "Télécharger un modèle personnalisé",
+    "customPlaceholder": "p. ex. codellama:7b",
+    "pull": "Télécharger",
+    "active": "Actif",
+    "use": "Utiliser",
+    "delete": "Supprimer le modèle",
+    "readyTitle": "Ollama est prêt",
+    "installedList": "Modèles installés : {{models}}",
+    "chooseTitle": "Choisissez un modèle d'IA",
+    "chooseDesc": "Les petits modèles sont plus rapides, les grands plus performants.",
+    "downloadModel": "Télécharger {{model}}",
+    "downloadModelGeneric": "Télécharger le modèle",
+    "downloadingModel": "Téléchargement de {{model}}...",
+    "errorTitle": "Un problème est survenu",
+    "skip": "Passer pour l'instant",
+    "skipped": "Vous pourrez configurer l'IA plus tard dans les réglages.",
+    "heading": "Assistant IA",
+    "intro": "L'application de bureau utilise l'IA pour vous aider à apprendre. Elle fonctionne sur votre ordinateur ou avec votre propre clé.",
+    "speed": {
+      "Fast": "Rapide",
+      "Medium": "Moyen",
+      "Slow": "Lent"
+    },
+    "accuracy": {
+      "Good": "Bonne",
+      "VeryGood": "Très bonne",
+      "Excellent": "Excellente"
+    },
+    "models": {
+      "llama3_2": "Rapide, excellent en plusieurs langues. Le meilleur équilibre pour la plupart des gens.",
+      "llama3_1_8b": "Raisonnement et correction grammaticale plus solides. Excellent pour le tutorat.",
+      "gemma3_4b": "Modèle de Google très à l'aise en plusieurs langues. Bien pour le vocabulaire.",
+      "mistral": "Très bon en langues européennes (français, allemand, espagnol). Rapide.",
+      "phi4_mini": "Modèle compact de Microsoft. Réponses rapides, bien pour s'entraîner à converser.",
+      "qwen3_8b": "Le meilleur pour le chinois, l'arabe et les langues asiatiques. Modèle d'Alibaba.",
+      "aya_expanse_8b": "Modèle de Cohere entraîné sur plus de 23 langues. Conçu pour le multilingue.",
+      "llama3_1_70b": "Le plus performant. Demande 48 Go de mémoire ou plus. Meilleurs retours en grammaire et en écriture."
+    },
+    "dismiss": "Fermer"
+  }
+}

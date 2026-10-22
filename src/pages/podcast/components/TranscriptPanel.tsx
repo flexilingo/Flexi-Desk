@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Badge } from '@/components/ui/badge';
 import type { PodcastTranscriptSegment, PodcastWordTimestamp } from '../types';
 import { formatTimeMs } from '../types';
-import { WordDialog } from './WordDialog';
+import { WordDialog } from '@/components/WordDialog';
 import { cleanWord, cefrCacheKey } from '../utils/words';
 import { usePlayerStore } from '../stores/playerStore';
 

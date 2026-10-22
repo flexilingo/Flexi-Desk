@@ -163,8 +163,8 @@ export function QuizContainer({
                   ? 'bg-primary scale-125'
                   : state?.answered
                     ? state.isCorrect
-                      ? 'bg-green-500'
-                      : 'bg-red-500'
+                      ? 'bg-success'
+                      : 'bg-error'
                     : 'bg-muted-foreground/30',
               )}
             />

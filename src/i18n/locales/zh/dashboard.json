@@ -1,0 +1,413 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "早上好，{{name}}",
+      "afternoon": "下午好，{{name}}",
+      "evening": "晚上好，{{name}}"
+    },
+    "greetingNoName": {
+      "morning": "早上好",
+      "afternoon": "下午好",
+      "evening": "晚上好"
+    },
+    "streak": "连续 {{count, number}} 天",
+    "streakNone": "今天开始连续学习",
+    "level": "等级 {{level, number}}",
+    "achievements_exact0": "还没有成就",
+    "achievements_other": "{{count, number}} 个成就",
+    "loadError": "部分数据没能加载。请刷新页面重试。",
+    "duration": {
+      "hours": "{{h, number}} 小时 {{m, number}} 分钟",
+      "minutes": "{{m, number}} 分钟"
+    },
+    "next": {
+      "eyebrowExam": "下一步 · {{exam}}",
+      "eyebrowMinutes": "下一步 · 约 {{count, number}} 分钟",
+      "eyebrowMinutesLeft": "下一步 · 还剩 {{count, number}} 分钟",
+      "eyebrowReading": "下一步 · 继续阅读",
+      "eyebrowFirst": "第一步 · 5 分钟",
+      "error": "出了点问题，请重试。",
+      "practice": {
+        "title": "一次简短的{{skill}}练习",
+        "whyLowest": "你最近练习中最弱的部分——短练习，马上出分。",
+        "whyUntried": "这个部分你还没试过——短练习，马上出分。",
+        "cta": "开始练习"
+      },
+      "review": {
+        "title": "{{count, number}} 张卡片等待复习",
+        "why": "你已经收集的单词，在你快要忘记之前回来。",
+        "cta": "开始复习"
+      },
+      "episode": {
+        "title": "听完{{title}}",
+        "why": "从上次停下的地方继续。点一下不认识的词，就能看到意思并保存。",
+        "cta": "继续收听"
+      },
+      "book": {
+        "title": "继续阅读{{title}}",
+        "page": "你读到第 {{page, number}} 页，共 {{total, number}} 页。",
+        "pageOnly": "你读到第 {{page, number}} 页。",
+        "cta": "继续阅读"
+      },
+      "start": {
+        "title": "听一集短节目，点一下每个不认识的词",
+        "why": "意思当场显示，单词会保存在「我的词汇」里。之后 FlexiLingo 会把它做成复习卡片。",
+        "cta": "选一集"
+      },
+      "after": "接下来：",
+      "chip": {
+        "practice": "简短的{{skill}}练习",
+        "review": "{{count, number}} 张卡片待复习",
+        "episode": "{{title}} · 还剩 {{count, number}} 分钟",
+        "book": "继续读{{title}}",
+        "library": "或者读一本简单的书",
+        "exam": "在准备考试吗？"
+      }
+    },
+    "week": {
+      "title": "过去 7 天",
+      "year": "全年",
+      "caption": "复习和学习时间",
+      "emptyBody": "你复习或手动记录的每一分钟都会在这里变成一根柱子。每天十分钟，一周内就能感受到变化。",
+      "goal": "每日目标 {{count, number}} 分钟",
+      "today": "今天",
+      "activeDays": "过去 7 天中有 {{count, number}} 天在学习",
+      "best": "最长连续：{{count, number}} 天"
+    },
+    "path": {
+      "title": "你的学习路径",
+      "lead": "你听的和读的会变成单词，复习让这些单词留在脑子里，最后它们会体现在你的考试中。",
+      "here": "你的下一步在这里",
+      "listen": {
+        "title": "听和读",
+        "emptyTitle": "还没有内容",
+        "emptyBody": "适合你水平的播客和现成书籍，全部带完整文本。点一下不认识的词。",
+        "unitHours": "小时收听，过去 30 天",
+        "unitMinutes": "分钟收听，过去 30 天",
+        "episodes": "开始过的单集",
+        "followed": "关注的播客",
+        "books": "书籍和文件",
+        "link": "播客"
+      },
+      "words": {
+        "title": "收集单词",
+        "emptyTitle": "还没有单词",
+        "emptyBody": "无论在哪里遇到不认识的词，点一下。你会看到意思、发音和一个例句，单词会保存在这里。",
+        "unit": "个单词已收集",
+        "thisWeek": "本周 +{{count, number}}",
+        "suggested": "常见但还没做成卡片",
+        "notes": "笔记",
+        "link": "我的词汇"
+      },
+      "review": {
+        "title": "复习",
+        "emptyTitle": "还没有卡片",
+        "emptyBody": "你收集的单词会变成卡片，每张卡片都会在你快忘记之前回来。",
+        "emptyLink": "现成卡组",
+        "unit": "张卡片已掌握",
+        "due": "今天有 {{count, number}} 张卡片到期",
+        "noneDue": "今天没有到期的卡片",
+        "learned": "已掌握",
+        "reviewing": "复习中",
+        "unseen": "还没见过",
+        "decks": "卡组",
+        "accuracy": "正确率",
+        "link": "卡组"
+      },
+      "exam": {
+        "title": "检测自己",
+        "emptyTitle": "还没选择考试",
+        "emptyBody": "在准备 CELPIP 或 TCF 吗？一次 10 分钟的练习就能看出你的水平。",
+        "emptyBodyNone": "不准备考试——没关系。哪天需要时，一次 10 分钟的练习就能看出你的水平。",
+        "emptyLink": "查看考试",
+        "daysUnit": "天后 {{exam}}",
+        "takenUnit": "次 {{exam}} 练习",
+        "weekProgress": "本周 {{done, number}} / {{target, number}} 次练习",
+        "weakest": "你最弱的部分",
+        "scale": "最近练习的平均分，单位 {{label}}",
+        "noScores": "还没有分数。做一次短练习，看看你的水平。",
+        "taken": "已做练习",
+        "addDate": "添加考试日期"
+      }
+    },
+    "shelf": {
+      "title": "从上次停下的地方继续",
+      "starterTitle": "适合你水平的入门书",
+      "library": "书库",
+      "allPodcasts": "播客",
+      "minLeft": "还剩 {{count, number}} 分钟",
+      "page": "第 {{page, number}} / {{total, number}} 页",
+      "pageOnly": "第 {{page, number}} 页",
+      "examTitle": "{{exam}} 练习",
+      "examMeta": "还没完成",
+      "due": "今天 {{count, number}} 张卡片",
+      "level": "等级 {{level}}",
+      "kind": {
+        "podcast": "播客",
+        "book": "书",
+        "file": "文件",
+        "exam": "考试",
+        "deck": "卡组"
+      }
+    }
+  },
+  "examGoal": {
+    "title": "你在准备哪场考试？",
+    "subtitle": "选一个，现在就开始一次短练习。之后可以在设置里更改。",
+    "celpip": "CELPIP",
+    "celpipHint": "英语 · 加拿大",
+    "tcf": "TCF Canada",
+    "tcfHint": "法语 · 加拿大",
+    "tcfQuebec": "TCF Québec",
+    "tcfQuebecHint": "法语 · 魁北克",
+    "none": "没有考试",
+    "noneHint": "只想提高水平",
+    "dateLabel": "你的考试在什么时候？（选填）",
+    "ctaCelpip": "开始10分钟 Reading 练习",
+    "ctaTcf": "开始10道听力练习",
+    "ctaNone": "看看播客",
+    "celpipNote": "Reading 第1部分 · 约10分钟 · CLB 估分",
+    "tcfNote": "Compréhension orale 第1–10题 · 约10分钟 · 无需麦克风",
+    "notNow": "以后再说",
+    "error": "出错了，请再试一次。",
+    "nudgeTitle": "在准备 CELPIP 或 TCF 吗？",
+    "nudgeBody": "选择你的考试，开始一次简短练习。",
+    "nudgeCta": "选择考试",
+    "nudgeClose": "关闭",
+    "ctaSave": "保存我的考试",
+    "webOnlyNote": "这项考试的练习目前在网站上进行。你的选择会保存到账号。"
+  },
+  "examResult": {
+    "title": "你的{{exam}}考得怎么样？",
+    "subtitle": "填写你的官方成绩——哪怕只有一项也有帮助。我们会把它和我们的估分对比，让你知道估分有多可靠。",
+    "notOutYet": "成绩还没出",
+    "notTakenYet": "我还没考",
+    "newDate": "新的考试日期",
+    "saveDate": "保存日期",
+    "save": "保存成绩",
+    "enterOne": "请至少填写一项成绩。",
+    "outOfRange": "{{skill}}必须在{{min}}到{{max}}之间。",
+    "thanks": "谢谢，成绩已保存。这能帮助这里的每位学习者了解我们的估分有多准。",
+    "error": "出错了，请再试一次。",
+    "skills": {
+      "listening": "Listening",
+      "reading": "Reading",
+      "writing": "Writing",
+      "speaking": "Speaking"
+    }
+  },
+  "examWeek": {
+    "title": "本周你的{{exam}}",
+    "daysLeft": "距离考试还有{{count}}天",
+    "today": "今天就考试了——祝你好运！",
+    "addDate": "添加考试日期",
+    "progress": "本周已练习 {{done}}/{{target}} 次",
+    "practiceTitle": "练习{{skill}}",
+    "practiceWhyUntried": "你还没试过这一部分——短练习，马上出分。",
+    "practiceWhyLowest": "你最近最弱的部分——短练习，马上出分。",
+    "practiceCta": "开始",
+    "listenTitleEn": "听一集英语播客",
+    "listenTitleFr": "听一集法语播客",
+    "listenWhy": "带文字稿听15分钟——听力部分考的正是这个。",
+    "listenCta": "选一集",
+    "readTitle": "读几页",
+    "readWhy": "你自己的书或书库里的书——不认识的词点一下。",
+    "readCta": "打开阅读器",
+    "error": "出错了，请再试一次。",
+    "skills": {
+      "celpip": {
+        "listening": "Listening",
+        "reading": "Reading",
+        "writing": "Writing",
+        "speaking": "Speaking"
+      },
+      "tcf": {
+        "listening": "Compréhension orale",
+        "reading": "Compréhension écrite",
+        "writing": "Expression écrite",
+        "speaking": "Expression orale"
+      }
+    }
+  },
+  "pendingReviews": {
+    "title": "待复习",
+    "totalDue": "{{count}} 张卡片待复习",
+    "dueOf": "{{total}} 张中有 {{due}} 张待复习",
+    "moreDecks": "还有 {{count}} 个牌组",
+    "startReview": "复习",
+    "allCaughtUp": "全部完成！",
+    "allCaughtUpDesc": "目前没有需要复习的卡片。做得好！"
+  },
+  "statusBar": {
+    "streakDays": "天连续",
+    "bestStreak": "最佳：{{count}}",
+    "levelShort": "等级{{level}}",
+    "today": "今天",
+    "minutesToday": "{{minutes}} 分钟",
+    "xpToday": "{{xp}} XP"
+  },
+  "goalSuggestion": {
+    "increaseTitle": "太棒了！是时候提高目标了",
+    "decreaseTitle": "目标调整建议",
+    "increaseDescription": "您已连续 {{days}} 天达成目标！当前：{{current}} 个单词。建议：{{suggested}} 个单词",
+    "decreaseDescription": "您当前的目标似乎有些挑战。您只在7天中的 {{days}} 天达成目标。建议：{{suggested}} 个单词",
+    "accept": "接受 ({{goal}} 个单词)",
+    "dismiss": "稍后再说"
+  },
+  "xp": {
+    "toNextLevel": "距离下一等级还需 {{xp}} XP",
+    "maxLevel": "已达到最高等级！"
+  },
+  "heatmap": {
+    "title": "学习连续日历",
+    "consecutiveDays": "个连续天",
+    "clickToEdit": "点击任意日期记录或编辑手动学习时间",
+    "loading": "加载中...",
+    "days": {
+      "sat": "六",
+      "sun": "日",
+      "mon": "一",
+      "tue": "二",
+      "wed": "三",
+      "thu": "四",
+      "fri": "五"
+    },
+    "less": "少",
+    "more": "多",
+    "manualTime": "已记录手动时间",
+    "futureDate": "未来日期",
+    "cardsReviewed": "已复习卡片：",
+    "autoTime": "自动时间：",
+    "manualTimeLabel": "手动记录：",
+    "total": "总计：",
+    "minutes": "分钟",
+    "activeDays": "活跃天数：",
+    "addManualTime": "添加手动时间",
+    "ringLegend": "圆环 = 已记录的手动学习时间",
+    "studyLabel": "学习：",
+    "listenLabel": "听力：",
+    "readLabel": "阅读："
+  },
+  "manualStudy": {
+    "title": "记录手动学习时间",
+    "description": "手动记录您的学习时间以跟踪您的进度",
+    "date": "日期",
+    "studyTime": "学习时间（分钟）",
+    "placeholder": "例如：90表示一个半小时",
+    "equivalent": "相当于：",
+    "error": "错误",
+    "invalidMinutes": "分钟必须在0到600之间",
+    "invalidDate": "无效日期",
+    "futureDate": "无法记录未来日期的学习时间",
+    "errorSaving": "保存学习时间出错",
+    "errorDeleting": "删除学习时间出错",
+    "delete": "删除",
+    "cancel": "取消",
+    "save": "保存",
+    "saving": "保存中...",
+    "close": "关闭",
+    "hours": "小时",
+    "minutes": "分钟",
+    "and": "和",
+    "zeroMinutes": "0分钟",
+    "dayTotal": "当天概览",
+    "activityTime": "活动",
+    "manualTime": "手动",
+    "total": "总计",
+    "cloudError": "已保存在这台电脑上，但未能保存到你的账号。请重试。"
+  },
+  "achievements": {
+    "title": "成就",
+    "unlocked": "已解锁",
+    "noAchievements": "暂无成就",
+    "startLearning": "开始学习以解锁您的第一个成就！",
+    "showAll": "显示全部 ({{count}})",
+    "showLess": "显示更少",
+    "levelUp": "升级",
+    "levelUnlocked": "等级 {{level}}",
+    "maxed": "已满级",
+    "locked": "未解锁",
+    "levels": "等级",
+    "classic": "经典",
+    "nextLevel": "下一级：",
+    "progress": "进度",
+    "detailTitle": "成就详情",
+    "currentProgress": "当前进度",
+    "levelsList": "等级列表",
+    "goAction": "开始吧！",
+    "pointsLabel": "{{points}} XP",
+    "thresholdLabel": "{{threshold}}",
+    "nextUnlock": "下一个解锁",
+    "nextUnlockProgress": "{{current}} / {{total}} · 完成 {{pct}}%",
+    "tier": {
+      "streak_master": "连续 {{n, number}} 天",
+      "word_scholar": "{{n, number}} 个单词",
+      "card_master": "{{n, number}} 次复习",
+      "time_investor": "{{n, number}} 分钟",
+      "episode_explorer": "{{n, number}} 期节目",
+      "bookworm": "{{n, number}} 份文档",
+      "steady_learner": "{{n, number}} 个活跃日"
+    },
+    "groups": {
+      "streak_master": {
+        "name": "连续达人",
+        "hint": "连续多天学习，每连续一天都算数。",
+        "action": "今天学习"
+      },
+      "word_scholar": {
+        "name": "单词学者",
+        "hint": "收藏你在听和读时遇到的单词。",
+        "action": "发现新单词"
+      },
+      "card_master": {
+        "name": "卡片大师",
+        "hint": "卡片到期时及时复习。",
+        "action": "开始复习"
+      },
+      "time_investor": {
+        "name": "时间投资者",
+        "hint": "学习、听力和阅读的分钟会不断累积。",
+        "action": "继续加油"
+      },
+      "episode_explorer": {
+        "name": "节目探索者",
+        "hint": "开始播放播客节目并听完。",
+        "action": "选一期节目"
+      },
+      "bookworm": {
+        "name": "书虫",
+        "hint": "在阅读器中打开书籍和你自己的文件。",
+        "action": "打开阅读器"
+      },
+      "steady_learner": {
+        "name": "稳定学习者",
+        "hint": "在不同的日子里保持活跃，不必连续。",
+        "action": "今天学习"
+      }
+    }
+  },
+  "desk": {
+    "signIn": "登录",
+    "retry": "重试",
+    "cardError": "这一部分无法加载。",
+    "close": "关闭",
+    "loadErrorSome": "你的部分数据无法加载。",
+    "examSignedOutTitle": "正在备考 CELPIP 或 TCF？",
+    "examSignedOutBody": "登录后可以选择考试和日期、查看练习进度，并与网站保持一致。",
+    "streakMilestone": "连续 {{n, number}} 天！",
+    "streakMilestoneBody": "继续保持，明天见。",
+    "unlockedToast": "解锁成就",
+    "dismiss": "关闭",
+    "pendingSignedOut": "你的卡片保存在这台电脑上。"
+  },
+  "goal": {
+    "set": "设置每日目标",
+    "title": "每日学习目标",
+    "body": "你每天想学习的分钟数。它会在本周图上画出虚线。",
+    "minutes": "每天分钟数",
+    "save": "保存",
+    "remove": "删除目标",
+    "error": "目标无法保存。",
+    "invalid": "请输入 5 到 600 之间的数字。"
+  }
+}

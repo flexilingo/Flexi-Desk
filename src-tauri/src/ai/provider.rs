@@ -31,14 +31,26 @@ pub fn read_ai_settings(conn: &Connection) -> AiSettings {
     let provider = get("ai_provider").unwrap_or_else(|| "ollama".to_string());
     let model = get("ai_model").unwrap_or_else(|| "llama3.2".to_string());
 
-    let api_key = get(&format!("{}_api_key", provider));
-    let base_url = get(&format!("{}_base_url", provider));
+    // A blank value means "not set" (the settings screen stores "" to clear an address).
+    let api_key = get(&format!("{}_api_key", provider)).filter(|v| !v.trim().is_empty());
+    let base_url = get(&format!("{}_base_url", provider)).filter(|v| !v.trim().is_empty());
 
     AiSettings {
         provider,
         model,
         api_key,
         base_url,
+    }
+}
+
+/// The key an OpenAI-compatible call authenticates with. A custom base URL
+/// (LM Studio, OpenRouter, a local gateway) may need no key at all, so an empty
+/// key is allowed there; the official endpoint always needs one.
+fn openai_key<'a>(api_key: Option<&'a str>, base_url: Option<&str>) -> Result<&'a str, String> {
+    match api_key.map(str::trim).filter(|k| !k.is_empty()) {
+        Some(k) => Ok(k),
+        None if base_url.map(|u| !u.trim().is_empty()).unwrap_or(false) => Ok(""),
+        None => Err("AI_KEY_MISSING".to_string()),
     }
 }
 
@@ -96,6 +108,9 @@ pub async fn ollama_chat(
     if !response.status().is_success() {
         let status = response.status();
         let text = response.text().await.unwrap_or_default();
+        if status == reqwest::StatusCode::NOT_FOUND {
+            return Err("OLLAMA_MODEL_MISSING".to_string());
+        }
         return Err(format!("Ollama error ({status}): {text}"));
     }
 
@@ -143,10 +158,11 @@ pub async fn openai_chat(
     }
 
     let client = reqwest::Client::new();
-    let response = client
-        .post(&url)
-        .header("Authorization", format!("Bearer {api_key}"))
-        .json(&body)
+    let mut request = client.post(&url).json(&body);
+    if !api_key.is_empty() {
+        request = request.header("Authorization", format!("Bearer {api_key}"));
+    }
+    let response = request
         .send()
         .await
         .map_err(|e| {
@@ -264,11 +280,11 @@ pub async fn chat_completion(
             ollama_chat(model, messages, base_url, temperature, max_tokens, json_mode).await
         }
         "openai" => {
-            let key = api_key.ok_or("OpenAI API key not configured")?;
+            let key = openai_key(api_key, base_url)?;
             openai_chat(model, messages, key, base_url, temperature, max_tokens, json_mode).await
         }
         "anthropic" => {
-            let key = api_key.ok_or("Anthropic API key not configured")?;
+            let key = api_key.filter(|k| !k.trim().is_empty()).ok_or("AI_KEY_MISSING")?;
             anthropic_chat(model, messages, key, temperature, max_tokens, json_mode).await
         }
         _ => Err(format!("Unsupported provider: {provider}")),
@@ -318,6 +334,9 @@ pub async fn ollama_chat_stream(
     if !response.status().is_success() {
         let status = response.status();
         let text = response.text().await.unwrap_or_default();
+        if status == reqwest::StatusCode::NOT_FOUND {
+            return Err("OLLAMA_MODEL_MISSING".to_string());
+        }
         return Err(format!("Ollama error ({status}): {text}"));
     }
 
@@ -382,10 +401,11 @@ pub async fn openai_chat_stream(
     }
 
     let client = reqwest::Client::new();
-    let response = client
-        .post(&url)
-        .header("Authorization", format!("Bearer {api_key}"))
-        .json(&body)
+    let mut request = client.post(&url).json(&body);
+    if !api_key.is_empty() {
+        request = request.header("Authorization", format!("Bearer {api_key}"));
+    }
+    let response = request
         .send()
         .await
         .map_err(|e| {
@@ -555,13 +575,13 @@ pub async fn chat_completion_stream(
             ollama_chat_stream(url, model, &messages, temperature, on_token).await
         }
         "openai" => {
-            let key = api_key.ok_or("OpenAI API key not configured")?;
-            let url = base_url.unwrap_or("https://api.openai.com/v1");
+            let key = openai_key(api_key, base_url)?;
+            let url = base_url.unwrap_or("https://api.openai.com");
             openai_chat_stream(url, key, model, &messages, temperature, max_tokens, on_token)
                 .await
         }
         "anthropic" => {
-            let key = api_key.ok_or("Anthropic API key not configured")?;
+            let key = api_key.filter(|k| !k.trim().is_empty()).ok_or("AI_KEY_MISSING")?;
             let url = base_url.unwrap_or("https://api.anthropic.com/v1");
             let system_msg = messages
                 .iter()
@@ -580,5 +600,23 @@ pub async fn chat_completion_stream(
             .await
         }
         _ => Err(format!("Unsupported provider: {provider}")),
+    }
+}
+
+#[cfg(test)]
+mod key_tests {
+    use super::openai_key;
+
+    #[test]
+    fn official_endpoint_needs_a_key() {
+        assert_eq!(openai_key(None, None), Err("AI_KEY_MISSING".to_string()));
+        assert_eq!(openai_key(Some("  "), None), Err("AI_KEY_MISSING".to_string()));
+        assert_eq!(openai_key(Some("sk-1"), None), Ok("sk-1"));
+    }
+
+    #[test]
+    fn custom_address_may_need_no_key() {
+        assert_eq!(openai_key(None, Some("http://localhost:1234")), Ok(""));
+        assert_eq!(openai_key(None, Some("  ")), Err("AI_KEY_MISSING".to_string()));
     }
 }

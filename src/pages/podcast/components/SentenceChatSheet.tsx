@@ -1,9 +1,24 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Send, Sparkles, Languages, BookOpen, Lightbulb, Loader2 } from 'lucide-react';
+import {
+  X,
+  Send,
+  Sparkles,
+  Languages,
+  BookOpen,
+  BookMarked,
+  Lightbulb,
+  Loader2,
+} from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from 'react-i18next';
 import { useLanguageSettings } from '@/hooks/useLanguageSettings';
 import { SimpleMarkdown } from '@/components/common/SimpleMarkdown';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { useAiSource } from '@/stores/aiSourceStore';
+import { isAiSetupError } from '@/lib/aiSource';
+
+const CHAT_LANGS = ['fa', 'ar', 'tr', 'es', 'fr', 'de', 'zh', 'hi', 'ru', 'en'];
 
 interface ChatMessage {
   id: string;
@@ -32,12 +47,18 @@ export function SentenceChatSheet({
   sourceLang = 'en',
   autoAction,
 }: SentenceChatSheetProps) {
+  const { t, i18n } = useTranslation('podcastUi');
+  const langName = (code: string) =>
+    new Intl.DisplayNames([i18n.language], { type: 'language' }).of(code) ?? code;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const { nativeLang } = useLanguageSettings();
   const [targetLang, setTargetLang] = useState('fa');
   const [error, setError] = useState<string | null>(null);
+  const [setupFailed, setSetupFailed] = useState(false);
+  const { own: ownAi } = useAiSource();
+  const pendingRequest = useRef<{ text: string; action?: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoActionDone = useRef(false);
   const langInitialized = useRef(false);
@@ -53,8 +74,14 @@ export function SentenceChatSheet({
   // Load history on open
   useEffect(() => {
     if (!open) return;
-    invoke<{ id: string; role: string; content: string }[]>('ai_sentence_chat_history', { episodeId })
-      .then((msgs) => setMessages(msgs.map(m => ({ id: m.id, role: m.role as 'user' | 'assistant', content: m.content }))))
+    invoke<{ id: string; role: string; content: string }[]>('ai_sentence_chat_history', {
+      episodeId,
+    })
+      .then((msgs) =>
+        setMessages(
+          msgs.map((m) => ({ id: m.id, role: m.role as 'user' | 'assistant', content: m.content })),
+        ),
+      )
       .catch(() => {});
   }, [open, episodeId]);
 
@@ -86,15 +113,18 @@ export function SentenceChatSheet({
       const userMsg =
         text ||
         (action === 'translate'
-          ? 'Translate this sentence'
+          ? t('chatTranslate')
           : action === 'grammar'
-            ? 'Analyze grammar'
-            : 'Give me a tip');
+            ? t('chatGrammar')
+            : action === 'vocab'
+              ? t('chatVocab')
+              : t('chatTip'));
 
+      const tmpId = `tmp-${Date.now()}`;
       setMessages((prev) => [
         ...prev,
         {
-          id: `tmp-${Date.now()}`,
+          id: tmpId,
           role: 'user',
           content: userMsg,
         },
@@ -118,17 +148,18 @@ export function SentenceChatSheet({
           },
         ]);
       } catch (e) {
-        const errStr = String(e);
-        if (errStr === 'OLLAMA_NOT_RUNNING') {
-          setError('Ollama is not running. Start it from Settings → AI Provider.');
-        } else {
-          setError(errStr);
-        }
+        // The user's own AI is not ready: show the setup card, never a cloud fallback.
+        if (isAiSetupError(e)) {
+          // Drop the unanswered bubble and remember the request: it re-runs once setup is done.
+          setMessages((prev) => prev.filter((m) => m.id !== tmpId));
+          pendingRequest.current = { text, action };
+          setSetupFailed(true);
+        } else setError(String(e));
       } finally {
         setSending(false);
       }
     },
-    [sending, episodeId, sentence, prevSentence, nextSentence, targetLang],
+    [sending, episodeId, sentence, prevSentence, nextSentence, targetLang, t],
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -148,7 +179,7 @@ export function SentenceChatSheet({
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Ask Lena</h2>
+            <h2 className="font-semibold text-foreground">{t('askLena')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -177,11 +208,7 @@ export function SentenceChatSheet({
                     : 'bg-muted text-foreground'
                 }`}
               >
-                {msg.role === 'assistant' ? (
-                  <SimpleMarkdown content={msg.content} />
-                ) : (
-                  msg.content
-                )}
+                {msg.role === 'assistant' ? <SimpleMarkdown content={msg.content} /> : msg.content}
               </div>
             </div>
           ))}
@@ -193,6 +220,21 @@ export function SentenceChatSheet({
             </div>
           )}
         </div>
+
+        {/* The user's own AI is not ready yet */}
+        {(setupFailed || ownAi.kind === 'unconfigured') && (
+          <div className="mx-4 mb-2">
+            <AiSetupCard
+              compact
+              onReady={() => {
+                setSetupFailed(false);
+                const pending = pendingRequest.current;
+                pendingRequest.current = null;
+                if (pending) void sendMessage(pending.text, pending.action);
+              }}
+            />
+          </div>
+        )}
 
         {/* Error */}
         {error && (
@@ -208,37 +250,39 @@ export function SentenceChatSheet({
             disabled={sending}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
           >
-            <Languages className="w-3.5 h-3.5" /> Translate
+            <Languages className="w-3.5 h-3.5" /> {t('chatTranslate')}
           </button>
           <button
             onClick={() => sendMessage('', 'grammar')}
             disabled={sending}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
           >
-            <BookOpen className="w-3.5 h-3.5" /> Grammar
+            <BookOpen className="w-3.5 h-3.5" /> {t('quickGrammar')}
+          </button>
+          <button
+            onClick={() => sendMessage('', 'vocab')}
+            disabled={sending}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
+          >
+            <BookMarked className="w-3.5 h-3.5" /> {t('quickVocab')}
           </button>
           <button
             onClick={() => sendMessage('', 'tip')}
             disabled={sending}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-xs text-foreground disabled:opacity-50"
           >
-            <Lightbulb className="w-3.5 h-3.5" /> Tip
+            <Lightbulb className="w-3.5 h-3.5" /> {t('quickTip')}
           </button>
           <select
             value={targetLang}
             onChange={(e) => setTargetLang(e.target.value)}
             className="ml-auto px-2 py-1 rounded-lg bg-muted border border-border text-xs text-foreground"
           >
-            <option value="fa">Persian</option>
-            <option value="ar">Arabic</option>
-            <option value="tr">Turkish</option>
-            <option value="es">Spanish</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-            <option value="zh">Chinese</option>
-            <option value="hi">Hindi</option>
-            <option value="ru">Russian</option>
-            <option value="en">English</option>
+            {CHAT_LANGS.map((code) => (
+              <option key={code} value={code}>
+                {langName(code)}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -248,7 +292,7 @@ export function SentenceChatSheet({
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about this sentence..."
+            placeholder={t('chatPlaceholder')}
             className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={sending}
           />

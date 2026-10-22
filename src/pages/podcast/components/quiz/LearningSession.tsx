@@ -186,9 +186,7 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
         errMsg.includes('Failed to fetch') ||
         errMsg.includes('Network')
       ) {
-        setSessionError(
-          'This feature requires an internet connection and a FlexiLingo account.',
-        );
+        setSessionError('This feature requires an internet connection and a FlexiLingo account.');
       } else {
         setSessionError(errMsg || 'Failed to start session. The content may not be analyzed yet.');
       }
@@ -359,13 +357,11 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
         </div>
 
         {limitInfo && (
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/30">
-            <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/30">
+            <Clock className="h-6 w-6 text-warning shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-amber-700 dark:text-amber-400 mb-1">
-                Daily Limit Reached
-              </h4>
-              <p className="text-sm text-amber-600 dark:text-amber-300/80">
+              <h4 className="font-semibold text-warning mb-1">Daily Limit Reached</h4>
+              <p className="text-sm text-warning">
                 You&apos;ve used all your quiz sessions for today. Come back tomorrow!
               </p>
             </div>
@@ -373,7 +369,7 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
         )}
 
         {!limitInfo && sessionError && (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-error/15 text-error">
             <AlertCircle className="h-5 w-5" />
             <span>{sessionError}</span>
           </div>
@@ -413,15 +409,11 @@ export function LearningSession({ contentId, contentTitle, onClose }: LearningSe
         </div>
 
         {questions.length === 0 ? (
-          <div className="flex items-center justify-center p-8 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-700/30">
+          <div className="flex items-center justify-center p-8 rounded-lg bg-warning/10 border border-warning/30">
             <div className="text-center">
-              <AlertCircle className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-              <p className="text-amber-800 dark:text-amber-400 font-medium">
-                No questions available
-              </p>
-              <p className="text-amber-600 dark:text-amber-300 text-sm mt-1">
-                The content may not have quiz data yet.
-              </p>
+              <AlertCircle className="h-8 w-8 text-warning mx-auto mb-2" />
+              <p className="text-warning font-medium">No questions available</p>
+              <p className="text-warning text-sm mt-1">The content may not have quiz data yet.</p>
             </div>
           </div>
         ) : (

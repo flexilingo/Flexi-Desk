@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { speak, stop as stopSpeech } from '@/lib/speech';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
@@ -368,20 +369,13 @@ export const useTutorStore = create<TutorState>()(
     },
 
     speakText: async (text) => {
-      const language = get().activeConversation?.language ?? null;
-      try {
-        await invoke('tutor_speak_text', { text, language });
-      } catch {
-        // Ignore TTS errors silently
-      }
+      const language = get().activeConversation?.language ?? undefined;
+      // The shared voice stack never rejects; it falls back engine by engine.
+      await speak(text, language);
     },
 
     stopSpeaking: async () => {
-      try {
-        await invoke('tutor_stop_speaking');
-      } catch {
-        // ignore
-      }
+      stopSpeech();
     },
 
     toggleSubtitles: () => {

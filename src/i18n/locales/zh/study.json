@@ -22,7 +22,19 @@
     "focusLabel": "侧重",
     "daysWithoutReview": "已 {{days}} 天未复习",
     "settings": "设置",
-    "preparing": "正在准备学习计划…"
+    "preparing": "正在准备学习计划…",
+    "mode": {
+      "normal": "普通",
+      "shadowing": "跟读"
+    },
+    "modeHint": {
+      "normal": "会考你并安排下次复习的练习。",
+      "shadowing": "卡片自动播放：听每个词并跟着说。不评分。"
+    },
+    "modeLabel": "学习模式",
+    "startShadowing": "开始跟读",
+    "stuckCards": "{{count}} 张卡壳的卡片",
+    "stuckCardsHint": "反复练习这些卡片，直到记牢为止"
   },
   "deckList": {
     "title": "你的卡组",
@@ -61,7 +73,10 @@
     "focus": "侧重",
     "force": "突击复习（包含尚未到期的卡片）",
     "start": "开始",
-    "cancel": "取消"
+    "cancel": "取消",
+    "forceHint": "即使这些卡片安排在以后，也提前复习本卡组。",
+    "random": "随机",
+    "randomDesc": "全部卡片，随机顺序 — 不计入复习计划"
   },
   "focus": {
     "balanced": "均衡",
@@ -138,7 +153,12 @@
     "delayDescription": "朗读前等待的秒数。",
     "voiceAccent": "语音",
     "save": "保存",
-    "close": "关闭"
+    "close": "关闭",
+    "deckSearchPlaceholder": "搜索牌组…",
+    "deckSearchNoResults": "没有与\"{{query}}\"匹配的牌组。",
+    "deckSearchTunedOnly": "仅显示已调整",
+    "deckSearchResetAll": "全部重置为 1×",
+    "deckSearchClear": "清除搜索"
   },
   "activity": {
     "recall": "记忆卡",
@@ -148,7 +168,9 @@
     "speak_test": "朗读",
     "use_in_sentence": "造句",
     "synonym_discrim": "选择近义词",
-    "mini_reading": "短文阅读"
+    "mini_reading": "短文阅读",
+    "fromDeck": "来自牌组 {{deck}}",
+    "activityType": "活动"
   },
   "activityDesc": {
     "recall": "翻开卡片，评价自己掌握的程度。",
@@ -191,7 +213,119 @@
       "learning": "学习中",
       "review": "复习"
     },
-    "hint": "提示"
+    "hint": "提示",
+    "stop": "停止",
+    "elapsed": "已用时间",
+    "abandonConfirm": "停止此练习?",
+    "loading": "加载中…",
+    "preparingSession": "准备会话中…",
+    "doneTitle": "练习会话结束",
+    "card": "卡片",
+    "recallRate": "回忆率",
+    "elapsedLabel": "时间",
+    "feedbackOptimal": "极好 — 你处于最佳区间(85–90%)。",
+    "feedbackGood": "良好 — 略减少新卡片数量。",
+    "feedbackWeak": "困难卡片较多 — 减少新卡片数量。",
+    "feedbackEmpty": "本次会话结束时没有任何复习。",
+    "optimalRange": "最佳区间:85–90%",
+    "noAttempts": "未完成任何卡片",
+    "noAttemptsHint": "本次会话结束时没有任何复习。开始下一次以继续。",
+    "back": "返回仪表板",
+    "reviewBanner": "上一张卡片 — 仅供复习",
+    "continuePractice": "继续",
+    "abandonConfirmDesc": "到目前为止的答案已保存——只有剩余的卡片会被跳过。",
+    "requeueBadge": "重复 #{{count}}",
+    "repeatsAdded": "+{{count}}",
+    "requeueHint": "新卡片和答错的卡片会在本次学习结束前再出现一次——所以总数会增加。",
+    "settings": "设置",
+    "settingsTitle": {
+      "normal": "普通模式设置",
+      "shadowing": "跟读设置"
+    },
+    "textSize": "文字大小",
+    "textSizeOption": {
+      "compact": "紧凑",
+      "comfortable": "舒适",
+      "large": "大",
+      "huge": "超大"
+    },
+    "focusMode": "专注模式（全屏）",
+    "exitFocusMode": "退出专注模式",
+    "shortcuts": {
+      "replayWord": "重播单词",
+      "prevExample": "上一个例句",
+      "playExample": "播放例句",
+      "exampleOf": "例句 {{index}}/{{total}}",
+      "showMeaning": "显示释义",
+      "hideMeaning": "隐藏释义",
+      "layoutExamples": "先看例句",
+      "layoutMeaning": "先看释义",
+      "flip": "揭示",
+      "grade": "评分",
+      "exitFocus": "退出",
+      "showExampleMeaning": "显示例句释义",
+      "hideExampleMeanings": "隐藏例句释义"
+    },
+    "cardView": "卡片显示的内容",
+    "cardViewOption": {
+      "showWord": "显示单词",
+      "showMeaning": "显示单词释义",
+      "showExampleMeanings": "显示例句翻译"
+    },
+    "cardViewHint": {
+      "showWord": "关闭后：先听——揭示时单词和释义一起出现。",
+      "showMeaning": "关闭后：释义保持隐藏，例句排在前面。",
+      "showExampleMeanings": "关闭后：逐句自行揭示翻译。"
+    },
+    "shortcutsTitle": "键盘快捷键",
+    "shortcutList": {
+      "flip": "显示 / 隐藏答案",
+      "grade": "为卡片评分",
+      "nextExample": "下一个例句",
+      "exampleMeaning": "揭示一条例句释义",
+      "meaning": "显示 / 隐藏释义",
+      "toggleMeaningPref": "为所有卡片开启或关闭释义",
+      "moreInFocus": "专注模式提供更多快捷键。"
+    },
+    "viewMenu": "显示",
+    "audio": "音频",
+    "autoPronounce": "自动发音",
+    "autoPronounceHint": "下一张卡片自动朗读",
+    "voiceAccent": "英语口音",
+    "voiceAccentHint": "用于英语单词，两种模式通用。",
+    "voiceAccentOption": {
+      "us": "美式",
+      "uk": "英式"
+    },
+    "exitFocus": "退出全屏",
+    "reverseCard": "反向",
+    "reverseCardHint": "开启：卡片两面互换——闪卡先显示释义，你来回想单词。",
+    "pronounceWordOnReveal": "翻面时朗读单词",
+    "pronounceWordOnRevealHint": "单词现在在卡片背面——翻面时会被朗读出来。",
+    "pronunciationSettings": "发音设置",
+    "pronunciationTitle": "发音",
+    "pronunciationSub": "朗读单词的语音——在这里以及 FlexiLingo 各处使用。选择一个即可立即试听。",
+    "reverseCardError": "无法保存此设置，请重试。",
+    "normalSetupTitle": "设置本次学习",
+    "normalSetupSub": "选择卡片显示的内容，然后点击开始。",
+    "clickToReveal": "点击或按 Space 显示答案",
+    "hiddenWord": "单词已隐藏",
+    "listenThenReveal": "先听，然后点击或按 Space",
+    "translationLabel": "翻译",
+    "hideMeaning": "隐藏释义",
+    "revealMeaning": "显示释义",
+    "corrections": "更正",
+    "grading": "评分中…",
+    "useInSentence": "用这个单词造一个句子",
+    "kind": {
+      "spelling": "拼写",
+      "grammar": "语法"
+    },
+    "typeIn": "输入{{language}}单词",
+    "typeWord": "输入单词",
+    "placeholderIn": "{{language}}单词…",
+    "nearAccent": "差一点——只是一个重音符号不对。",
+    "nearTypo": "差一点——只差一个字母。"
   },
   "complete": {
     "title": "本次学习完成",
@@ -208,7 +342,9 @@
     "newlyMastered": "已掌握",
     "duesReviewed": "完成复习",
     "xpEarned": "获得经验",
-    "xpHint": "已计入连续天数与每日目标。"
+    "xpHint": "已计入连续天数与每日目标。",
+    "reviewAgain": "再次复习",
+    "tomorrowShort": "明天"
   },
   "errors": {
     "NO_CARDS_FOR_SELECTION": "没有符合该条件的卡片，请换一个范围试试。",
@@ -224,5 +360,227 @@
     "collocations": "搭配",
     "commonMistakes": "常见错误",
     "notes": "备注"
+  },
+  "shadowing": {
+    "empty": "本次学习还没有可跟读的单词。",
+    "readyTitle": "设置本轮练习",
+    "idle": "点击开始 — 听完后跟着念一遍。",
+    "start": "开始",
+    "pause": "暂停",
+    "resume": "继续",
+    "reset": "重置",
+    "settings": "跟读设置",
+    "wordCount": "{{count}} 个单词",
+    "round": "第 {{pass}} 遍",
+    "elapsed": "播放时长",
+    "listenOf": "第 {{n}} 遍 / 共 {{total}} 遍",
+    "meaning": "释义",
+    "recall": "回想释义",
+    "shuffle": "随机播放",
+    "speakMeaning": "朗读释义",
+    "speakMeaningHint": "意思会用它所写的语言朗读。",
+    "meaningMode": "释义",
+    "meaningOption": {
+      "always": "始终显示",
+      "after": "跟读后显示",
+      "hidden": "隐藏"
+    },
+    "meaningHint": {
+      "always": "释义与单词一起显示在卡片上。",
+      "after": "先听词，在停顿中回想意思，然后再看。",
+      "hidden": "只显示单词，释义一直遮住。"
+    },
+    "showWordHint": "关闭：只听，单词保持遮住。",
+    "gap": "跟读停顿",
+    "gapHint": "这个停顿就是练习 — 足够你在下一个单词前把它念出来。",
+    "gapNone": "不停顿",
+    "gapOffHint": "当前不使用：每个词结束后会一直等待，直到你点击“下一个”。",
+    "autoAdvance": "自动进入下一个",
+    "autoAdvanceHint": "关闭后：每个词结束后会一直等待，直到你点击“下一个”。",
+    "replay": "再听一次",
+    "next": "下一个",
+    "repeatEach": "每词遍数",
+    "repeatEachHint": "两遍效果好：听、跟读、再听一遍纠正自己。",
+    "repeatMore": "增加重复次数",
+    "repeatLess": "减少重复次数",
+    "rounds": "轮数",
+    "roundsInfinite": "循环直到停止",
+    "hiddenWord": "单词已隐藏",
+    "hiddenMeaning": "释义已隐藏",
+    "size": "每轮单词数",
+    "sizeAll": "全部",
+    "doneTitle": "本轮完成",
+    "doneSub": "听过的单词和实际播放时长。",
+    "doneWords": "单词",
+    "doneTime": "时长",
+    "again": "再来一轮",
+    "done": "完成",
+    "loadFailed": "无法载入本次练习的词。",
+    "retry": "重试",
+    "groupRepeat": "重复与停顿",
+    "groupRun": "单词与轮数",
+    "gapSeconds": "停顿（秒）",
+    "secondsUnit": "秒",
+    "reportFailed": "这一轮的进度无法保存到这台电脑。"
+  },
+  "report": {
+    "headlineMastered": "{{count}} 个词进入了长期记忆",
+    "headlineRecalled": "{{count}} 个词在结束时已记住",
+    "headlinePlain": "练习了 {{count}} 个词",
+    "factSeen": "共 {{count}} 个",
+    "factFirstTry": "首次答对 {{percent}}%",
+    "factActive": "实际练习 {{time}}",
+    "durationHm": "{{hours}} 小时 {{minutes}} 分",
+    "durationM": "{{minutes}} 分",
+    "recallTitle": "回忆率",
+    "firstTry": "首次即答对",
+    "byTheEnd": "结束时答对",
+    "attemptsNote": "{{cards}} 个词共 {{attempts}} 次作答 — 平均每词 {{avg}} 次",
+    "gapNote": "{{count}} 个在本次练习中扭转",
+    "strugglesTitle": "最难的词",
+    "strugglesNote": "{{count}} 个词用了 3 次以上",
+    "drillWeak": "练习薄弱词",
+    "forecastTitle": "何时再出现",
+    "today": "今天",
+    "inDays": "+{{count}} 天",
+    "levelsTitle": "按等级",
+    "levelsNote": "仅限已定级的词",
+    "missed": "答错",
+    "decksTitle": "来自哪些卡组"
+  },
+  "tour": {
+    "guideButton": "指南",
+    "next": "下一步",
+    "back": "上一步",
+    "skip": "跳过",
+    "done": "完成",
+    "stepOf": "第 {{current}} 步，共 {{total}} 步",
+    "steps": {
+      "intro": {
+        "title": "欢迎使用练习",
+        "body": "来一段快速导览——了解每个设置的作用，以及如何充分利用你的学习会话。"
+      },
+      "hero": {
+        "title": "今日学习",
+        "body": "显示还剩多少张卡片、需要多少分钟。点击「开始」即可开始你的智能每日组合。"
+      },
+      "heroShortcuts": {
+        "title": "学习方式",
+        "body": "普通：会考你并安排下次复习的练习。跟读：卡片自动播放——听每个词并跟着说，不评分。重点用于调整普通模式的练习组合。"
+      },
+      "deckList": {
+        "title": "你的牌组",
+        "body": "这里列出你正在学习的所有牌组，包含健康状态和掌握度。使用标签页按需要关注的程度筛选。"
+      },
+      "deckCard": {
+        "title": "开始单个牌组",
+        "body": "点击任意牌组上的「开始」，精确选择要从该牌组学习的内容。"
+      },
+      "scopeOptions": {
+        "title": "学习什么",
+        "body": "选择一个范围：全部到期内容、仅新词、你总是答错的薄弱词，或随机顺序。"
+      },
+      "scopeFocus": {
+        "title": "重点",
+        "body": "选择要侧重哪类练习——听力、产出、识别，或你自己的自定义组合。"
+      },
+      "scopeForce": {
+        "title": "提前复习模式",
+        "body": "打开此选项，即使卡片还未正式到期，也可以提前复习本牌组。"
+      },
+      "scopeStart": {
+        "title": "开始学习",
+        "body": "使用你在上方选择的所有设置，开始本次会话。"
+      },
+      "settingsTabs": {
+        "title": "设置",
+        "body": "你所有的练习偏好都在这里，分为三个标签页：节奏和牌组、活动、偏好。"
+      },
+      "settingsDuration": {
+        "title": "每日目标",
+        "body": "你希望每天学习多少分钟——这决定了每日计划会为你安排多少张卡片。"
+      },
+      "settingsDeckStrategy": {
+        "title": "牌组策略",
+        "body": "「混合」将所有牌组合并到一次练习，「单一牌组」每次只学习一个，「轮换」每天选最被忽视的牌组。"
+      },
+      "settingsDeckWeights": {
+        "title": "牌组权重",
+        "body": "为某个牌组设置更高或更低的优先级——数值越大，它的卡片在每日组合中出现得越多。"
+      },
+      "settingsFocusChips": {
+        "title": "活动组合",
+        "body": "选择一个「重点」预设，下方的进度条会实时显示本次会话组合的变化。"
+      },
+      "settingsActivityList": {
+        "title": "微调各项练习",
+        "body": "开启或关闭任意练习类型并调整其权重——右侧的占比显示它在组合中的份额。"
+      },
+      "settingsSrs": {
+        "title": "间隔重复算法",
+        "body": "选择复习间隔的计算方式——Leitner、SM-2，或 FSRS(默认选项，通常也是最智能的)。"
+      },
+      "settingsAutoRead": {
+        "title": "自动朗读",
+        "body": "让每张卡片自动朗读出来，并选择美式或英式发音。"
+      },
+      "outro": {
+        "title": "就是这样!",
+        "body": "现在你已经了解练习页面的方方面面。随时可以点击设置旁的「指南」按钮重新打开这段导览。"
+      }
+    }
+  },
+  "summary": "摘要",
+  "mode": "模式",
+  "scorecard": {
+    "title": "AI 检查",
+    "criteria": {
+      "meaning": "意思",
+      "grammar": "语法",
+      "spelling": "拼写",
+      "elision": "省音"
+    },
+    "why": {
+      "meaning": {
+        "pass": "表达了卡片要求的意思。",
+        "fail": "没有表达卡片要求的意思。"
+      },
+      "grammar": {
+        "pass": "语法正确。",
+        "fail": "有一个语法错误。"
+      },
+      "spelling": {
+        "pass": "拼写正确。",
+        "near": "词是对的——检查一下重音符号。",
+        "fail": "有一个拼写错误。"
+      },
+      "elision": {
+        "pass": "省音正确。",
+        "fail": "缺少一处省音——本该缩写的词被完整写出（例如写成 me aider 而不是 m'aider）。"
+      }
+    },
+    "register": {
+      "formal": "正式语体——适合信件或对陌生人。",
+      "neutral": "中性语体——几乎处处适用。",
+      "informal": "口语化——很适合发消息给朋友。"
+    },
+    "natural": {
+      "yes": "很自然——母语者就会这么说。",
+      "no": "正确，但母语者会换个说法。"
+    },
+    "error": {
+      "gender_agreement": "看起来是性或数的配合错误。",
+      "verb_conjugation": "检查动词的形式或时态。",
+      "word_order": "检查词序。",
+      "preposition_or_article": "检查介词或冠词。",
+      "spelling_or_accent": "检查拼写。",
+      "negation": "检查否定形式。",
+      "wrong_word": "有一个词与意思不符。",
+      "avoir_expression": "这里法语用 avoir，不用 être：j'ai faim，quel âge avez-vous ?"
+    },
+    "needsAi": "这次没有评分卡：在设置里配置你自己的 AI，你的句子就会得到评分卡。"
+  },
+  "conjugation": {
+    "title": "动词变位"
   }
 }

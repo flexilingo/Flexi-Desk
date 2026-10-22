@@ -1,0 +1,116 @@
+{
+  "confidence": {
+    "level_1": "没听懂",
+    "level_2": "一半",
+    "level_3": "听懂了",
+    "question": "听懂了多少？"
+  },
+  "controls": {
+    "again": "再听",
+    "begin": "开始",
+    "continue": "继续",
+    "next": "下一个",
+    "resume": "继续",
+    "skip": "跳过"
+  },
+  "launcher": {
+    "label": "练习"
+  },
+  "picker": {
+    "cancel": "取消",
+    "close": "关闭",
+    "minutes": "{{n}} 分钟",
+    "range": "片段",
+    "rangeFrom": "从 {{at}} 到 {{to}}",
+    "resume": "继续练习 — 第 {{n}} / {{total}} 步",
+    "start": "开始",
+    "subtitle": "挑一小段反复练。短的比长的有效。",
+    "title": "练习这集播客"
+  },
+  "programs": {
+    "dictation": {
+      "description": "把听到的写下来，逐词批改",
+      "label": "听写"
+    },
+    "loopCrack": {
+      "description": "一小段反复播放，直到每个词都听清",
+      "label": "循环到听懂"
+    },
+    "threePass": {
+      "description": "先无字幕，再看字幕，最后再无字幕",
+      "label": "三遍法"
+    }
+  },
+  "rail": {
+    "cycleIdle": "收听中 — 几分钟后进入下一次练习",
+    "exit": "退出练习",
+    "stepOf": "{{n}} / {{total}}",
+    "working": "练习"
+  },
+  "steps": {
+    "blind1": {
+      "body": "别想抓住每个词，先听个大概。",
+      "title": "第一遍 — 无字幕"
+    },
+    "blind2": {
+      "body": "同一段音频。感受一下这次听懂了多少。",
+      "title": "第三遍 — 无字幕"
+    },
+    "confidence": {
+      "title": "这遍怎么样？"
+    },
+    "dictation": {
+      "check": "检查",
+      "hint": "已重听 {{replays}} 次。想听几次都可以。",
+      "placeholder": "输入你听到的内容…",
+      "retry": "再试一次",
+      "title": "写下你听到的",
+      "verdict_close": "{{pct}}% — 接近了",
+      "verdict_missed": "{{pct}}% — 值得再听一遍",
+      "verdict_pass": "{{pct}}% — 过关"
+    },
+    "dictationBrief": {
+      "body": "一小段会播两遍。写下你听到的 — 重听不限次数。",
+      "title": "听写"
+    },
+    "dictationCheck": {
+      "body": "同一段音频，0.85 倍速并显示文字。",
+      "title": "放慢再听一遍"
+    },
+    "guided": {
+      "body": "边看边听，找出刚才漏掉的部分。",
+      "title": "第二遍 — 有字幕"
+    },
+    "loop": {
+      "gotIt": "听懂了",
+      "hint": "反复播放，直到你听懂。",
+      "revealedHint": "现在对着文字再听两遍。",
+      "showMe": "显示原文",
+      "title": "仔细听"
+    },
+    "loopBrief": {
+      "body": "一小段会反复播放。每个词都听清了就点一下。",
+      "title": "循环到听懂"
+    },
+    "preteach": {
+      "body": "二十秒，先认识这段里最难的词。",
+      "empty": "这一段没有生僻词 — 直接开始吧。",
+      "loading": "正在查询词汇等级…",
+      "startListening": "开始收听",
+      "title": "即将出现的词"
+    }
+  },
+  "summary": {
+    "addToDeck": "添加 {{n}} 个词",
+    "delta": "从「{{from}}」到「{{to}}」— 同一段音频提升 {{n}} 级",
+    "deltaFlat": "两次结果相同",
+    "deltaFlatHint": "这一段值得明天再来一次。",
+    "done": "完成",
+    "keepGoing": "继续 — {{n}} 分钟后再练一次",
+    "missedWords": "没听出的词",
+    "statAccuracy": "准确率",
+    "statCracked": "攻克",
+    "statMinutes": "分钟",
+    "title": "本次练习结束"
+  }
+}

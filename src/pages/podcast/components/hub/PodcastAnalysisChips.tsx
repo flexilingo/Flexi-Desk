@@ -28,9 +28,7 @@ function BaseChip({ children, className }: ChipProps) {
 export function CefrChip({ level }: { level: CefrLevel | null | undefined }) {
   if (!level) return null;
   return (
-    <BaseChip className="border border-[#8BB7A3]/40 bg-[#8BB7A3]/15 text-[#3d6b58] dark:text-[#a5c7b8] dark:border-[#8BB7A3]/50 dark:bg-[#8BB7A3]/20">
-      {level}
-    </BaseChip>
+    <BaseChip className="border border-success/40 bg-success/15 text-success">{level}</BaseChip>
   );
 }
 
@@ -48,7 +46,7 @@ export function ScoreChip({ score }: { score: number | null | undefined }) {
 
 export function ReadyChip({ label = 'Ready' }: { label?: string }) {
   return (
-    <BaseChip className="border border-[#8BB7A3]/45 bg-[#8BB7A3]/18 text-[#3d6b58] dark:text-[#a5c7b8] dark:border-[#8BB7A3]/55 dark:bg-[#8BB7A3]/22">
+    <BaseChip className="border border-success/45 bg-success/18 text-success">
       <Check className="h-3 w-3" />
       {label}
     </BaseChip>
@@ -58,15 +56,13 @@ export function ReadyChip({ label = 'Ready' }: { label?: string }) {
 /**
  * Theme-aware gradient for premium hero / featured cards.
  * Light mode: warm cream → off-white.
- * Dark mode: subtle sage-tinted dark → slate.
+ * Dark mode: the same tokens resolve to the dark-cream panel → background.
  */
-export const HERO_GRADIENT_LIGHT = 'from-[#fff7e6] to-[#fffef7]';
-export const HERO_GRADIENT_DARK = 'from-[#8BB7A3]/12 to-[#0f172a]';
-export const HERO_GRADIENT_CLASS =
-  'bg-gradient-to-br from-[#fff7e6] to-[#fffef7] dark:from-[#8BB7A3]/10 dark:to-[#0f172a]';
+export const HERO_GRADIENT_LIGHT = 'from-muted to-card';
+export const HERO_GRADIENT_DARK = 'from-muted to-card';
+export const HERO_GRADIENT_CLASS = 'bg-gradient-to-br from-muted to-card';
 
 /**
  * Common sage pill palette used for Editor's Pick, Live pill, Ready badges.
  */
-export const SAGE_PILL_CLASS =
-  'border border-[#8BB7A3]/45 bg-[#8BB7A3]/18 text-[#3d6b58] dark:text-[#a5c7b8] dark:border-[#8BB7A3]/55 dark:bg-[#8BB7A3]/22';
+export const SAGE_PILL_CLASS = 'border border-success/45 bg-success/18 text-success';

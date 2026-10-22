@@ -36,23 +36,25 @@ const LANGUAGE_NAMES: Record<string, string> = {
 
 /** Strip correction/vocab blocks from AI content to get clean speech text */
 function cleanSpeechText(content: string): string {
-  return content
-    // :::blocks:::
-    .replace(/:::corrections[\s\S]*?:::/g, '')
-    .replace(/:::vocabulary[\s\S]*?:::/g, '')
-    // ```blocks```
-    .replace(/```corrections[\s\S]*?```/g, '')
-    .replace(/```vocabulary[\s\S]*?```/g, '')
-    // ### Headers with JSON arrays
-    .replace(/###\s*Corrections?\s*:?\s*\[[\s\S]*?\]/g, '')
-    .replace(/###\s*Vocabulary\s*:?\s*\[[\s\S]*?\]/g, '')
-    // **Bold** headers with JSON
-    .replace(/\*\*Corrections?\*\*\s*:?\s*\[[\s\S]*?\]/g, '')
-    .replace(/\*\*Vocabulary\*\*\s*:?\s*\[[\s\S]*?\]/g, '')
-    // Clean markdown artifacts
-    .replace(/\*\*/g, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+  return (
+    content
+      // :::blocks:::
+      .replace(/:::corrections[\s\S]*?:::/g, '')
+      .replace(/:::vocabulary[\s\S]*?:::/g, '')
+      // ```blocks```
+      .replace(/```corrections[\s\S]*?```/g, '')
+      .replace(/```vocabulary[\s\S]*?```/g, '')
+      // ### Headers with JSON arrays
+      .replace(/###\s*Corrections?\s*:?\s*\[[\s\S]*?\]/g, '')
+      .replace(/###\s*Vocabulary\s*:?\s*\[[\s\S]*?\]/g, '')
+      // **Bold** headers with JSON
+      .replace(/\*\*Corrections?\*\*\s*:?\s*\[[\s\S]*?\]/g, '')
+      .replace(/\*\*Vocabulary\*\*\s*:?\s*\[[\s\S]*?\]/g, '')
+      // Clean markdown artifacts
+      .replace(/\*\*/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  );
 }
 
 export function VoiceSession() {
@@ -194,13 +196,15 @@ export function VoiceSession() {
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center p-6">
         <SessionSummary
           summary={{
-            grammarScore: allCorrections.length === 0 ? 100 : Math.max(0, 100 - allCorrections.length * 10),
+            grammarScore:
+              allCorrections.length === 0 ? 100 : Math.max(0, 100 - allCorrections.length * 10),
             vocabScore: Math.min(100, allVocab.length * 15),
             fluencyScore: Math.min(100, userMessageCount * 12),
             overallScore: Math.round(
-              (allCorrections.length === 0 ? 100 : Math.max(0, 100 - allCorrections.length * 10)) * 0.4 +
-              Math.min(100, allVocab.length * 15) * 0.3 +
-              Math.min(100, userMessageCount * 12) * 0.3
+              (allCorrections.length === 0 ? 100 : Math.max(0, 100 - allCorrections.length * 10)) *
+                0.4 +
+                Math.min(100, allVocab.length * 15) * 0.3 +
+                Math.min(100, userMessageCount * 12) * 0.3,
             ),
             corrections: allCorrections,
             newWords: allVocab,
@@ -234,8 +238,12 @@ export function VoiceSession() {
       {/* Minimal header */}
       <div className="w-full flex items-center justify-between px-6 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">{modeLabel}</Badge>
-          <Badge variant="outline" className="text-xs">{activeConversation.cefrLevel}</Badge>
+          <Badge variant="outline" className="text-xs">
+            {modeLabel}
+          </Badge>
+          <Badge variant="outline" className="text-xs">
+            {activeConversation.cefrLevel}
+          </Badge>
           <span className="text-xs text-muted-foreground">{languageName}</span>
         </div>
         <div className="flex items-center gap-3">
@@ -246,7 +254,9 @@ export function VoiceSession() {
           >
             {showSubtitles ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
-          <span className="font-mono text-sm tabular-nums text-muted-foreground">{formattedTime}</span>
+          <span className="font-mono text-sm tabular-nums text-muted-foreground">
+            {formattedTime}
+          </span>
           <Button variant="destructive" size="sm" onClick={handleEnd}>
             <Square className="h-3 w-3 mr-1" />
             End
@@ -263,9 +273,11 @@ export function VoiceSession() {
         <div className="w-full min-h-[80px] flex flex-col items-center justify-center">
           {showSubtitles && currentSubtitle && (
             <div className="text-center animate-in fade-in duration-300">
-              <span className={`text-xs font-medium ${
-                currentSubtitle.role === 'assistant' ? 'text-[#8BB7A3]' : 'text-primary'
-              }`}>
+              <span
+                className={`text-xs font-medium ${
+                  currentSubtitle.role === 'assistant' ? 'text-success' : 'text-primary'
+                }`}
+              >
                 {currentSubtitle.role === 'assistant' ? 'Tutor' : 'You'}
               </span>
               <p className="text-base text-foreground mt-1 leading-relaxed">
@@ -290,9 +302,9 @@ export function VoiceSession() {
             disabled={isTranscribing}
             className={`flex h-16 w-16 items-center justify-center rounded-full transition-all ${
               isRecording
-                ? 'bg-error text-white animate-pulse scale-110 ring-4 ring-error/30'
+                ? 'bg-error text-error-foreground animate-pulse scale-110 ring-4 ring-error/30'
                 : isSpeaking
-                  ? 'bg-[#C58C6E] text-white hover:scale-105 active:scale-95'
+                  ? 'bg-warning text-warning-foreground hover:scale-105 active:scale-95'
                   : isTranscribing || isSending || isStreaming
                     ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
                     : 'bg-primary text-primary-foreground hover:scale-105 active:scale-95'
@@ -307,9 +319,7 @@ export function VoiceSession() {
             )}
           </button>
 
-          {statusText && (
-            <p className="text-xs text-muted-foreground">{statusText}</p>
-          )}
+          {statusText && <p className="text-xs text-muted-foreground">{statusText}</p>}
         </div>
       </div>
 

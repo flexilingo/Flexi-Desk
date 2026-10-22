@@ -152,11 +152,11 @@ function SessionRow({
   const statusIcon = (() => {
     switch (session.status) {
       case 'completed':
-        return <Check className="h-4 w-4 text-[#8BB7A3]" />;
+        return <Check className="h-4 w-4 text-success" />;
       case 'in_progress':
         return <Play className="h-4 w-4 text-primary" />;
       case 'paused':
-        return <Pause className="h-4 w-4 text-[#C58C6E]" />;
+        return <Pause className="h-4 w-4 text-warning" />;
       default:
         return <FileText className="h-4 w-4 text-muted-foreground" />;
     }

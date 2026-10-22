@@ -1,6 +1,8 @@
 use tauri::State;
 use crate::AppState;
 
+pub mod google;
+
 const SUPABASE_URL: &str = "https://api.flexilingo.com";
 const SUPABASE_ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhZ2pnYnBlZWF1YWJsY2N2a2dzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1OTE4NDIsImV4cCI6MjA4MTE2Nzg0Mn0.bim07d-SPrjViZ5qcugIGggfBd3iv0WF4RrdV3wgiTQ";
 
@@ -110,41 +112,67 @@ pub async fn auth_verify_otp(
 pub async fn auth_refresh(
     state: State<'_, AppState>,
 ) -> Result<AuthSession, String> {
-    let refresh_token = {
-        let conn = lock_db(&state)?;
-        let session_json = get_token(&conn, "session")
-            .ok_or("No session found")?;
-        let session: AuthSession = serde_json::from_str(&session_json)
-            .map_err(|e| format!("Parse error: {e}"))?;
-        session.refresh_token
-    };
+    refresh_session(&state.db, SUPABASE_URL, None).await
+}
 
-    let client = reqwest::Client::new();
-    let resp = client
-        .post(format!("{SUPABASE_URL}/auth/v1/token?grant_type=refresh_token"))
+/// Serialises session refreshes so a burst of 401s triggers ONE refresh request.
+/// Refresh tokens rotate: a second concurrent refresh with the old token would fail
+/// and sign the user out.
+static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+fn read_session(db: &std::sync::Mutex<rusqlite::Connection>) -> Result<Option<AuthSession>, String> {
+    let conn = db.lock().map_err(|e| format!("DB lock error: {e}"))?;
+    Ok(get_token(&conn, "session").and_then(|j| serde_json::from_str::<AuthSession>(&j).ok()))
+}
+
+/// Refreshes the stored session and persists it.
+///
+/// `stale_access_token` is the token that just got a 401. If, once we hold the lock,
+/// the stored token differs, another call already refreshed and we reuse its result
+/// instead of spending the (rotating) refresh token a second time.
+async fn refresh_session(
+    db: &std::sync::Mutex<rusqlite::Connection>,
+    base_url: &str,
+    stale_access_token: Option<&str>,
+) -> Result<AuthSession, String> {
+    let _guard = REFRESH_LOCK.lock().await;
+
+    let current = read_session(db)?.ok_or("No session found")?;
+    if let Some(stale) = stale_access_token {
+        if current.access_token != stale {
+            return Ok(current);
+        }
+    }
+
+    let resp = reqwest::Client::new()
+        .post(format!("{base_url}/auth/v1/token?grant_type=refresh_token"))
         .header("apikey", SUPABASE_ANON_KEY)
         .header("Content-Type", "application/json")
-        .json(&serde_json::json!({ "refresh_token": refresh_token }))
+        .json(&serde_json::json!({ "refresh_token": current.refresh_token }))
         .send()
         .await
         .map_err(|e| format!("Refresh request failed: {e}"))?;
 
-    if !resp.status().is_success() {
-        let conn = lock_db(&state)?;
-        let _ = conn.execute("DELETE FROM auth_tokens WHERE key = 'session'", []);
-        return Err("Session expired. Please log in again.".to_string());
+    let status = resp.status();
+    if !status.is_success() {
+        // Only a rejected token ends the session; a 5xx / outage must not sign the user out.
+        if status.is_client_error() {
+            if let Ok(conn) = db.lock() {
+                let _ = conn.execute("DELETE FROM auth_tokens WHERE key = 'session'", []);
+            }
+            return Err("Session expired. Please log in again.".to_string());
+        }
+        return Err(format!("Refresh failed ({})", status.as_u16()));
     }
 
     let body: serde_json::Value = resp.json().await
         .map_err(|e| format!("Failed to parse refresh response: {e}"))?;
-
     let session = parse_supabase_auth_response(&body)?;
 
-    let conn = lock_db(&state)?;
+    let conn = db.lock().map_err(|e| format!("DB lock error: {e}"))?;
     let session_json = serde_json::to_string(&session)
         .map_err(|e| format!("Serialize error: {e}"))?;
     store_token(&conn, "session", &session_json)?;
-
     Ok(session)
 }
 
@@ -224,6 +252,31 @@ pub async fn storage_upload(
     ))
 }
 
+/// Downloads an object from a PRIVATE Storage bucket with the user's own session,
+/// so the bucket's owner-only policy is what grants access.
+pub async fn storage_download(
+    access_token: &str,
+    bucket: &str,
+    object_path: &str,
+) -> Result<Vec<u8>, String> {
+    let url = format!("{SUPABASE_URL}/storage/v1/object/authenticated/{bucket}/{object_path}");
+    let resp = reqwest::Client::new()
+        .get(&url)
+        .header("apikey", SUPABASE_ANON_KEY)
+        .header("Authorization", format!("Bearer {access_token}"))
+        .send()
+        .await
+        .map_err(|e| format!("Storage download failed: {e}"))?;
+    let status = resp.status().as_u16();
+    if status >= 400 {
+        return Err(format!("Storage download failed ({status})"));
+    }
+    resp.bytes()
+        .await
+        .map(|b| b.to_vec())
+        .map_err(|e| format!("Storage download failed: {e}"))
+}
+
 #[tauri::command]
 pub async fn supabase_call(
     state: State<'_, AppState>,
@@ -231,30 +284,143 @@ pub async fn supabase_call(
     path: String,
     body: Option<serde_json::Value>,
 ) -> Result<serde_json::Value, String> {
-    let access_token = {
-        let conn = lock_db(&state)?;
-        get_token(&conn, "session")
-            .and_then(|json| serde_json::from_str::<AuthSession>(&json).ok())
-            .map(|s| s.access_token)
-    };
-    call_edge_function(access_token, &method, &path, body).await
+    call_edge_function_authed(&state.db, &method, &path, body).await
+}
+
+/// Edge-function call with the stored session. On HTTP 401 and a stored refresh
+/// token it refreshes the session once, persists it and retries the request once.
+/// Signed-out calls go out without a bearer token and are never retried.
+pub async fn call_edge_function_authed(
+    db: &std::sync::Mutex<rusqlite::Connection>,
+    method: &str,
+    path: &str,
+    body: Option<serde_json::Value>,
+) -> Result<serde_json::Value, String> {
+    call_with_refresh(db, SUPABASE_URL, method, path, body).await
+}
+
+async fn call_with_refresh(
+    db: &std::sync::Mutex<rusqlite::Connection>,
+    base_url: &str,
+    method: &str,
+    path: &str,
+    body: Option<serde_json::Value>,
+) -> Result<serde_json::Value, String> {
+    let token = read_session(db)?.map(|s| s.access_token);
+    let first = send_edge(base_url, token.as_deref(), method, path, body.clone()).await?;
+    if first.status == 401 {
+        if let Some(stale) = token.as_deref() {
+            if let Ok(fresh) = refresh_session(db, base_url, Some(stale)).await {
+                let retry = send_edge(base_url, Some(&fresh.access_token), method, path, body).await?;
+                return retry.into_result();
+            }
+        }
+    }
+    first.into_result()
 }
 
 /// Raw call to a FlexiLingo edge function. `path` starts with `/` and may carry a
-/// query string, e.g. `/get-content-status?video_id=...`.
+/// query string, e.g. `/get-content-status?video_id=...`. Does not refresh.
 pub async fn call_edge_function(
     access_token: Option<String>,
     method: &str,
     path: &str,
     body: Option<serde_json::Value>,
 ) -> Result<serde_json::Value, String> {
-    let url = format!("{SUPABASE_URL}/functions/v1{path}");
+    send_edge(SUPABASE_URL, access_token.as_deref(), method, path, body)
+        .await?
+        .into_result()
+}
+
+/// Raw bytes from an edge function (audio, mostly), with the same 401 refresh + one
+/// retry as `call_edge_function_authed`. Errors carry the HTTP status as `HTTP_<n>`.
+#[tauri::command]
+pub async fn supabase_fetch_bytes(
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<tauri::ipc::Response, String> {
+    let bytes = fetch_bytes_with_refresh(&state.db, SUPABASE_URL, &path).await?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+async fn fetch_bytes_with_refresh(
+    db: &std::sync::Mutex<rusqlite::Connection>,
+    base_url: &str,
+    path: &str,
+) -> Result<Vec<u8>, String> {
+    let token = read_session(db)?.map(|s| s.access_token);
+    let (mut status, mut bytes) = send_edge_bytes(base_url, token.as_deref(), path).await?;
+    if status == 401 {
+        if let Some(stale) = token.as_deref() {
+            if let Ok(fresh) = refresh_session(db, base_url, Some(stale)).await {
+                (status, bytes) = send_edge_bytes(base_url, Some(&fresh.access_token), path).await?;
+            }
+        }
+    }
+    if status >= 400 {
+        return Err(format!("HTTP_{status}"));
+    }
+    Ok(bytes)
+}
+
+async fn send_edge_bytes(
+    base_url: &str,
+    access_token: Option<&str>,
+    path: &str,
+) -> Result<(u16, Vec<u8>), String> {
+    let mut req = reqwest::Client::new()
+        .get(format!("{base_url}/functions/v1{path}"))
+        .header("apikey", SUPABASE_ANON_KEY);
+    if let Some(token) = access_token {
+        req = req.header("Authorization", format!("Bearer {token}"));
+    }
+    let resp = req.send().await.map_err(|e| format!("API request failed: {e}"))?;
+    let status = resp.status().as_u16();
+    let bytes = resp.bytes().await.map_err(|e| format!("Failed to read response: {e}"))?;
+    Ok((status, bytes.to_vec()))
+}
+
+struct EdgeResponse {
+    status: u16,
+    json: serde_json::Value,
+}
+
+impl EdgeResponse {
+    fn into_result(self) -> Result<serde_json::Value, String> {
+        if self.status >= 400 {
+            let error_msg = self.json.get("error")
+                .or(self.json.get("message"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("API call failed");
+            let code = self.json.get("code")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            return Err(serde_json::json!({
+                "status": self.status,
+                "error": error_msg,
+                "code": code,
+                "data": self.json,
+            }).to_string());
+        }
+        Ok(self.json)
+    }
+}
+
+async fn send_edge(
+    base_url: &str,
+    access_token: Option<&str>,
+    method: &str,
+    path: &str,
+    body: Option<serde_json::Value>,
+) -> Result<EdgeResponse, String> {
+    let url = format!("{base_url}/functions/v1{path}");
     let client = reqwest::Client::new();
 
     let mut req = match method.to_uppercase().as_str() {
         "POST" => client.post(&url),
         "GET" => client.get(&url),
         "PUT" => client.put(&url),
+        "PATCH" => client.patch(&url),
         "DELETE" => client.delete(&url),
         _ => return Err(format!("Unsupported method: {method}")),
     };
@@ -262,7 +428,7 @@ pub async fn call_edge_function(
     req = req.header("apikey", SUPABASE_ANON_KEY);
     req = req.header("Content-Type", "application/json");
 
-    if let Some(token) = &access_token {
+    if let Some(token) = access_token {
         req = req.header("Authorization", format!("Bearer {token}"));
     }
 
@@ -280,23 +446,7 @@ pub async fn call_edge_function(
     let json: serde_json::Value = serde_json::from_str(&text)
         .unwrap_or(serde_json::json!({ "raw": text }));
 
-    if status >= 400 {
-        let error_msg = json.get("error")
-            .or(json.get("message"))
-            .and_then(|v| v.as_str())
-            .unwrap_or("API call failed");
-        let code = json.get("code")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
-        return Err(serde_json::json!({
-            "status": status,
-            "error": error_msg,
-            "code": code,
-            "data": json,
-        }).to_string());
-    }
-
-    Ok(json)
+    Ok(EdgeResponse { status, json })
 }
 
 // ── Response parsers ───────────────────────────────────
@@ -367,4 +517,164 @@ fn parse_supabase_auth_response(body: &serde_json::Value) -> Result<AuthSession,
         email,
         expires_at,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    /// Minimal scripted HTTP server: records "METHOD path|authorization" per request and
+    /// answers with `handler(request_line, authorization)` -> (status, body).
+    async fn serve(
+        handler: impl Fn(&str, &str) -> (u16, String) + Send + Sync + 'static,
+    ) -> (String, Arc<Mutex<Vec<String>>>) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let log = Arc::new(Mutex::new(Vec::new()));
+        let log2 = log.clone();
+        let handler = Arc::new(handler);
+        tokio::spawn(async move {
+            loop {
+                let Ok((mut sock, _)) = listener.accept().await else { break };
+                let log = log2.clone();
+                let handler = handler.clone();
+                tokio::spawn(async move {
+                    let mut buf = vec![0u8; 16384];
+                    let n = sock.read(&mut buf).await.unwrap_or(0);
+                    let req = String::from_utf8_lossy(&buf[..n]).to_string();
+                    let line = req.lines().next().unwrap_or("").to_string();
+                    let auth = req.lines()
+                        .find(|l| l.to_lowercase().starts_with("authorization:"))
+                        .map(|l| l.split_once(':').unwrap().1.trim().to_string())
+                        .unwrap_or_default();
+                    log.lock().unwrap().push(format!("{line}|{auth}"));
+                    let (status, body) = handler(&line, &auth);
+                    let resp = format!(
+                        "HTTP/1.1 {status} X\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                        body.len()
+                    );
+                    let _ = sock.write_all(resp.as_bytes()).await;
+                });
+            }
+        });
+        (base, log)
+    }
+
+    fn db_with(session: Option<(&str, &str)>) -> Arc<Mutex<rusqlite::Connection>> {
+        let conn = rusqlite::Connection::open_in_memory().unwrap();
+        conn.execute(
+            "CREATE TABLE auth_tokens (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT)",
+            [],
+        ).unwrap();
+        if let Some((access, refresh)) = session {
+            let s = AuthSession {
+                access_token: access.into(),
+                refresh_token: refresh.into(),
+                user_id: "u1".into(),
+                email: "a@b.c".into(),
+                expires_at: 0,
+            };
+            store_token(&conn, "session", &serde_json::to_string(&s).unwrap()).unwrap();
+        }
+        Arc::new(Mutex::new(conn))
+    }
+
+    const REFRESH_OK: &str = r#"{"access_token":"new-access","refresh_token":"new-refresh","expires_at":9,"user":{"id":"u1","email":"a@b.c"}}"#;
+
+    fn router(line: &str, auth: &str) -> (u16, String) {
+        if line.contains("/auth/v1/token") {
+            (200, REFRESH_OK.into())
+        } else if auth == "Bearer new-access" {
+            (200, r#"{"ok":true}"#.into())
+        } else {
+            (401, r#"{"error":"expired","code":"JWT_EXPIRED"}"#.into())
+        }
+    }
+
+    #[tokio::test]
+    async fn refreshes_on_401_persists_and_retries_once() {
+        let (base, log) = serve(router).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let out = call_with_refresh(&db, &base, "GET", "/x", None).await.unwrap();
+        assert_eq!(out["ok"], true);
+        let stored = read_session(&db).unwrap().unwrap();
+        assert_eq!(stored.access_token, "new-access");
+        assert_eq!(stored.refresh_token, "new-refresh");
+        let log = log.lock().unwrap();
+        assert_eq!(log.len(), 3, "call, refresh, retry: {log:?}");
+    }
+
+    #[tokio::test]
+    async fn signed_out_401_is_not_retried() {
+        let (base, log) = serve(router).await;
+        let db = db_with(None);
+        let err = call_with_refresh(&db, &base, "GET", "/x", None).await.unwrap_err();
+        assert!(err.contains("\"status\":401"));
+        assert_eq!(log.lock().unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn retry_happens_only_once() {
+        let (base, log) = serve(|line, _| {
+            if line.contains("/auth/v1/token") { (200, REFRESH_OK.into()) }
+            else { (401, r#"{"error":"nope"}"#.into()) }
+        }).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let err = call_with_refresh(&db, &base, "GET", "/x", None).await.unwrap_err();
+        assert!(err.contains("401"));
+        assert_eq!(log.lock().unwrap().len(), 3);
+    }
+
+    #[tokio::test]
+    async fn rejected_refresh_signs_out_and_returns_original_error() {
+        let (base, _log) = serve(|line, _| {
+            if line.contains("/auth/v1/token") { (400, r#"{"error":"invalid_grant"}"#.into()) }
+            else { (401, r#"{"error":"expired"}"#.into()) }
+        }).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let err = call_with_refresh(&db, &base, "GET", "/x", None).await.unwrap_err();
+        assert!(err.contains("401"));
+        assert!(read_session(&db).unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn server_error_on_refresh_keeps_the_session() {
+        let (base, _log) = serve(|line, _| {
+            if line.contains("/auth/v1/token") { (503, "{}".into()) }
+            else { (401, r#"{"error":"expired"}"#.into()) }
+        }).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let _ = call_with_refresh(&db, &base, "GET", "/x", None).await;
+        assert!(read_session(&db).unwrap().is_some());
+    }
+
+    #[tokio::test]
+    async fn concurrent_401s_share_one_refresh() {
+        let (base, log) = serve(router).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let calls = (0..5).map(|_| call_with_refresh(&db, &base, "GET", "/x", None));
+        let results = futures_util::future::join_all(calls).await;
+        assert!(results.iter().all(|r| r.is_ok()));
+        let refreshes = log.lock().unwrap().iter().filter(|l| l.contains("/auth/v1/token")).count();
+        assert_eq!(refreshes, 1, "refresh token must be spent once");
+    }
+
+    #[tokio::test]
+    async fn bytes_fetch_refreshes_on_401_and_retries() {
+        let (base, log) = serve(router).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let bytes = fetch_bytes_with_refresh(&db, &base, "/text-to-speech-v2?text=hi").await.unwrap();
+        assert_eq!(bytes, br#"{"ok":true}"#.to_vec());
+        assert_eq!(log.lock().unwrap().len(), 3);
+    }
+
+    #[tokio::test]
+    async fn bytes_fetch_reports_http_status() {
+        let (base, _log) = serve(|_, _| (404, "{}".into())).await;
+        let db = db_with(None);
+        let err = fetch_bytes_with_refresh(&db, &base, "/x").await.unwrap_err();
+        assert_eq!(err, "HTTP_404");
+    }
 }

@@ -1,0 +1,149 @@
+{
+  "setup": {
+    "title": "设置你自己的 AI",
+    "intro": "这个功能需要 AI。桌面版使用你自己设置的 AI，也就是在你自己的电脑上，或用你自己的密钥来完成。",
+    "own": "除非你在设置中手动开启，否则不会使用 FlexiLingo 的云端 AI。",
+    "deviceButton": "在这台电脑上设置",
+    "keyButton": "使用我自己的密钥",
+    "deviceHint": "免费且私密。只需下载一次，约 2 GB。内存 8 GB 及以上效果最佳。",
+    "weakMachine": "这台电脑配置较低。本机模型可以运行，但回答可能较慢。使用自己的密钥会更快。",
+    "installing": "正在安装本地 AI 引擎...",
+    "starting": "正在启动本地 AI 引擎...",
+    "downloading": "正在下载 {{model}} 模型，可能需要几分钟...",
+    "working": "正在设置...",
+    "provider": "服务商",
+    "providers": {
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "compatible": "其他（兼容 OpenAI）"
+    },
+    "baseUrl": "服务器地址",
+    "baseUrlHint": "适用于 LM Studio、OpenRouter 或任何兼容 OpenAI 的服务器，例如 http://localhost:1234",
+    "key": "API 密钥",
+    "keyOptional": "API 密钥（服务器不需要则留空）",
+    "model": "模型（可选）",
+    "keyPrivacy": "密钥只保存在这台电脑上，只会发送给你选择的服务商。",
+    "saveAndTest": "保存并测试",
+    "back": "返回"
+  },
+  "reason": {
+    "local_not_installed": "这台电脑上还没有安装本地 AI 引擎。",
+    "local_not_running": "本地 AI 引擎已安装，但没有运行。",
+    "local_no_model": "本地 AI 引擎正在运行，但还没有模型。",
+    "local_model_missing": "所选模型尚未下载到这台电脑。",
+    "key_missing": "尚未为你的 AI 服务商保存 API 密钥。"
+  },
+  "errors": {
+    "OLLAMA_NOT_RUNNING": "你的 AI 没有在这台电脑上运行。",
+    "OLLAMA_MODEL_MISSING": "所选模型尚未下载到这台电脑。",
+    "AI_KEY_MISSING": "尚未为你的 AI 服务商保存 API 密钥。",
+    "AI_NOT_READY": "你的 AI 还没有设置好。",
+    "AI_KEY_REJECTED": "服务商拒绝了这个密钥。请检查后重试。",
+    "AI_RATE_LIMITED": "服务商表示你的额度暂时用完了。请稍后再试。",
+    "AI_UNREACHABLE": "无法连接到你的 AI。请检查地址和网络连接。",
+    "UNKNOWN_ERROR": "你的 AI 出了点问题。请重试。"
+  },
+  "origin": {
+    "device": "本设备",
+    "ownKey": "你的密钥",
+    "cloud": "FlexiLingo 云端"
+  },
+  "originHint": {
+    "device": "由你电脑上的 AI 生成",
+    "ownKey": "由你自己的 AI 密钥生成",
+    "cloud": "由 FlexiLingo 云端 AI 生成（你已在设置中开启）"
+  },
+  "settings": {
+    "title": "你的 AI",
+    "explain": "桌面版的所有 AI 功能都使用你自己的电脑或你自己的密钥，工作在你的系统上完成，不会给 FlexiLingo 带来费用。考试分数和词典仍然来自 FlexiLingo。",
+    "status": {
+      "checking": "正在检查你的 AI...",
+      "device": "在这台电脑上：{{model}}",
+      "openai": "你的 OpenAI 密钥：{{model}}",
+      "anthropic": "你的 Anthropic 密钥：{{model}}",
+      "compatible": "你的服务器 {{url}}：{{model}}"
+    },
+    "test": "测试",
+    "testOk": "可以使用。{{model}} 回答：{{reply}}",
+    "modelPicker": "这台电脑上的模型",
+    "manageModels": "下载或删除模型",
+    "hideModels": "隐藏模型",
+    "change": "使用其他 AI",
+    "cancelChange": "取消",
+    "cloudTitle": "使用 FlexiLingo 云端 AI",
+    "cloudDesc": "默认关闭。开启后，单词分析和考试分析由 FlexiLingo 的服务器生成，而不是你自己的 AI。其他功能仍使用你的 AI。",
+    "cloudNeedsSignIn": "登录付费方案后才能开启。",
+    "cloudNeedsPaid": "仅限付费方案。",
+    "cloudInactive": "已开启但未生效：需要登录并拥有付费方案。",
+    "cloudActive": "已用于单词分析和考试分析。"
+  },
+  "wizard": {
+    "ownKeyLink": "改用我自己的密钥（OpenAI、Anthropic 或其他服务器）",
+    "ownKeyReady": "你自己的 AI 密钥已设置好，可以开始了。"
+  },
+  "engine": {
+    "checking": "正在检查本地 AI 引擎（Ollama）...",
+    "notInstalledTitle": "尚未安装 Ollama",
+    "notInstalledDesc": "Ollama 是运行在你电脑上的免费开源 AI 引擎。一键即可安装。",
+    "download": "约 120 MB 下载",
+    "install": "安装 Ollama",
+    "installing": "正在安装 Ollama...",
+    "downloadingBytes": "正在下载... {{done}} / {{total}}",
+    "notRunningTitle": "Ollama 已安装但没有运行",
+    "foundAtSystem": "在 {{path}} 找到系统安装",
+    "foundAt": "安装在 {{path}}",
+    "notRunningDesc": "启动 Ollama 以开启 AI 功能。",
+    "start": "启动 Ollama",
+    "starting": "正在启动 Ollama...",
+    "waiting": "正在等待 Ollama 就绪...",
+    "connected": "已连接",
+    "connectedVersion": "已连接（v{{version}}）",
+    "system": "系统",
+    "managed": "托管",
+    "stop": "停止 Ollama",
+    "refresh": "刷新",
+    "search": "搜索模型...",
+    "installedModels": "已安装的模型",
+    "noModels": "还没有安装模型。请从下方下载一个开始使用。",
+    "recommended": "推荐模型",
+    "custom": "下载自定义模型",
+    "customPlaceholder": "例如 codellama:7b",
+    "pull": "下载",
+    "active": "使用中",
+    "use": "使用",
+    "delete": "删除模型",
+    "readyTitle": "Ollama 已就绪",
+    "installedList": "已安装的模型：{{models}}",
+    "chooseTitle": "选择一个 AI 模型",
+    "chooseDesc": "小模型更快，大模型更强。",
+    "downloadModel": "下载 {{model}}",
+    "downloadModelGeneric": "下载模型",
+    "downloadingModel": "正在下载 {{model}}...",
+    "errorTitle": "出了点问题",
+    "skip": "暂时跳过",
+    "skipped": "你可以稍后在设置中设置 AI。",
+    "heading": "AI 助手",
+    "intro": "桌面版使用 AI 帮助你学习。它在你自己的电脑上运行，或使用你自己的密钥。",
+    "speed": {
+      "Fast": "快",
+      "Medium": "中等",
+      "Slow": "慢"
+    },
+    "accuracy": {
+      "Good": "良好",
+      "VeryGood": "很好",
+      "Excellent": "出色"
+    },
+    "models": {
+      "llama3_2": "速度快，多语言支持出色。适合大多数人的最佳平衡。",
+      "llama3_1_8b": "推理和语法纠正更强。非常适合辅导。",
+      "gemma3_4b": "Google 模型，多语言能力强。适合词汇练习。",
+      "mistral": "对欧洲语言（法语、德语、西班牙语）支持强。速度快。",
+      "phi4_mini": "Microsoft 精简模型。回答迅速，适合会话练习。",
+      "qwen3_8b": "最适合中文、阿拉伯语和亚洲语言。阿里巴巴模型。",
+      "aya_expanse_8b": "Cohere 模型，训练覆盖 23 种以上语言。专为多语言任务打造。",
+      "llama3_1_70b": "能力最强。需要 48 GB 以上内存。语法和写作反馈最佳。"
+    },
+    "dismiss": "关闭"
+  }
+}

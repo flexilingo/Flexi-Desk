@@ -71,7 +71,7 @@ export function ExamPickerView() {
             </div>
             {history.some((h) => h.bestBand) && (
               <div className="flex items-center gap-1">
-                <Trophy className="h-4 w-4 text-[#C58C6E]" />
+                <Trophy className="h-4 w-4 text-warning" />
                 <span className="text-sm font-medium text-foreground">
                   {history.find((h) => h.bestBand)?.bestBand}
                 </span>

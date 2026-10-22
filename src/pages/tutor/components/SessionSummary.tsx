@@ -13,8 +13,8 @@ interface SessionSummaryProps {
 
 const borderColorByType: Record<CorrectionType, string> = {
   grammar: 'border-l-primary',
-  spelling: 'border-l-[#C58C6E]',
-  word_choice: 'border-l-[#8BB7A3]',
+  spelling: 'border-l-warning',
+  word_choice: 'border-l-success',
   word_order: 'border-l-muted',
 };
 
@@ -22,8 +22,8 @@ export function SessionSummary({ summary, onStartNew, onSaveAllVocab }: SessionS
   return (
     <Card className="mx-auto max-w-2xl">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#8BB7A3]/20">
-          <Trophy className="h-6 w-6 text-[#8BB7A3]" />
+        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
+          <Trophy className="h-6 w-6 text-success" />
         </div>
         <CardTitle className="text-xl">Session Complete!</CardTitle>
       </CardHeader>
@@ -68,12 +68,8 @@ export function SessionSummary({ summary, onStartNew, onSaveAllVocab }: SessionS
                   <p className="text-sm text-muted-foreground line-through">
                     ❌ {correction.original}
                   </p>
-                  <p className="text-sm font-medium text-foreground">
-                    ✅ {correction.corrected}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    💡 {correction.explanation}
-                  </p>
+                  <p className="text-sm font-medium text-foreground">✅ {correction.corrected}</p>
+                  <p className="text-sm text-muted-foreground">💡 {correction.explanation}</p>
                 </div>
               ))}
             </div>

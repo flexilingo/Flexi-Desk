@@ -5,7 +5,8 @@
     "signIn": "Sign in",
     "retry": "Try again",
     "libraryFailed": "The library could not be loaded right now. Your documents are not affected.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "kindText": "Text"
   },
   "errors": {
     "PDF_PASSWORD_PROTECTED": "This PDF is password protected.",
@@ -29,10 +30,24 @@
     "DOCUMENT_CREATE_FAILED": "The file could not be saved on this computer.",
     "INVALID_FILE": "This photo could not be read.",
     "OCR_ENGINE_FAILED": "The reading engine could not start on this computer.",
-    "OCR_LANGUAGE_DOWNLOAD_FAILED": "The reading data for this language could not be downloaded. Check the connection and try again."
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "The reading data for this language could not be downloaded. Check the connection and try again.",
+    "BOOK_NOT_FOUND": "This book could not be found.",
+    "PAGE_NOT_FOUND": "This page could not be found.",
+    "PAGE_FETCH_FAILED": "This page could not be loaded.",
+    "EMPTY_TEXT": "There is no text to add.",
+    "TEXT_TOO_LONG": "This text is too long to add. Split it into parts.",
+    "INVALID_URL": "This is not a web address. It should start with https://",
+    "URL_FETCH_FAILED": "The page could not be fetched. Check the address and your connection.",
+    "URL_NOT_TEXT": "This address is not a web page with text.",
+    "URL_TOO_LARGE": "This page is too large to add.",
+    "URL_NO_TEXT": "No readable text was found on this page."
   },
   "upload": {
-    "hint": "PDF, JPG, PNG or WebP. No size limit.",
+    "hint": {
+      "file": "PDF, JPG, PNG or WebP. No size limit.",
+      "text": "Paste any text you want to read. It is split into pages and stays on this computer.",
+      "url": "Paste the address of a web page. Its text is fetched and kept on this computer."
+    },
     "filterName": "PDF and photos",
     "privacy": "Stays on this computer. Nothing is uploaded.",
     "submitting": "Adding...",
@@ -40,17 +55,23 @@
     "dropHere": "Drop to add to your reading",
     "duplicate": {
       "again": "Add a new copy"
-    }
-  },
-  "soon": {
-    "book": {
-      "title": "Library books"
     },
-    "library": {
-      "title": "The library"
+    "mode": {
+      "file": "File",
+      "text": "Paste text",
+      "url": "From a web page"
     },
-    "body": "Reading library books on the desktop arrives in a later update. Your own documents work now.",
-    "back": "Back to your reading"
+    "text": {
+      "label": "Text",
+      "placeholder": "Paste or type the text here",
+      "title": "Title (optional)",
+      "titlePlaceholder": "Taken from the first line if left empty"
+    },
+    "url": {
+      "label": "Web page address",
+      "autoLanguage": "Detect from the page"
+    },
+    "privacyUrl": "The page is fetched by this computer and kept here."
   },
   "ocr": {
     "downloading": "Downloading the reading data for {{language}}… {{percent}}%",
@@ -64,5 +85,27 @@
     "list": "Bulleted list",
     "preview": "Preview",
     "write": "Edit"
+  },
+  "library": {
+    "level": "Level",
+    "levelName": {
+      "A1": "Beginner",
+      "A2": "Elementary",
+      "B1": "Intermediate",
+      "B2": "Upper intermediate",
+      "C1": "Advanced",
+      "C2": "Proficiency"
+    },
+    "clearAll": "Clear all",
+    "pages": "Pages",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "pageN": "Page {{n}}"
+  },
+  "language": {
+    "set": "Language set to {{language}}",
+    "change": "Change",
+    "dismiss": "Dismiss",
+    "detected": "Detected from the text: {{language}}"
   }
 }

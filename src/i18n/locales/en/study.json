@@ -22,7 +22,19 @@
     "focusLabel": "Focus",
     "daysWithoutReview": "{{days}} days without review",
     "settings": "Settings",
-    "preparing": "Preparing your plan…"
+    "preparing": "Preparing your plan…",
+    "mode": {
+      "normal": "Normal",
+      "shadowing": "Shadowing"
+    },
+    "modeHint": {
+      "normal": "Exercises that test you and plan your next reviews.",
+      "shadowing": "Cards play by themselves: hear each word and say it back. No grading."
+    },
+    "modeLabel": "Study mode",
+    "startShadowing": "Start shadowing",
+    "stuckCards": "{{count}} stuck cards",
+    "stuckCardsHint": "Practice these cards until they stop slipping"
   },
   "deckList": {
     "title": "Your decks",
@@ -61,7 +73,10 @@
     "focus": "Focus",
     "force": "Cram (include cards not due yet)",
     "start": "Start",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "forceHint": "Pull this deck's cards forward even if they're scheduled for later (cram).",
+    "random": "Random",
+    "randomDesc": "All cards, shuffled — no scheduling"
   },
   "focus": {
     "balanced": "Balanced",
@@ -138,7 +153,12 @@
     "delayDescription": "Seconds to wait before speaking.",
     "voiceAccent": "Voice",
     "save": "Save",
-    "close": "Close"
+    "close": "Close",
+    "deckSearchPlaceholder": "Search decks…",
+    "deckSearchNoResults": "No decks match \"{{query}}\".",
+    "deckSearchTunedOnly": "Tuned only",
+    "deckSearchResetAll": "Reset all to 1×",
+    "deckSearchClear": "Clear search"
   },
   "activity": {
     "recall": "Flashcard",
@@ -148,7 +168,9 @@
     "speak_test": "Say it",
     "use_in_sentence": "Use in a sentence",
     "synonym_discrim": "Pick the synonym",
-    "mini_reading": "Mini reading"
+    "mini_reading": "Mini reading",
+    "fromDeck": "From deck {{deck}}",
+    "activityType": "Activity"
   },
   "activityDesc": {
     "recall": "Flip the card and rate how well you knew it.",
@@ -191,7 +213,119 @@
       "learning": "Learning",
       "review": "Review"
     },
-    "hint": "Hint"
+    "hint": "Hint",
+    "stop": "Stop",
+    "elapsed": "Elapsed",
+    "abandonConfirm": "Stop this practice session?",
+    "loading": "Loading…",
+    "preparingSession": "Preparing session…",
+    "doneTitle": "Practice session done",
+    "card": "Cards",
+    "recallRate": "Recall rate",
+    "elapsedLabel": "Time",
+    "feedbackOptimal": "Excellent — you're in the optimal range (85–90%).",
+    "feedbackGood": "Good — add slightly fewer new cards.",
+    "feedbackWeak": "Many hard cards — reduce new card count.",
+    "feedbackEmpty": "Session ended without any reviews.",
+    "optimalRange": "Optimal: 85–90%",
+    "noAttempts": "No cards completed",
+    "noAttemptsHint": "This session ended without any reviews. Start another to begin.",
+    "back": "Back to dashboard",
+    "reviewBanner": "Previous card — review only",
+    "continuePractice": "Continue",
+    "abandonConfirmDesc": "Your answers so far are saved — only the remaining cards will be skipped.",
+    "requeueBadge": "Repeat #{{count}}",
+    "repeatsAdded": "+{{count}}",
+    "requeueHint": "New cards and wrong answers come back once more before this session ends — that's why the total grows.",
+    "settings": "Settings",
+    "settingsTitle": {
+      "normal": "Normal study settings",
+      "shadowing": "Shadowing settings"
+    },
+    "textSize": "Text size",
+    "textSizeOption": {
+      "compact": "Compact",
+      "comfortable": "Comfortable",
+      "large": "Large",
+      "huge": "Extra large"
+    },
+    "focusMode": "Focus mode (fullscreen)",
+    "exitFocusMode": "Exit focus mode",
+    "shortcuts": {
+      "replayWord": "Replay word",
+      "prevExample": "Previous example",
+      "playExample": "Play example",
+      "exampleOf": "Example {{index}}/{{total}}",
+      "showMeaning": "Show meaning",
+      "hideMeaning": "Hide meaning",
+      "layoutExamples": "Examples first",
+      "layoutMeaning": "Meaning first",
+      "flip": "reveal",
+      "grade": "grade",
+      "exitFocus": "exit",
+      "showExampleMeaning": "Show example meaning",
+      "hideExampleMeanings": "Hide example meanings"
+    },
+    "cardView": "What the card shows",
+    "cardViewOption": {
+      "showWord": "Show the word",
+      "showMeaning": "Show the meaning",
+      "showExampleMeanings": "Show example meanings"
+    },
+    "cardViewHint": {
+      "showWord": "Off: listen first — the reveal brings the word and its meaning together.",
+      "showMeaning": "Off: the meaning stays masked and the examples come first.",
+      "showExampleMeanings": "Off: uncover each sentence translation yourself."
+    },
+    "shortcutsTitle": "Keyboard shortcuts",
+    "shortcutList": {
+      "flip": "Reveal / hide the answer",
+      "grade": "Grade the card",
+      "nextExample": "Next example",
+      "exampleMeaning": "Uncover one example meaning",
+      "meaning": "Show / hide the meaning",
+      "toggleMeaningPref": "Meaning on or off for every card",
+      "moreInFocus": "Focus mode adds more shortcuts."
+    },
+    "viewMenu": "Display",
+    "audio": "Audio",
+    "autoPronounce": "Auto-pronounce",
+    "autoPronounceHint": "Next card is read automatically",
+    "voiceAccent": "English accent",
+    "voiceAccentHint": "For English words, in both modes.",
+    "voiceAccentOption": {
+      "us": "American",
+      "uk": "British"
+    },
+    "exitFocus": "Exit fullscreen",
+    "reverseCard": "Reverse direction",
+    "reverseCardHint": "On: the two sides of the card swap — a flashcard shows the meaning and you recall the word.",
+    "pronounceWordOnReveal": "Read the word on flip",
+    "pronounceWordOnRevealHint": "The word is on the back now — it is read aloud as you flip the card.",
+    "pronunciationSettings": "Pronunciation settings",
+    "pronunciationTitle": "Pronunciation",
+    "pronunciationSub": "The voice that reads words aloud — here and everywhere on FlexiLingo. Pick one and you hear it straight away.",
+    "reverseCardError": "Couldn't save this setting. Try again.",
+    "normalSetupTitle": "Set up your study",
+    "normalSetupSub": "Choose what the card shows, then press Start.",
+    "clickToReveal": "Click or press Space to reveal",
+    "hiddenWord": "Word hidden",
+    "listenThenReveal": "Listen, then click or press Space",
+    "translationLabel": "Translation",
+    "hideMeaning": "Hide meaning",
+    "revealMeaning": "Show meaning",
+    "corrections": "Corrections",
+    "grading": "Checking…",
+    "useInSentence": "Use this word in a sentence",
+    "kind": {
+      "spelling": "spelling",
+      "grammar": "grammar"
+    },
+    "typeIn": "Type the word in {{language}}",
+    "typeWord": "Type the word",
+    "placeholderIn": "Word in {{language}}…",
+    "nearAccent": "So close — only an accent is off.",
+    "nearTypo": "So close — just one letter off."
   },
   "complete": {
     "title": "Session complete",
@@ -208,7 +342,9 @@
     "newlyMastered": "Mastered",
     "duesReviewed": "Reviews done",
     "xpEarned": "XP earned",
-    "xpHint": "Added to your streak and daily goal."
+    "xpHint": "Added to your streak and daily goal.",
+    "reviewAgain": "Review again",
+    "tomorrowShort": "Tomorrow"
   },
   "errors": {
     "NO_CARDS_FOR_SELECTION": "No cards match that selection. Try a different scope.",
@@ -224,5 +360,227 @@
     "collocations": "Collocations",
     "commonMistakes": "Common mistakes",
     "notes": "Notes"
+  },
+  "shadowing": {
+    "empty": "This session has no words to shadow yet.",
+    "readyTitle": "Set up your run",
+    "idle": "Press Start — listen, then say the word back.",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "reset": "Reset",
+    "settings": "Shadowing settings",
+    "wordCount": "{{count}} words",
+    "round": "round {{pass}}",
+    "elapsed": "Time spent playing",
+    "listenOf": "listen {{n}} of {{total}}",
+    "meaning": "meaning",
+    "recall": "recall the meaning",
+    "shuffle": "Shuffle",
+    "speakMeaning": "Read the meaning aloud",
+    "speakMeaningHint": "The meaning is read in the language it is written in.",
+    "meaningMode": "Meaning",
+    "meaningOption": {
+      "always": "Always",
+      "after": "After you say it",
+      "hidden": "Hidden"
+    },
+    "meaningHint": {
+      "always": "The meaning is on the card with the word.",
+      "after": "Hear the word, recall its meaning in the pause, then see it.",
+      "hidden": "Only the word — the meaning stays covered."
+    },
+    "showWordHint": "Off: listen only — the word stays covered.",
+    "gap": "Pause to repeat",
+    "gapHint": "This pause is the practice — long enough to say the word back before the next one.",
+    "gapNone": "No pause",
+    "gapOffHint": "Not used now: the run waits after each word until you tap Next.",
+    "autoAdvance": "Move on by itself",
+    "autoAdvanceHint": "Off: the run waits after each word until you tap Next, for as long as you need.",
+    "replay": "Hear it again",
+    "next": "Next",
+    "repeatEach": "Times per word",
+    "repeatEachHint": "Twice works well: hear it, say it back, hear it again to correct yourself.",
+    "repeatMore": "Repeat more",
+    "repeatLess": "Repeat less",
+    "rounds": "Rounds",
+    "roundsInfinite": "Repeat until stopped",
+    "hiddenWord": "Word hidden",
+    "hiddenMeaning": "Meaning hidden",
+    "size": "Words per run",
+    "sizeAll": "All",
+    "doneTitle": "Run finished",
+    "doneSub": "Words heard and time actually spent playing.",
+    "doneWords": "words",
+    "doneTime": "time",
+    "again": "Go again",
+    "done": "Done",
+    "loadFailed": "The words for this run could not be loaded.",
+    "retry": "Try again",
+    "groupRepeat": "Repeat and pause",
+    "groupRun": "Words and rounds",
+    "gapSeconds": "Pause, in seconds",
+    "secondsUnit": "s",
+    "reportFailed": "This run's progress could not be saved on this computer."
+  },
+  "report": {
+    "headlineMastered": "{{count}} words moved into long-term memory",
+    "headlineRecalled": "{{count}} words recalled by the end",
+    "headlinePlain": "{{count}} words practised",
+    "factSeen": "{{count}} seen",
+    "factFirstTry": "{{percent}}% first try",
+    "factActive": "{{time}} active",
+    "durationHm": "{{hours}}h {{minutes}}m",
+    "durationM": "{{minutes}}m",
+    "recallTitle": "Recall",
+    "firstTry": "Right first try",
+    "byTheEnd": "Right by the end",
+    "attemptsNote": "{{attempts}} attempts across {{cards}} words — {{avg}} per word",
+    "gapNote": "{{count}} turned around during the session",
+    "strugglesTitle": "What fought back",
+    "strugglesNote": "{{count}} words took 3+ tries",
+    "drillWeak": "Drill weak words",
+    "forecastTitle": "When they come back",
+    "today": "Today",
+    "inDays": "+{{count}}d",
+    "levelsTitle": "By level",
+    "levelsNote": "levelled words only",
+    "missed": "missed",
+    "decksTitle": "Where they came from"
+  },
+  "tour": {
+    "guideButton": "Guide",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip",
+    "done": "Done",
+    "stepOf": "Step {{current}} of {{total}}",
+    "steps": {
+      "intro": {
+        "title": "Welcome to Study",
+        "body": "Let's take a quick tour — what each setting does and how to get the most out of your sessions."
+      },
+      "hero": {
+        "title": "Today's practice",
+        "body": "Shows how many cards are left and how many minutes it'll take. Tap Start to begin your smart daily mix."
+      },
+      "heroShortcuts": {
+        "title": "How you study",
+        "body": "Normal: exercises that test you and plan your next reviews. Shadowing: cards play by themselves — hear each word and say it back, nothing is graded. Focus tunes the exercise mix of normal study."
+      },
+      "deckList": {
+        "title": "Your decks",
+        "body": "Every deck you're studying, with its health status and mastery. Use the tabs to filter by what needs attention."
+      },
+      "deckCard": {
+        "title": "Start a single deck",
+        "body": "Tap Start on any deck to choose exactly what to study from it."
+      },
+      "scopeOptions": {
+        "title": "What to study",
+        "body": "Pick a scope: everything due now, only new words, words you keep getting wrong, or a random shuffle."
+      },
+      "scopeFocus": {
+        "title": "Focus",
+        "body": "Choose which kind of exercises to lean on — listening, production, recognition, or your own custom mix."
+      },
+      "scopeForce": {
+        "title": "Cram mode",
+        "body": "Turn this on to review a deck's cards even before they're officially due."
+      },
+      "scopeStart": {
+        "title": "Start studying",
+        "body": "Kicks off the session with everything you picked above."
+      },
+      "settingsTabs": {
+        "title": "Settings",
+        "body": "All your Study preferences live here, across three tabs: Pace & Decks, Activities, and Preferences."
+      },
+      "settingsDuration": {
+        "title": "Daily target",
+        "body": "How many minutes you want to study each day — this shapes how many cards your daily plan pulls in."
+      },
+      "settingsDeckStrategy": {
+        "title": "Deck strategy",
+        "body": "Mix studies all decks together, Single deck studies one at a time, and Rotation picks whichever deck has been neglected longest."
+      },
+      "settingsDeckWeights": {
+        "title": "Deck weights",
+        "body": "Give a deck more or less priority in the daily mix — higher means more of its cards show up."
+      },
+      "settingsFocusChips": {
+        "title": "Exercise mix",
+        "body": "Pick a Focus preset and watch the bar below show exactly how your session mix changes."
+      },
+      "settingsActivityList": {
+        "title": "Fine-tune each exercise",
+        "body": "Turn any exercise type on or off and adjust its weight — the share on the right shows its slice of the mix."
+      },
+      "settingsSrs": {
+        "title": "Spaced-repetition algorithm",
+        "body": "Choose how review intervals are calculated — Leitner, SM-2, or FSRS (the default, and usually the smartest)."
+      },
+      "settingsAutoRead": {
+        "title": "Auto-read",
+        "body": "Have each card read aloud automatically, and pick a US or UK voice."
+      },
+      "outro": {
+        "title": "That's it!",
+        "body": "You now know your way around Study. Reopen this tour anytime from the Guide button next to Settings."
+      }
+    }
+  },
+  "summary": "Summary",
+  "mode": "Mode",
+  "scorecard": {
+    "title": "AI check",
+    "criteria": {
+      "meaning": "Meaning",
+      "grammar": "Grammar",
+      "spelling": "Spelling",
+      "elision": "Elision"
+    },
+    "why": {
+      "meaning": {
+        "pass": "It says what the card asked for.",
+        "fail": "It doesn't say what the card asked for."
+      },
+      "grammar": {
+        "pass": "The grammar is correct.",
+        "fail": "There is a grammar mistake."
+      },
+      "spelling": {
+        "pass": "Spelled correctly.",
+        "near": "Right word — check an accent.",
+        "fail": "A spelling slip."
+      },
+      "elision": {
+        "pass": "Elisions are made.",
+        "fail": "An elision is missing — a word that must contract was written out in full (for example me aider instead of m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Formal register — right for a letter or a stranger.",
+      "neutral": "Neutral register — fits almost anywhere.",
+      "informal": "Informal register — perfect for a text to a friend."
+    },
+    "natural": {
+      "yes": "Sounds natural — a native speaker would say it this way.",
+      "no": "Correct, but a native speaker would put it differently."
+    },
+    "error": {
+      "gender_agreement": "Looks like a gender or number agreement slip.",
+      "verb_conjugation": "Check the verb's form or tense.",
+      "word_order": "Check the word order.",
+      "preposition_or_article": "Check the preposition or article.",
+      "spelling_or_accent": "Check the spelling.",
+      "negation": "Check the negation.",
+      "wrong_word": "One word doesn't fit the meaning.",
+      "avoir_expression": "French says avoir here, not être: j'ai faim, quel âge avez-vous ?"
+    },
+    "needsAi": "No scorecard this time: set up your own AI in Settings and your sentences get one."
+  },
+  "conjugation": {
+    "title": "Conjugation"
   }
 }
