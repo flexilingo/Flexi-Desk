@@ -314,7 +314,11 @@ export function LibraryBrowser({
                 </p>
                 <p className="mt-0.5 truncate text-[12px] text-muted-foreground" dir="auto">
                   {book.series_title && book.series_order
-                    ? `${book.series_title} · ${t('catalog.episode', { n: book.series_episode ?? book.series_order })}`
+                    ? `${book.series_title} · ${
+                        book.series_season != null
+                          ? t('series.seasonEpisode', { season: book.series_season, n: book.series_episode ?? book.series_order })
+                          : t('catalog.episode', { n: book.series_order })
+                      }`
                     : book.author}
                 </p>
                 <p className="mt-1 text-[11.5px] font-semibold text-primary">

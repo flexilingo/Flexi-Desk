@@ -92,7 +92,13 @@
     "seasonNav": "Saisons",
     "loginNote": "La première page de chaque épisode est gratuite. La suite est gratuite avec un compte.",
     "listHeading": "Histoires en épisodes",
-    "open": "Voir tous les épisodes"
+    "open": "Voir tous les épisodes",
+    "continue": "Continuer : {{label}}",
+    "startOver": "Recommencer à l'épisode 1",
+    "readMark": "Lu",
+    "orderNote": "Vous êtes à : {{label}}. L'histoire commence à l'épisode 1.",
+    "orderNoteLink": "Commencer à l'épisode 1",
+    "close": "Fermer"
   },
   "pagination": {
     "showing": "Affichage de {{start}} à {{end}} sur {{total}}",

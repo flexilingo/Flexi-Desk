@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, BookOpen, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CefrBadge } from '@/components/common/CefrBadge';
-import { getLibrarySeries, type LibrarySeriesPage } from '../services/libraryService';
+import { useAuthStore } from '@/stores/authStore';
+import { getLibraryShelf, getLibrarySeries, type LibrarySeriesPage } from '../services/libraryService';
+import { continueTarget, EMPTY_PROGRESS, progressFromShelf, type SeriesProgress } from './series-progress';
 import { useReaderErrorText } from '../lib/use-error-text';
 import { ReaderShell } from '../components/ReaderShell';
 import { BookCover } from './BookCover';
@@ -29,6 +31,24 @@ export function SeriesPage() {
   const errorText = useReaderErrorText();
   const [data, setData] = useState<LibrarySeriesPage | null>(null);
   const [error, setError] = useState<unknown>(null);
+  // Where the reader is in this series (signed in: the shelf). Only guides, never locks.
+  const signedIn = !!useAuthStore((s) => s.session);
+  const [progress, setProgress] = useState<SeriesProgress>(EMPTY_PROGRESS);
+
+  useEffect(() => {
+    if (!signedIn) {
+      setProgress(EMPTY_PROGRESS);
+      return;
+    }
+    let cancelled = false;
+    getLibraryShelf()
+      .then((r) => !cancelled && setProgress(progressFromShelf(r.items, language, slug)))
+      // No shelf, no progress: the page still lists every episode.
+      .catch(() => !cancelled && setProgress(EMPTY_PROGRESS));
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn, language, slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +98,11 @@ export function SeriesPage() {
   const episodes = seasons.flatMap((s) => s.episodes);
   const first = episodes[0];
   const showSeasons = seasons.length > 1 || (seasons[0]?.number ?? 1) > 1;
+  const resume = continueTarget(episodes, progress);
+  const labelOf = (e: (typeof episodes)[number]) =>
+    showSeasons
+      ? t('series.seasonEpisode', { season: e.series_season, n: e.series_episode ?? e.series_order })
+      : t('catalog.episode', { n: e.series_order });
 
   return (
     <ReaderShell>
@@ -110,7 +135,23 @@ export function SeriesPage() {
             {t('series.episodes', { count: series.episode_count })}
             {showSeasons ? <> · {t('series.seasons', { count: seasons.length })}</> : null}
           </p>
-          {first && (
+          {first && resume ? (
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Button asChild variant="accent">
+                <Link to={bookReadPath(resume.id)}>
+                  <BookOpen className="h-4 w-4" />
+                  {t('series.continue', { label: labelOf(resume) })}
+                  <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Link
+                to={bookReadPath(first.id)}
+                className="text-sm font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                {t('series.startOver')}
+              </Link>
+            </div>
+          ) : first ? (
             <Button asChild variant="accent" className="mt-4">
               <Link to={bookReadPath(first.id)}>
                 <BookOpen className="h-4 w-4" />
@@ -118,7 +159,7 @@ export function SeriesPage() {
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
-          )}
+          ) : null}
         </div>
       </header>
 
@@ -200,7 +241,18 @@ export function SeriesPage() {
                     )}
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-1">
-                    <CefrBadge level={e.level} />
+                    <span className="inline-flex items-center gap-1.5">
+                      {e.series_order && progress.finished.has(e.series_order) ? (
+                        <span
+                          className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success/15 text-success"
+                          title={t('series.readMark')}
+                          aria-label={t('series.readMark')}
+                        >
+                          <Check className="h-3 w-3" />
+                        </span>
+                      ) : null}
+                      <CefrBadge level={e.level} />
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {t('catalog.minutes', { n: readingMinutes(e.word_count) })}
                     </span>

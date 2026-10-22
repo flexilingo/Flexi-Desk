@@ -92,7 +92,13 @@
     "seasonNav": "Seasons",
     "loginNote": "Page 1 of every episode is free. The rest is free with an account.",
     "listHeading": "Stories in episodes",
-    "open": "See all episodes"
+    "open": "See all episodes",
+    "continue": "Continue: {{label}}",
+    "startOver": "Start again from episode 1",
+    "readMark": "Read",
+    "orderNote": "This is {{label}}. The story starts with episode 1.",
+    "orderNoteLink": "Start from episode 1",
+    "close": "Close"
   },
   "pagination": {
     "showing": "Showing {{start}} to {{end}} of {{total}}",

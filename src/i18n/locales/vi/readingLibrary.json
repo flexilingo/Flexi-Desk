@@ -88,7 +88,13 @@
     "seasonNav": "Các phần",
     "loginNote": "Trang đầu của mỗi tập là miễn phí. Phần còn lại miễn phí khi có tài khoản.",
     "listHeading": "Truyện nhiều tập",
-    "open": "Xem tất cả các tập"
+    "open": "Xem tất cả các tập",
+    "continue": "Đọc tiếp: {{label}}",
+    "startOver": "Đọc lại từ tập 1",
+    "readMark": "Đã đọc",
+    "orderNote": "Đây là {{label}}. Câu chuyện bắt đầu từ tập 1.",
+    "orderNoteLink": "Bắt đầu từ tập 1",
+    "close": "Đóng"
   },
   "pagination": {
     "showing": "Hiển thị {{start}} đến {{end}} trong số {{total}}",

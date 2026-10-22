@@ -88,7 +88,13 @@
     "seasonNav": "各季",
     "loginNote": "每一集的第一页免费，其余内容注册账号后免费阅读。",
     "listHeading": "连载故事",
-    "open": "查看全部剧集"
+    "open": "查看全部剧集",
+    "continue": "继续阅读：{{label}}",
+    "startOver": "从第 1 集重新开始",
+    "readMark": "已读",
+    "orderNote": "这是{{label}}。故事从第 1 集开始。",
+    "orderNoteLink": "从第 1 集开始",
+    "close": "关闭"
   },
   "pagination": {
     "showing": "显示第 {{start}} 到 {{end}} 项，共 {{total}} 项",

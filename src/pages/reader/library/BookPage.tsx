@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Lock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
@@ -28,6 +28,8 @@ import { ReaderFrame } from '../text/ReaderFrame';
 import { ReaderTextScreen } from '../text/ReaderTextScreen';
 import { useReaderPager } from '../text/useReaderPager';
 import { bookReadPath, languageName, seriesReadPath } from './format';
+import { EMPTY_PROGRESS, orderNoteSettingKey, progressFromShelf, showOrderNote, type SeriesProgress } from './series-progress';
+import type { LibraryShelfItem } from '../services/libraryService';
 import { seriesSupported, subscribeSeriesSupport } from './library-capability';
 import {
   hasSeasons,
@@ -76,6 +78,9 @@ export function BookPage() {
     ready: false,
     onShelf: false,
   });
+  // The shelf as it was when the book opened — for "was the episode before this one opened?".
+  const [shelfItems, setShelfItems] = useState<LibraryShelfItem[] | null>(null);
+  const [noteClosed, setNoteClosed] = useState<boolean | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +105,7 @@ export function BookPage() {
       getLibraryShelf()
         .then((r) => {
           const item = r.items.find((i) => i.book_id === bookId);
+          if (!cancelled) setShelfItems(r.items);
           done(item?.last_page, !!item);
         })
         // A shelf that will not load costs the resume point, never the book.
@@ -113,6 +119,20 @@ export function BookPage() {
       cancelled = true;
     };
   }, [bookId, signedIn, authLoading]);
+
+  // The note stays closed for the whole series once the reader closes it.
+  const seriesKey = detail?.book.series_slug ? orderNoteSettingKey(detail.book.language, detail.book.series_slug) : null;
+  useEffect(() => {
+    if (!seriesKey) return;
+    let cancelled = false;
+    setNoteClosed(null);
+    getSetting(seriesKey)
+      .then((raw) => !cancelled && setNoteClosed(raw === '1'))
+      .catch(() => !cancelled && setNoteClosed(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [seriesKey]);
 
   // Opening a book is starting it: it goes on the shelf once, quietly, so it is waiting under
   // "My reading" next time.
@@ -199,6 +219,23 @@ export function BookPage() {
         : tl('catalog.episode', { n: book.series_order })
       : null;
   const seriesList = detail?.series ?? [];
+  // An episode opened out of order gets a quiet note: the story starts at episode 1. Never a
+  // lock — someone practising one exam task opens that episode directly. Signed in only: the
+  // shelf is what knows which episodes were opened.
+  const progress: SeriesProgress =
+    withSeries && book.series_slug && shelfItems
+      ? progressFromShelf(shelfItems, book.language, book.series_slug)
+      : EMPTY_PROGRESS;
+  const firstEpisode = readingOrder(seriesList)[0];
+  const orderNote =
+    withSeries &&
+    signedIn &&
+    !!shelfItems &&
+    noteClosed === false &&
+    !!book.series_slug &&
+    !!firstEpisode &&
+    firstEpisode.id !== book.id &&
+    showOrderNote(book.series_order, progress);
   const sameSeason = readingOrder(seriesList).filter((e) => seasonOf(e) === seasonOf(book));
 
   return (
@@ -232,11 +269,38 @@ export function BookPage() {
           ) : undefined
         }
         pageAbove={
-          pager.chapterTitle ? (
-            <h2 className="mb-4 text-lg font-bold text-foreground" dir="auto" lang={book.language}>
-              {pager.chapterTitle}
-            </h2>
-          ) : null
+          <>
+            {orderNote && pager.page === 1 && episodeLabel ? (
+              <div className="mb-5 flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/[0.08] px-4 py-3">
+                <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
+                  {tl('series.orderNote', { label: episodeLabel })}{' '}
+                  <Link
+                    to={bookReadPath(firstEpisode!.id)}
+                    className="font-semibold text-primary underline-offset-2 hover:underline"
+                  >
+                    {tl('series.orderNoteLink')}
+                  </Link>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNoteClosed(true);
+                    if (seriesKey) setSetting(seriesKey, '1').catch(() => {});
+                  }}
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label={tl('series.close')}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : null}
+            {pager.chapterTitle ? (
+              <h2 className="mb-4 text-lg font-bold text-foreground" dir="auto" lang={book.language}>
+                {pager.chapterTitle}
+              </h2>
+            ) : null}
+          </>
         }
         // The end of a book is a moment, not one more page: it says so, names what comes next,
         // and the dead Next button gives its place to it.

@@ -103,7 +103,13 @@
     "seasonNav": "المواسم",
     "loginNote": "الصفحة الأولى من كل حلقة مجانية. والباقي مجاني بحساب.",
     "listHeading": "قصص بالحلقات",
-    "open": "عرض كل الحلقات"
+    "open": "عرض كل الحلقات",
+    "continue": "تابع: {{label}}",
+    "startOver": "ابدأ من جديد من الحلقة 1",
+    "readMark": "مقروءة",
+    "orderNote": "هذه {{label}}. تبدأ القصة من الحلقة 1.",
+    "orderNoteLink": "ابدأ من الحلقة 1",
+    "close": "إغلاق"
   },
   "pagination": {
     "showing": "عرض {{start}} إلى {{end}} من {{total}}",

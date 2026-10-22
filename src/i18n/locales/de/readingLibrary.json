@@ -92,7 +92,13 @@
     "seasonNav": "Staffeln",
     "loginNote": "Die erste Seite jeder Folge ist kostenlos. Der Rest ist mit Konto kostenlos.",
     "listHeading": "Geschichten in Folgen",
-    "open": "Alle Folgen ansehen"
+    "open": "Alle Folgen ansehen",
+    "continue": "Weiterlesen: {{label}}",
+    "startOver": "Von Folge 1 neu beginnen",
+    "readMark": "Gelesen",
+    "orderNote": "Das ist {{label}}. Die Geschichte beginnt mit Folge 1.",
+    "orderNoteLink": "Mit Folge 1 beginnen",
+    "close": "Schließen"
   },
   "pagination": {
     "showing": "{{start}} bis {{end}} von {{total}}",
