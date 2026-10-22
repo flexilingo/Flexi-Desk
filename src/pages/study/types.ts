@@ -239,6 +239,11 @@ export interface NextActivityResponse {
   } | null;
   srs_algorithm: SRSAlgorithm;
   card_progress: CardProgressSnapshot | null;
+  /**
+   * Days until the card returns for each self-rating "1".."5", from the same path a
+   * submit takes in Rust (0 = the schedule does not move). Older builds: absent.
+   */
+  predicted_intervals?: Record<string, number> | null;
   requeue_count: number;
   remaining: number;
   total: number;

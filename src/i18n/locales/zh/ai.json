@@ -41,7 +41,9 @@
     "AI_KEY_REJECTED": "服务商拒绝了这个密钥。请检查后重试。",
     "AI_RATE_LIMITED": "服务商表示你的额度暂时用完了。请稍后再试。",
     "AI_UNREACHABLE": "无法连接到你的 AI。请检查地址和网络连接。",
-    "UNKNOWN_ERROR": "你的 AI 出了点问题。请重试。"
+    "UNKNOWN_ERROR": "你的 AI 出了点问题。请重试。",
+    "AI_TIMEOUT": "你的 AI 用时太长——试试更小的模型或你自己的密钥。",
+    "AI_CANCELLED": "你已停止这次回答。"
   },
   "origin": {
     "device": "本设备",
@@ -75,7 +77,12 @@
     "cloudNeedsSignIn": "登录付费方案后才能开启。",
     "cloudNeedsPaid": "仅限付费方案。",
     "cloudInactive": "已开启但未生效：需要登录并拥有付费方案。",
-    "cloudActive": "已用于单词分析和考试分析。"
+    "cloudActive": "已用于单词分析和考试分析。",
+    "timeoutLabel": "每次回答的时限",
+    "timeoutHint": "如果你的 AI 在此时间内没有回答，请求会被停止，你可以重试。较慢的电脑可能需要更长时间。",
+    "timeoutMinutes_one": "{{count}} 分钟",
+    "timeoutMinutes_other": "{{count}} 分钟",
+    "timeoutSaveFailed": "无法保存时限，请重试。"
   },
   "wizard": {
     "ownKeyLink": "改用我自己的密钥（OpenAI、Anthropic 或其他服务器）",
@@ -145,5 +152,13 @@
       "llama3_1_70b": "能力最强。需要 48 GB 以上内存。语法和写作反馈最佳。"
     },
     "dismiss": "关闭"
+  },
+  "wait": {
+    "elapsed": "已用时 {{time}}",
+    "cancel": "取消",
+    "slowHint": "你电脑上的 AI 可能需要几分钟。超过“设置 → 你的 AI”中设定的时限后会自动停止。",
+    "timeoutHint": "较旧的电脑回答较慢。选择更小的模型、使用你自己的密钥，或在“设置 → 你的 AI”中放宽时限。",
+    "retry": "重试",
+    "openSettings": "AI 设置"
   }
 }

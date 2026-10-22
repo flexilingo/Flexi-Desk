@@ -191,9 +191,20 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
     );
   }
 
-  const sectionStatuses = detail.section_results.map((s, i) => {
-    if (i === currentSectionIndex && s.status === 'pending') return 'in_progress' as const;
-    return s.status;
+  // The sections this session holds, canonical indices in order: a practice
+  // carries only what was picked (a speaking-only run is section 1 of 1).
+  const sessionSections: number[] =
+    detail.section_results.length > 0
+      ? [...detail.section_results]
+          .sort((a, b) => a.section_index - b.section_index)
+          .map((s) => s.section_index)
+      : (session.practice_config?.sections_order ?? SECTION_TYPES.map((_, i) => i));
+
+  const sectionStatuses = sessionSections.map((index) => {
+    const row = detail.section_results.find((s) => s.section_index === index);
+    const status = row?.status ?? 'pending';
+    if (index === currentSectionIndex && status === 'pending') return 'in_progress' as const;
+    return status;
   }) as Array<'pending' | 'scoring' | 'scored' | 'in_progress'>;
 
   const currentResult = detail.section_results.find((s) => s.section_type === currentSectionType);
@@ -231,6 +242,29 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
 
   // Items/tasks this session holds in a section — shown on the intro of a
   // practice slice instead of the full paper's count (TCF copy only).
+  // Questions (listening/reading) or tasks the section really holds - the intro
+  // names this number, never a fixed figure from the copy.
+  const questionCount = (section: SectionType): number | undefined => {
+    const set = detail.exam_set;
+    if (section === 'listening')
+      return set.listening_content?.parts?.reduce((n, p) => n + (p.questions?.length ?? 0), 0);
+    if (section === 'reading')
+      return set.reading_content?.parts?.reduce((n, p) => n + (p.questions?.length ?? 0), 0);
+    if (section === 'writing') return set.writing_prompts?.tasks?.length;
+    return set.speaking_prompts?.tasks?.length;
+  };
+
+  // Speaking with no usable microphone: submit every task unanswered (the
+  // website's per-task "Skip" for the whole section) so the exam can finish.
+  const skipSpeakingSection = async (): Promise<boolean> => {
+    const tasks = detail.exam_set.speaking_prompts?.tasks ?? [];
+    const answers: Record<string, unknown> = {};
+    tasks.forEach((_, i) => {
+      answers[`task_${i}`] = '';
+    });
+    return handleSubmitSection(answers, 0, {});
+  };
+
   const heldCount = (section: SectionType): number | undefined => {
     const set = detail.exam_set;
     if (section === 'listening') return set.listening_content?.parts?.length;
@@ -324,7 +358,9 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
           requiresMic={currentSectionType === 'speaking'}
           copyPrefix={profile.sectionIntroPrefix}
           copyNs={profile.ns}
-          itemCount={isPractice ? heldCount(currentSectionType as SectionType) : undefined}
+          itemCount={isPractice ? questionCount(currentSectionType as SectionType) : undefined}
+          questionCount={questionCount(currentSectionType as SectionType)}
+          onSkipSection={currentSectionType === 'speaking' ? skipSpeakingSection : undefined}
           onStart={() => setIntroShown((prev) => new Set([...prev, currentSectionIndex]))}
         />
       );
@@ -428,7 +464,7 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-background">
       <ExamProgress
         currentSection={currentSectionIndex}
-        totalSections={4}
+        sections={sessionSections}
         sectionStatuses={sectionStatuses}
         onEndExam={openEndConfirm}
         sectionLabels={[

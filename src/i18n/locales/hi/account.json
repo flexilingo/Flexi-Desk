@@ -690,7 +690,8 @@
       "cardsReviewed": "समीक्षित कार्ड",
       "mastered": "महारत हासिल",
       "accuracyRate": "सटीकता दर",
-      "streakDays": "स्ट्रीक दिन"
+      "streakDays": "स्ट्रीक दिन",
+      "reviewStreakDays": "कार्ड रिव्यू स्ट्रीक (खाता)"
     },
     "mastered": "महारत हासिल",
     "accuracyRate": "सटीकता दर",

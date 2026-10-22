@@ -297,5 +297,29 @@
   },
   "dictionary": {
     "translationLanguage": "Übersetzungssprache"
+  },
+  "reportBug": {
+    "title": "Fehler melden",
+    "description": "Sag uns, was nicht funktioniert hat oder was du dir wünschst. Die Nachricht geht direkt an das FlexiLingo-Team.",
+    "type": "Art",
+    "types": {
+      "bug": "Etwas funktioniert nicht",
+      "feature": "Eine Idee",
+      "other": "Etwas anderes"
+    },
+    "subject": "Betreff",
+    "subjectPlaceholder": "z. B. Der Sprechteil startet nicht",
+    "subjectInvalid": "Schreibe einen Betreff mit 3 bis 200 Zeichen.",
+    "message": "Was ist passiert?",
+    "messagePlaceholder": "Was du getan hast, was du erwartet hast und was du stattdessen gesehen hast.",
+    "messageInvalid": "Beschreibe es mit mindestens 10 Zeichen.",
+    "email": "Deine E-Mail",
+    "emailHint": "Damit wir dir antworten können. Angemeldet wird die E-Mail deines Kontos verwendet.",
+    "emailInvalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "send": "Senden",
+    "sendFailed": "Deine Meldung konnte nicht gesendet werden. Prüfe deine Verbindung und versuche es erneut.",
+    "sent": "Danke – deine Meldung ist beim FlexiLingo-Team angekommen.",
+    "close": "Schließen",
+    "github": "Mitwirkende? Issue auf GitHub öffnen"
   }
 }

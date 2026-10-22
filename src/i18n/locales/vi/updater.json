@@ -13,5 +13,11 @@
   "ready": "Bản cập nhật đã được cài đặt. Hãy khởi động lại để hoàn tất.",
   "restart": "Khởi động lại ngay",
   "dismiss": "Đóng",
-  "error": "Không thể cập nhật: {{message}}"
+  "error": "Không thể cập nhật: {{message}}",
+  "errors": {
+    "check": "Hiện không thể kiểm tra bản cập nhật. Hãy kiểm tra kết nối và thử lại.",
+    "install": "Không tải xuống hoặc cài đặt được bản cập nhật. Hãy thử lại.",
+    "restart": "FlexiDesk không tự khởi động lại được. Hãy đóng và mở lại."
+  },
+  "tryAgain": "Thử lại"
 }

@@ -13,5 +13,11 @@
   "ready": "更新已安装。重新启动以完成。",
   "restart": "立即重启",
   "dismiss": "关闭",
-  "error": "更新失败:{{message}}"
+  "error": "更新失败:{{message}}",
+  "errors": {
+    "check": "暂时无法检查更新。请检查网络连接后重试。",
+    "install": "无法下载或安装更新。请重试。",
+    "restart": "FlexiDesk 无法自动重启。请关闭后重新打开。"
+  },
+  "tryAgain": "重试"
 }

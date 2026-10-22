@@ -50,22 +50,24 @@
     "listening": {
       "title": "Hören",
       "description": "Sie hören Audioclips und beantworten Multiple-Choice-Fragen. Das Audio wird einmal automatisch abgespielt.",
-      "duration": "55 Minuten • 47 Fragen"
+      "duration": "55 Minuten • {{n}} Fragen"
     },
     "reading": {
       "title": "Lesen",
       "description": "Lesen Sie Texte und beantworten Sie Multiple-Choice-Fragen.",
-      "duration": "55 Minuten • 38 Fragen"
+      "duration": "55 Minuten • {{n}} Fragen"
     },
     "writing": {
       "title": "Schreiben",
       "description": "Erledigen Sie zwei Schreibaufgaben. Achten Sie auf die Wortanzahl (150–200 Wörter jeweils).",
-      "duration": "53 Minuten • 2 Aufgaben"
+      "duration": "53 Minuten • 2 Aufgaben",
+      "practiceDescription": "Bearbeite jede Schreibaufgabe. Achte auf die Wortzahl (je 150–200 Wörter)."
     },
     "speaking": {
       "title": "Sprechen",
       "description": "Nehmen Sie mündliche Antworten für 8 Aufgaben auf. Sie haben vor jeder Aufgabe Vorbereitungszeit.",
-      "duration": "~20 Minuten • 8 Aufgaben"
+      "duration": "~20 Minuten • 8 Aufgaben",
+      "practiceDescription": "Nimm zu jeder Aufgabe eine gesprochene Antwort auf. Vor jeder Aufgabe hast du Vorbereitungszeit."
     }
   },
   "startSection": "Abschnitt beginnen",
@@ -367,5 +369,15 @@
   "examSettingsTranslate": "Tippen zum Übersetzen",
   "examSettingsTranslateHint": "Tippe auf ein Wort, um seine Bedeutung zu sehen",
   "sectionSubmitOffline": "Du bist offline – deine Antworten sind auf diesem Computer gespeichert. Wir senden sie, sobald du wieder online bist.",
-  "sectionSubmitUnreachable": "Der Server war nicht erreichbar – deine Antworten sind auf diesem Computer gespeichert. Wir versuchen weiter, sie zu senden."
+  "sectionSubmitUnreachable": "Der Server war nicht erreichbar – deine Antworten sind auf diesem Computer gespeichert. Wir versuchen weiter, sie zu senden.",
+  "micSkipSection": "Sprechteil überspringen",
+  "micSkipSectionTitle": "Sprechteil überspringen?",
+  "micSkipSectionBody": "Nicht beantwortete Sprechaufgaben werden ohne Antwort abgegeben, damit du die Prüfung abschließen kannst. Sie zählen null Punkte; alles andere bleibt erhalten.",
+  "micSkipSectionConfirm": "Sprechen überspringen",
+  "micRequiredOrSkipHint": "Behebe oben das Mikrofonproblem oder überspringe den Sprechteil, um die Prüfung abzuschließen.",
+  "examExpiredTitle": "Die unvollständige Prüfung vom {{date}} ist abgelaufen",
+  "examExpiredBody": "Das 4-Stunden-Limit ist überschritten, sie kann nicht mehr fortgesetzt werden. Was du abgegeben hast, bleibt erhalten und wird beim Öffnen bewertet.",
+  "openSessionTitle": "Du hast bereits eine unvollständige Prüfung",
+  "openSessionBody": "Eine früher begonnene Prüfung ist noch offen. Setze sie fort oder beende sie (deine Antworten bleiben erhalten und werden bewertet) und starte die neue.",
+  "openSessionReplace": "Beenden und neu starten"
 }

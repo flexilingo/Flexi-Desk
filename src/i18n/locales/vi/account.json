@@ -690,7 +690,8 @@
       "cardsReviewed": "Thẻ Đã Ôn",
       "mastered": "Đã Thành Thạo",
       "accuracyRate": "Tỷ Lệ Chính Xác",
-      "streakDays": "Ngày Chuỗi"
+      "streakDays": "Ngày Chuỗi",
+      "reviewStreakDays": "Chuỗi ôn thẻ (tài khoản)"
     },
     "mastered": "Đã Thành Thạo",
     "accuracyRate": "Tỷ Lệ Chính Xác",

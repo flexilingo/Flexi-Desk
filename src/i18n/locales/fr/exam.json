@@ -474,7 +474,9 @@
     "openSettingsFailed": "Impossible d’ouvrir les réglages. Ouvrez-les depuis les réglages du système.",
     "noDevice": "Aucun microphone trouvé. Branchez-en un ou choisissez un périphérique d’entrée dans les réglages du système, puis réessayez.",
     "inUse": "Une autre application utilise le microphone. Fermez-la, puis réessayez.",
-    "unsupported": "Cet ordinateur ne peut pas enregistrer l’audio pour l’examen."
+    "unsupported": "Cet ordinateur ne peut pas enregistrer l’audio pour l’examen.",
+    "silentTitle": "Votre micro est branché mais n'envoie aucun son",
+    "unmuteStep": "Vérifiez dans les réglages son du système que le micro n'est pas coupé et que son niveau d'entrée est monté."
   },
   "listening": "Compréhension orale",
   "reading": "Compréhension écrite",

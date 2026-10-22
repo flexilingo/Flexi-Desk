@@ -191,6 +191,10 @@ pub struct NextActivityResponse {
     pub card_meta: Option<CardMetaOut>,
     pub srs_algorithm: String,
     pub card_progress: Option<CardProgressSnapshot>,
+    /// Days until the card comes back for each self-rating 1..5, computed by the
+    /// same path a submit takes (rating -> score -> write threshold -> SRS rating ->
+    /// the deck's algorithm). 0 = the schedule does not move (it stays due).
+    pub predicted_intervals: Option<std::collections::BTreeMap<u8, f64>>,
     pub requeue_count: i64,
     pub remaining: i64,
     pub total: i64,
@@ -1532,6 +1536,7 @@ pub async fn study_next_activity(
         requeue_count: i64,
         srs_algorithm: String,
         progress: Option<CardProgressSnapshot>,
+        predicted: Option<std::collections::BTreeMap<u8, f64>>,
         total: i64,
         consumed: i64,
         ready: Option<(ActivityPromptPayload, Option<String>)>,
@@ -1583,6 +1588,7 @@ pub async fn study_next_activity(
         let deck_native_language = deck_native_language(&conn, &item.card_id);
         let srs_algorithm = deck_algorithm(&conn, &item.card_id);
         let progress = card_progress_snapshot(&conn, &item.card_id);
+        let predicted = Some(predicted_intervals(&conn, &item.card_id));
 
         Prep {
             config,
@@ -1591,6 +1597,7 @@ pub async fn study_next_activity(
             requeue_count,
             srs_algorithm,
             progress,
+            predicted,
             total,
             consumed,
             ready,
@@ -1702,6 +1709,7 @@ pub async fn study_next_activity(
         }),
         srs_algorithm: prep.srs_algorithm,
         card_progress: prep.progress,
+        predicted_intervals: prep.predicted,
         requeue_count: prep.requeue_count,
         remaining: prep.total - prep.consumed - 1,
         total: prep.total,
@@ -1748,6 +1756,7 @@ fn empty_next(session_id: &str, total: i64) -> NextActivityResponse {
         card_meta: None,
         srs_algorithm: "leitner".to_string(),
         card_progress: None,
+        predicted_intervals: None,
         requeue_count: 0,
         remaining: 0,
         total,
@@ -2123,8 +2132,10 @@ fn resolve_evidence(
     payload: &ActivityPromptPayload,
     body: &SubmitBody,
 ) -> (bool, f64) {
-    // recall self-rating.
-    if activity_type == ActivityType::Recall {
+    // Self-rated activities: recall, and listen-again (its screen asks for the same
+    // 1..5 rating - without this every listen-again counted as a wrong answer and
+    // its rating buttons never moved the schedule).
+    if matches!(activity_type, ActivityType::Recall | ActivityType::ListenAgain) {
         if let Some(r) = body.self_rating {
             return self_rating_to_evidence(r);
         }
@@ -2237,6 +2248,98 @@ fn upsert_proficiency(conn: &Conn, p: &CardProficiency, deck_id: &str) -> Result
     Ok(())
 }
 
+/// The SRS rating a study score moves the schedule with.
+fn srs_rating_for_score(score: f64) -> Rating {
+    match score_to_confidence(score) {
+        1 => Rating::Again,
+        2 => Rating::Hard,
+        3 | 4 => Rating::Good,
+        _ => Rating::Easy,
+    }
+}
+
+/// The card's schedule as `write_card_srs` reads it; a card never scheduled is New.
+fn read_card_progress(conn: &Conn, card_id: &str) -> CardProgress {
+    let algo_str = deck_algorithm(conn, card_id);
+    type Row = (
+        String, Option<i32>, Option<f64>, Option<i32>, Option<f64>, Option<f64>, String, f64,
+        String, Option<String>, i32, i32,
+    );
+    let row: Option<Row> = conn
+        .query_row(
+            "SELECT algorithm, box_number, easiness_factor, repetitions, stability, difficulty,
+                    state, interval_days, due_date, last_review, review_count, lapses
+             FROM srs_progress WHERE card_id = ?1",
+            rusqlite::params![card_id],
+            |row| {
+                Ok((
+                    row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?,
+                    row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?,
+                ))
+            },
+        )
+        .ok();
+    let parse_time = |s: &str| {
+        chrono::DateTime::parse_from_rfc3339(s)
+            .ok()
+            .map(|dt| dt.with_timezone(&chrono::Utc))
+    };
+    match row {
+        Some((algorithm, box_number, ef, reps, stability, difficulty, state, interval, due, last, count, lapses)) => {
+            CardProgress {
+                card_id: card_id.to_string(),
+                algorithm: Algorithm::from_str(&algorithm).unwrap_or(Algorithm::FSRS),
+                box_number,
+                easiness_factor: ef,
+                repetitions: reps,
+                stability,
+                difficulty,
+                state: CardState::from_str(&state).unwrap_or(CardState::New),
+                interval_days: interval,
+                due_date: parse_time(&due).unwrap_or_else(chrono::Utc::now),
+                last_review: last.as_deref().and_then(parse_time),
+                review_count: count,
+                lapses,
+            }
+        }
+        None => CardProgress {
+            card_id: card_id.to_string(),
+            algorithm: Algorithm::from_str(&algo_str).unwrap_or(Algorithm::FSRS),
+            box_number: None,
+            easiness_factor: None,
+            repetitions: None,
+            stability: None,
+            difficulty: None,
+            state: CardState::New,
+            interval_days: 0.0,
+            due_date: chrono::Utc::now(),
+            last_review: None,
+            review_count: 0,
+            lapses: 0,
+        },
+    }
+}
+
+/// What each self-rating (1..5) would do to this card's schedule, in days - the
+/// numbers on the rating buttons. Same path as a submit: a rating under the write
+/// threshold leaves the schedule as it is (0: it stays due), the rest go through the
+/// deck's own algorithm.
+pub(crate) fn predicted_intervals(conn: &Conn, card_id: &str) -> std::collections::BTreeMap<u8, f64> {
+    let progress = read_card_progress(conn, card_id);
+    let strategy = create_strategy(progress.algorithm);
+    (1u8..=5)
+        .map(|rating| {
+            let (_, score) = self_rating_to_evidence(rating);
+            let days = if score < SRS_WRITE_THRESHOLD {
+                0.0
+            } else {
+                strategy.schedule(&progress, srs_rating_for_score(score)).interval_days
+            };
+            (rating, days)
+        })
+        .collect()
+}
+
 /// Push a study result into the SRS schedule (srs_progress) via desk's engine.
 /// Returns `Some((interval_before, interval_after))` when the schedule actually
 /// moved, or `None` when the score stayed below the write threshold.
@@ -2260,13 +2363,7 @@ fn write_card_srs(conn: &Conn, card_id: &str, score: f64) -> Result<Option<(f64,
         return Ok(None);
     }
 
-    let confidence = score_to_confidence(score);
-    let rating = match confidence {
-        1 => Rating::Again,
-        2 => Rating::Hard,
-        3 | 4 => Rating::Good,
-        _ => Rating::Easy,
-    };
+    let rating = srs_rating_for_score(score);
 
     conn.execute(
         "INSERT OR IGNORE INTO srs_progress (id, card_id, algorithm, state, interval_days, due_date)
@@ -2275,49 +2372,11 @@ fn write_card_srs(conn: &Conn, card_id: &str, score: f64) -> Result<Option<(f64,
     )
     .ok();
 
-    let (algorithm_str, box_number, ef, reps, stability, difficulty, state_str, interval, due_str, last_rev, review_count, lapses): (
-        String, Option<i32>, Option<f64>, Option<i32>, Option<f64>, Option<f64>, String, f64, String, Option<String>, i32, i32,
-    ) = conn
-        .query_row(
-            "SELECT algorithm, box_number, easiness_factor, repetitions, stability, difficulty,
-                    state, interval_days, due_date, last_review, review_count, lapses
-             FROM srs_progress WHERE card_id = ?1",
-            rusqlite::params![card_id],
-            |row| {
-                Ok((
-                    row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?,
-                    row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?,
-                ))
-            },
-        )
-        .map_err(|e| format!("srs progress lookup: {e}"))?;
-
-    let algorithm = Algorithm::from_str(&algorithm_str).unwrap_or(Algorithm::FSRS);
-    let card_state = CardState::from_str(&state_str).unwrap_or(CardState::New);
-    let last_review = last_rev.and_then(|s| {
-        chrono::DateTime::parse_from_rfc3339(&s)
-            .ok()
-            .map(|dt| dt.with_timezone(&chrono::Utc))
-    });
-    let due_date = chrono::DateTime::parse_from_rfc3339(&due_str)
-        .map(|dt| dt.with_timezone(&chrono::Utc))
-        .unwrap_or_else(|_| chrono::Utc::now());
-
-    let progress = CardProgress {
-        card_id: card_id.to_string(),
-        algorithm,
-        box_number,
-        easiness_factor: ef,
-        repetitions: reps,
-        stability,
-        difficulty,
-        state: card_state,
-        interval_days: interval,
-        due_date,
-        last_review,
-        review_count,
-        lapses,
-    };
+    // The same reading the rating buttons' prediction uses (`predicted_intervals`).
+    let progress = read_card_progress(conn, card_id);
+    let interval = progress.interval_days;
+    let lapses = progress.lapses;
+    let algorithm = progress.algorithm;
 
     let result = create_strategy(algorithm).schedule(&progress, rating);
     let algo_state = &result.algorithm_state;
@@ -3110,6 +3169,52 @@ mod tests {
             .query_row("SELECT interval_days FROM srs_progress WHERE card_id='c1'", [], |r| r.get(0))
             .unwrap();
         assert_eq!(stored, after);
+    }
+
+    #[test]
+    fn listen_again_honours_its_self_rating() {
+        let body = SubmitBody {
+            session_id: "s".into(),
+            activity_id: "a".into(),
+            user_response: None,
+            user_audio_url: None,
+            response_time_ms: None,
+            is_correct: None,
+            self_rating: Some(4),
+        };
+        let payload = ActivityPromptPayload::Recall {
+            front_text: "w".into(),
+            back_text: "m".into(),
+            reverse: false,
+        };
+        assert_eq!(
+            resolve_evidence(ActivityType::ListenAgain, &payload, &body),
+            self_rating_to_evidence(4)
+        );
+    }
+
+    #[test]
+    fn rating_buttons_predict_what_a_submit_writes() {
+        // Windows QA (W10): a new card read "1d Again | 1d Hard | 1d Good". The
+        // prediction now takes the submit's own path, per algorithm.
+        for algorithm in ["fsrs", "sm2", "leitner"] {
+            let predicted = {
+                let conn = setup();
+                conn.execute("UPDATE decks SET algorithm = ?1 WHERE id = 'd1'", [algorithm]).unwrap();
+                predicted_intervals(&conn, "c1")
+            };
+            // Again / Hard stay under the write threshold: the schedule does not move.
+            assert_eq!(predicted[&1], 0.0, "{algorithm}");
+            assert_eq!(predicted[&2], 0.0, "{algorithm}");
+            for rating in [3u8, 4, 5] {
+                let conn = setup();
+                conn.execute("UPDATE decks SET algorithm = ?1 WHERE id = 'd1'", [algorithm]).unwrap();
+                let (_, score) = self_rating_to_evidence(rating);
+                let (_, after) = write_card_srs(&conn, "c1", score).unwrap().expect("moved");
+                assert_eq!(predicted[&rating], after, "{algorithm} rating {rating}");
+            }
+            assert!(predicted[&3] >= 1.0, "{algorithm}: Good schedules the card");
+        }
     }
 
     #[test]

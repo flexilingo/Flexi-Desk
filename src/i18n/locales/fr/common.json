@@ -297,5 +297,29 @@
   },
   "dictionary": {
     "translationLanguage": "Langue de traduction"
+  },
+  "reportBug": {
+    "title": "Signaler un problème",
+    "description": "Dites-nous ce qui n'a pas marché ou ce que vous souhaitez. Le message arrive directement à l'équipe FlexiLingo.",
+    "type": "Type",
+    "types": {
+      "bug": "Quelque chose ne marche pas",
+      "feature": "Une idée",
+      "other": "Autre chose"
+    },
+    "subject": "Sujet",
+    "subjectPlaceholder": "ex. : La section orale ne démarre pas",
+    "subjectInvalid": "Écrivez un sujet de 3 à 200 caractères.",
+    "message": "Que s'est-il passé ?",
+    "messagePlaceholder": "Ce que vous avez fait, ce que vous attendiez, et ce que vous avez vu à la place.",
+    "messageInvalid": "Décrivez-le en au moins 10 caractères.",
+    "email": "Votre e-mail",
+    "emailHint": "Pour pouvoir vous répondre. Connecté, l'e-mail de votre compte est utilisé.",
+    "emailInvalid": "Saisissez une adresse e-mail valide.",
+    "send": "Envoyer",
+    "sendFailed": "Votre signalement n'a pas pu être envoyé. Vérifiez votre connexion et réessayez.",
+    "sent": "Merci — votre signalement est bien arrivé à l'équipe FlexiLingo.",
+    "close": "Fermer",
+    "github": "Contributeur ? Ouvrez un ticket sur GitHub"
   }
 }

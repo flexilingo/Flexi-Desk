@@ -450,3 +450,10 @@ pub async fn ai_test(state: State<'_, AppState>) -> Result<AiTestResult, String>
         reply: reply.trim().to_string(),
     })
 }
+
+/// The Cancel button of a long AI answer: stops every AI call running now. The
+/// waiting command then fails with `AI_CANCELLED`.
+#[tauri::command]
+pub fn ai_cancel_requests() {
+    crate::ai::provider::cancel_requests();
+}

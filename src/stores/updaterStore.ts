@@ -36,11 +36,23 @@ export function progressPercent(p: DownloadProgress): number | null {
   return Math.min(100, Math.round((p.downloaded / p.total) * 100));
 }
 
+/** Which step failed - picks the translated sentence (the plugin's own text is English-only). */
+export type UpdaterFailure = 'check' | 'install' | 'restart';
+
+/** The `updater` i18n key for a failure. */
+export function updaterErrorKey(failure: UpdaterFailure | null): string {
+  if (failure === 'install') return 'errors.install';
+  if (failure === 'restart') return 'errors.restart';
+  return 'errors.check';
+}
+
 interface UpdaterState {
   status: UpdaterStatus;
   version: string | null;
   progress: DownloadProgress;
+  /** The plugin's raw message - kept for diagnostics, never shown as the sentence. */
   error: string | null;
+  failure: UpdaterFailure | null;
   dismissed: boolean;
   /** `silent` (startup): a failed check leaves no error behind. */
   check: (opts?: { silent?: boolean }) => Promise<void>;
@@ -57,12 +69,13 @@ export const useUpdaterStore = create<UpdaterState>((set, get) => ({
   version: null,
   progress: { downloaded: 0, total: null },
   error: null,
+  failure: null,
   dismissed: false,
 
   check: async (opts) => {
     const { status } = get();
     if (status === 'checking' || status === 'downloading') return;
-    set({ status: 'checking', error: null });
+    set({ status: 'checking', error: null, failure: null });
     try {
       const update = await check();
       if (update) {
@@ -74,20 +87,25 @@ export const useUpdaterStore = create<UpdaterState>((set, get) => ({
       }
     } catch (e) {
       if (opts?.silent) set({ status: 'idle' });
-      else set({ status: 'error', error: messageOf(e) });
+      else set({ status: 'error', error: messageOf(e), failure: 'check' });
     }
   },
 
   install: async () => {
     if (!pending || get().status === 'downloading') return;
-    set({ status: 'downloading', error: null, progress: { downloaded: 0, total: null } });
+    set({
+      status: 'downloading',
+      error: null,
+      failure: null,
+      progress: { downloaded: 0, total: null },
+    });
     try {
       await pending.downloadAndInstall((ev) =>
         set((s) => ({ progress: nextProgress(s.progress, ev) })),
       );
       set({ status: 'ready' });
     } catch (e) {
-      set({ status: 'error', error: messageOf(e) });
+      set({ status: 'error', error: messageOf(e), failure: 'install' });
     }
   },
 
@@ -95,7 +113,7 @@ export const useUpdaterStore = create<UpdaterState>((set, get) => ({
     try {
       await relaunch();
     } catch (e) {
-      set({ status: 'error', error: messageOf(e) });
+      set({ status: 'error', error: messageOf(e), failure: 'restart' });
     }
   },
 

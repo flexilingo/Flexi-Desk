@@ -65,6 +65,13 @@ pub fn set_setting(
     )
     .map_err(DatabaseError::from)?;
 
+    // The AI time limit is read on every call: apply a change at once.
+    if key == crate::ai::provider::AI_TIMEOUT_SETTING {
+        crate::ai::provider::set_request_timeout_secs(crate::ai::provider::parse_timeout_setting(
+            Some(&value),
+        ));
+    }
+
     Ok(())
 }
 

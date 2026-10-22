@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import {
   detectOs,
-  looksBlockedBySystem,
   micFailureOf,
+  probeVerdict,
   readMicLevel,
   startMicProbe,
   stopMicProbe,
@@ -15,6 +15,7 @@ export type MicStatus =
   | 'denied' // the system blocks the microphone - needs a settings change
   | 'no-device' // no microphone hardware found
   | 'in-use' // another app (or recording) holds it
+  | 'silent' // it opened, but not a single sample of sound arrived (muted / blocked)
   | 'unsupported';
 
 interface UseMicrophonePermissionResult {
@@ -48,7 +49,7 @@ export function useMicrophonePermission(): UseMicrophonePermissionResult {
         await new Promise((r) => setTimeout(r, PROBE_GAP_MS));
         peak = Math.max(peak, await readMicLevel());
       }
-      setStatus(looksBlockedBySystem(peak, detectOs()) ? 'denied' : 'granted');
+      setStatus(probeVerdict(peak, detectOs()));
     } catch {
       setStatus('denied');
     } finally {

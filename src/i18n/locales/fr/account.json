@@ -697,7 +697,8 @@
       "cardsReviewed": "Cartes Révisées",
       "mastered": "Maîtrisé",
       "accuracyRate": "Taux de Précision",
-      "streakDays": "Jours de Série"
+      "streakDays": "Jours de Série",
+      "reviewStreakDays": "Série de révision des cartes (compte)"
     },
     "mastered": "Maîtrisé",
     "accuracyRate": "Taux de Précision",

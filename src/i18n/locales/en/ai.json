@@ -41,7 +41,9 @@
     "AI_KEY_REJECTED": "The provider rejected this key. Check it and try again.",
     "AI_RATE_LIMITED": "The provider says you have used up your limit for now. Try again later.",
     "AI_UNREACHABLE": "Could not reach your AI. Check the address and your connection.",
-    "UNKNOWN_ERROR": "Something went wrong with your AI. Try again."
+    "UNKNOWN_ERROR": "Something went wrong with your AI. Try again.",
+    "AI_TIMEOUT": "Your AI took too long — try a smaller model or your own key.",
+    "AI_CANCELLED": "You stopped this answer."
   },
   "origin": {
     "device": "On this device",
@@ -75,7 +77,12 @@
     "cloudNeedsSignIn": "Sign in to a paid plan to switch this on.",
     "cloudNeedsPaid": "Available on paid plans only.",
     "cloudInactive": "Switched on, but not active: it needs a signed-in paid plan.",
-    "cloudActive": "Active for word analysis and exam insights."
+    "cloudActive": "Active for word analysis and exam insights.",
+    "timeoutLabel": "Time limit per answer",
+    "timeoutHint": "If your AI has not answered by then, the request is stopped and you can try again. Slow computers may need longer.",
+    "timeoutMinutes_one": "{{count}} minute",
+    "timeoutMinutes_other": "{{count}} minutes",
+    "timeoutSaveFailed": "The time limit could not be saved. Try again."
   },
   "wizard": {
     "ownKeyLink": "Use my own key instead (OpenAI, Anthropic or another server)",
@@ -145,5 +152,13 @@
       "llama3_1_70b": "Most capable. Needs 48 GB or more of memory. Best grammar and writing feedback."
     },
     "dismiss": "Dismiss"
+  },
+  "wait": {
+    "elapsed": "Working for {{time}}",
+    "cancel": "Cancel",
+    "slowHint": "The AI on your computer can take a few minutes. It stops by itself after the time limit set in Settings → Your AI.",
+    "timeoutHint": "Older computers answer slowly. Choose a smaller model, use your own key, or allow more time in Settings → Your AI.",
+    "retry": "Try again",
+    "openSettings": "AI settings"
   }
 }

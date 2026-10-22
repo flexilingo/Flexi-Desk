@@ -125,3 +125,35 @@ export const OWN_KEY_DEFAULT_MODEL: Record<Exclude<AiProviderId, 'ollama'>, stri
 
 /** The local model the one-click setup downloads: small, multilingual, fits most machines. */
 export const RECOMMENDED_LOCAL_MODEL = 'llama3.2';
+
+// ── Time limit and Cancel (every call to the user's own AI) ─────────────────
+//
+// Rust stops a call to the user's AI after a time limit (`AI_TIMEOUT`) or when
+// Cancel is pressed (`AI_CANCELLED`): a small model on a slow computer must never
+// leave an endless spinner.
+
+/** Settings key of the per-call limit, in seconds (Settings -> My AI). */
+export const AI_TIMEOUT_SETTING = 'ai_request_timeout_sec';
+export const DEFAULT_AI_TIMEOUT_SEC = 180;
+/** The choices Settings offers. */
+export const AI_TIMEOUT_OPTIONS_SEC = [60, 180, 300, 600, 1200] as const;
+
+export type AiStopKind = 'timeout' | 'cancelled';
+
+/** Did this AI call end because it took too long, or because the user cancelled it? */
+export function aiStopKind(err: unknown): AiStopKind | null {
+  const text =
+    typeof err === 'object' && err !== null && 'code' in err
+      ? String((err as { code?: unknown }).code)
+      : String(err);
+  if (text.includes('AI_TIMEOUT')) return 'timeout';
+  if (text.includes('AI_CANCELLED')) return 'cancelled';
+  return null;
+}
+
+/** "1:05" for 65 seconds - the elapsed time beside a running AI answer. */
+export function formatElapsed(totalSec: number): string {
+  const s = Math.max(0, Math.floor(totalSec));
+  const m = Math.floor(s / 60);
+  return `${m}:${String(s % 60).padStart(2, '0')}`;
+}

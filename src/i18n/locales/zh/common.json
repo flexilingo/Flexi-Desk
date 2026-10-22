@@ -297,5 +297,29 @@
   },
   "dictionary": {
     "translationLanguage": "翻译语言"
+  },
+  "reportBug": {
+    "title": "报告问题",
+    "description": "告诉我们哪里出了问题或你想要什么。消息会直接发送给 FlexiLingo 团队。",
+    "type": "类型",
+    "types": {
+      "bug": "有功能坏了",
+      "feature": "一个想法",
+      "other": "其他"
+    },
+    "subject": "主题",
+    "subjectPlaceholder": "例如：口语部分无法开始",
+    "subjectInvalid": "请填写 3 到 200 个字符的主题。",
+    "message": "发生了什么？",
+    "messagePlaceholder": "你做了什么、期望看到什么、实际看到了什么。",
+    "messageInvalid": "请至少用 10 个字符描述。",
+    "email": "你的邮箱",
+    "emailHint": "以便我们回复你。登录后会使用你账户的邮箱。",
+    "emailInvalid": "请输入有效的邮箱地址。",
+    "send": "发送",
+    "sendFailed": "报告未能发送。请检查网络连接后重试。",
+    "sent": "谢谢——你的报告已送达 FlexiLingo 团队。",
+    "close": "关闭",
+    "github": "贡献者？在 GitHub 上提交问题"
   }
 }

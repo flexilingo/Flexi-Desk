@@ -695,7 +695,8 @@
       "cardsReviewed": "Cards Reviewed",
       "mastered": "Mastered",
       "accuracyRate": "Accuracy Rate",
-      "streakDays": "Streak Days"
+      "streakDays": "Streak Days",
+      "reviewStreakDays": "Card review streak (account)"
     },
     "mastered": "Mastered",
     "accuracyRate": "Accuracy Rate",

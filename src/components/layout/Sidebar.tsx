@@ -1,16 +1,14 @@
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Bug, ChevronsLeft, ChevronsRight, Crown, Sparkles } from 'lucide-react';
-import { openUrl } from '@tauri-apps/plugin-opener';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { useAuthStore } from '@/stores/authStore';
 import { isPaidTier, useSubscriptionStore } from '@/stores/subscriptionStore';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { isItemActive, visibleGroups, type NavItem } from '@/components/layout/sidebarConfig';
-
-const BUG_URL = 'https://github.com/flexilingo/Flexi-Desk/issues/new';
+import { ReportBugDialog } from '@/components/feedback/ReportBugDialog';
 
 /** Row shape shared by every entry, so links, the offer and the foot line up. */
 const ROW = 'relative flex items-center rounded-md text-[13.5px] leading-5 transition-colors';
@@ -208,6 +206,8 @@ export function Sidebar() {
   const CollapseIcon = isRtl === collapsed ? ChevronsLeft : ChevronsRight;
   const collapseLabel = collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar');
   const bugLabel = t('nav.reportBug');
+  // In the app, not GitHub: learners have no GitHub account (Windows QA, W7).
+  const [bugOpen, setBugOpen] = useState(false);
 
   const footButton = (
     label: string,
@@ -308,7 +308,7 @@ export function Sidebar() {
           {footButton(
             bugLabel,
             <Bug className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={1.9} />,
-            () => void openUrl(BUG_URL),
+            () => setBugOpen(true),
           )}
           {footButton(
             collapseLabel,
@@ -318,6 +318,7 @@ export function Sidebar() {
           )}
         </div>
       </aside>
+      <ReportBugDialog open={bugOpen} onOpenChange={setBugOpen} />
     </TooltipProvider>
   );
 }

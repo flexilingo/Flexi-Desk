@@ -690,7 +690,8 @@
       "cardsReviewed": "البطاقات المراجعة",
       "mastered": "متقنة",
       "accuracyRate": "نسبة الدقة",
-      "streakDays": "أيام السلسلة"
+      "streakDays": "أيام السلسلة",
+      "reviewStreakDays": "سلسلة مراجعة البطاقات (الحساب)"
     },
     "mastered": "متقنة",
     "accuracyRate": "نسبة الدقة",

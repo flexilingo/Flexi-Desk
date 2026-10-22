@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useSpeechState } from '@/lib/speech';
-import { formatInterval, predictIntervals } from '../../../utils/srs-display';
+import { ratingIntervalLabels } from '../../../utils/srs-display';
 import { useSpeak } from '../../../hooks/useSpeak';
 import { frontLanguage, meaningLanguage } from '../../../lib/cardLang';
 import { resolveCardKey, type CardKeyAction } from '../../../lib/cardKeys';
@@ -24,6 +24,7 @@ export function RecallMethod({
   cardMeta,
   srsAlgorithm,
   cardProgress,
+  predictedIntervals,
   requeueCount,
   submitting,
   onSubmit,
@@ -74,11 +75,9 @@ export function RecallMethod({
   }, [activity.id]);
 
   const intervals = useMemo(() => {
-    const days = predictIntervals(srsAlgorithm, cardProgress);
-    return Object.fromEntries(
-      Object.entries(days).map(([r, d]) => [r, formatInterval(d)]),
-    ) as Record<number, string>;
-  }, [srsAlgorithm, cardProgress]);
+    // The scheduler's own numbers; the formula port only for an older backend.
+    return ratingIntervalLabels(predictedIntervals, srsAlgorithm, cardProgress);
+  }, [srsAlgorithm, cardProgress, predictedIntervals]);
 
   // ── Auto-pronounce: once per card, as soon as it is up. A masked prompt is an audio card by
   // definition — with the word hidden and nothing spoken there is nothing to study — so it speaks

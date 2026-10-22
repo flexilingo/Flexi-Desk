@@ -13,5 +13,11 @@
   "ready": "Das Update ist installiert. Starte neu, um es abzuschließen.",
   "restart": "Jetzt neu starten",
   "dismiss": "Schließen",
-  "error": "Update fehlgeschlagen: {{message}}"
+  "error": "Update fehlgeschlagen: {{message}}",
+  "errors": {
+    "check": "Updates konnten gerade nicht geprüft werden. Prüfe deine Verbindung und versuche es erneut.",
+    "install": "Das Update konnte nicht heruntergeladen oder installiert werden. Versuche es erneut.",
+    "restart": "FlexiDesk konnte nicht von selbst neu starten. Schließe es und öffne es erneut."
+  },
+  "tryAgain": "Erneut versuchen"
 }

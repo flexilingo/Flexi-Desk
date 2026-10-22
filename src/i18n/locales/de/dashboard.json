@@ -104,7 +104,10 @@
         "thisWeek": "+{{count, number}} diese Woche",
         "suggested": "Oft gesehen, noch keine Karte",
         "notes": "Notizen",
-        "link": "Mein Wortschatz"
+        "link": "Mein Wortschatz",
+        "unitLocal": "Wörter auf diesem Computer gesammelt",
+        "notesLocal": "Notizen auf diesem Computer",
+        "localHint": "Die Wörter und Notizen deines Kontos kommen auf den Seiten Wortschatz und Notizen dazu."
       },
       "review": {
         "title": "Wiederholen",

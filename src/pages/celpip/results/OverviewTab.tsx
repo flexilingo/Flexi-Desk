@@ -7,6 +7,8 @@ import { CLB_SCALE, clbTextColor, clbBarColor, SECTION_META, type ScoreScale } f
 import { HeroScoreCard, VsAvgBadge } from './HeroScoreCard';
 import { SummaryCard, ImprovementPlanCard } from './InsightSections';
 import { InsightOriginBadge, LocalModelGate } from './SkillInsightPanel';
+import { AiStoppedNotice, AiWorkingStatus } from '@/components/ai/AiWait';
+import type { AiStopKind } from '@/lib/aiSource';
 import { useAiSource } from '@/stores/aiSourceStore';
 
 interface OverviewTabProps {
@@ -27,6 +29,11 @@ interface OverviewTabProps {
   /** Skills whose generation failed — surfaced with a retry instead of the skeleton */
   erroredSkills?: string[];
   onRetryFailed?: () => void;
+  /**
+   * The user's own AI: when the running request started (elapsed time + Cancel),
+   * and whether the last one ran out of time / was cancelled.
+   */
+  insightWait?: { startedAt: number | null; stopped: AiStopKind | null; onCancel: () => void };
   onRetrySummary: () => void;
   vsAvgT: (key: 'vsAvgPositive' | 'vsAvgNegative' | 'vsAvgEqual', val?: string) => string;
   /** Exam profile scale; defaults to CLB out of 12. */
@@ -77,6 +84,7 @@ export function OverviewTab({
   limitReached,
   erroredSkills,
   onRetryFailed,
+  insightWait,
   onRetrySummary,
   vsAvgT,
   scale = CLB_SCALE,
@@ -227,6 +235,14 @@ export function OverviewTab({
           <SummaryCard summary={insight.summary} />
           <ImprovementPlanCard plan={insight.improvement_plan ?? []} />
         </>
+      ) : insightOrigin !== 'cloud' && insightWait?.stopped ? (
+        <AiStoppedNotice
+          kind={insightWait.stopped}
+          onRetry={() => {
+            onRetryFailed?.();
+            onRetrySummary?.();
+          }}
+        />
       ) : ownAi.kind === 'unconfigured' &&
         (summaryState === 'error' || (erroredSkills && erroredSkills.length > 0)) ? (
         <LocalModelGate
@@ -276,6 +292,9 @@ export function OverviewTab({
               </span>
             </div>
           </div>
+          {insightOrigin !== 'cloud' && insightWait && (
+            <AiWorkingStatus startedAt={insightWait.startedAt} onCancel={insightWait.onCancel} />
+          )}
           <div className="flex flex-col gap-2.5" aria-hidden="true">
             <div className="h-3.5 rounded-full bg-border animate-pulse w-2/3" />
             <div className="h-3.5 rounded-full bg-border animate-pulse w-4/5" />

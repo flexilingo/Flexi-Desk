@@ -690,7 +690,8 @@
       "cardsReviewed": "已复习卡片",
       "mastered": "已掌握",
       "accuracyRate": "准确率",
-      "streakDays": "连续天数"
+      "streakDays": "连续天数",
+      "reviewStreakDays": "卡片复习连续天数（账户）"
     },
     "mastered": "已掌握",
     "accuracyRate": "准确率",

@@ -104,7 +104,10 @@
         "thisWeek": "+{{count, number}} this week",
         "suggested": "Seen often, not a card yet",
         "notes": "Notes",
-        "link": "My vocabulary"
+        "link": "My vocabulary",
+        "unitLocal": "words caught on this computer",
+        "notesLocal": "Notes on this computer",
+        "localHint": "Your account's words and notes are added on the Vocabulary and Notes pages."
       },
       "review": {
         "title": "Review",

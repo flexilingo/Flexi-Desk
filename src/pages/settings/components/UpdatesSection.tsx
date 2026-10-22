@@ -4,11 +4,11 @@ import { getVersion } from '@tauri-apps/api/app';
 import { AlertCircle, CheckCircle2, Download, Loader2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { progressPercent, useUpdaterStore } from '@/stores/updaterStore';
+import { progressPercent, updaterErrorKey, useUpdaterStore } from '@/stores/updaterStore';
 
 export function UpdatesSection() {
   const { t } = useTranslation('updater');
-  const { status, version, progress, error, check, install, restart } = useUpdaterStore();
+  const { status, version, progress, error, failure, check, install, restart } = useUpdaterStore();
   const [current, setCurrent] = useState<string>('');
 
   useEffect(() => {
@@ -58,10 +58,14 @@ export function UpdatesSection() {
           </div>
         )}
         {status === 'ready' && <p className="text-sm text-foreground">{t('ready')}</p>}
-        {status === 'error' && error && (
-          <p className="flex items-start gap-2 text-sm text-destructive">
+        {status === 'error' && (
+          <p
+            role="alert"
+            title={error ?? undefined}
+            className="flex items-start gap-2 text-sm text-destructive"
+          >
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            {t('error', { message: error })}
+            {t(updaterErrorKey(failure))}
           </p>
         )}
 
@@ -86,7 +90,11 @@ export function UpdatesSection() {
               onClick={() => void check()}
             >
               {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {status === 'checking' ? t('checking') : t('check')}
+              {status === 'checking'
+                ? t('checking')
+                : status === 'error' && failure === 'check'
+                  ? t('tryAgain')
+                  : t('check')}
             </Button>
           )}
         </div>

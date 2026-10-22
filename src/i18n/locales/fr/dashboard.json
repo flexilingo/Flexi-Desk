@@ -111,7 +111,10 @@
         "thisWeek": "+{{count, number}} cette semaine",
         "suggested": "Vus souvent, pas encore en carte",
         "notes": "Notes",
-        "link": "Mon vocabulaire"
+        "link": "Mon vocabulaire",
+        "unitLocal": "mots récoltés sur cet ordinateur",
+        "notesLocal": "Notes sur cet ordinateur",
+        "localHint": "Les mots et notes de votre compte s'ajoutent sur les pages Vocabulaire et Notes."
       },
       "review": {
         "title": "Réviser",

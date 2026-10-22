@@ -51,22 +51,24 @@
     "listening": {
       "title": "听力",
       "description": "您将听到音频片段并回答选择题。音频自动播放一次。",
-      "duration": "55分钟 • 47题"
+      "duration": "55分钟 • {{n}}题"
     },
     "reading": {
       "title": "阅读",
       "description": "阅读文章并回答选择题。",
-      "duration": "55分钟 • 38题"
+      "duration": "55分钟 • {{n}}题"
     },
     "writing": {
       "title": "写作",
       "description": "完成两个写作任务。注意字数要求（每题150–200词）。",
-      "duration": "53分钟 • 2个任务"
+      "duration": "53分钟 • 2个任务",
+      "practiceDescription": "完成每项写作任务。注意字数（每项 150–200 词）。"
     },
     "speaking": {
       "title": "口语",
       "description": "录制8个任务的口头回答。每个任务前您将有准备时间。",
-      "duration": "约20分钟 • 8个任务"
+      "duration": "约20分钟 • 8个任务",
+      "practiceDescription": "为每项任务录制口语回答。每项任务前都有准备时间。"
     }
   },
   "startSection": "开始部分",
@@ -366,5 +368,15 @@
   "examSettingsTranslate": "点按即可翻译",
   "examSettingsTranslateHint": "点按任意词语查看其含义",
   "sectionSubmitOffline": "你处于离线状态 - 答案已保存在这台电脑上。恢复联网后我们会发送。",
-  "sectionSubmitUnreachable": "无法连接服务器 - 答案已保存在这台电脑上。我们会继续尝试发送。"
+  "sectionSubmitUnreachable": "无法连接服务器 - 答案已保存在这台电脑上。我们会继续尝试发送。",
+  "micSkipSection": "跳过口语部分",
+  "micSkipSectionTitle": "要跳过口语部分吗？",
+  "micSkipSectionBody": "尚未作答的口语任务将以空白提交，这样你就能完成考试。这些任务计零分；你完成的其他内容都会保留。",
+  "micSkipSectionConfirm": "跳过口语",
+  "micRequiredOrSkipHint": "请先解决上方的麦克风问题，或跳过口语部分以完成考试。",
+  "examExpiredTitle": "{{date}} 未完成的考试已超时",
+  "examExpiredBody": "已超过 4 小时的时限，无法继续。你已提交的内容会保留，并在打开时评分。",
+  "openSessionTitle": "你已有一场未完成的考试",
+  "openSessionBody": "你之前开始的一场考试仍未结束。继续它，或结束它（已作答内容会保留并评分），然后开始新的考试。",
+  "openSessionReplace": "结束它并开始新的考试"
 }

@@ -297,5 +297,29 @@
   },
   "dictionary": {
     "translationLanguage": "Translation language"
+  },
+  "reportBug": {
+    "title": "Report a bug",
+    "description": "Tell us what went wrong or what you would like. It goes straight to the FlexiLingo team.",
+    "type": "Kind",
+    "types": {
+      "bug": "Something is broken",
+      "feature": "An idea",
+      "other": "Something else"
+    },
+    "subject": "Subject",
+    "subjectPlaceholder": "e.g. The speaking section will not start",
+    "subjectInvalid": "Write a subject of 3 to 200 characters.",
+    "message": "What happened?",
+    "messagePlaceholder": "What you did, what you expected, and what you saw instead.",
+    "messageInvalid": "Describe it in at least 10 characters.",
+    "email": "Your email",
+    "emailHint": "So we can answer you. Signed-in reports use your account email.",
+    "emailInvalid": "Enter a valid email address.",
+    "send": "Send",
+    "sendFailed": "Your report could not be sent. Check your connection and try again.",
+    "sent": "Thank you — your report reached the FlexiLingo team.",
+    "close": "Close",
+    "github": "Contributor? Open an issue on GitHub"
   }
 }

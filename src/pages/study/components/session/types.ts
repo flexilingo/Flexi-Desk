@@ -41,6 +41,8 @@ export interface MethodProps {
   /** Drives the predicted next-review intervals on the rating buttons. */
   srsAlgorithm: SRSAlgorithm;
   cardProgress: CardProgressSnapshot | null;
+  /** The rating buttons' days, computed by the scheduler itself (see `predicted_intervals`). */
+  predictedIntervals?: Record<string, number> | null;
   /** How many times this card has already come round in this session. */
   requeueCount: number;
   submitting: boolean;

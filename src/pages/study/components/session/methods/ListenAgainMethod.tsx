@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpeak } from '../../../hooks/useSpeak';
-import { formatInterval, predictIntervals } from '../../../utils/srs-display';
+import { ratingIntervalLabels } from '../../../utils/srs-display';
 import { InsightsPanel } from '../InsightsPanel';
 import { RatingButtons } from '../RatingButtons';
 import type { MethodProps } from '../types';
@@ -18,6 +18,7 @@ export function ListenAgainMethod({
   cardMeta,
   srsAlgorithm,
   cardProgress,
+  predictedIntervals,
   submitting,
   onSubmit,
   onNext,
@@ -32,11 +33,9 @@ export function ListenAgainMethod({
   const playedFor = useRef<string | null>(null);
 
   const intervals = useMemo(() => {
-    const days = predictIntervals(srsAlgorithm, cardProgress);
-    return Object.fromEntries(
-      Object.entries(days).map(([r, d]) => [r, formatInterval(d)]),
-    ) as Record<number, string>;
-  }, [srsAlgorithm, cardProgress]);
+    // The scheduler's own numbers; the formula port only for an older backend.
+    return ratingIntervalLabels(predictedIntervals, srsAlgorithm, cardProgress);
+  }, [srsAlgorithm, cardProgress, predictedIntervals]);
 
   const payload = activity.prompt_payload;
   const clipUrl = payload.type === 'listen_again' ? payload.audio_clip_url : '';

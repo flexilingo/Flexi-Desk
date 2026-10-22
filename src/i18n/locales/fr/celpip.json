@@ -51,22 +51,24 @@
     "listening": {
       "title": "Compréhension orale",
       "description": "Vous entendrez des extraits audio et répondrez à des questions à choix multiples. L'audio se joue une fois automatiquement.",
-      "duration": "55 minutes • 47 questions"
+      "duration": "55 minutes • {{n}} questions"
     },
     "reading": {
       "title": "Compréhension écrite",
       "description": "Lisez des passages et répondez à des questions à choix multiples.",
-      "duration": "55 minutes • 38 questions"
+      "duration": "55 minutes • {{n}} questions"
     },
     "writing": {
       "title": "Expression écrite",
       "description": "Complétez deux tâches d'écriture. Respectez le nombre de mots (150–200 mots chacune).",
-      "duration": "53 minutes • 2 tâches"
+      "duration": "53 minutes • 2 tâches",
+      "practiceDescription": "Complétez chaque tâche d'écriture. Surveillez le nombre de mots (150–200 mots chacune)."
     },
     "speaking": {
       "title": "Expression orale",
       "description": "Enregistrez des réponses orales pour 8 tâches. Vous aurez du temps de préparation avant chaque tâche.",
-      "duration": "~20 minutes • 8 tâches"
+      "duration": "~20 minutes • 8 tâches",
+      "practiceDescription": "Enregistrez une réponse orale pour chaque tâche. Vous disposez d’un temps de préparation avant chacune."
     }
   },
   "startSection": "Commencer la section",
@@ -368,5 +370,15 @@
   "examSettingsTranslate": "Toucher pour traduire",
   "examSettingsTranslateHint": "Touchez un mot pour voir son sens",
   "sectionSubmitOffline": "Vous êtes hors ligne : vos réponses sont enregistrées sur cet ordinateur. Nous les enverrons dès le retour de la connexion.",
-  "sectionSubmitUnreachable": "Le serveur est injoignable : vos réponses sont enregistrées sur cet ordinateur. Nous continuons d’essayer de les envoyer."
+  "sectionSubmitUnreachable": "Le serveur est injoignable : vos réponses sont enregistrées sur cet ordinateur. Nous continuons d’essayer de les envoyer.",
+  "micSkipSection": "Passer la section orale",
+  "micSkipSectionTitle": "Passer la section orale ?",
+  "micSkipSectionBody": "Les tâches orales sans réponse sont envoyées vides pour que vous puissiez terminer l'examen. Elles valent zéro ; tout le reste de votre travail est conservé.",
+  "micSkipSectionConfirm": "Passer l'oral",
+  "micRequiredOrSkipHint": "Réglez le micro ci-dessus, ou passez la section orale pour terminer l'examen.",
+  "examExpiredTitle": "L'examen inachevé du {{date}} a dépassé son temps",
+  "examExpiredBody": "Son délai de 4 heures est dépassé : il ne peut plus être repris. Ce que vous avez envoyé est conservé et noté à l'ouverture.",
+  "openSessionTitle": "Vous avez déjà un examen inachevé",
+  "openSessionBody": "Un examen commencé plus tôt est encore ouvert. Reprenez-le, ou terminez-le (vos réponses sont conservées et notées) et commencez le nouveau.",
+  "openSessionReplace": "Le terminer et en commencer un nouveau"
 }

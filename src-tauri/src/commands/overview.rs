@@ -396,7 +396,11 @@ pub fn words_snapshot(conn: &Connection) -> Result<WordsSnapshot, String> {
             |r| r.get(0),
         )
         .map_err(q)?;
-    let notes: i64 = conn.query_row("SELECT COUNT(*) FROM notes", [], |r| r.get(0)).unwrap_or(0);
+    // The notes the Notes page lists on this computer (podcast bookmarks + reader
+    // notes) - not the old `notes` table, which nothing writes any more (Windows QA W9).
+    let notes = crate::commands::notes::list_local_notes(conn)
+        .map(|v| v.len() as i64)
+        .unwrap_or(0);
     let mut cefr: HashMap<String, i64> =
         ["A1", "A2", "B1", "B2", "C1", "C2"].iter().map(|k| (k.to_string(), 0)).collect();
     let mut stmt = conn
@@ -644,5 +648,18 @@ mod tests {
         assert_eq!(w.new_this_week, 3);
         assert_eq!(w.cefr["B1"], 1);
         assert_eq!(w.cefr["A1"], 1);
+    }
+
+    #[test]
+    fn words_snapshot_counts_the_notes_the_notes_page_lists() {
+        let conn = db();
+        conn.execute("INSERT INTO podcast_feeds (id, feed_url, title, language) VALUES ('f1','https://e.com/rss','Feed','en')", []).unwrap();
+        conn.execute("INSERT INTO podcast_episodes (id, feed_id, title, audio_url, duration_seconds) VALUES ('e1','f1','Episode One','https://e.com/a.mp3',60)", []).unwrap();
+        conn.execute("INSERT INTO podcast_bookmarks (id, episode_id, position_ms, label, note) VALUES ('b1','e1',12000,'Idiom','a note')", []).unwrap();
+        conn.execute("INSERT INTO reader_documents (id, title, original_filename, kind, file_path) VALUES ('d1','Doc','doc.pdf','pdf','/x/doc.pdf')", []).unwrap();
+        conn.execute("INSERT INTO reader_notes (id, document_id, page_number, quote, body) VALUES ('n1','d1',3,'quoted words','reader body')", []).unwrap();
+        let listed = crate::commands::notes::list_local_notes(&conn).unwrap().len() as i64;
+        assert_eq!(listed, 2);
+        assert_eq!(words_snapshot(&conn).unwrap().notes, listed);
     }
 }

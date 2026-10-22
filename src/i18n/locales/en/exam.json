@@ -474,7 +474,9 @@
     "openSettingsFailed": "The settings page could not be opened. Open it from your system settings.",
     "noDevice": "No microphone was found. Plug one in or choose an input device in your system settings, then try again.",
     "inUse": "Another app is using the microphone. Close it, then try again.",
-    "unsupported": "This computer cannot record audio for the exam."
+    "unsupported": "This computer cannot record audio for the exam.",
+    "silentTitle": "Your microphone is connected but sends no sound",
+    "unmuteStep": "Check that the microphone is not muted and its input level is turned up in your system sound settings."
   },
   "listening": "Listening",
   "reading": "Reading",

@@ -49,22 +49,24 @@
     "listening": {
       "title": "Nghe",
       "description": "Bạn sẽ nghe các đoạn âm thanh và trả lời câu hỏi nhiều lựa chọn. Âm thanh tự động phát một lần.",
-      "duration": "55 phút • 47 câu hỏi"
+      "duration": "55 phút • {{n}} câu hỏi"
     },
     "reading": {
       "title": "Đọc",
       "description": "Đọc các đoạn văn và trả lời câu hỏi nhiều lựa chọn.",
-      "duration": "55 phút • 38 câu"
+      "duration": "55 phút • {{n}} câu"
     },
     "writing": {
       "title": "Viết",
       "description": "Hoàn thành hai nhiệm vụ viết. Chú ý số lượng từ (150–200 từ mỗi nhiệm vụ).",
-      "duration": "53 phút • 2 nhiệm vụ"
+      "duration": "53 phút • 2 nhiệm vụ",
+      "practiceDescription": "Hoàn thành từng bài viết. Chú ý số từ (150–200 từ mỗi bài)."
     },
     "speaking": {
       "title": "Nói",
       "description": "Ghi lại phản hồi nói cho 8 nhiệm vụ. Bạn sẽ có thời gian chuẩn bị trước mỗi nhiệm vụ.",
-      "duration": "~20 phút • 8 nhiệm vụ"
+      "duration": "~20 phút • 8 nhiệm vụ",
+      "practiceDescription": "Ghi âm câu trả lời cho từng nhiệm vụ. Bạn có thời gian chuẩn bị trước mỗi nhiệm vụ."
     }
   },
   "startSection": "Bắt Đầu Kỹ Năng",
@@ -364,5 +366,15 @@
   "examSettingsTranslate": "Chạm để dịch",
   "examSettingsTranslateHint": "Chạm vào từ bất kỳ để xem nghĩa",
   "sectionSubmitOffline": "Bạn đang ngoại tuyến — các câu trả lời được lưu trên máy này. Chúng tôi sẽ gửi khi bạn trực tuyến trở lại.",
-  "sectionSubmitUnreachable": "Không thể kết nối với máy chủ — các câu trả lời được lưu trên máy này. Chúng tôi sẽ tiếp tục thử gửi."
+  "sectionSubmitUnreachable": "Không thể kết nối với máy chủ — các câu trả lời được lưu trên máy này. Chúng tôi sẽ tiếp tục thử gửi.",
+  "micSkipSection": "Bỏ qua phần nói",
+  "micSkipSectionTitle": "Bỏ qua phần nói?",
+  "micSkipSectionBody": "Các nhiệm vụ nói bạn chưa trả lời sẽ được nộp trống để bạn có thể hoàn thành bài thi. Chúng được 0 điểm; mọi phần khác bạn đã làm vẫn được giữ.",
+  "micSkipSectionConfirm": "Bỏ qua phần nói",
+  "micRequiredOrSkipHint": "Hãy khắc phục micrô ở trên, hoặc bỏ qua phần nói để hoàn thành bài thi.",
+  "examExpiredTitle": "Bài thi chưa hoàn thành ngày {{date}} đã hết giờ",
+  "examExpiredBody": "Đã quá giới hạn 4 giờ nên không thể tiếp tục. Những gì bạn đã nộp vẫn được giữ và sẽ được chấm khi bạn mở bài.",
+  "openSessionTitle": "Bạn đang có một bài thi chưa hoàn thành",
+  "openSessionBody": "Một bài thi bạn bắt đầu trước đó vẫn đang mở. Hãy tiếp tục bài đó, hoặc kết thúc nó (câu trả lời được giữ và chấm điểm) rồi bắt đầu bài mới.",
+  "openSessionReplace": "Kết thúc và bắt đầu bài mới"
 }

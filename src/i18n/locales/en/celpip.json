@@ -51,22 +51,24 @@
     "listening": {
       "title": "Listening",
       "description": "You will hear audio clips and answer multiple-choice questions. Audio plays once automatically.",
-      "duration": "55 minutes • 47 questions"
+      "duration": "55 minutes • {{n}} questions"
     },
     "reading": {
       "title": "Reading",
       "description": "Read passages and answer multiple-choice questions.",
-      "duration": "55 minutes • 38 questions"
+      "duration": "55 minutes • {{n}} questions"
     },
     "writing": {
       "title": "Writing",
       "description": "Complete two written tasks. Watch your word count (150–200 words each).",
-      "duration": "53 minutes • 2 tasks"
+      "duration": "53 minutes • 2 tasks",
+      "practiceDescription": "Complete each writing task. Watch your word count (150–200 words each)."
     },
     "speaking": {
       "title": "Speaking",
       "description": "Record spoken responses for 8 tasks. You will have preparation time before each task.",
-      "duration": "~20 minutes • 8 tasks"
+      "duration": "~20 minutes • 8 tasks",
+      "practiceDescription": "Record a spoken response for each task. You will have preparation time before each one."
     }
   },
   "startSection": "Begin Section",
@@ -368,5 +370,15 @@
   "examSettingsTranslate": "Tap to translate",
   "examSettingsTranslateHint": "Tap any word to see its meaning",
   "sectionSubmitOffline": "You're offline - your answers are saved on this computer. We'll send them when you're back online.",
-  "sectionSubmitUnreachable": "We couldn't reach the server - your answers are saved on this computer. We'll keep trying to send them."
+  "sectionSubmitUnreachable": "We couldn't reach the server - your answers are saved on this computer. We'll keep trying to send them.",
+  "micSkipSection": "Skip the speaking section",
+  "micSkipSectionTitle": "Skip the speaking section?",
+  "micSkipSectionBody": "The speaking tasks you have not answered are submitted without an answer, so you can finish the exam. They score zero; everything else you did is kept.",
+  "micSkipSectionConfirm": "Skip speaking",
+  "micRequiredOrSkipHint": "Fix the microphone above, or skip the speaking section to finish the exam.",
+  "examExpiredTitle": "Unfinished exam from {{date}} ran out of time",
+  "examExpiredBody": "Its 4-hour limit has passed, so it can no longer be resumed. What you submitted is kept and scored when you open it.",
+  "openSessionTitle": "You already have an unfinished exam",
+  "openSessionBody": "An exam you started earlier is still open. Resume it, or end it (what you answered is kept and scored) and start the new one.",
+  "openSessionReplace": "End it and start a new one"
 }

@@ -211,6 +211,9 @@ export function localInsightProvider(
 
       const skills = {} as Record<InsightSkill, InsightSkillState>;
       const insight: Partial<ExamInsight> = {};
+      const errors: Partial<Record<InsightSkill, string>> = {};
+      for (const r of rows)
+        if (r.status === 'error' && r.error) errors[r.skill as InsightSkill] = r.error;
 
       for (const skill of SKILL_ORDER) {
         if (!taken.includes(skill as SectionType)) {
@@ -228,7 +231,7 @@ export function localInsightProvider(
       skills.summary = taken.length === 0 ? 'not_taken' : stateOf(bySkill.get('summary'));
       hydrate(insight, 'summary', bySkill.get('summary'));
 
-      return { skills, insight, taken_sections: taken };
+      return { skills, insight, taken_sections: taken, errors };
     },
 
     async generate(skill) {

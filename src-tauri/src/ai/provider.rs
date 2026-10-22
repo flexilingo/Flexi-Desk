@@ -1,6 +1,11 @@
 use futures_util::StreamExt;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use std::future::Future;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::OnceLock;
+use std::time::Duration;
+use tokio::sync::Notify;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessage {
@@ -264,8 +269,114 @@ pub async fn anthropic_chat(
     Ok(content)
 }
 
-/// Dispatch to the right provider based on provider name.
+// ---------------------------------------------------------------------------
+// Time limit and Cancel for every non-streaming AI call
+// ---------------------------------------------------------------------------
+//
+// A small model on a slow CPU can take half an hour on one exam insight. Every
+// call through `chat_completion` therefore has a time limit (the user can change
+// it in Settings -> My AI) and can be cancelled from the UI. Either way the request
+// future is dropped, which closes the HTTP connection - Ollama stops generating
+// when its client goes away, so the computer is not left busy.
+
+/// Settings key holding the per-call limit in seconds.
+pub const AI_TIMEOUT_SETTING: &str = "ai_request_timeout_sec";
+pub const DEFAULT_AI_TIMEOUT_SECS: u64 = 180;
+const MIN_AI_TIMEOUT_SECS: u64 = 30;
+const MAX_AI_TIMEOUT_SECS: u64 = 3600;
+
+static AI_TIMEOUT_SECS: AtomicU64 = AtomicU64::new(DEFAULT_AI_TIMEOUT_SECS);
+static AI_CANCEL: OnceLock<Notify> = OnceLock::new();
+
+fn cancel_signal() -> &'static Notify {
+    AI_CANCEL.get_or_init(Notify::new)
+}
+
+/// The per-call limit from a stored setting: a number of seconds, clamped; anything
+/// unreadable means the default.
+pub fn parse_timeout_setting(value: Option<&str>) -> u64 {
+    value
+        .and_then(|v| v.trim().parse::<u64>().ok())
+        .map(|v| v.clamp(MIN_AI_TIMEOUT_SECS, MAX_AI_TIMEOUT_SECS))
+        .unwrap_or(DEFAULT_AI_TIMEOUT_SECS)
+}
+
+pub fn set_request_timeout_secs(secs: u64) {
+    AI_TIMEOUT_SECS.store(
+        secs.clamp(MIN_AI_TIMEOUT_SECS, MAX_AI_TIMEOUT_SECS),
+        Ordering::Relaxed,
+    );
+}
+
+pub fn request_timeout_secs() -> u64 {
+    AI_TIMEOUT_SECS.load(Ordering::Relaxed)
+}
+
+/// Reads the stored limit (at start-up).
+pub fn load_request_timeout(conn: &Connection) {
+    let stored: Option<String> = conn
+        .query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            rusqlite::params![AI_TIMEOUT_SETTING],
+            |row| row.get(0),
+        )
+        .ok();
+    set_request_timeout_secs(parse_timeout_setting(stored.as_deref()));
+}
+
+/// Stops every AI call that is running now (the Cancel button). Calls started
+/// afterwards are not affected.
+pub fn cancel_requests() {
+    cancel_signal().notify_waiters();
+}
+
+/// Runs one AI call under the time limit and the Cancel signal.
+/// `AI_TIMEOUT` / `AI_CANCELLED` are codes the UI translates.
+pub async fn guard_ai_call<F>(limit: Duration, call: F) -> Result<String, String>
+where
+    F: Future<Output = Result<String, String>>,
+{
+    guard_with(cancel_signal(), limit, call).await
+}
+
+async fn guard_with<F>(signal: &Notify, limit: Duration, call: F) -> Result<String, String>
+where
+    F: Future<Output = Result<String, String>>,
+{
+    // Registered before the call starts, so a Cancel pressed at any moment reaches it.
+    let cancelled = signal.notified();
+    tokio::pin!(cancelled);
+    cancelled.as_mut().enable();
+    tokio::select! {
+        result = tokio::time::timeout(limit, call) => {
+            result.unwrap_or_else(|_| Err("AI_TIMEOUT".to_string()))
+        }
+        _ = &mut cancelled => Err("AI_CANCELLED".to_string()),
+    }
+}
+
+/// Dispatch to the right provider based on provider name, under the time limit
+/// and the Cancel signal.
 pub async fn chat_completion(
+    provider: &str,
+    model: &str,
+    messages: Vec<ChatMessage>,
+    api_key: Option<&str>,
+    base_url: Option<&str>,
+    temperature: Option<f64>,
+    max_tokens: Option<u32>,
+    json_mode: bool,
+) -> Result<String, String> {
+    let limit = Duration::from_secs(request_timeout_secs());
+    guard_ai_call(
+        limit,
+        dispatch_chat(provider, model, messages, api_key, base_url, temperature, max_tokens, json_mode),
+    )
+    .await
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn dispatch_chat(
     provider: &str,
     model: &str,
     messages: Vec<ChatMessage>,
@@ -618,5 +729,60 @@ mod key_tests {
     fn custom_address_may_need_no_key() {
         assert_eq!(openai_key(None, Some("http://localhost:1234")), Ok(""));
         assert_eq!(openai_key(None, Some("  ")), Err("AI_KEY_MISSING".to_string()));
+    }
+}
+
+#[cfg(test)]
+mod guard_tests {
+    use super::*;
+
+    #[test]
+    fn timeout_setting_is_clamped_and_defaults() {
+        assert_eq!(parse_timeout_setting(None), DEFAULT_AI_TIMEOUT_SECS);
+        assert_eq!(parse_timeout_setting(Some("abc")), DEFAULT_AI_TIMEOUT_SECS);
+        assert_eq!(parse_timeout_setting(Some("300")), 300);
+        assert_eq!(parse_timeout_setting(Some("5")), MIN_AI_TIMEOUT_SECS);
+        assert_eq!(parse_timeout_setting(Some("999999")), MAX_AI_TIMEOUT_SECS);
+    }
+
+    fn rt() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_current_thread().enable_time().build().unwrap()
+    }
+
+    #[test]
+    fn a_call_past_its_limit_ends_with_ai_timeout() {
+        let out = rt().block_on(guard_ai_call(Duration::from_millis(20), async {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            Ok("late".to_string())
+        }));
+        assert_eq!(out, Err("AI_TIMEOUT".to_string()));
+    }
+
+    #[test]
+    fn a_quick_call_passes_through() {
+        let out = rt().block_on(guard_ai_call(Duration::from_secs(5), async { Ok("ok".to_string()) }));
+        assert_eq!(out, Ok("ok".to_string()));
+    }
+
+    #[test]
+    fn cancel_stops_a_running_call() {
+        // Its own signal: the shared one would also cancel the other tests' calls.
+        let signal = Notify::new();
+        let out = rt().block_on(async {
+            let call = guard_with(&signal, Duration::from_secs(30), async {
+                tokio::time::sleep(Duration::from_secs(10)).await;
+                Ok("never".to_string())
+            });
+            let cancel = async {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                signal.notify_waiters();
+                std::future::pending::<()>().await;
+            };
+            tokio::select! {
+                r = call => r,
+                _ = cancel => unreachable!(),
+            }
+        });
+        assert_eq!(out, Err("AI_CANCELLED".to_string()));
     }
 }

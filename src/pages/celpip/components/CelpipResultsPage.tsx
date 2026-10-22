@@ -623,6 +623,11 @@ export function CelpipResultsPage({
                     staged.retry('summary');
                   }}
                   onRetrySummary={() => staged.retry('summary')}
+                  insightWait={{
+                    startedAt: staged.startedAt,
+                    stopped: staged.stopped,
+                    onCancel: staged.cancel,
+                  }}
                   vsAvgT={vsAvgT}
                   scale={scale}
                   rawScores={rawScores}
@@ -746,6 +751,11 @@ export function CelpipResultsPage({
                     insightState={staged.skillState(currentTab as InsightSkill)}
                     insight={staged.insight}
                     onRetryInsight={() => staged.retry(currentTab as InsightSkill)}
+                    insightWait={{
+                      startedAt: staged.runningSkill === currentTab ? staged.startedAt : null,
+                      stopKind: staged.stopKind(currentTab as InsightSkill),
+                      onCancel: staged.cancel,
+                    }}
                     yourAnswerLabel={t('results.yourAnswer')}
                     taskLabel={t('task')}
                     vsAvgT={vsAvgT}

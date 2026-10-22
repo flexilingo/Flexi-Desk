@@ -144,8 +144,9 @@ export function dialogSpeakers(language: string, ownVoice?: string | null): Dial
 export function errorCodeOf(err: unknown): string {
   const { code, message } = parseCloudError(err);
   if (/^[A-Z][A-Z0-9_]{2,63}$/.test(code)) return code;
-  if (/OLLAMA_NOT_RUNNING|OLLAMA_MODEL_MISSING|AI_KEY_MISSING/.test(message))
-    return message.match(/OLLAMA_NOT_RUNNING|OLLAMA_MODEL_MISSING|AI_KEY_MISSING/)![0];
+  // Before the network check: "AI_TIMEOUT" would otherwise read as a timed-out connection.
+  const own = /OLLAMA_NOT_RUNNING|OLLAMA_MODEL_MISSING|AI_KEY_MISSING|AI_TIMEOUT|AI_CANCELLED/;
+  if (own.test(message)) return message.match(own)![0];
   if (/error sending request|failed to send|network|timed? ?out|offline|dns/i.test(message))
     return 'NETWORK_ERROR';
   return 'UNKNOWN_ERROR';

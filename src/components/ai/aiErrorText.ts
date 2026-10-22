@@ -5,6 +5,8 @@ const KNOWN = [
   'OLLAMA_MODEL_MISSING',
   'AI_KEY_MISSING',
   'AI_NOT_READY',
+  'AI_TIMEOUT',
+  'AI_CANCELLED',
 ] as const;
 
 /** A friendly, translated sentence for any failure of the user's AI. */

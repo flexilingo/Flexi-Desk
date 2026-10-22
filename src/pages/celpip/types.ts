@@ -501,6 +501,8 @@ export interface InsightStatus {
   skills: Record<InsightSkill, InsightSkillState>;
   insight: Partial<ExamInsight>;
   taken_sections: string[];
+  /** On-device only: why a skill's last run failed (e.g. `AI_TIMEOUT`). */
+  errors?: Partial<Record<InsightSkill, string>>;
 }
 
 export interface AssembleExamPayload {

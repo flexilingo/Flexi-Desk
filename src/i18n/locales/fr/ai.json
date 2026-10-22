@@ -41,7 +41,9 @@
     "AI_KEY_REJECTED": "Le fournisseur a refusé cette clé. Vérifiez-la et réessayez.",
     "AI_RATE_LIMITED": "Le fournisseur indique que votre limite est atteinte pour le moment. Réessayez plus tard.",
     "AI_UNREACHABLE": "Impossible de joindre votre IA. Vérifiez l'adresse et votre connexion.",
-    "UNKNOWN_ERROR": "Un problème est survenu avec votre IA. Réessayez."
+    "UNKNOWN_ERROR": "Un problème est survenu avec votre IA. Réessayez.",
+    "AI_TIMEOUT": "Votre IA a mis trop de temps — essayez un modèle plus petit ou votre propre clé.",
+    "AI_CANCELLED": "Vous avez arrêté cette réponse."
   },
   "origin": {
     "device": "Sur cet appareil",
@@ -75,7 +77,12 @@
     "cloudNeedsSignIn": "Connectez-vous avec une offre payante pour activer cette option.",
     "cloudNeedsPaid": "Disponible uniquement avec une offre payante.",
     "cloudInactive": "Activé mais inactif : il faut être connecté avec une offre payante.",
-    "cloudActive": "Actif pour l'analyse des mots et l'analyse des examens."
+    "cloudActive": "Actif pour l'analyse des mots et l'analyse des examens.",
+    "timeoutLabel": "Délai par réponse",
+    "timeoutHint": "Si votre IA n'a pas répondu d'ici là, la demande est arrêtée et vous pouvez réessayer. Les ordinateurs lents peuvent avoir besoin de plus de temps.",
+    "timeoutMinutes_one": "{{count}} minute",
+    "timeoutMinutes_other": "{{count}} minutes",
+    "timeoutSaveFailed": "Le délai n'a pas pu être enregistré. Réessayez."
   },
   "wizard": {
     "ownKeyLink": "Utiliser plutôt ma propre clé (OpenAI, Anthropic ou un autre serveur)",
@@ -145,5 +152,13 @@
       "llama3_1_70b": "Le plus performant. Demande 48 Go de mémoire ou plus. Meilleurs retours en grammaire et en écriture."
     },
     "dismiss": "Fermer"
+  },
+  "wait": {
+    "elapsed": "En cours depuis {{time}}",
+    "cancel": "Annuler",
+    "slowHint": "L'IA de votre ordinateur peut prendre quelques minutes. Elle s'arrête d'elle-même après le délai fixé dans Réglages → Votre IA.",
+    "timeoutHint": "Les ordinateurs plus anciens répondent lentement. Choisissez un modèle plus petit, utilisez votre propre clé ou accordez plus de temps dans Réglages → Votre IA.",
+    "retry": "Réessayer",
+    "openSettings": "Réglages de l'IA"
   }
 }

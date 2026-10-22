@@ -135,10 +135,15 @@ export function StartExamDialog({
   const {
     start,
     startPracticeSession,
+    complete,
     isStarting,
     error: storeError,
     clearError,
   } = useCelpipStore();
+  // The server handed back an unfinished sitting instead of a new exam (one open
+  // sitting per exam type): resume it, or end it and start the new one.
+  const [openSessionId, setOpenSessionId] = useState<string | null>(null);
+  const [replacing, setReplacing] = useState(false);
 
   // Practice is the default (it is what learners choose and finish); an exam with
   // no practice (TCF IRN) opens on the full exam.
@@ -187,6 +192,7 @@ export function StartExamDialog({
       setExpandedSection(firstExpanded(preselect));
       setPickSingle(wholeSection(preselect));
       setClientError(null);
+      setOpenSessionId(null);
       clearError();
     }
   }
@@ -250,12 +256,35 @@ export function StartExamDialog({
 
   const startFull = async (learning = false) => {
     setClientError(null);
+    setOpenSessionId(null);
     const id = await start({
       exam_type: profile.examType,
       no_repeat: noRepeat,
       ...(learning ? { learning_mode: true } : {}),
     });
+    if (id && useCelpipStore.getState().startResumed) {
+      setOpenSessionId(id);
+      return;
+    }
     goToSession(id);
+  };
+
+  // End the open sitting (what it holds is scored), then assemble the new exam.
+  const replaceOpenSession = async () => {
+    if (!openSessionId) return;
+    setReplacing(true);
+    setClientError(null);
+    try {
+      const ended = await complete(openSessionId, true);
+      if (!ended) {
+        setClientError(t('startExamError'));
+        return;
+      }
+      setOpenSessionId(null);
+      await startFull(untimed && mode === 'practice');
+    } finally {
+      setReplacing(false);
+    }
   };
 
   const startPractice = async (learning = false) => {
@@ -490,6 +519,30 @@ export function StartExamDialog({
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {openSessionId && (
+            <div
+              data-testid="start-open-session"
+              className="flex flex-col gap-2.5 rounded-[9px] border border-warning/40 bg-warning/10 px-3 py-3 text-[12.5px] text-foreground"
+            >
+              <p className="font-semibold">{t('openSessionTitle')}</p>
+              <p className="text-muted-foreground">{t('openSessionBody')}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" onClick={() => goToSession(openSessionId)} disabled={replacing}>
+                  {t('resumeExam')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void replaceOpenSession()}
+                  disabled={replacing}
+                >
+                  {replacing && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {t('openSessionReplace')}
+                </Button>
               </div>
             </div>
           )}

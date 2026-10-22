@@ -9,12 +9,14 @@ import {
   Headphones,
   BookOpen,
   PenLine,
+  SkipForward,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMicrophonePermission } from './useMicrophonePermission';
 import { MicAccessPanel } from '@/components/mic/MicAccessPanel';
 import MicLevelCheck from '../speaking/MicLevelCheck';
+import { ConfirmDialog } from './ConfirmDialog';
 import type { SectionType } from '../../types';
 
 interface SectionTone {
@@ -58,28 +60,76 @@ interface SectionIntroProps {
   requiresMic?: boolean;
   /** Practice slice: how many items/tasks this run holds (replaces the full-paper count). */
   itemCount?: number;
+  /**
+   * Questions (listening/reading) or tasks this sitting really holds, put into the
+   * full exam's "55 minutes • {{n}} questions" copy instead of a fixed figure.
+   */
+  questionCount?: number;
   /** Where the intro copy lives: `sectionIntro` in `celpip`, `tcf.sectionIntro` in `exam`. */
   copyPrefix?: string;
   copyNs?: 'celpip' | 'exam';
+  /**
+   * Speaking without a working microphone: submit the section unanswered so the
+   * exam can still be finished. Resolves true once the server holds it.
+   */
+  onSkipSection?: () => Promise<boolean>;
 }
+
+// Mic states that cannot record: unblock steps + Try again + Skip.
+const MIC_BLOCKED = new Set(['denied', 'no-device', 'in-use', 'silent', 'unsupported']);
 
 export function SectionIntro({
   sectionType,
   onStart,
   requiresMic,
   itemCount,
+  questionCount,
   copyPrefix = 'sectionIntro',
   copyNs = 'celpip',
+  onSkipSection,
 }: SectionIntroProps) {
   const { t } = useTranslation('celpip');
   const { t: tx, i18n } = useTranslation(copyNs);
+  const { t: tExam } = useTranslation('exam');
   const i18nHas = (key: string) => i18n.exists(key, { ns: copyNs });
   const { status, requestPermission } = useMicrophonePermission();
   const [showMicHint, setShowMicHint] = useState(false);
+  const [skipOpen, setSkipOpen] = useState(false);
+  const [skipping, setSkipping] = useState(false);
+  const [skipFailed, setSkipFailed] = useState(false);
   const tone = SECTION_TONES[sectionType];
   const Icon = tone.icon;
 
   const micReady = !requiresMic || status === 'granted';
+
+  const micBlocked = !!requiresMic && MIC_BLOCKED.has(status);
+
+  const confirmSkip = async () => {
+    if (!onSkipSection) return;
+    setSkipping(true);
+    setSkipFailed(false);
+    try {
+      // On failure the dialog stays open with the error, ready for another try.
+      if (await onSkipSection()) setSkipOpen(false);
+      else setSkipFailed(true);
+    } catch {
+      setSkipFailed(true);
+    } finally {
+      setSkipping(false);
+    }
+  };
+
+  const skipButton = onSkipSection ? (
+    <button
+      type="button"
+      data-testid="skip-speaking-section"
+      onClick={() => setSkipOpen(true)}
+      className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"
+    >
+      <SkipForward className="h-3.5 w-3.5" />
+      {t('micSkipSection')}
+    </button>
+  ) : undefined;
 
   const handleBegin = () => {
     if (micReady) {
@@ -103,9 +153,7 @@ export function SectionIntro({
         <p className="text-[13px] text-muted-foreground mb-3 leading-relaxed">
           {/* Writing and speaking name a count in their copy, which a practice
               subset contradicts — those carry a countless variant. */}
-          {itemCount !== undefined &&
-          copyNs === 'exam' &&
-          i18nHas(`${copyPrefix}.${sectionType}.practiceDescription`)
+          {itemCount !== undefined && i18nHas(`${copyPrefix}.${sectionType}.practiceDescription`)
             ? tx(`${copyPrefix}.${sectionType}.practiceDescription`)
             : tx(`${copyPrefix}.${sectionType}.description`)}
         </p>
@@ -113,15 +161,15 @@ export function SectionIntro({
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[11.5px] font-semibold mb-6 ${tone.chip}`}
         >
           <Clock className="w-3 h-3" />
-          {itemCount === undefined || copyNs !== 'exam'
-            ? tx(`${copyPrefix}.${sectionType}.duration`)
-            : tx(
+          {itemCount === undefined
+            ? tx(`${copyPrefix}.${sectionType}.duration`, {
+                n: questionCount === undefined ? '' : questionCount.toLocaleString(i18n.language),
+              })
+            : tExam(
                 sectionType === 'writing' || sectionType === 'speaking'
                   ? 'practiceTaskCount'
                   : 'practiceQuestionCount',
-                {
-                  count: itemCount,
-                },
+                { count: itemCount },
               )}
         </div>
 
@@ -167,12 +215,18 @@ export function SectionIntro({
 
             {/* Blocked, no device, in use: what is wrong, the steps for this computer,
                 Try again. Typing is never offered in place of speaking. */}
-            <MicAccessPanel status={status} onRetry={() => void requestPermission()} />
+            <MicAccessPanel
+              status={status}
+              onRetry={() => void requestPermission()}
+              fallbackSlot={skipButton}
+            />
           </div>
         )}
 
         {showMicHint && !micReady && (
-          <p className="mb-3 text-[12px] text-error font-medium">{t('micRequiredHint')}</p>
+          <p className="mb-3 text-[12px] text-error font-medium">
+            {t(micBlocked && onSkipSection ? 'micRequiredOrSkipHint' : 'micRequiredHint')}
+          </p>
         )}
 
         <Button onClick={handleBegin}>
@@ -180,6 +234,28 @@ export function SectionIntro({
           <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </Button>
       </div>
+      <ConfirmDialog
+        open={skipOpen}
+        onOpenChange={(o) => {
+          if (!skipping) setSkipOpen(o);
+        }}
+        variant="warning"
+        title={t('micSkipSectionTitle')}
+        description={
+          <>
+            {t('micSkipSectionBody')}
+            {skipFailed && (
+              <span role="alert" className="mt-2 block text-error">
+                {t('sectionSubmitError')}
+              </span>
+            )}
+          </>
+        }
+        confirmText={t('micSkipSectionConfirm')}
+        cancelText={t('cancel')}
+        onConfirm={() => void confirmSkip()}
+        isLoading={skipping}
+      />
     </div>
   );
 }

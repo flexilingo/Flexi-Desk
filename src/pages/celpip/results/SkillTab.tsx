@@ -18,7 +18,7 @@ import type {
 import { SECTION_META, CLB_SCALE, type ScoreScale } from './shared';
 import { McqResultTab } from './McqResultTab';
 import { AiInsightTab } from './AiInsightTab';
-import { SkillInsightPanel, InsightOriginBadge } from './SkillInsightPanel';
+import { SkillInsightPanel, InsightOriginBadge, type InsightWait } from './SkillInsightPanel';
 import { VsAvgBadge } from './HeroScoreCard';
 
 type Skill = Exclude<InsightSkill, 'summary'>;
@@ -35,6 +35,8 @@ interface SkillTabProps {
   /** Where the insight was generated (this device, own key, cloud): drives the error path and the badge. */
   insightOrigin: InsightOrigin;
   onRetryInsight: () => void;
+  /** Elapsed time, Cancel and the stop reason of a run on the user's own AI. */
+  insightWait?: InsightWait;
   yourAnswerLabel: string;
   taskLabel: string;
   /** Speaking only: the prompt and picture each task was answered against. */
@@ -89,6 +91,7 @@ export function SkillTab({
   insight,
   insightOrigin,
   onRetryInsight,
+  insightWait,
   yourAnswerLabel,
   taskLabel,
   speakingTasks,
@@ -202,6 +205,7 @@ export function SkillTab({
         origin={insightOrigin}
         onRetry={onRetryInsight}
         explainedInCard={explainedInCard}
+        wait={insightWait}
       />
     );
 
@@ -305,6 +309,7 @@ export function SkillTab({
                     origin={insightOrigin}
                     onRetry={onRetryInsight}
                     taskIndex={taskIndex}
+                    wait={insightWait}
                   />
                 )
               : undefined

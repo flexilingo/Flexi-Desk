@@ -12,12 +12,21 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { AiErrorOrSetup } from '@/components/ai/AiErrorOrSetup';
+import { AiStoppedNotice } from '@/components/ai/AiWait';
+import { cancelAiRequests } from '@/lib/aiWait';
 import { InlineError } from '@/components/common/InlineError';
-import { isAiSetupError } from '@/lib/aiSource';
+import { aiStopKind, isAiSetupError, type AiStopKind } from '@/lib/aiSource';
 import { cn } from '@/lib/utils';
 import * as api from '../lib/api';
 import { writingErrorText } from '../lib/errors';
-import { MIN_WORDS, countWords, elapsedSeconds, formatTime, timeRemaining } from '../lib/session';
+import {
+  MIN_WORDS,
+  countWords,
+  elapsedSeconds,
+  formatTime,
+  routeOfId,
+  timeRemaining,
+} from '../lib/session';
 import { useAutosave } from '../lib/useAutosave';
 import type { WritingSession } from '../lib/types';
 import { GradingState } from './bits';
@@ -37,6 +46,9 @@ export function ActiveWritingView({ session, onGraded }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // The user's own AI: when grading started (elapsed + Cancel), and why it stopped.
+  const [submitStartedAt, setSubmitStartedAt] = useState<number | null>(null);
+  const [stopKind, setStopKind] = useState<AiStopKind | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [stopError, setStopError] = useState<string | null>(null);
@@ -77,6 +89,8 @@ export function ActiveWritingView({ session, onGraded }: Props) {
     if (!essayText.trim()) return;
     setError(null);
     setSetupError(null);
+    setStopKind(null);
+    setSubmitStartedAt(Date.now());
     setSubmitting(true);
     autosave.cancel();
     try {
@@ -89,7 +103,9 @@ export function ActiveWritingView({ session, onGraded }: Props) {
       onGraded(graded);
     } catch (err) {
       // The essay stays saved. A not-set-up AI gets the setup card; the rest an inline error.
-      if (isAiSetupError(err)) setSetupError(String(err));
+      const stop = aiStopKind(err);
+      if (stop) setStopKind(stop);
+      else if (isAiSetupError(err)) setSetupError(String(err));
       else setError(writingErrorText(t, err));
       setSubmitting(false);
     }
@@ -108,7 +124,17 @@ export function ActiveWritingView({ session, onGraded }: Props) {
   };
 
   if (submitting) {
-    return <GradingState title={t('submitting')} body={t('feedback.gradingDescription')} />;
+    return (
+      <GradingState
+        title={t('submitting')}
+        body={t('feedback.gradingDescription')}
+        wait={
+          routeOfId(sessionId) === 'local'
+            ? { startedAt: submitStartedAt, onCancel: () => void cancelAiRequests() }
+            : undefined
+        }
+      />
+    );
   }
 
   const canSubmit = wordCount >= MIN_WORDS && !isTimeUp;
@@ -162,6 +188,7 @@ export function ActiveWritingView({ session, onGraded }: Props) {
               }}
             />
           )}
+          {stopKind && <AiStoppedNotice kind={stopKind} onRetry={() => void submit()} />}
           {error && <InlineError message={error} onDismiss={() => setError(null)} />}
         </div>
 

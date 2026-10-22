@@ -41,7 +41,9 @@
     "AI_KEY_REJECTED": "Nhà cung cấp đã từ chối khóa này. Hãy kiểm tra và thử lại.",
     "AI_RATE_LIMITED": "Nhà cung cấp cho biết bạn đã dùng hết hạn mức lúc này. Hãy thử lại sau.",
     "AI_UNREACHABLE": "Không thể kết nối với AI của bạn. Hãy kiểm tra địa chỉ và kết nối của bạn.",
-    "UNKNOWN_ERROR": "AI của bạn gặp sự cố. Hãy thử lại."
+    "UNKNOWN_ERROR": "AI của bạn gặp sự cố. Hãy thử lại.",
+    "AI_TIMEOUT": "AI của bạn mất quá nhiều thời gian — hãy thử mô hình nhỏ hơn hoặc khóa riêng của bạn.",
+    "AI_CANCELLED": "Bạn đã dừng câu trả lời này."
   },
   "origin": {
     "device": "Trên thiết bị này",
@@ -75,7 +77,12 @@
     "cloudNeedsSignIn": "Hãy đăng nhập gói trả phí để bật tính năng này.",
     "cloudNeedsPaid": "Chỉ có trong các gói trả phí.",
     "cloudInactive": "Đã bật nhưng chưa hoạt động: cần đăng nhập gói trả phí.",
-    "cloudActive": "Đang hoạt động cho phân tích từ và nhận xét bài thi."
+    "cloudActive": "Đang hoạt động cho phân tích từ và nhận xét bài thi.",
+    "timeoutLabel": "Giới hạn thời gian mỗi câu trả lời",
+    "timeoutHint": "Nếu AI của bạn chưa trả lời trong thời gian này, yêu cầu sẽ bị dừng và bạn có thể thử lại. Máy tính chậm có thể cần lâu hơn.",
+    "timeoutMinutes_one": "{{count}} phút",
+    "timeoutMinutes_other": "{{count}} phút",
+    "timeoutSaveFailed": "Không lưu được giới hạn thời gian. Hãy thử lại."
   },
   "wizard": {
     "ownKeyLink": "Dùng khóa của tôi thay thế (OpenAI, Anthropic hoặc máy chủ khác)",
@@ -145,5 +152,13 @@
       "llama3_1_70b": "Mạnh nhất. Cần 48 GB bộ nhớ trở lên. Phản hồi ngữ pháp và viết tốt nhất."
     },
     "dismiss": "Đóng"
+  },
+  "wait": {
+    "elapsed": "Đang xử lý {{time}}",
+    "cancel": "Hủy",
+    "slowHint": "AI trên máy tính của bạn có thể mất vài phút. Nó tự dừng sau giới hạn thời gian đặt trong Cài đặt → AI của bạn.",
+    "timeoutHint": "Máy tính cũ trả lời chậm. Hãy chọn mô hình nhỏ hơn, dùng khóa riêng của bạn, hoặc cho thêm thời gian trong Cài đặt → AI của bạn.",
+    "retry": "Thử lại",
+    "openSettings": "Cài đặt AI"
   }
 }

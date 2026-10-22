@@ -13,5 +13,11 @@
   "ready": "The update is installed. Restart to finish.",
   "restart": "Restart now",
   "dismiss": "Dismiss",
-  "error": "Could not update: {{message}}"
+  "error": "Could not update: {{message}}",
+  "errors": {
+    "check": "Could not check for updates right now. Check your connection and try again.",
+    "install": "The update could not be downloaded or installed. Try again.",
+    "restart": "FlexiDesk could not restart by itself. Close it and open it again."
+  },
+  "tryAgain": "Try again"
 }

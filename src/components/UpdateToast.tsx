@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { progressPercent, useUpdaterStore } from '@/stores/updaterStore';
+import { progressPercent, updaterErrorKey, useUpdaterStore } from '@/stores/updaterStore';
 
 /** Small corner notice: shows only when an update was found at startup. */
 export function UpdateToast() {
   const { t } = useTranslation('updater');
-  const { status, version, progress, error, dismissed, install, restart, dismiss } =
+  const { status, version, progress, error, failure, dismissed, install, restart, dismiss } =
     useUpdaterStore();
 
   const canRetry = status === 'error' && !!version;
@@ -42,7 +42,11 @@ export function UpdateToast() {
           </p>
         </div>
       )}
-      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+      {status === 'error' && (
+        <p title={error ?? undefined} className="mt-2 text-xs text-destructive">
+          {t(updaterErrorKey(failure))}
+        </p>
+      )}
       <div className="mt-3">
         {(status === 'available' || canRetry) && (
           <Button size="sm" className="inline-flex" onClick={() => void install()}>

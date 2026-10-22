@@ -130,6 +130,22 @@ export function predictIntervals(
   }
 }
 
+/**
+ * The labels on the rating buttons. `predicted` is what Rust's own scheduler says
+ * each rating does to this card (`predicted_intervals`, 0 = it stays due); the
+ * formula port above is only the fallback for a response without it.
+ */
+export function ratingIntervalLabels(
+  predicted: Record<string, number> | null | undefined,
+  algorithm: SRSAlgorithm | undefined,
+  progress: Progress,
+): Record<number, string> {
+  const days = predicted ?? predictIntervals(algorithm, progress);
+  return Object.fromEntries(
+    Object.entries(days).map(([r, d]) => [Number(r), formatInterval(d)]),
+  ) as Record<number, string>;
+}
+
 /** Format days into a short human string (<1d, 3d, 2w, 5mo, 1.4y). */
 export function formatInterval(days: number): string {
   if (days < 1) return '<1d';

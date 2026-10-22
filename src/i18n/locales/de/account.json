@@ -695,7 +695,8 @@
       "cardsReviewed": "Karten wiederholt",
       "mastered": "Gemeistert",
       "accuracyRate": "Genauigkeitsrate",
-      "streakDays": "Streak-Tage"
+      "streakDays": "Streak-Tage",
+      "reviewStreakDays": "Karten-Wiederholungsserie (Konto)"
     },
     "mastered": "Gemeistert",
     "accuracyRate": "Genauigkeitsrate",

@@ -66,6 +66,12 @@ interface CelpipState {
   isResultsLoading: boolean;
 
   isStarting: boolean;
+  /**
+   * The last full-exam start handed back an unfinished session instead of a new
+   * one (the server keeps one open sitting per exam type). The start dialog then
+   * asks: resume it, or end it and start fresh.
+   */
+  startResumed: boolean;
   isSubmitting: boolean;
   isCompleting: boolean;
 
@@ -204,6 +210,7 @@ export const useCelpipStore = create<CelpipState>()(
     results: null,
     isResultsLoading: false,
     isStarting: false,
+    startResumed: false,
     isSubmitting: false,
     isCompleting: false,
     error: null,
@@ -271,12 +278,14 @@ export const useCelpipStore = create<CelpipState>()(
     start: async (payload) => {
       set((s) => {
         s.isStarting = true;
+        s.startResumed = false;
         s.error = null;
       });
       try {
         const res = await assembleExam(payload);
         set((s) => {
           s.isStarting = false;
+          s.startResumed = res.resumed === true;
         });
         return res.session_id;
       } catch (err) {
@@ -398,6 +407,37 @@ export function hasSectionLeft(session: ExamSession): boolean {
 /** Every section submitted, the score still being made: neither resumable nor completed. */
 export function isScoringSession(session: ExamSession): boolean {
   return session.status === 'in_progress' && !hasSectionLeft(session);
+}
+
+const startedAtMs = (s: ExamSession) => new Date(s.started_at ?? s.created_at ?? 0).getTime();
+
+/**
+ * The unfinished session the hub offers to resume: the MOST RECENT one of this
+ * exam type that still has a section left and is inside its time limit - never
+ * whichever row the list happened to return first.
+ */
+export function latestResumable(
+  sessions: ExamSession[],
+  ttlMs: number,
+  examType?: string,
+): ExamSession | undefined {
+  return sessions
+    .filter((s) => !examType || (s.exam_type ?? examType) === examType)
+    .filter((s) => isResumable(s, ttlMs) && hasSectionLeft(s))
+    .sort((a, b) => startedAtMs(b) - startedAtMs(a))[0];
+}
+
+/**
+ * Unfinished sittings past their time limit: the server closes them with what was
+ * submitted the next time they are opened. The hub marks them instead of hiding them.
+ */
+export function expiredUnfinished(sessions: ExamSession[], ttlMs: number): ExamSession[] {
+  return sessions.filter(
+    (s) =>
+      (s.status === 'in_progress' || s.status === 'not_started') &&
+      hasSectionLeft(s) &&
+      !isResumable(s, ttlMs),
+  );
 }
 
 /** Where the learner is within the sections THIS session holds (practice carries only what was picked). */

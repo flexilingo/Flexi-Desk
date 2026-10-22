@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Sparkles, RefreshCw, Lock, Info, Cloud, Cpu, KeyRound } from 'lucide-react';
 import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { AiStoppedNotice, AiWorkingStatus } from '@/components/ai/AiWait';
+import type { AiStopKind } from '@/lib/aiSource';
 import { useAiSource } from '@/stores/aiSourceStore';
 import { Button } from '@/components/ui/button';
 import type {
@@ -56,6 +58,14 @@ export function LocalModelGate({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+/** A run on the user's own AI: how long it has taken, Cancel, and why it stopped. */
+export interface InsightWait {
+  /** Start of the request running for THIS skill; null when none is. */
+  startedAt: number | null;
+  stopKind: AiStopKind | null;
+  onCancel: () => void;
+}
+
 interface SkillInsightPanelProps {
   skill: Exclude<InsightSkill, 'summary'>;
   state: InsightSkillState;
@@ -70,6 +80,7 @@ interface SkillInsightPanelProps {
    * question's own review card, left out here so nothing is explained twice.
    */
   explainedInCard?: Set<string>;
+  wait?: InsightWait;
 }
 
 /** The AI-insight block inside a skill tab — one state at a time. */
@@ -81,6 +92,7 @@ export function SkillInsightPanel({
   origin,
   taskIndex,
   explainedInCard,
+  wait,
 }: SkillInsightPanelProps) {
   const { t } = useTranslation('celpip');
 
@@ -108,6 +120,11 @@ export function SkillInsightPanel({
     );
   }
 
+  if (state === 'pending' && origin !== 'cloud' && wait?.stopKind) {
+    // Waiting behind a request that was stopped: Try again starts the queue again.
+    return <AiStoppedNotice kind={wait.stopKind} onRetry={onRetry} />;
+  }
+
   if (state === 'generating' || state === 'pending') {
     return (
       <div className="bg-muted border border-border rounded-[14px] p-5 flex flex-col gap-3 shadow-sm">
@@ -115,6 +132,9 @@ export function SkillInsightPanel({
           <Sparkles className="w-3.5 h-3.5 text-accent animate-pulse" />
           {t('insightAnalyzingSection')}
         </p>
+        {origin !== 'cloud' && wait && (
+          <AiWorkingStatus startedAt={wait.startedAt} onCancel={wait.onCancel} />
+        )}
         <div className="flex flex-col gap-2.5" aria-hidden="true">
           <div className="h-3.5 rounded-full bg-border animate-pulse w-3/4" />
           <div className="h-3.5 rounded-full bg-border animate-pulse w-full" />
@@ -126,6 +146,10 @@ export function SkillInsightPanel({
   }
 
   if (state === 'error') {
+    // Too slow, or cancelled: the plain reason and Try again, never a bare "failed".
+    if (origin !== 'cloud' && wait?.stopKind) {
+      return <AiStoppedNotice kind={wait.stopKind} onRetry={onRetry} />;
+    }
     // A local failure is almost always the model not being runnable, which the
     // user can fix — send them to the actionable gate rather than a bare retry.
     if (origin !== 'cloud') return <LocalModelGate onRetry={onRetry} />;

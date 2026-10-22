@@ -39,6 +39,8 @@ import { NormalStudySettingsPanel } from './NormalStudySettingsPanel';
 import { PronunciationSettingsDialog } from './PronunciationSettingsDialog';
 import { StudyModePicker } from './StudyModePicker';
 import { StudyViewControls } from './StudyViewControls';
+import { AiWorkingStatus } from '@/components/ai/AiWait';
+import { cancelAiRequests } from '@/lib/aiWait';
 
 export function StudyRunner() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -56,6 +58,7 @@ function StudySession({ sessionId }: { sessionId: string }) {
   const deckStatus = useStudyStore((s) => s.deckStatus);
   const advancing = useStudyStore((s) => s.advancing);
   const submitting = useStudyStore((s) => s.submitting);
+  const aiWaitStartedAt = useStudyStore((s) => s.aiWaitStartedAt);
   const starting = useStudyStore((s) => s.starting);
   const error = useStudyStore((s) => s.error);
   const fetchConfig = useStudyStore((s) => s.fetchConfig);
@@ -437,8 +440,14 @@ function StudySession({ sessionId }: { sessionId: string }) {
                     </div>
                   )}
                   {advancing ? (
-                    <div className="flex min-h-[40vh] items-center justify-center text-muted-foreground">
+                    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-muted-foreground">
                       <Loader2 className="h-6 w-6 animate-spin" />
+                      {/* A generated exercise waits on the user's own AI. */}
+                      <AiWorkingStatus
+                        startedAt={aiWaitStartedAt}
+                        onCancel={() => void cancelAiRequests()}
+                        showAfterSec={3}
+                      />
                     </div>
                   ) : (
                     <Method
@@ -448,6 +457,7 @@ function StudySession({ sessionId }: { sessionId: string }) {
                       config={config}
                       srsAlgorithm={cur.srs_algorithm}
                       cardProgress={cur.card_progress}
+                      predictedIntervals={cur.predicted_intervals}
                       requeueCount={cur.requeue_count}
                       submitting={submitting}
                       onSubmit={handleSubmit}
@@ -459,6 +469,16 @@ function StudySession({ sessionId }: { sessionId: string }) {
                       deckLanguage={cardLanguage}
                       nativeLanguage={nativeLanguage}
                     />
+                  )}
+                  {submitting && (
+                    <div className="mt-4 flex justify-center">
+                      {/* Sentence grading waits on the user's own AI; Cancel grades without it. */}
+                      <AiWorkingStatus
+                        startedAt={aiWaitStartedAt}
+                        onCancel={() => void cancelAiRequests()}
+                        showAfterSec={3}
+                      />
+                    </div>
                   )}
                   {error && (
                     <div className="mt-4 text-center text-sm text-error">{resolveErr(error)}</div>

@@ -115,12 +115,16 @@ export function LearningPath({ data, onSignIn }: { data: OverviewData; onSignIn:
         emptyTitle: t('words.emptyTitle'),
         emptyBody: t('words.emptyBody'),
         big: w ? n(w.total) : '–',
-        unit: t('words.unit'),
+        // Signed in, the Vocabulary / Notes pages add the account's words and notes;
+        // this card counts this computer, and says so (Windows QA W9).
+        unit: data.signedIn ? t('words.unitLocal') : t('words.unit'),
         sub:
           w && w.new_this_week > 0 ? (
             <span className="font-bold text-success">
               {t('words.thisWeek', { count: w.new_this_week })}
             </span>
+          ) : data.signedIn ? (
+            <span className="text-muted-foreground">{t('words.localHint')}</span>
           ) : null,
         viz: dist ? (
           <div>
@@ -144,7 +148,13 @@ export function LearningPath({ data, onSignIn }: { data: OverviewData; onSignIn:
             </div>
           </div>
         ) : null,
-        rows: [{ icon: NotebookPen, label: t('words.notes'), value: w ? n(w.notes) : '–' }],
+        rows: [
+          {
+            icon: NotebookPen,
+            label: data.signedIn ? t('words.notesLocal') : t('words.notes'),
+            value: w ? n(w.notes) : '–',
+          },
+        ],
         link: ENABLED_MODULES.vocabulary ? { to: '/vocabulary', label: t('words.link') } : null,
       };
     })(),

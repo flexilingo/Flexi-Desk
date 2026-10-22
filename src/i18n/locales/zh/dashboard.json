@@ -97,7 +97,10 @@
         "thisWeek": "本周 +{{count, number}}",
         "suggested": "常见但还没做成卡片",
         "notes": "笔记",
-        "link": "我的词汇"
+        "link": "我的词汇",
+        "unitLocal": "个单词已在本电脑收集",
+        "notesLocal": "本电脑上的笔记",
+        "localHint": "你账户中的单词和笔记会在“词汇”和“笔记”页面中一并显示。"
       },
       "review": {
         "title": "复习",

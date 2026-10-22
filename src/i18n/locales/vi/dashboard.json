@@ -97,7 +97,10 @@
         "thisWeek": "+{{count, number}} tuần này",
         "suggested": "Gặp nhiều, chưa thành thẻ",
         "notes": "Ghi chú",
-        "link": "Từ Vựng Của Tôi"
+        "link": "Từ Vựng Của Tôi",
+        "unitLocal": "từ đã thu thập trên máy này",
+        "notesLocal": "Ghi chú trên máy này",
+        "localHint": "Từ và ghi chú của tài khoản bạn được cộng thêm ở trang Từ vựng và Ghi chú."
       },
       "review": {
         "title": "Ôn Tập",

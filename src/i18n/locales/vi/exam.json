@@ -466,7 +466,9 @@
     "openSettingsFailed": "Không thể mở trang cài đặt. Hãy mở nó từ cài đặt hệ thống của bạn.",
     "noDevice": "Không tìm thấy micro. Hãy cắm một micro hoặc chọn thiết bị đầu vào trong cài đặt hệ thống, rồi thử lại.",
     "inUse": "Một ứng dụng khác đang dùng micro. Hãy đóng nó rồi thử lại.",
-    "unsupported": "Máy này không thể ghi âm cho bài thi."
+    "unsupported": "Máy này không thể ghi âm cho bài thi.",
+    "silentTitle": "Micrô đã kết nối nhưng không gửi âm thanh nào",
+    "unmuteStep": "Kiểm tra trong cài đặt âm thanh của hệ thống rằng micrô không bị tắt tiếng và mức đầu vào đã được tăng lên."
   },
   "listening": "Nghe",
   "reading": "Đọc",

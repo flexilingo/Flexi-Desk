@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bot, Cloud, Cpu, FileText, Info, KeyRound, RotateCw } from 'lucide-react';
 import { AIError, analyzeWord } from '../api';
+import { AiStoppedNotice, AiWorkingStatus } from '@/components/ai/AiWait';
+import { cancelAiRequests } from '@/lib/aiWait';
+import { aiStopKind } from '@/lib/aiSource';
 import { AiSetupCard } from '@/components/ai/AiSetupCard';
 import { useAiSource } from '@/stores/aiSourceStore';
 import { isAiSetupError } from '@/lib/aiSource';
@@ -96,6 +99,8 @@ export function AITab({
     null,
   );
   const [attempt, setAttempt] = useState(0);
+  // When the request on the user's own AI started: elapsed time + Cancel while it runs.
+  const [waitStart, setWaitStart] = useState<{ token: string; at: number } | null>(null);
   // One request per key: a tab switch or StrictMode re-run joins the one in flight instead of spending another analysis.
   const inflight = useRef(new Map<string, Promise<AIWordAnalysis>>());
 
@@ -108,6 +113,7 @@ export function AITab({
     const token = `${key}\u0000${attempt}`;
     let request = inflight.current.get(token);
     if (!request) {
+      setWaitStart({ token, at: Date.now() });
       request = analyzeWord({
         word,
         sentence,
@@ -171,6 +177,9 @@ export function AITab({
     return <AiSetupCard compact onReady={() => setAttempt((n) => n + 1)} />;
   }
 
+  const stop = errorCode ? aiStopKind(errorCode) : null;
+  if (stop) return <AiStoppedNotice kind={stop} onRetry={() => setAttempt((n) => n + 1)} />;
+
   if (errorCode) {
     const message = t(`errors.${errorCode}`, { defaultValue: t('errors.UNKNOWN_ERROR') });
     return (
@@ -189,7 +198,21 @@ export function AITab({
     );
   }
 
-  if (!data) return isActive ? <LoadingBlock label={t('aiAnalyzing')} tone="accent" /> : null;
+  if (!data) {
+    if (!isActive) return null;
+    const token = key ? `${key}\u0000${attempt}` : null;
+    return (
+      <div className="space-y-3">
+        <LoadingBlock label={t('aiAnalyzing')} tone="accent" />
+        {effectiveRoute === 'local' && (
+          <AiWorkingStatus
+            startedAt={waitStart && waitStart.token === token ? waitStart.at : null}
+            onCancel={() => void cancelAiRequests()}
+          />
+        )}
+      </div>
+    );
+  }
 
   // The header already shows the word and its IPA; repeat them only when the analysis
   // is about a different form, and never for a phrase.

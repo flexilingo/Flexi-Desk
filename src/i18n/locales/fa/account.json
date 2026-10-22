@@ -690,7 +690,8 @@
       "cardsReviewed": "کارت‌های مرور شده",
       "mastered": "مسلط شده",
       "accuracyRate": "نرخ دقت",
-      "streakDays": "روزهای متوالی"
+      "streakDays": "روزهای متوالی",
+      "reviewStreakDays": "روزهای پیاپی مرور کارت (حساب)"
     },
     "mastered": "مسلط شده",
     "accuracyRate": "نرخ دقت",

@@ -11,7 +11,12 @@ import { useAuthStore } from '@/stores/authStore';
 import { useOllamaStore } from '@/stores/ollamaStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useAiSource, useAiSourceStore } from '@/stores/aiSourceStore';
-import { isCloudTier } from '@/lib/aiSource';
+import {
+  AI_TIMEOUT_OPTIONS_SEC,
+  AI_TIMEOUT_SETTING,
+  DEFAULT_AI_TIMEOUT_SEC,
+  isCloudTier,
+} from '@/lib/aiSource';
 import { cn } from '@/lib/utils';
 
 interface TestResult {
@@ -183,6 +188,8 @@ export function AiSettingsSection() {
           </label>
         )}
 
+        {ownReady && <AiTimeoutSetting />}
+
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {ownReady && provider === 'ollama' && (
             <Button variant="ghost" size="sm" onClick={() => setShowModels((v) => !v)}>
@@ -246,5 +253,70 @@ export function AiSettingsSection() {
         </div>
       </section>
     </div>
+  );
+}
+
+/**
+ * How long one answer from the user's own AI may take before it is stopped (Rust
+ * reads the same setting). A slow computer may need more; nothing waits forever.
+ */
+export function AiTimeoutSetting() {
+  const { t } = useTranslation('ai');
+  const [value, setValue] = useState<number>(DEFAULT_AI_TIMEOUT_SEC);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    invoke<string | null>('get_setting', { key: AI_TIMEOUT_SETTING })
+      .then((v) => {
+        const n = Number(v);
+        if (alive && Number.isFinite(n) && n > 0) setValue(n);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const save = async (secs: number) => {
+    const previous = value;
+    setValue(secs);
+    setFailed(false);
+    try {
+      await invoke('set_setting', { key: AI_TIMEOUT_SETTING, value: String(secs) });
+    } catch {
+      setValue(previous);
+      setFailed(true);
+    }
+  };
+
+  const options: number[] = (AI_TIMEOUT_OPTIONS_SEC as readonly number[]).includes(value)
+    ? [...AI_TIMEOUT_OPTIONS_SEC]
+    : [...AI_TIMEOUT_OPTIONS_SEC, value].sort((a, b) => a - b);
+
+  return (
+    <label className="mt-4 block space-y-1">
+      <span className="text-xs font-medium text-foreground">{t('settings.timeoutLabel')}</span>
+      <select
+        data-testid="ai-timeout-select"
+        value={value}
+        onChange={(e) => void save(Number(e.target.value))}
+        className="flex h-9 w-full max-w-xs rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-xs focus-visible:border-accent/60 focus-visible:outline-none"
+      >
+        {options.map((secs) => (
+          <option key={secs} value={secs}>
+            {t('settings.timeoutMinutes', { count: Math.round(secs / 60) })}
+          </option>
+        ))}
+      </select>
+      <span className="block text-[12px] leading-relaxed text-muted-foreground">
+        {t('settings.timeoutHint')}
+      </span>
+      {failed && (
+        <span role="alert" className="block text-[12px] text-error">
+          {t('settings.timeoutSaveFailed')}
+        </span>
+      )}
+    </label>
   );
 }

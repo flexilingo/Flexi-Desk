@@ -14,6 +14,7 @@ import {
   Trophy,
   TrendingUp,
   LogIn,
+  TimerOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -21,9 +22,9 @@ import { SignInDialog } from '@/components/auth/SignInDialog';
 import {
   useCelpipStore,
   isRankedSession,
-  isResumable,
-  hasSectionLeft,
   isScoringSession,
+  latestResumable,
+  expiredUnfinished,
   sessionProgress,
 } from '../stores/celpipStore';
 import { meanOf, SECTION_META } from '../results/shared';
@@ -87,10 +88,15 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
     new Date(dateStr).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' });
 
   // Only an unfinished, still-in-TTL session with a section left is resumable
-  // (learning never expires). One whose sections are all submitted is being
-  // scored and must not hide Start.
+  // (learning never expires); the card and its Resume are the MOST RECENT one of
+  // this exam type. Start stays available beside it - an open sitting never
+  // blocks a new one. One past its time limit is marked, not offered.
   const activeSession = useMemo(
-    () => ownSessions.find((s) => isResumable(s, EXAM_SESSION_TTL_MS) && hasSectionLeft(s)),
+    () => latestResumable(ownSessions, EXAM_SESSION_TTL_MS),
+    [ownSessions],
+  );
+  const expiredSessions = useMemo(
+    () => expiredUnfinished(ownSessions, EXAM_SESSION_TTL_MS),
     [ownSessions],
   );
   const scoringSessions = useMemo(() => ownSessions.filter(isScoringSession), [ownSessions]);
@@ -105,7 +111,9 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
   const stats = useMemo(() => {
     const scores = rankedSessions.map((s) => s.m_score as number);
     return {
-      total: rankedSessions.length,
+      // Every completed session, the same number the coach card counts (and the
+      // website's tile); best/average only over the ranked ones.
+      total: completedSessions.length,
       best: scores.length ? Math.max(...scores) : null,
       avg: meanOf(scores),
       lastLabel: completedSessions[0] ? formatDate(completedSessions[0].created_at) : null,
@@ -206,13 +214,8 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
             <LogIn className="h-3.5 w-3.5" />
             {t('signInToStart', 'Sign in to start')}
           </Button>
-        ) : activeSession ? (
-          <Button onClick={() => navigate(`${base}/session/${activeSession.id}`)}>
-            <Play className="h-3.5 w-3.5" />
-            {t('resumeExam')}
-          </Button>
         ) : (
-          <Button onClick={() => openDialog()}>
+          <Button data-testid="hub-start" onClick={() => openDialog()}>
             <Play className="h-3.5 w-3.5" />
             {t('startCta')}
           </Button>
@@ -221,7 +224,7 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
 
       {/* Practise one section, or one task of it: opens the dialog on that
           section with every choice ticked, and the first tap picks just one. */}
-      {isSignedIn && !comingSoon && profile.features.practice && !activeSession && (
+      {isSignedIn && !comingSoon && profile.features.practice && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] font-semibold text-muted-foreground">
             {t('choosePracticeSections')}
@@ -267,9 +270,12 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
         </div>
       )}
 
-      {/* Active session banner */}
+      {/* Active session banner: the most recent unfinished sitting, with its own Resume */}
       {activeSession && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-warning/[0.08] px-4 py-3">
+        <div
+          data-testid="hub-in-progress"
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-warning/[0.08] px-4 py-3"
+        >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-warning/15">
             <AlertCircle className="h-4 w-4 text-warning" />
           </div>
@@ -290,8 +296,40 @@ export function CelpipLandingPage({ examType = 'celpip' }: { examType?: string }
               />
             </div>
           </div>
+          <Button
+            data-testid="hub-resume"
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`${base}/session/${activeSession.id}`)}
+          >
+            <Play className="h-3.5 w-3.5" />
+            {t('resumeExam')}
+          </Button>
         </div>
       )}
+
+      {/* Ran out of time before it was finished: the server closes it with what was
+          submitted when it is opened, so "See results" goes through the session. */}
+      {expiredSessions.slice(0, 3).map((s) => (
+        <div
+          key={s.id}
+          data-testid="hub-expired"
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-muted">
+            <TimerOff className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-bold text-foreground">
+              {t('examExpiredTitle', { date: formatDate(s.started_at ?? s.created_at) })}
+            </p>
+            <p className="mt-0.5 text-[11.5px] text-muted-foreground">{t('examExpiredBody')}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate(`${base}/session/${s.id}`)}>
+            {t('viewResults')}
+          </Button>
+        </div>
+      ))}
 
       {/* Finished, still being scored — the results page shows what is ready */}
       {scoringSessions.map((s) => (

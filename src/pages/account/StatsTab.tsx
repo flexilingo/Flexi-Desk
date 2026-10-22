@@ -118,7 +118,12 @@ export function StatsTab() {
               label={t('analytics.stats.accuracyRate')}
               value={`${(stats.data?.accuracy_rate ?? 0).toFixed(1)}%`}
             />
-            <Stat label={t('analytics.stats.streakDays')} value={stats.data?.streak_days ?? 0} />
+            {/* Days in a row with card reviews on the account - not the Overview's
+                study streak, which counts any study on this computer too. */}
+            <Stat
+              label={t('analytics.stats.reviewStreakDays')}
+              value={stats.data?.streak_days ?? 0}
+            />
           </>
         ) : (
           <Stat label={t('analytics.stats.cardsReviewed')} value={localTotal} />

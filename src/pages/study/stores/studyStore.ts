@@ -37,6 +37,11 @@ interface StudyState {
   starting: boolean;
   advancing: boolean;
   submitting: boolean;
+  /**
+   * When the running next-activity / submit started: both can wait on the user's
+   * own AI (generated exercise, sentence grading) - elapsed time + Cancel.
+   */
+  aiWaitStartedAt: number | null;
 
   // Actions
   fetchConfig: () => Promise<void>;
@@ -73,6 +78,7 @@ export const useStudyStore = create<StudyState>()(
     starting: false,
     advancing: false,
     submitting: false,
+    aiWaitStartedAt: null,
 
     fetchConfig: async () => {
       set((s) => {
@@ -202,6 +208,7 @@ export const useStudyStore = create<StudyState>()(
     nextActivity: async (sessionId) => {
       set((s) => {
         s.advancing = true;
+        s.aiWaitStartedAt = Date.now();
         s.error = null;
       });
       try {
@@ -211,12 +218,14 @@ export const useStudyStore = create<StudyState>()(
         set((s) => {
           s.current = res;
           s.advancing = false;
+          s.aiWaitStartedAt = null;
         });
         return res;
       } catch (e) {
         set((s) => {
           s.error = errMsg(e);
           s.advancing = false;
+          s.aiWaitStartedAt = null;
         });
         return null;
       }
@@ -225,17 +234,20 @@ export const useStudyStore = create<StudyState>()(
     submitActivity: async (body) => {
       set((s) => {
         s.submitting = true;
+        s.aiWaitStartedAt = Date.now();
       });
       try {
         const res = await invoke<SubmitResponse>('study_submit_activity', { body });
         set((s) => {
           s.submitting = false;
+          s.aiWaitStartedAt = null;
         });
         return res;
       } catch (e) {
         set((s) => {
           s.error = errMsg(e);
           s.submitting = false;
+          s.aiWaitStartedAt = null;
         });
         return null;
       }

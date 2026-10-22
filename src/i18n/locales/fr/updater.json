@@ -13,5 +13,11 @@
   "ready": "La mise à jour est installée. Redémarrez pour terminer.",
   "restart": "Redémarrer maintenant",
   "dismiss": "Fermer",
-  "error": "Mise à jour impossible : {{message}}"
+  "error": "Mise à jour impossible : {{message}}",
+  "errors": {
+    "check": "Impossible de rechercher les mises à jour pour le moment. Vérifiez votre connexion et réessayez.",
+    "install": "La mise à jour n'a pas pu être téléchargée ou installée. Réessayez.",
+    "restart": "FlexiDesk n'a pas pu redémarrer seul. Fermez-le puis rouvrez-le."
+  },
+  "tryAgain": "Réessayer"
 }

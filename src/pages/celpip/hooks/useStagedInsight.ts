@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { aiStopKind, type AiStopKind } from '@/lib/aiSource';
+import { cancelAiRequests } from '@/lib/aiWait';
 import type { InsightProvider } from './insightProviders';
 import type { ExamInsight, InsightSkill, InsightSkillState } from '../types';
 
@@ -23,6 +25,19 @@ interface StagedInsight {
   limitReached: boolean;
   retry: (skill: InsightSkill) => void;
   origin: InsightProvider['origin'];
+  /** When the request now running started (ms), for the elapsed time; null when idle. */
+  startedAt: number | null;
+  /** The skill that request is for. */
+  runningSkill: InsightSkill | null;
+  /** The user's AI ran out of time / was cancelled on this skill. */
+  stopKind: (skill: InsightSkill) => AiStopKind | null;
+  /**
+   * The last request ended by the time limit or Cancel: nothing else is started
+   * by itself until the user presses Try again.
+   */
+  stopped: AiStopKind | null;
+  /** Stops the request running on the user's own AI (no effect on the cloud). */
+  cancel: () => void;
 }
 
 /**
@@ -49,6 +64,9 @@ export function useStagedInsight(
     {},
   );
   const [limitReached, setLimitReached] = useState(false);
+  const [running, setRunning] = useState<{ skill: InsightSkill; at: number } | null>(null);
+  const [stopKinds, setStopKinds] = useState<Partial<Record<InsightSkill, AiStopKind>>>({});
+  const [stopped, setStopped] = useState<AiStopKind | null>(null);
 
   const inFlightRef = useRef<InsightSkill | null>(null);
   const summaryRetryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,6 +139,7 @@ export function useStagedInsight(
     (skill: InsightSkill) => {
       inFlightRef.current = skill;
       setLocalStates((prev) => ({ ...prev, [skill]: 'generating' }));
+      setRunning({ skill, at: Date.now() });
 
       providerRef.current
         .generate(skill)
@@ -154,11 +173,19 @@ export function useStagedInsight(
             if (summaryRetryTimer.current) clearTimeout(summaryRetryTimer.current);
             summaryRetryTimer.current = setTimeout(() => clearLocal('summary'), 5000);
           } else {
+            // Too slow / cancelled on the user's own AI: say so, and start nothing
+            // else by itself - the next skill would only wait out the same limit.
+            const stop = aiStopKind(code ?? err);
+            if (stop) {
+              setStopKinds((prev) => ({ ...prev, [skill]: stop }));
+              setStopped(stop);
+            }
             setLocalStates((prev) => ({ ...prev, [skill]: 'error' }));
           }
         })
         .finally(() => {
           inFlightRef.current = null;
+          setRunning(null);
           // Nudge the orchestration effect to dequeue the next skill.
           setLocalStates((prev) => ({ ...prev }));
         });
@@ -168,7 +195,7 @@ export function useStagedInsight(
 
   // Orchestration: one request in flight, viewed tab first, summary last.
   useEffect(() => {
-    if (!enabled || !status || limitReached || inFlightRef.current) return;
+    if (!enabled || !status || limitReached || stopped || inFlightRef.current) return;
 
     const taken = SKILL_ORDER.filter((s) => status.skills[s] !== 'not_taken');
     const queue: InsightSkill[] = [];
@@ -199,6 +226,7 @@ export function useStagedInsight(
     activeTab,
     localStates,
     limitReached,
+    stopped,
     skillState,
     fire,
     startPolling,
@@ -217,8 +245,32 @@ export function useStagedInsight(
     // 'pending' makes the orchestrator pick it up again; the provider's claim
     // clears any stored error.
     summary409Count.current = 0;
+    setStopped(null);
+    setStopKinds((prev) => {
+      if (!(skill in prev)) return prev;
+      const next = { ...prev };
+      delete next[skill];
+      return next;
+    });
     setLocalStates((prev) => ({ ...prev, [skill]: 'pending' }));
   }, []);
+
+  const cancel = useCallback(() => {
+    void cancelAiRequests();
+  }, []);
+
+  const stopKind = useCallback(
+    (skill: InsightSkill): AiStopKind | null => {
+      if (stopKinds[skill]) return stopKinds[skill] ?? null;
+      // A run that timed out before the page was opened again.
+      const stored = status?.skills?.[skill] === 'error' ? status?.errors?.[skill] : undefined;
+      if (stored) return aiStopKind(stored);
+      // Queued behind the request that ran out of time: nothing will start it by
+      // itself, so it must not sit under an "analyzing" spinner either.
+      return stopped && skillState(skill) === 'pending' ? stopped : null;
+    },
+    [stopKinds, status, stopped, skillState],
+  );
 
   const takenSkills = SKILL_ORDER.filter((s) => status?.skills?.[s] !== 'not_taken');
   const done = status
@@ -233,5 +285,10 @@ export function useStagedInsight(
     limitReached,
     retry,
     origin: provider.origin,
+    startedAt: running?.at ?? null,
+    runningSkill: running?.skill ?? null,
+    stopKind,
+    stopped,
+    cancel,
   };
 }

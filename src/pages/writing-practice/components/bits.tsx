@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { AiWorkingStatus } from '@/components/ai/AiWait';
 
 type Tone = 'primary' | 'success' | 'muted' | 'sage';
 
@@ -24,7 +25,16 @@ export function Chip({ tone, children }: { tone: Tone; children: ReactNode }) {
 }
 
 /** The spinning "grading" screen shown while the user's AI reads the essay. */
-export function GradingState({ title, body }: { title: string; body: string }) {
+export function GradingState({
+  title,
+  body,
+  wait,
+}: {
+  title: string;
+  body: string;
+  /** The user's own AI: elapsed time and Cancel (none for the cloud). */
+  wait?: { startedAt: number | null; onCancel: () => void };
+}) {
   return (
     <div
       className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-6"
@@ -38,6 +48,11 @@ export function GradingState({ title, body }: { title: string; body: string }) {
         <h2 className="text-base font-bold text-foreground">{title}</h2>
         <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
       </div>
+      {wait && (
+        <div className="flex max-w-sm justify-center text-center">
+          <AiWorkingStatus startedAt={wait.startedAt} onCancel={wait.onCancel} />
+        </div>
+      )}
     </div>
   );
 }

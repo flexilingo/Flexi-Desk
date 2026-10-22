@@ -41,7 +41,9 @@
     "AI_KEY_REJECTED": "Der Anbieter hat diesen Schlüssel abgelehnt. Prüfe ihn und versuche es erneut.",
     "AI_RATE_LIMITED": "Der Anbieter meldet, dass dein Limit vorerst aufgebraucht ist. Versuche es später erneut.",
     "AI_UNREACHABLE": "Deine KI ist nicht erreichbar. Prüfe die Adresse und deine Verbindung.",
-    "UNKNOWN_ERROR": "Bei deiner KI ist etwas schiefgelaufen. Versuche es erneut."
+    "UNKNOWN_ERROR": "Bei deiner KI ist etwas schiefgelaufen. Versuche es erneut.",
+    "AI_TIMEOUT": "Deine KI hat zu lange gebraucht – probiere ein kleineres Modell oder deinen eigenen Schlüssel.",
+    "AI_CANCELLED": "Du hast diese Antwort abgebrochen."
   },
   "origin": {
     "device": "Auf diesem Gerät",
@@ -75,7 +77,12 @@
     "cloudNeedsSignIn": "Melde dich bei einem Bezahlplan an, um das zu aktivieren.",
     "cloudNeedsPaid": "Nur in Bezahlplänen verfügbar.",
     "cloudInactive": "Aktiviert, aber nicht aktiv: Dafür ist ein angemeldeter Bezahlplan nötig.",
-    "cloudActive": "Aktiv für Wortanalysen und Prüfungs-Insights."
+    "cloudActive": "Aktiv für Wortanalysen und Prüfungs-Insights.",
+    "timeoutLabel": "Zeitlimit pro Antwort",
+    "timeoutHint": "Hat deine KI bis dahin nicht geantwortet, wird die Anfrage gestoppt und du kannst es erneut versuchen. Langsame Computer brauchen eventuell länger.",
+    "timeoutMinutes_one": "{{count}} Minute",
+    "timeoutMinutes_other": "{{count}} Minuten",
+    "timeoutSaveFailed": "Das Zeitlimit konnte nicht gespeichert werden. Versuche es erneut."
   },
   "wizard": {
     "ownKeyLink": "Stattdessen meinen eigenen Schlüssel verwenden (OpenAI, Anthropic oder ein anderer Server)",
@@ -145,5 +152,13 @@
       "llama3_1_70b": "Am leistungsfähigsten. Benötigt 48 GB Arbeitsspeicher oder mehr. Beste Rückmeldungen zu Grammatik und Schreiben."
     },
     "dismiss": "Schließen"
+  },
+  "wait": {
+    "elapsed": "Läuft seit {{time}}",
+    "cancel": "Abbrechen",
+    "slowHint": "Die KI auf deinem Computer kann ein paar Minuten brauchen. Sie stoppt von selbst nach dem Zeitlimit unter Einstellungen → Deine KI.",
+    "timeoutHint": "Ältere Computer antworten langsam. Wähle ein kleineres Modell, nutze deinen eigenen Schlüssel oder erlaube unter Einstellungen → Deine KI mehr Zeit.",
+    "retry": "Erneut versuchen",
+    "openSettings": "KI-Einstellungen"
   }
 }

@@ -69,6 +69,9 @@ pub fn run() {
             // Seed keyboard shortcut defaults
             shortcuts::seed_defaults(&conn).ok();
 
+            // The user's AI time limit (Settings -> My AI) applies from the first call.
+            ai::provider::load_request_timeout(&conn);
+
             // Reset stale 'processing' transcript status from previous crashed runs
             conn.execute(
                 "UPDATE podcast_episodes SET transcript_status = 'none' WHERE transcript_status = 'processing'",
@@ -350,6 +353,7 @@ pub fn run() {
             commands::ai::ai_sentence_chat_clear,
             commands::ai::ai_evaluate_writing,
             commands::ai::ai_test,
+            commands::ai::ai_cancel_requests,
             // Sentence practice: the answer judge, on the learner's own AI
             commands::sentences::sentences_judge,
             // Deck Hub

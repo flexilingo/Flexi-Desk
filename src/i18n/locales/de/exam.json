@@ -474,7 +474,9 @@
     "openSettingsFailed": "Die Einstellungsseite konnte nicht geöffnet werden. Öffne sie über deine Systemeinstellungen.",
     "noDevice": "Es wurde kein Mikrofon gefunden. Schließe eines an oder wähle in den Systemeinstellungen ein Eingabegerät aus und versuche es dann erneut.",
     "inUse": "Eine andere App verwendet das Mikrofon. Schließe sie und versuche es erneut.",
-    "unsupported": "Dieser Computer kann kein Audio für die Prüfung aufnehmen."
+    "unsupported": "Dieser Computer kann kein Audio für die Prüfung aufnehmen.",
+    "silentTitle": "Dein Mikrofon ist verbunden, sendet aber keinen Ton",
+    "unmuteStep": "Prüfe in den Toneinstellungen des Systems, dass das Mikrofon nicht stummgeschaltet und der Eingangspegel hochgedreht ist."
   },
   "listening": "Hören",
   "reading": "Lesen",

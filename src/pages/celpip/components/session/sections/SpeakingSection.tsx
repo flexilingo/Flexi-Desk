@@ -23,6 +23,7 @@ import { useCelpipStore, errorCodeOf } from '../../../stores/celpipStore';
 import { MicAccessPanel } from '@/components/mic/MicAccessPanel';
 import MicLevelBars from '@/components/mic/MicLevelBars';
 import MicLevelCheck from '../../speaking/MicLevelCheck';
+import { ConfirmDialog } from '../ConfirmDialog';
 import { pretranscribeTask } from '../../../services/celpipCloud';
 import { micFailureOf, readMicLevel, type MicFailure } from '../../../services/micProbe';
 import {
@@ -117,6 +118,8 @@ export default function SpeakingSection({
   const [micQuiet, setMicQuiet] = useState(false);
   // Every task so far silent: offer the microphone test beside the question.
   const [silentAll, setSilentAll] = useState(false);
+  // The microphone died mid-section: skip what is left in one go.
+  const [skipRestOpen, setSkipRestOpen] = useState(false);
   const { t: tx } = useTranslation('exam');
 
   const startTime = useRef<number>(0);
@@ -230,6 +233,17 @@ export default function SpeakingSection({
   const commitTranscriptOnly = (text: string) => {
     setTranscriptFor(taskKey, text);
     finishTask();
+  };
+
+  // Every task not answered yet goes in unanswered, and the section is submitted:
+  // with no microphone, eight one-by-one skips is no way to finish an exam.
+  const skipRestOfSection = () => {
+    setSkipRestOpen(false);
+    prompts.tasks.forEach((_, i) => {
+      const k = `task_${i}`;
+      if (i >= taskIndex && audioAnswersRef.current[k] === undefined) setTranscriptFor(k, '');
+    });
+    void submitSection();
   };
 
   // Transcribe (local Whisper) then upload the native recording. Both steps
@@ -778,12 +792,23 @@ export default function SpeakingSection({
                   status={micFailure}
                   onRetry={() => void startRecording()}
                   fallbackSlot={
-                    <button
-                      onClick={() => commitTranscriptOnly('')}
-                      className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-                    >
-                      {t('speakingSkipTask')}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => commitTranscriptOnly('')}
+                        className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                      >
+                        {t('speakingSkipTask')}
+                      </button>
+                      {!isLastTask && (
+                        <button
+                          data-testid="skip-rest-of-speaking"
+                          onClick={() => setSkipRestOpen(true)}
+                          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                        >
+                          {t('micSkipSection')}
+                        </button>
+                      )}
+                    </>
                   }
                 />
               </div>
@@ -866,6 +891,17 @@ export default function SpeakingSection({
           />
         </div>
       )}
+
+      <ConfirmDialog
+        open={skipRestOpen}
+        onOpenChange={setSkipRestOpen}
+        variant="warning"
+        title={t('micSkipSectionTitle')}
+        description={t('micSkipSectionBody')}
+        confirmText={t('micSkipSectionConfirm')}
+        cancelText={t('cancel')}
+        onConfirm={skipRestOfSection}
+      />
 
       {/* DEV ONLY — floating fast-forward for end-to-end flow testing. */}
       {isDev && (
