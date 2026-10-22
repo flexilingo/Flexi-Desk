@@ -39,7 +39,8 @@
       "cc_by_sa": "CC BY-SA"
     },
     "nextEpisode": "قسمت بعد",
-    "chapter": "فصل"
+    "chapter": "فصل",
+    "readAloud": "خواندن این بند با صدا"
   },
   "public": {
     "listTitle": "داستان و کتاب {{language}} بر اساس سطح | FlexiLingo",

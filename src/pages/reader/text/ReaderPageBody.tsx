@@ -13,12 +13,15 @@ export function ReaderPageBody({
   language,
   scale,
   onSpeakWord,
+  speakLabel,
 }: {
   text: string;
   language: string;
   scale: number;
   /** Tap to speak: a click says the word instead of opening it. */
   onSpeakWord?: (word: string) => void;
+  /** A speaker after every paragraph reads it aloud (library books); off when absent. */
+  speakLabel?: string;
 }) {
   return (
     <div
@@ -34,6 +37,7 @@ export function ReaderPageBody({
         speakOnHover={!onSpeakWord}
         markLookedUp
         onSpeakWord={onSpeakWord}
+        paragraphSpeaker={speakLabel ? { label: speakLabel } : undefined}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
 import { TEXT_WORD_MARKERS, snapSelectionToWords } from '@/pages/reader/text/snap-selection';
 import { SpeakButton } from './SpeakButton';
+import { ParagraphSpeakButton } from './ParagraphSpeakButton';
 import { useLookup } from './lookup-context';
 import { cleanWord, splitParagraphs, splitSentences, tokenize } from './tokenize';
 
@@ -56,12 +57,15 @@ export function TappableText({
   speakOnHover = false,
   markLookedUp = false,
   onSpeakWord,
+  paragraphSpeaker,
 }: {
   text: string;
   className?: string;
   wordClassName?: string;
   /** The language the words are IN — what their voice should sound like. */
   language?: string;
+  /** A speaker after every paragraph that reads it aloud (library books). Off when absent. */
+  paragraphSpeaker?: { label: string };
   /**
    * Resting on a word puts a speaker under it. Off by default: it belongs to
    * reading a page, not to every place a word happens to be tappable.
@@ -339,6 +343,13 @@ export function TappableText({
               )}
             </Fragment>
           ))}
+          {paragraphSpeaker && sentences.length > 0 ? (
+            <ParagraphSpeakButton
+              sentences={sentences.map((x) => x.sentence)}
+              lang={language}
+              label={paragraphSpeaker.label}
+            />
+          ) : null}
         </p>
       ))}
 

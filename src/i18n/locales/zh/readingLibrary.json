@@ -39,7 +39,8 @@
       "cc_by_sa": "CC BY-SA"
     },
     "nextEpisode": "下一集",
-    "chapter": "章节"
+    "chapter": "章节",
+    "readAloud": "朗读这一段"
   },
   "public": {
     "listTitle": "按级别分类的{{language}}故事和书籍 | FlexiLingo",

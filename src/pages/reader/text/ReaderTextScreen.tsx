@@ -50,6 +50,7 @@ export function ReaderTextScreen({
   onLanguageChange,
   notice,
   gate,
+  speakLabel,
 }: {
   title: string;
   subtitle?: string;
@@ -72,6 +73,8 @@ export function ReaderTextScreen({
   gate?: ReactNode;
   /** A line under the toolbar — the language-corrected note. */
   notice?: ReactNode;
+  /** A speaker after every paragraph reads it aloud (library books); off when absent. */
+  speakLabel?: string;
 }) {
   const { t } = useTranslation('reader');
   const { t: tDesk } = useTranslation('readerDesk');
@@ -195,6 +198,7 @@ export function ReaderTextScreen({
                     language={language}
                     scale={scale}
                     onSpeakWord={tapToSpeak ? speakWord : undefined}
+                    speakLabel={speakLabel}
                   />
                   {pager.truncated && (
                     <p className="mt-6 border-t border-border pt-4 text-xs text-muted-foreground">

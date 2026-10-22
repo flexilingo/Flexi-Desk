@@ -39,7 +39,8 @@
       "cc_by_sa": "CC BY-SA"
     },
     "nextEpisode": "Nächste Folge",
-    "chapter": "Kapitel"
+    "chapter": "Kapitel",
+    "readAloud": "Diesen Absatz vorlesen"
   },
   "public": {
     "listTitle": "Geschichten und Bücher auf {{language}} nach Niveau | FlexiLingo",

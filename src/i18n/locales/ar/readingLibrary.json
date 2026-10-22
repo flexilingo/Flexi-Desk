@@ -39,7 +39,8 @@
       "cc_by_sa": "CC BY-SA"
     },
     "nextEpisode": "الحلقة التالية",
-    "chapter": "الفصل"
+    "chapter": "الفصل",
+    "readAloud": "استمع إلى هذه الفقرة"
   },
   "public": {
     "listTitle": "قصص وكتب باللغة {{language}} حسب المستوى | FlexiLingo",

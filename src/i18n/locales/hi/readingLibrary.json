@@ -39,7 +39,8 @@
       "cc_by_sa": "CC BY-SA"
     },
     "nextEpisode": "अगला भाग",
-    "chapter": "अध्याय"
+    "chapter": "अध्याय",
+    "readAloud": "यह अनुच्छेद सुनें"
   },
   "public": {
     "listTitle": "स्तर के अनुसार {{language}} कहानियाँ और किताबें | FlexiLingo",

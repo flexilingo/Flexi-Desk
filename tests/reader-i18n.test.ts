@@ -30,7 +30,7 @@ describe.each(NAMESPACES)('%s namespace', (ns) => {
   const en = flatten(load('en', ns));
 
   it('has the website key counts', () => {
-    expect(en.size).toBe(ns === 'reader' ? 241 : 86); // readingLibrary: 58 + series (19 + 6 progress) + pagination (3)
+    expect(en.size).toBe(ns === 'reader' ? 241 : 87); // readingLibrary: 58 + series (19 + 6 progress) + pagination (3) + book.readAloud
   });
 
   it.each(LOCALES.filter((l) => l !== 'en'))('%s has the same keys and placeholders as en', (l) => {

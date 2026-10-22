@@ -241,6 +241,7 @@ export function BookPage() {
   return (
     <ReaderFrame>
       <ReaderTextScreen
+        speakLabel={tl('book.readAloud')}
         title={book.title}
         subtitle={`${tl('book.by', { author: book.author })} · ${book.level} · ${languageName(book.language, i18n.language)}${episodeLabel ? ` · ${episodeLabel}` : ''}`}
         language={book.language}

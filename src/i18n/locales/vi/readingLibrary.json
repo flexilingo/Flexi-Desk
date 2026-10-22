@@ -39,7 +39,8 @@
       "cc_by_sa": "CC BY-SA"
     },
     "nextEpisode": "Tập tiếp theo",
-    "chapter": "Chương"
+    "chapter": "Chương",
+    "readAloud": "Nghe đoạn này"
   },
   "public": {
     "listTitle": "Truyện và sách {{language}} theo trình độ | FlexiLingo",
