@@ -6,13 +6,10 @@ mod deck_hub;
 mod commands;
 mod dashboard;
 mod db;
-mod exam;
 mod export;
 mod jobs;
 mod ollama;
-mod plugins;
 mod podcast;
-mod pronunciation;
 mod reader;
 mod shortcuts;
 mod sidecar;
@@ -20,7 +17,6 @@ mod srs;
 mod study;
 mod sync;
 mod tutor;
-mod writing;
 mod writing_practice;
 
 use std::sync::Mutex;
@@ -126,7 +122,6 @@ pub fn run() {
             commands::srs::srs_delete_card,
             commands::srs::srs_get_due_cards,
             commands::srs::srs_merge_decks,
-            commands::srs::srs_add_vocabulary,
             commands::srs::srs_update_card,
             commands::srs::srs_get_deck_stats,
             commands::srs::srs_deck_card_tags,
@@ -145,17 +140,6 @@ pub fn run() {
             commands::study::study_deck_status,
             commands::study::study_set_srs_algorithm,
             commands::study::study_get_srs_algorithm,
-            commands::reading::reading_import_text,
-            commands::reading::reading_list_documents,
-            commands::reading::reading_get_document,
-            commands::reading::reading_delete_document,
-            commands::reading::reading_update_progress,
-            commands::reading::reading_add_highlight,
-            commands::reading::reading_get_highlights,
-            commands::reading::reading_delete_highlight,
-            commands::reading::reading_import_url,
-            commands::reading::reading_import_file,
-            commands::reading::reading_analyze_document,
             commands::tutor::tutor_start_conversation,
             commands::tutor::tutor_list_conversations,
             commands::tutor::tutor_get_messages,
@@ -196,14 +180,6 @@ pub fn run() {
             commands::caption::caption_start_live_capture,
             commands::caption::caption_stop_live_capture,
             commands::caption::caption_set_active_model,
-            commands::pronunciation::pronunciation_create_session,
-            commands::pronunciation::pronunciation_list_sessions,
-            commands::pronunciation::pronunciation_get_session,
-            commands::pronunciation::pronunciation_delete_session,
-            commands::pronunciation::pronunciation_record_attempt,
-            commands::pronunciation::pronunciation_stop_and_analyze,
-            commands::pronunciation::pronunciation_get_attempts,
-            commands::pronunciation::pronunciation_get_progress,
             commands::podcast::podcast_add_feed,
             commands::podcast::podcast_list_feeds,
             commands::podcast::podcast_get_feed,
@@ -227,19 +203,6 @@ pub fn run() {
             commands::podcast::podcast_get_sync_points,
             commands::podcast::podcast_save_sync_points,
             commands::podcast::podcast_clear_sync_points,
-            commands::writing::writing_create_session,
-            commands::writing::writing_list_sessions,
-            commands::writing::writing_get_session,
-            commands::writing::writing_update_text,
-            commands::writing::writing_submit,
-            commands::writing::writing_update_elapsed,
-            commands::writing::writing_save_corrections,
-            commands::writing::writing_get_corrections,
-            commands::writing::writing_delete_session,
-            commands::writing::writing_list_prompts,
-            commands::writing::writing_create_prompt,
-            commands::writing::writing_delete_prompt,
-            commands::writing::writing_get_stats,
             commands::writing_practice::wp_generate_prompt,
             commands::writing_practice::wp_create_session,
             commands::writing_practice::wp_get_session,
@@ -248,22 +211,6 @@ pub fn run() {
             commands::writing_practice::wp_cancel_session,
             commands::writing_practice::wp_history,
             commands::writing_practice::wp_submit,
-            commands::exam::exam_create_session,
-            commands::exam::exam_list_sessions,
-            commands::exam::exam_get_session,
-            commands::exam::exam_start_session,
-            commands::exam::exam_pause_session,
-            commands::exam::exam_complete_session,
-            commands::exam::exam_abandon_session,
-            commands::exam::exam_delete_session,
-            commands::exam::exam_update_elapsed,
-            commands::exam::exam_add_questions,
-            commands::exam::exam_get_questions,
-            commands::exam::exam_answer_question,
-            commands::exam::exam_score_question,
-            commands::exam::exam_list_templates,
-            commands::exam::exam_create_template,
-            commands::exam::exam_get_history,
             commands::dashboard::dashboard_get_summary,
             commands::dashboard::dashboard_get_daily_stats,
             commands::dashboard::dashboard_log_activity,
@@ -357,12 +304,6 @@ pub fn run() {
             commands::sync::sync_resolve_conflict,
             commands::sync::sync_enqueue_change,
             // Plugins
-            commands::plugins::plugin_list,
-            commands::plugins::plugin_enable,
-            commands::plugins::plugin_disable,
-            commands::plugins::plugin_uninstall,
-            commands::plugins::plugin_update_config,
-            commands::plugins::plugin_install_local,
             // Jobs
             commands::jobs::job_cancel,
             commands::jobs::job_list,

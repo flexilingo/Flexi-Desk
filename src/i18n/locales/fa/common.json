@@ -6,12 +6,8 @@
   "nav": {
     "dashboard": "داشبورد",
     "review": "مرور",
-    "reading": "خواندن",
     "tutor": "معلم هوشمند",
     "caption": "زیرنویس زنده",
-    "pronunciation": "تلفظ",
-    "writing": "نوشتن",
-    "exam": "شبیه‌ساز آزمون",
     "podcast": "پادکست",
     "settings": "تنظیمات",
     "overview": "نمای کلی",
@@ -28,7 +24,6 @@
     "cheatsheet": "چیت‌شیت",
     "notes": "یادداشت‌ها",
     "vocabulary": "واژگان من",
-    "plugins": "افزونه‌ها",
     "groups": {
       "home": "خانه",
       "study": "مطالعه",
@@ -59,10 +54,6 @@
       "title": "مرور",
       "subtitle": "فلش‌کارت‌های مرور فاصله‌دار"
     },
-    "reading": {
-      "title": "حالت خواندن",
-      "subtitle": "تحلیل تعاملی متن"
-    },
     "tutor": {
       "title": "معلم هوشمند",
       "subtitle": "تمرین مکالمه"
@@ -70,18 +61,6 @@
     "caption": {
       "title": "زیرنویس زنده",
       "subtitle": "زیرنویس سراسری سیستم"
-    },
-    "pronunciation": {
-      "title": "آزمایشگاه تلفظ",
-      "subtitle": "تمرین گفتار"
-    },
-    "writing": {
-      "title": "مربی نوشتن",
-      "subtitle": "اصلاحات با هوش مصنوعی"
-    },
-    "exam": {
-      "title": "شبیه‌ساز آزمون",
-      "subtitle": "آزمون‌های زبان آزمایشی"
     },
     "podcast": {
       "title": "پادکست",

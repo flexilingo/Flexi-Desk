@@ -8,10 +8,8 @@ import { DashboardPage } from '@/pages/dashboard';
 import { StudyPage } from '@/pages/study';
 import { ReviewPage } from '@/pages/review';
 import { ExplorePage } from '@/pages/explore';
-import { ReadingPage } from '@/pages/reading';
 import { TutorPage } from '@/pages/tutor';
 import { CaptionPage } from '@/pages/caption';
-import { PronunciationPage } from '@/pages/pronunciation';
 import { WritingPracticePage } from '@/pages/writing-practice';
 import { CelpipPage } from '@/pages/celpip';
 import { ReaderPage } from '@/pages/reader';
@@ -25,7 +23,6 @@ import { NotesPage } from '@/pages/notes';
 import { AccountLayout } from '@/pages/account/AccountLayout';
 import { SubscriptionPage } from '@/pages/subscription/SubscriptionPage';
 import { WhatsNewPage } from '@/pages/whatsnew/WhatsNewPage';
-import { PluginManagerPage } from '@/pages/plugins/PluginManagerPage';
 import { useAuthStore } from '@/stores/authStore';
 import { ENABLED_MODULES } from '@/config/features';
 import { SetupWizard } from '@/components/onboarding/SetupWizard';
@@ -90,15 +87,11 @@ function App() {
           {ENABLED_MODULES.study && <Route path="study/*" element={<StudyPage />} />}
           {ENABLED_MODULES.review && <Route path="review/*" element={<ReviewPage />} />}
           {ENABLED_MODULES.browse && <Route path="explore/*" element={<ExplorePage />} />}
-          {ENABLED_MODULES.reading && <Route path="reading" element={<ReadingPage />} />}
           {ENABLED_MODULES.reader && <Route path="reader/*" element={<ReaderPage />} />}
           {ENABLED_MODULES.cheatsheet && <Route path="cheatsheet/*" element={<CheatsheetPage />} />}
           {ENABLED_MODULES.sentences && <Route path="sentences/*" element={<SentencesPage />} />}
           {ENABLED_MODULES.tutor && <Route path="tutor" element={<TutorPage />} />}
           {ENABLED_MODULES.caption && <Route path="caption" element={<CaptionPage />} />}
-          {ENABLED_MODULES.pronunciation && (
-            <Route path="pronunciation" element={<PronunciationPage />} />
-          )}
           {ENABLED_MODULES.writingPractice && (
             <Route path="writing-practice/*" element={<WritingPracticePage />} />
           )}
@@ -110,7 +103,6 @@ function App() {
           {ENABLED_MODULES.videos && <Route path="videos/*" element={<VideosPage />} />}
           {ENABLED_MODULES.vocabulary && <Route path="vocabulary" element={<VocabularyPage />} />}
           {ENABLED_MODULES.notes && <Route path="notes" element={<NotesPage />} />}
-          {ENABLED_MODULES.plugins && <Route path="plugins" element={<PluginManagerPage />} />}
           {ENABLED_MODULES.settings && <Route path="settings" element={<SettingsPage />} />}
           {ENABLED_MODULES.account && (
             <>

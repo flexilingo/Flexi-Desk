@@ -6,12 +6,8 @@
   "nav": {
     "dashboard": "Dashboard",
     "review": "SRS-Wiederholung",
-    "reading": "Lesen",
     "tutor": "KI-Tutor",
     "caption": "Live-Untertitel",
-    "pronunciation": "Aussprache",
-    "writing": "Schreiben",
-    "exam": "Prüfungssimulator",
     "podcast": "Podcast",
     "settings": "Einstellungen",
     "overview": "Übersicht",
@@ -28,7 +24,6 @@
     "cheatsheet": "Spickzettel",
     "notes": "Notizen",
     "vocabulary": "Mein Wortschatz",
-    "plugins": "Plugins",
     "groups": {
       "home": "Startseite",
       "study": "Lernen",
@@ -59,10 +54,6 @@
       "title": "SRS-Wiederholung",
       "subtitle": "Spaced-Repetition-Karteikarten"
     },
-    "reading": {
-      "title": "Lesemodus",
-      "subtitle": "Interaktive Textanalyse"
-    },
     "tutor": {
       "title": "KI-Tutor",
       "subtitle": "Gesprächsübung"
@@ -70,18 +61,6 @@
     "caption": {
       "title": "Live-Untertitel",
       "subtitle": "Systemweite Untertitel"
-    },
-    "pronunciation": {
-      "title": "Aussprache-Labor",
-      "subtitle": "Sprechübung"
-    },
-    "writing": {
-      "title": "Schreibcoach",
-      "subtitle": "KI-gestützte Korrekturen"
-    },
-    "exam": {
-      "title": "Prüfungssimulator",
-      "subtitle": "Sprachtests zur Übung"
     },
     "podcast": {
       "title": "Podcast",

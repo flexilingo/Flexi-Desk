@@ -6,12 +6,8 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "review": "Révision",
-    "reading": "Lecture",
     "tutor": "Tuteur IA",
     "caption": "Sous-titres en direct",
-    "pronunciation": "Prononciation",
-    "writing": "Écriture",
-    "exam": "Simulateur d'examen",
     "podcast": "Podcast",
     "settings": "Paramètres",
     "overview": "Aperçu",
@@ -28,7 +24,6 @@
     "cheatsheet": "Aide-mémoire",
     "notes": "Notes",
     "vocabulary": "Mon vocabulaire",
-    "plugins": "Extensions",
     "groups": {
       "home": "Accueil",
       "study": "Étudier",
@@ -59,10 +54,6 @@
       "title": "Révision",
       "subtitle": "Cartes mémoire à répétition espacée"
     },
-    "reading": {
-      "title": "Mode lecture",
-      "subtitle": "Analyse de texte interactive"
-    },
     "tutor": {
       "title": "Tuteur IA",
       "subtitle": "Pratique de conversation"
@@ -70,18 +61,6 @@
     "caption": {
       "title": "Sous-titres en direct",
       "subtitle": "Sous-titres à l'échelle du système"
-    },
-    "pronunciation": {
-      "title": "Labo de prononciation",
-      "subtitle": "Pratique orale"
-    },
-    "writing": {
-      "title": "Coach d'écriture",
-      "subtitle": "Corrections par IA"
-    },
-    "exam": {
-      "title": "Simulateur d'examen",
-      "subtitle": "Tests de langue simulés"
     },
     "podcast": {
       "title": "Podcast",

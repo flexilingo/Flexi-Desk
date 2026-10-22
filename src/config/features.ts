@@ -19,22 +19,14 @@ export const ENABLED_MODULES = {
   vocabulary: true,
 
   // Tier 3 — AI-powered (enable next)
-  pronunciation: false,
   tutor: true,
   celpip: true,
-  // The legacy local-SQLite exam module (`src/pages/exam/`) is superseded by
-  // CELPIP but left in the tree, unrouted, until you say to remove it.
-  exam: false,
 
   // Tier 4 — Early stage (enable later)
-  reading: false,
   // The website's Reader, ported: PDFs and photos stay on this computer.
   reader: true,
-  // The old local writing module (src/pages/writing) is superseded by writingPractice and unrouted.
-  writing: false,
   // The website's Writing practice (no menu entry, like the website): prompts and grading on the user's own AI.
   writingPractice: true,
-  plugins: false,
 
   // The website's menu (see components/layout/sidebarConfig.ts). ON = the page
   // is ported and complete; OFF = defined in the sidebar, hidden until its port

@@ -6,12 +6,8 @@
   "nav": {
     "dashboard": "Dashboard",
     "review": "SRS Review",
-    "reading": "Reading",
     "tutor": "AI Tutor",
     "caption": "Live Caption",
-    "pronunciation": "Pronunciation",
-    "writing": "Writing",
-    "exam": "Exam Simulator",
     "podcast": "Podcast",
     "settings": "Settings",
     "overview": "Overview",
@@ -28,7 +24,6 @@
     "cheatsheet": "Cheatsheet",
     "notes": "Notes",
     "vocabulary": "My Vocabulary",
-    "plugins": "Plugins",
     "groups": {
       "home": "Home",
       "study": "Study",
@@ -59,10 +54,6 @@
       "title": "SRS Review",
       "subtitle": "Spaced repetition flashcards"
     },
-    "reading": {
-      "title": "Reading Mode",
-      "subtitle": "Interactive text analysis"
-    },
     "tutor": {
       "title": "AI Tutor",
       "subtitle": "Conversation practice"
@@ -70,18 +61,6 @@
     "caption": {
       "title": "Live Caption",
       "subtitle": "System-wide subtitles"
-    },
-    "pronunciation": {
-      "title": "Pronunciation Lab",
-      "subtitle": "Speech practice"
-    },
-    "writing": {
-      "title": "Writing Coach",
-      "subtitle": "AI-powered corrections"
-    },
-    "exam": {
-      "title": "Exam Simulator",
-      "subtitle": "Mock language tests"
     },
     "podcast": {
       "title": "Podcast",

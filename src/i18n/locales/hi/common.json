@@ -6,12 +6,8 @@
   "nav": {
     "dashboard": "डैशबोर्ड",
     "review": "SRS समीक्षा",
-    "reading": "पठन",
     "tutor": "AI ट्यूटर",
     "caption": "लाइव कैप्शन",
-    "pronunciation": "उच्चारण",
-    "writing": "लेखन",
-    "exam": "परीक्षा सिम्युलेटर",
     "podcast": "पॉडकास्ट",
     "settings": "सेटिंग्स",
     "overview": "अवलोकन",
@@ -28,7 +24,6 @@
     "cheatsheet": "चीटशीट",
     "notes": "नोट्स",
     "vocabulary": "मेरी शब्दावली",
-    "plugins": "प्लगइन",
     "groups": {
       "home": "होम",
       "study": "अध्ययन",
@@ -59,10 +54,6 @@
       "title": "SRS समीक्षा",
       "subtitle": "अंतराल पुनरावृत्ति फ्लैशकार्ड"
     },
-    "reading": {
-      "title": "पठन मोड",
-      "subtitle": "इंटरैक्टिव टेक्स्ट विश्लेषण"
-    },
     "tutor": {
       "title": "AI ट्यूटर",
       "subtitle": "बातचीत अभ्यास"
@@ -70,18 +61,6 @@
     "caption": {
       "title": "लाइव कैप्शन",
       "subtitle": "सिस्टम-व्यापी उपशीर्षक"
-    },
-    "pronunciation": {
-      "title": "उच्चारण प्रयोगशाला",
-      "subtitle": "भाषण अभ्यास"
-    },
-    "writing": {
-      "title": "लेखन कोच",
-      "subtitle": "AI-संचालित सुधार"
-    },
-    "exam": {
-      "title": "परीक्षा सिम्युलेटर",
-      "subtitle": "मॉक भाषा परीक्षण"
     },
     "podcast": {
       "title": "पॉडकास्ट",

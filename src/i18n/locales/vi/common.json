@@ -6,12 +6,8 @@
   "nav": {
     "dashboard": "Bảng Điều Khiển",
     "review": "Ôn tập SRS",
-    "reading": "Đọc",
     "tutor": "Gia sư AI",
     "caption": "Phụ đề trực tiếp",
-    "pronunciation": "Phát Âm",
-    "writing": "Viết",
-    "exam": "Mô Phỏng Bài Thi",
     "podcast": "Podcast",
     "settings": "Cài Đặt",
     "overview": "Tổng Quan",
@@ -28,7 +24,6 @@
     "cheatsheet": "Bảng tra",
     "notes": "Ghi chú",
     "vocabulary": "Từ Vựng Của Tôi",
-    "plugins": "Plugin",
     "groups": {
       "home": "Trang Chủ",
       "study": "Học",
@@ -59,10 +54,6 @@
       "title": "Ôn tập SRS",
       "subtitle": "Thẻ ghi nhớ với lặp lại ngắt quãng"
     },
-    "reading": {
-      "title": "Chế độ đọc",
-      "subtitle": "Phân tích văn bản tương tác"
-    },
     "tutor": {
       "title": "Gia sư AI",
       "subtitle": "Luyện hội thoại"
@@ -70,18 +61,6 @@
     "caption": {
       "title": "Phụ đề trực tiếp",
       "subtitle": "Phụ đề trên toàn hệ thống"
-    },
-    "pronunciation": {
-      "title": "Phòng luyện phát âm",
-      "subtitle": "Luyện nói"
-    },
-    "writing": {
-      "title": "Huấn luyện viên viết",
-      "subtitle": "Sửa lỗi bằng AI"
-    },
-    "exam": {
-      "title": "Mô Phỏng Bài Thi",
-      "subtitle": "Bài thi thử ngôn ngữ"
     },
     "podcast": {
       "title": "Podcast",

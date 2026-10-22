@@ -814,61 +814,6 @@ pub fn srs_get_deck_stats(
     }))
 }
 
-// ── Vocabulary Commands ────────────────────────────────────
-
-#[tauri::command]
-pub fn srs_add_vocabulary(
-    state: State<'_, AppState>,
-    word: String,
-    language: String,
-    translation: Option<String>,
-    definition: Option<String>,
-    pos: Option<String>,
-    cefr_level: Option<String>,
-    example_sentence: Option<String>,
-    source_module: String,
-    context_sentence: Option<String>,
-) -> Result<i64, String> {
-    let conn = lock_db(&state)?;
-
-    // Check if exists
-    let existing: Option<i64> = conn
-        .query_row(
-            "SELECT id FROM vocabulary WHERE word = ?1 AND language = ?2",
-            rusqlite::params![word, language],
-            |row: &rusqlite::Row| row.get(0),
-        )
-        .ok();
-
-    if let Some(id) = existing {
-        // Update if new info provided
-        if translation.is_some() || definition.is_some() {
-            conn.execute(
-                "UPDATE vocabulary SET
-                    translation = COALESCE(?1, translation),
-                    definition = COALESCE(?2, definition),
-                    pos = COALESCE(?3, pos),
-                    cefr_level = COALESCE(?4, cefr_level),
-                    examples = COALESCE(?5, examples),
-                    updated_at = datetime('now')
-                 WHERE id = ?6",
-                rusqlite::params![translation, definition, pos, cefr_level, example_sentence, id],
-            )
-            .map_err(|e| format!("Vocab update error: {e}"))?;
-        }
-        Ok(id)
-    } else {
-        conn.execute(
-            "INSERT INTO vocabulary (word, language, translation, definition, pos, cefr_level, examples, source_module, context_sentence)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-            rusqlite::params![word, language, translation, definition, pos, cefr_level, example_sentence, source_module, context_sentence],
-        )
-        .map_err(|e| format!("Vocab insert error: {e}"))?;
-
-        Ok(conn.last_insert_rowid())
-    }
-}
-
 // ── Tags, history and list-level stats ────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
