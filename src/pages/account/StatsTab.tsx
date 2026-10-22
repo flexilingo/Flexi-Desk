@@ -23,7 +23,6 @@ import { ErrorLine, SourceBadge, Spinner, useAccountT } from './components/Accou
 
 const ACCENT = '#DF804D';
 const SAGE = '#8BB7A3';
-const RED = '#ef4444';
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -196,7 +195,7 @@ export function StatsTab() {
                 <Bar
                   dataKey="incorrect"
                   name={t('analytics.incorrect')}
-                  fill={RED}
+                  className="fill-destructive"
                   radius={[3, 3, 0, 0]}
                 />
               </BarChart>

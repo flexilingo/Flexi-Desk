@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -54,9 +53,7 @@ export function GoogleSignInButton({ onSignedIn }: { onSignedIn?: () => void }) 
         loading={busy}
         className="w-fit"
       >
-        {busy ? (
-          <Loader2 className="animate-spin" />
-        ) : (
+        {!busy && (
           <span className="font-bold text-accent" aria-hidden>
             G
           </span>

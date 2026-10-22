@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Maximize2, Pause, Play, X } from 'lucide-react';
 import { usePlayerStore } from '@/pages/podcast/stores/playerStore';
 import { useVideoSurface, youtubeMedia } from './YouTubeMedia';
+import { MINI_ICON_BUTTON } from '@/pages/podcast/components/mini/MiniPlayerBar';
 
 /**
  * The one place the YouTube picture lives, mounted by the Shell (through the mini player) so it
@@ -104,7 +105,7 @@ export function VideoHost() {
         className={
           docked
             ? 'fixed z-40 bg-black'
-            : 'fixed bottom-4 right-4 z-[200] flex w-96 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl'
+            : 'fixed bottom-4 end-4 z-[200] flex w-[400px] flex-col overflow-hidden rounded-md border border-border bg-card shadow-md'
         }
       >
         <div
@@ -127,11 +128,11 @@ export function VideoHost() {
               title={t('podcasts.expandPlayer')}
               className="min-w-0 flex-1 text-start"
             >
-              <span dir="auto" className="block truncate text-xs font-semibold text-foreground">
+              <span dir="auto" className="block truncate text-sm font-semibold text-foreground">
                 {episode.title}
               </span>
               {feed?.title && (
-                <span dir="auto" className="block truncate text-[10px] text-muted-foreground">
+                <span dir="auto" className="block truncate text-xs text-muted-foreground">
                   {feed.title}
                 </span>
               )}
@@ -143,7 +144,7 @@ export function VideoHost() {
                 onClick={toggle}
                 title={isPlaying ? t('podcasts.pause') : t('podcasts.play')}
                 aria-label={isPlaying ? t('podcasts.pause') : t('podcasts.play')}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-colors hover:bg-accent/90"
               >
                 {isPlaying ? (
                   <Pause className="h-4 w-4 fill-current" />
@@ -157,7 +158,7 @@ export function VideoHost() {
               onClick={expand}
               title={t('podcasts.expandPlayer')}
               aria-label={t('podcasts.expandPlayer')}
-              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className={MINI_ICON_BUTTON}
             >
               <Maximize2 className="h-4 w-4" />
             </button>
@@ -166,7 +167,7 @@ export function VideoHost() {
               onClick={stop}
               title={t('podcasts.closePlayer')}
               aria-label={t('podcasts.closePlayer')}
-              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className={MINI_ICON_BUTTON}
             >
               <X className="h-4 w-4" />
             </button>

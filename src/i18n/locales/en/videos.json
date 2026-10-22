@@ -111,11 +111,8 @@
     "page": "Page {{page}} of {{total}}"
   },
   "watch": {
-    "startHint": "Press play on the video itself to start it. The controls below work after that.",
     "preparing": "Opening the video…",
-    "importFailed": "This video could not be opened. Try again.",
-    "noTranscript": "This video has no interactive subtitles yet.",
-    "replay": "Watch again"
+    "importFailed": "This video could not be opened. Try again."
   },
   "watchWithSubtitles": "Watch with subtitles"
 }

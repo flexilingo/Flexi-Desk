@@ -1,0 +1,201 @@
+{
+  "title": "Pratique d'écriture",
+  "subtitle": "Améliorez vos compétences en écriture avec l'IA",
+  "selectExamType": "Choisir le type d'examen",
+  "selectExamTypeDescription": "Choisissez le type d'écriture que vous souhaitez pratiquer",
+  "generatePrompt": "Générer un nouveau sujet",
+  "generatingPrompt": "Génération du sujet...",
+  "startWriting": "Commencer à écrire",
+  "startSession": "Démarrer la session",
+  "submit": "Soumettre pour évaluation",
+  "submitting": "Évaluation de votre essai...",
+  "retrySumbit": "Réessayer l'évaluation",
+  "backToList": "Retour à la pratique d'écriture",
+  "newSession": "Nouvelle session de pratique",
+  "examTypes": {
+    "ielts_task1": "IELTS Task 1",
+    "ielts_task2": "IELTS Task 2",
+    "toefl_integrated": "TOEFL Integrated",
+    "toefl_independent": "TOEFL Independent",
+    "celpip": "CELPIP",
+    "cambridge_fce": "Cambridge B2 First",
+    "cambridge_cae": "Cambridge C1 Advanced",
+    "duolingo": "Rédaction de réponses courtes",
+    "pte": "PTE Academic",
+    "general_email": "Rédaction d'e-mails",
+    "general_essay": "Rédaction d'essais",
+    "general_letter": "Rédaction de lettres",
+    "general_report": "Rédaction de rapports"
+  },
+  "examDescriptions": {
+    "ielts_task1": "Décrivez des graphiques et diagrammes en 150+ mots",
+    "ielts_task2": "Rédigez un essai argumentatif en 250+ mots",
+    "toefl_integrated": "Résumez une lecture et une conférence en 150-225 mots",
+    "toefl_independent": "Exprimez votre opinion avec des exemples en 300+ mots",
+    "celpip": "Tâches d'écriture pratiques pour l'immigration canadienne",
+    "cambridge_fce": "Tâches d'écriture niveau B2 : essais, articles, critiques",
+    "cambridge_cae": "Écriture niveau C1 : propositions, rapports, essais",
+    "duolingo": "Réponses écrites courtes en 50-100 mots",
+    "pte": "Essais et résumés académiques pour le PTE",
+    "general_email": "Pratiquez la rédaction d'e-mails formels et informels",
+    "general_essay": "Rédigez des essais structurés sur divers sujets",
+    "general_letter": "Pratiquez la rédaction de lettres formelles et informelles",
+    "general_report": "Rédigez des rapports professionnels avec analyse de données"
+  },
+  "categories": {
+    "exams": "Préparation aux examens",
+    "general": "Pratique générale"
+  },
+  "timer": {
+    "remaining": "Temps restant",
+    "disabled": "Minuteur désactivé",
+    "enable": "Activer le minuteur",
+    "disable": "Désactiver le minuteur",
+    "timeUp": "Temps écoulé !",
+    "minutes": "{{count}} min",
+    "stopMessage": "Cela mettra fin à votre session d'écriture. Vous ne pourrez pas la reprendre. Êtes-vous sûr ?",
+    "stop": "Terminer la session"
+  },
+  "editor": {
+    "placeholder": "Commencez à écrire votre réponse ici...",
+    "wordCount": "Mots : {{count}}",
+    "wordTarget": "Objectif : {{min}}-{{max}} mots",
+    "autoSaved": "Brouillon sauvegardé",
+    "saving": "Sauvegarde...",
+    "wordsToGo": "encore {{count}} mots"
+  },
+  "prompt": {
+    "title": "Sujet d'écriture",
+    "supplementary": "Documents complémentaires",
+    "readingPassage": "Texte de lecture",
+    "lectureSummary": "Résumé de conférence",
+    "chartDescription": "Description du graphique",
+    "collapse": "Masquer le sujet",
+    "expand": "Afficher le sujet"
+  },
+  "feedback": {
+    "title": "Évaluation IA",
+    "overall": "Note globale",
+    "criteria": "Détail des critères",
+    "strengths": "Points forts",
+    "weaknesses": "Points à améliorer",
+    "errors": "Erreurs relevées",
+    "errorTypes": {
+      "grammar": "Grammaire",
+      "vocabulary": "Vocabulaire",
+      "spelling": "Orthographe",
+      "punctuation": "Ponctuation"
+    },
+    "suggestions": "Suggestions d'amélioration",
+    "rewritten": "Version améliorée par l'IA",
+    "rewrittenDescription": "Voici comment votre essai pourrait être amélioré tout en gardant vos idées",
+    "showRewritten": "Afficher la version améliorée",
+    "hideRewritten": "Masquer la version améliorée",
+    "original": "Votre essai original",
+    "improved": "Amélioré",
+    "noFeedback": "Soumettez votre essai pour recevoir l'évaluation IA",
+    "noErrors": "Aucune erreur trouvée - excellent !",
+    "noSuggestions": "Pas de suggestions supplémentaires",
+    "loading": "Chargement de la session...",
+    "gradingDescription": "Notre IA analyse votre écriture pour la grammaire, le vocabulaire, la structure et plus...",
+    "scoreDisclaimer": "Estimation IA — les notes peuvent différer des résultats officiels",
+    "vocabularyAnalysis": "Analyse du vocabulaire",
+    "lexicalDiversity": "Diversité lexicale",
+    "estimatedCEFR": "Niveau CECR",
+    "advancedWords": "Mots avancés utilisés",
+    "suggestedUpgrades": "Améliorations de vocabulaire",
+    "doubleChecked": "Double vérification",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "Votre propre IA"
+    },
+    "badgeTitle": {
+      "pro": "Évaluation FlexiLingo Pro",
+      "mini": "Évaluation FlexiLingo Mini",
+      "own": "Corrigé par votre propre IA"
+    },
+    "badgeBody": {
+      "pro": "Votre essai a été évalué avec notre modèle IA le plus avancé, avec double vérification pour des notes plus précises et cohérentes.",
+      "mini": "Votre essai a été évalué avec notre modèle IA standard. Passez à Pro pour une évaluation plus précise, des notes vérifiées et des commentaires détaillés.",
+      "own": "Votre texte a été corrigé par l'IA que vous avez configurée ({{model}}), et non par le cloud de FlexiLingo."
+    }
+  },
+  "history": {
+    "title": "Historique d'écriture",
+    "noHistory": "Pas encore de sessions. Commencez votre première pratique !",
+    "viewDetails": "Voir les détails",
+    "filterByExam": "Filtrer par type d'examen",
+    "allTypes": "Tous les types",
+    "score": "Note",
+    "wordsWritten": "mots",
+    "timeSpent": "Temps passé",
+    "gradedOn": "Évalué le"
+  },
+  "stats": {
+    "title": "Votre progression",
+    "totalSessions": "Total des sessions",
+    "gradedSessions": "Évaluées",
+    "avgScore": "Note moyenne",
+    "scoreTrend": "Tendance des notes",
+    "bestCriteria": "Meilleur domaine",
+    "weakestCriteria": "À travailler",
+    "noStats": "Complétez quelques sessions pour voir votre progression"
+  },
+  "usage": {
+    "remaining": "{{count}} sessions restantes ce mois",
+    "unlimited": "Sessions illimitées",
+    "used": "{{used}} sur {{limit}} utilisées",
+    "upgradePrompt": "Passez à la version supérieure pour plus de sessions",
+    "limitReached": "Limite atteinte",
+    "dailyLimitReached": "Limite quotidienne atteinte",
+    "monthlyLimitReached": "Limite mensuelle atteinte",
+    "limitUsedAllDaily": "Limite mensuelle ({{monthlyLimit}}) épuisée. Allocation quotidienne ({{dailyLimit}}/jour) aussi épuisée.",
+    "limitUsedAllMonthly": "Limite mensuelle atteinte. Vous avez encore {{dailyLimit}} session(s)/jour.",
+    "limitUsedAllMonthlyNoDaily": "Vous avez utilisé toutes vos sessions de pratique d'écriture pour ce mois.",
+    "limitResetDaily": "Réinitialisation demain !",
+    "limitResetMonthly": "Réinitialisation au début du mois prochain."
+  },
+  "status": {
+    "active": "En cours",
+    "submitted": "Soumis",
+    "graded": "Évalué"
+  },
+  "activeSession": {
+    "title": "Session active",
+    "resume": "Reprendre",
+    "existsMessage": "Vous avez déjà une séance d’écriture en cours. Terminez-la ou envoyez-la avant d’en commencer une nouvelle."
+  },
+  "timerToggle": "Activer le compte à rebours",
+  "disclaimer": "FlexiLingo est une plateforme de pratique indépendante, non affiliée à ni approuvée par aucune organisation officielle d'examen. Tous les noms d'examens sont des marques déposées de leurs organisations respectives.",
+  "back": "Retour",
+  "cancel": "Annuler",
+  "origin": {
+    "local": "Sur cet ordinateur",
+    "cloud": "Cloud"
+  },
+  "cloudSessionOff": {
+    "title": "Cette session est dans votre cloud FlexiLingo",
+    "body": "Activez l'IA cloud dans les Réglages pour l'ouvrir."
+  },
+  "dashboardChip": "S'entraîner à écrire",
+  "errors": {
+    "UNKNOWN_ERROR": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+    "WRITING_SESSION_NOT_FOUND": "Session d'écriture introuvable.",
+    "WRITING_GRADING_FAILED": "Échec de la notation IA. Veuillez soumettre à nouveau.",
+    "WRITING_ESSAY_TOO_SHORT": "Votre essai est trop court. Veuillez écrire davantage avant de soumettre.",
+    "WRITING_ESSAY_TOO_LONG": "Votre essai est trop long. Veuillez le raccourcir avant de soumettre.",
+    "WRITING_PROMPT_GENERATION_FAILED": "Échec de la génération du sujet d'écriture. Veuillez réessayer.",
+    "DAILY_LIMIT_REACHED": "Limite quotidienne atteinte. Revenez demain !",
+    "MONTHLY_LIMIT_REACHED": "Limite mensuelle atteinte. Réessayez le mois prochain ou mettez à niveau votre abonnement.",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "Cet essai a déjà été soumis pour notation.",
+    "SESSION_CREATION_FAILED": "Échec de la création de la session vocale. Veuillez réessayer.",
+    "INVALID_EXAM_TYPE": "Type d'examen sélectionné invalide.",
+    "MISSING_REQUIRED_FIELDS": "Veuillez remplir tous les champs obligatoires.",
+    "AUTH_REQUIRED": "Veuillez vous connecter pour utiliser cette fonctionnalité.",
+    "WRITING_SESSION_CANCELLED": "Cette session d'écriture est terminée.",
+    "SAVE_DRAFT_FAILED": "Impossible d'enregistrer le brouillon. Réessayez.",
+    "CANCEL_SESSION_FAILED": "Impossible de terminer la session. Réessayez.",
+    "WRITING_PROMPT_NOT_FOUND": "Le sujet d'écriture est introuvable."
+  }
+}

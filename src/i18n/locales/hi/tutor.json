@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "title": "एआई ट्यूटर",
+    "subtitle": "अपने एआई बातचीत साथी के साथ बोलने का अभ्यास करें",
+    "newConversation": "नई बातचीत",
+    "loading": "बातचीत लोड हो रही हैं...",
+    "emptyTitle": "अभी तक कोई बातचीत नहीं",
+    "emptyBody": "किसी भी भाषा में बोलने का अभ्यास करने के लिए अपनी पहली एआई बातचीत शुरू करें।",
+    "startFirst": "अपनी पहली बातचीत शुरू करें",
+    "active": "सक्रिय",
+    "messages_one": "{{count}} संदेश",
+    "messages_other": "{{count}} संदेश",
+    "corrections_one": "{{count}} सुधार",
+    "corrections_other": "{{count}} सुधार"
+  },
+  "time": {
+    "justNow": "अभी",
+    "minutesAgo": "{{count}} मिनट पहले",
+    "hoursAgo": "{{count}} घंटे पहले",
+    "daysAgo": "{{count}} दिन पहले"
+  },
+  "modes": {
+    "free": {
+      "name": "खुली बातचीत",
+      "description": "जिस बारे में चाहें बात करें"
+    },
+    "role_play": {
+      "name": "भूमिका अभिनय",
+      "description": "असली ज़िंदगी की स्थितियाँ निभाएँ"
+    },
+    "deck_practice": {
+      "name": "डेक अभ्यास",
+      "description": "अपने फ्लैशकार्ड डेक के शब्दों का उपयोग करें"
+    },
+    "vocab_challenge": {
+      "name": "शब्दावली चुनौती",
+      "description": "बातचीत में नए शब्दों का अभ्यास करें"
+    },
+    "escape_room": {
+      "name": "एस्केप रूम",
+      "description": "बोलकर एक कहानी सुलझाएँ"
+    }
+  },
+  "categories": {
+    "daily_life": "रोज़मर्रा की ज़िंदगी",
+    "travel": "यात्रा",
+    "social": "सामाजिक",
+    "professional": "पेशेवर",
+    "academic": "शैक्षणिक",
+    "health": "स्वास्थ्य",
+    "emergency": "आपातकाल",
+    "creative": "रचनात्मक और मज़ेदार"
+  },
+  "topics": {
+    "travel": "यात्रा और रोमांच",
+    "food": "खाना और पकाना",
+    "movies": "फ़िल्में और टीवी शो",
+    "music": "संगीत और कॉन्सर्ट",
+    "sports": "खेल और फ़िटनेस",
+    "technology": "तकनीक",
+    "books": "किताबें और पढ़ना",
+    "work": "काम और करियर",
+    "hobbies": "शौक और हस्तकला",
+    "nature": "प्रकृति और पर्यावरण",
+    "family": "परिवार और रिश्ते",
+    "health": "सेहत और तंदुरुस्ती",
+    "fashion": "फ़ैशन और शैली",
+    "art": "कला और संस्कृति",
+    "science": "विज्ञान और खोजें",
+    "history": "इतिहास और परंपराएँ",
+    "routines": "दैनिक दिनचर्या",
+    "holidays": "छुट्टियाँ और उत्सव",
+    "childhood": "बचपन की यादें",
+    "future": "भविष्य की योजनाएँ और सपने"
+  },
+  "providers": {
+    "ollama": "ओलामा (लोकल)",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "नई बातचीत",
+    "stepOf": "चरण {{step}} / {{total}}",
+    "back": "वापस",
+    "next": "आगे",
+    "start": "बातचीत शुरू करें",
+    "starting": "शुरू हो रही है...",
+    "backAria": "वापस जाएँ",
+    "step1Title": "अभ्यास का तरीका चुनें",
+    "step1Subtitle": "आप कैसे अभ्यास करना चाहेंगे?",
+    "step2Title": "भाषा और स्तर",
+    "step2Subtitle": "अपने अभ्यास की सेटिंग तय करें",
+    "practiceLanguage": "अभ्यास की भाषा",
+    "languageSearch": "भाषा खोजें...",
+    "languageNoResults": "कोई भाषा नहीं मिली",
+    "cefrLevel": "CEFR स्तर",
+    "aiProvider": "एआई प्रदाता",
+    "model": "मॉडल",
+    "ollamaOffline": "ओलामा जुड़ा नहीं है। डाउनलोड किए गए मॉडल देखने के लिए ओलामा चलाएँ।",
+    "topicTitle": "एक विषय चुनें",
+    "scenarioTitle": "एक परिदृश्य चुनें",
+    "deckTitle": "एक डेक चुनें",
+    "extraTitle": "अतिरिक्त सेटिंग",
+    "topicSubtitle": "कोई विषय चुनें या अपना लिखें",
+    "scenarioSubtitle": "भूमिका अभिनय का परिदृश्य खोजकर चुनें",
+    "deckSubtitle": "अपने फ्लैशकार्ड डेक की शब्दावली का अभ्यास करें",
+    "extraSubtitle": "चाहें तो अपने निर्देश जोड़ें",
+    "optional": "(वैकल्पिक)",
+    "ownTopic": "अपना विषय लिखें",
+    "topicPlaceholder": "आप किस बारे में बात करना चाहेंगे?",
+    "suggestedTopic": "या सुझाया गया विषय चुनें",
+    "searchScenarios": "परिदृश्य खोजें...",
+    "customGroup": "कस्टम",
+    "customScenario": "अपना परिदृश्य लिखें",
+    "customScenarioHint": "कोई भी स्थिति बताएँ जिसका आप अभ्यास करना चाहते हैं",
+    "customScenarioPlaceholder": "जैसे: आप एक पिस्सू बाज़ार में हैं और अड़ियल दुकानदार से एक पुराने लैंप की कीमत पर मोलभाव कर रहे हैं...",
+    "deck": "डेक",
+    "loadingDecks": "डेक लोड हो रहे हैं...",
+    "selectDeck": "एक डेक चुनें...",
+    "deckCards": "{{name}} ({{count}} कार्ड)",
+    "noDecks": "कोई डेक नहीं मिला। पहले रिव्यू सेक्शन में एक डेक बनाएँ।",
+    "customInstructions": "कस्टम निर्देश",
+    "customInstructionsPlaceholder": "जैसे: व्यावसायिक शब्दावली पर ध्यान दो, धीरे बोलो, मुझे ज़्यादा सख़्ती से सुधारो...",
+    "practiceTitle": "{{language}} अभ्यास"
+  },
+  "detail": {
+    "back": "बातचीत की सूची पर वापस",
+    "resume": "जारी रखें",
+    "minutes": "{{count}} मिनट",
+    "messages_one": "{{count}} संदेश",
+    "messages_other": "{{count}} संदेश",
+    "fixes_one": "{{count}} सुधार",
+    "fixes_other": "{{count}} सुधार",
+    "conversation": "बातचीत"
+  },
+  "scores": {
+    "grammar": "व्याकरण",
+    "vocabulary": "शब्दावली",
+    "fluency": "प्रवाह",
+    "overall": "कुल"
+  },
+  "corrections": {
+    "title": "सुधार ({{count}})",
+    "wrong": "मूल",
+    "right": "सुधारा हुआ",
+    "why": "कारण"
+  },
+  "words": {
+    "title": "नए शब्द ({{count}})",
+    "saved": "सहेजा गया",
+    "saveToDeck": "डेक में सहेजें",
+    "saveAll": "सभी डेक में सहेजें"
+  },
+  "summary": {
+    "title": "सत्र पूरा हुआ",
+    "startNew": "नई बातचीत शुरू करें"
+  },
+  "voice": {
+    "listening": "सुन रहा है...",
+    "transcribing": "लिखित रूप में बदला जा रहा है...",
+    "thinking": "सोच रहा है...",
+    "tapInterrupt": "रोकने के लिए टैप करें",
+    "tapSpeak": "बोलने के लिए टैप करें",
+    "hideSubtitles": "उपशीर्षक छिपाएँ",
+    "showSubtitles": "उपशीर्षक दिखाएँ",
+    "end": "समाप्त",
+    "tutor": "ट्यूटर",
+    "you": "आप",
+    "micAria": "माइक्रोफ़ोन"
+  },
+  "errorDismiss": "बंद करें",
+  "errors": {
+    "AUTH_REQUIRED": "इस सुविधा के लिए साइन इन करना ज़रूरी है।",
+    "NETWORK_ERROR": "FlexiLingo तक पहुँच नहीं हो सकी। इंटरनेट जाँचें और दोबारा कोशिश करें।",
+    "MIC_UNAVAILABLE": "माइक्रोफ़ोन उपलब्ध नहीं है। जाँचें कि वह जुड़ा है और अनुमति मिली है, फिर दोबारा कोशिश करें।",
+    "MODEL_MISSING": "स्पीच मॉडल नहीं मिला। Whisper सेटिंग्स में मॉडल डाउनलोड करें और दोबारा कोशिश करें।",
+    "UNKNOWN_ERROR": "कुछ गड़बड़ हो गई। कृपया दोबारा कोशिश करें।"
+  }
+}

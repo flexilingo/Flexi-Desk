@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "title": "KI-Tutor",
+    "subtitle": "Übe das Sprechen mit deinem KI-Gesprächspartner",
+    "newConversation": "Neues Gespräch",
+    "loading": "Gespräche werden geladen...",
+    "emptyTitle": "Noch keine Gespräche",
+    "emptyBody": "Starte dein erstes KI-Gespräch, um das Sprechen in jeder Sprache zu üben.",
+    "startFirst": "Erstes Gespräch starten",
+    "active": "Aktiv",
+    "messages_one": "{{count}} Nachricht",
+    "messages_other": "{{count}} Nachrichten",
+    "corrections_one": "{{count}} Korrektur",
+    "corrections_other": "{{count}} Korrekturen"
+  },
+  "time": {
+    "justNow": "Gerade eben",
+    "minutesAgo": "vor {{count}} Min.",
+    "hoursAgo": "vor {{count}} Std.",
+    "daysAgo": "vor {{count}} T."
+  },
+  "modes": {
+    "free": {
+      "name": "Freies Gespräch",
+      "description": "Sprich über alles, was du magst"
+    },
+    "role_play": {
+      "name": "Rollenspiel",
+      "description": "Spiele Alltagssituationen nach"
+    },
+    "deck_practice": {
+      "name": "Deck-Übung",
+      "description": "Nutze Wörter aus deinen Karteikarten-Decks"
+    },
+    "vocab_challenge": {
+      "name": "Vokabel-Challenge",
+      "description": "Übe neue Vokabeln im Gespräch"
+    },
+    "escape_room": {
+      "name": "Escape Room",
+      "description": "Löse eine Geschichte durch Sprechen"
+    }
+  },
+  "categories": {
+    "daily_life": "Alltag",
+    "travel": "Reisen",
+    "social": "Sozial",
+    "professional": "Beruf",
+    "academic": "Akademisch",
+    "health": "Gesundheit",
+    "emergency": "Notfall",
+    "creative": "Kreativ & Spaß"
+  },
+  "topics": {
+    "travel": "Reisen & Abenteuer",
+    "food": "Essen & Kochen",
+    "movies": "Filme & Serien",
+    "music": "Musik & Konzerte",
+    "sports": "Sport & Fitness",
+    "technology": "Technologie",
+    "books": "Bücher & Lesen",
+    "work": "Arbeit & Karriere",
+    "hobbies": "Hobbys & Handwerk",
+    "nature": "Natur & Umwelt",
+    "family": "Familie und Beziehungen",
+    "health": "Gesundheit und Wohlbefinden",
+    "fashion": "Mode & Stil",
+    "art": "Kunst & Kultur",
+    "science": "Wissenschaft & Entdeckungen",
+    "history": "Geschichte & Traditionen",
+    "routines": "Tagesabläufe",
+    "holidays": "Feiertage & Feste",
+    "childhood": "Kindheitserinnerungen",
+    "future": "Zukunftspläne & Träume"
+  },
+  "providers": {
+    "ollama": "Ollama (lokal)",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "Neues Gespräch",
+    "stepOf": "Step {{step}} of {{total}}",
+    "back": "Zurück",
+    "next": "Weiter",
+    "start": "Gespräch starten",
+    "starting": "Wird gestartet...",
+    "backAria": "Zurück",
+    "step1Title": "Übungsmodus wählen",
+    "step1Subtitle": "Wie möchtest du üben?",
+    "step2Title": "Sprache und Niveau",
+    "step2Subtitle": "Lege deine Übungseinstellungen fest",
+    "practiceLanguage": "Übungssprache",
+    "languageSearch": "Sprachen suchen...",
+    "languageNoResults": "Keine Sprache gefunden",
+    "cefrLevel": "GER-Niveau",
+    "aiProvider": "KI-Anbieter",
+    "model": "Modell",
+    "ollamaOffline": "Ollama ist nicht verbunden. Starte Ollama, um heruntergeladene Modelle zu sehen.",
+    "topicTitle": "Thema wählen",
+    "scenarioTitle": "Szenario wählen",
+    "deckTitle": "Ein Deck auswählen",
+    "extraTitle": "Weitere Einstellungen",
+    "topicSubtitle": "Wähle ein Thema oder schreibe dein eigenes",
+    "scenarioSubtitle": "Suche und wähle ein Rollenspiel-Szenario",
+    "deckSubtitle": "Übe Vokabeln aus deinen Karteikarten-Decks",
+    "extraSubtitle": "Füge eigene Anweisungen hinzu, wenn du möchtest",
+    "optional": "(optional)",
+    "ownTopic": "Eigenes Thema schreiben",
+    "topicPlaceholder": "Worüber möchtest du sprechen?",
+    "suggestedTopic": "Oder wähle ein vorgeschlagenes Thema",
+    "searchScenarios": "Szenarien suchen...",
+    "customGroup": "Benutzerdefiniert",
+    "customScenario": "Eigenes Szenario schreiben",
+    "customScenarioHint": "Beschreibe eine beliebige Situation, die du üben möchtest",
+    "customScenarioPlaceholder": "Z. B.: Du feilschst auf einem Flohmarkt mit einem sturen Verkäufer um den Preis einer Vintage-Lampe...",
+    "deck": "Deck",
+    "loadingDecks": "Decks werden geladen...",
+    "selectDeck": "Ein Deck auswählen...",
+    "deckCards": "{{name}} ({{count}} Karten)",
+    "noDecks": "Keine Decks gefunden. Erstelle zuerst ein Deck im Bereich „Wiederholen“.",
+    "customInstructions": "Eigene Anweisungen",
+    "customInstructionsPlaceholder": "Z. B.: Konzentriere dich auf Business-Vokabeln, sprich langsam, korrigiere mich strenger...",
+    "practiceTitle": "{{language}}-Übung"
+  },
+  "detail": {
+    "back": "Zurück zu den Gesprächen",
+    "resume": "Fortsetzen",
+    "minutes": "{{count}} Min.",
+    "messages_one": "{{count}} Nachricht",
+    "messages_other": "{{count}} Nachrichten",
+    "fixes_one": "{{count}} Verbesserung",
+    "fixes_other": "{{count}} Verbesserungen",
+    "conversation": "Konversation"
+  },
+  "scores": {
+    "grammar": "Grammatik",
+    "vocabulary": "Wortschatz",
+    "fluency": "Flüssigkeit",
+    "overall": "Overall"
+  },
+  "corrections": {
+    "title": "Korrekturen ({{count}})",
+    "wrong": "Original",
+    "right": "Korrigiert",
+    "why": "Why"
+  },
+  "words": {
+    "title": "Neue Wörter ({{count}})",
+    "saved": "Gespeichert",
+    "saveToDeck": "Save to deck",
+    "saveAll": "Alle im Deck speichern"
+  },
+  "summary": {
+    "title": "Session complete",
+    "startNew": "Neues Gespräch starten"
+  },
+  "voice": {
+    "listening": "Hört zu...",
+    "transcribing": "Wird transkribiert...",
+    "thinking": "Ich denke nach...",
+    "tapInterrupt": "Zum Unterbrechen tippen",
+    "tapSpeak": "Antippen zum Vorlesen",
+    "hideSubtitles": "Untertitel ausblenden",
+    "showSubtitles": "Untertitel anzeigen",
+    "end": "Beenden",
+    "tutor": "Tutor",
+    "you": "Du",
+    "micAria": "Mikrofon"
+  },
+  "errorDismiss": "Schließen",
+  "errors": {
+    "AUTH_REQUIRED": "Du musst dich anmelden, um diese Funktion zu nutzen.",
+    "NETWORK_ERROR": "FlexiLingo ist nicht erreichbar. Prüfe deine Internetverbindung und versuche es erneut.",
+    "MIC_UNAVAILABLE": "Das Mikrofon ist nicht verfügbar. Prüfe, ob es angeschlossen und erlaubt ist, und versuche es erneut.",
+    "MODEL_MISSING": "Das Sprachmodell fehlt. Lade in den Whisper-Einstellungen ein Modell herunter und versuche es erneut.",
+    "UNKNOWN_ERROR": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
+  }
+}

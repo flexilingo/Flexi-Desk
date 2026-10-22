@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageCircle, X } from 'lucide-react';
 import type { EnhancedWord } from '../studio-types';
@@ -322,13 +323,22 @@ interface SelectionActionBarProps {
   /** No podcast note for this text (a book track has no episode to pin it to). */
   hideNote?: boolean;
   currentTime?: number;
+  /**
+   * Drawn on the page, over the line, rather than inside it (website: the now-playing reading zone
+   * scrolls and clips, and a bar inside it was cut off).
+   */
+  floating?: boolean;
+  /** The element a floating bar sits above when it is not the container (a selection that starts on a line above). */
+  anchor?: () => HTMLElement | null;
 }
 
+/** The website's selection bar: the chosen words, Add to Deck, Translate, Note, Copy (and Ask Lena where offered). */
 export function SelectionActionBar({
   selectedText,
   words,
   selectedIndices,
   onClear,
+  containerRef,
   onPauseForDialog,
   onTranslate,
   onAskLena,
@@ -336,10 +346,30 @@ export function SelectionActionBar({
   onAddNote,
   hideNote = false,
   currentTime = 0,
+  floating = false,
+  anchor: anchorElement,
 }: SelectionActionBarProps) {
   const { t } = useTranslation();
   const { t: tp } = useTranslation('podcastUi');
   const [copied, setCopied] = useState(false);
+  // Where the floating bar sits: centred over the line, 12px above it.
+  const [anchor, setAnchor] = useState<{ bottom: number; left: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!floating) return;
+    const place = () => {
+      const el = anchorElement?.() ?? containerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setAnchor({ bottom: window.innerHeight - r.top + 12, left: r.left + r.width / 2 });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [floating, containerRef, anchorElement]);
 
   const syntheticWord = useMemo<EnhancedWord>(() => {
     const sortedIndices = Array.from(selectedIndices).sort((a, b) => a - b);
@@ -365,8 +395,6 @@ export function SelectionActionBar({
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(selectedText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
     } catch {
       const ta = document.createElement('textarea');
       ta.value = selectedText;
@@ -374,9 +402,9 @@ export function SelectionActionBar({
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   }, [selectedText]);
 
   const handleAskLena = useCallback(() => {
@@ -398,65 +426,56 @@ export function SelectionActionBar({
   }, [selectedText, onPauseForDialog, onClear, onTranslate]);
 
   const displayText = selectedText.length > 40 ? selectedText.slice(0, 37) + '...' : selectedText;
+  const quiet =
+    'inline-flex items-center gap-1 rounded-[7px] border border-transparent px-2.5 py-1.5 text-sm text-primary-light transition-colors duration-150 hover:bg-muted hover:text-foreground';
 
-  return (
+  const bar = (
     <div
-      className="absolute flex items-center gap-2 px-3 py-2 bg-popover text-popover-foreground border border-border rounded-xl shadow-xl z-[100] whitespace-nowrap animate-in fade-in slide-in-from-bottom-2 duration-150"
-      style={{
-        bottom: 'calc(100% + 12px)',
-        left: '50%',
-        transform: 'translateX(-50%)',
-      }}
+      data-selection-bar=""
+      className={`${floating ? 'relative animate-in fade-in duration-100' : 'absolute z-[100] animate-in fade-in slide-in-from-bottom-2 duration-150'} flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-2 text-foreground shadow-md`}
+      style={
+        floating
+          ? undefined
+          : { bottom: 'calc(100% + 12px)', left: '50%', transform: 'translateX(-50%)' }
+      }
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <span className="text-sm font-medium text-foreground max-w-[200px] truncate px-2 py-1 bg-muted rounded-lg">
+      <span className="max-w-[200px] truncate rounded-[7px] border border-border bg-muted px-2 py-1 text-sm font-medium text-muted-foreground">
         &quot;{displayText}&quot;
       </span>
-      <div className="w-px h-5 bg-white/10" />
+      <div className="h-5 w-px bg-border" />
       <button
         type="button"
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium border-0 cursor-pointer hover:bg-primary/88 transition-colors duration-150"
+        className="inline-flex items-center gap-1.5 rounded-[7px] border border-transparent bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent/90"
         onClick={handleAddToDeck}
       >
-        <span className="text-base">+</span>
+        <span className="text-base leading-none">+</span>
         {t('podcast.addToDeck')}
       </button>
-      <button
-        type="button"
-        className="flex items-center gap-1 px-2.5 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm border-0 cursor-pointer hover:bg-muted/70 hover:text-foreground transition-colors duration-150"
-        onClick={handleTranslate}
-      >
+      <button type="button" className={quiet} onClick={handleTranslate}>
         {t('podcast.translate')}
       </button>
       {!hideNote && (
-        <button
-          type="button"
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-muted text-muted-foreground rounded-lg text-sm border-0 cursor-pointer hover:bg-muted/70 hover:text-foreground transition-colors duration-150"
-          onClick={handleNote}
-        >
+        <button type="button" className={quiet} onClick={handleNote}>
           {t('podcast.note')}
         </button>
       )}
       <button
         type="button"
-        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm border-0 cursor-pointer transition-colors duration-150 ${
+        className={
           copied
-            ? 'bg-success text-success-foreground'
-            : 'bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground'
-        }`}
+            ? 'inline-flex items-center gap-1 rounded-[7px] border border-success/30 bg-success/10 px-2.5 py-1.5 text-sm text-success transition-colors duration-150'
+            : quiet
+        }
         onClick={handleCopy}
       >
         {copied ? t('podcast.copied') : t('podcast.copy')}
       </button>
       {onAskLena && (
         <>
-          <div className="w-px h-5 bg-white/10" />
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-success/15 text-success hover:bg-success/25 rounded-lg text-sm font-medium border-0 cursor-pointer transition-colors duration-150"
-            onClick={handleAskLena}
-          >
+          <div className="h-5 w-px bg-border" />
+          <button type="button" className={`${quiet} font-medium`} onClick={handleAskLena}>
             <MessageCircle size={14} />
             {t('podcast.askLena')}
           </button>
@@ -465,13 +484,13 @@ export function SelectionActionBar({
       <button
         type="button"
         aria-label={tp('subtitle.clearSelection')}
-        className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground border-0 cursor-pointer transition-colors duration-150"
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full text-caption transition-colors duration-150 hover:bg-muted hover:text-foreground"
         onClick={() => onClear()}
       >
         <X className="h-3 w-3" />
       </button>
       <div
-        className="absolute bg-popover border-r border-b border-border"
+        className="absolute border-b border-r border-border bg-card"
         style={{
           bottom: '-5px',
           left: '50%',
@@ -481,5 +500,18 @@ export function SelectionActionBar({
         }}
       />
     </div>
+  );
+
+  // Floating: nothing until its place is measured, so it never shows somewhere else first and jumps.
+  if (!floating) return bar;
+  if (!anchor) return null;
+  return createPortal(
+    <div
+      className="fixed z-[10010]"
+      style={{ bottom: anchor.bottom, left: anchor.left, transform: 'translateX(-50%)' }}
+    >
+      {bar}
+    </div>,
+    document.body,
   );
 }

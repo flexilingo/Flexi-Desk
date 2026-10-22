@@ -1,186 +1,149 @@
-import { useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Maximize2, Mic, Pause, Play, Volume1, Volume2, VolumeX, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { invoke } from '@tauri-apps/api/core';
 import { usePlayerStore } from '../stores/playerStore';
 import { usePodcastStore } from '../stores/podcastStore';
+import { useJobStore } from '@/stores/jobStore';
 import { VideoHost } from '@/pages/videos/player/VideoHost';
 import { BookMiniPlayer } from '@/pages/reader/book/BookMiniPlayer';
-import { useTranslation } from 'react-i18next';
+import { WordDialog } from '@/components/WordDialog';
+import { episodeSourceLang } from '../utils/difficulty';
+import {
+  getEffectiveOffset,
+  mapSyncPoint,
+  mapTranscriptSegment,
+  type PodcastTranscriptSegment,
+  type RawPodcastTranscriptSegment,
+  type RawSyncPoint,
+  type SyncPoint,
+} from '../types';
+import { MiniPlayerBar } from './mini/MiniPlayerBar';
+import { MiniSubtitleLine } from './mini/MiniSubtitleLine';
 
-function formatTime(s: number): string {
-  if (!isFinite(s) || s < 0) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, '0')}`;
-}
-
+/**
+ * The persistent mini player (website: `GlobalMiniPlayer`). A podcast docks a full-width bar under
+ * every page, with an opt-in (CC) subtitle line whose words open the word dialog; a catalogue video
+ * keeps its picture in a floating box (YouTube needs a visible player); a book track uses the same
+ * bar in book mode (line steps, the book's own subtitles, the listen count).
+ */
 export function MiniPlayer() {
   const currentEpisode = usePlayerStore((s) => s.currentEpisode);
-  const currentFeed = usePlayerStore((s) => s.currentFeed);
+  if (!currentEpisode) return null;
+  if (currentEpisode.youtubeId) return <VideoHost />;
+  if (currentEpisode.bookTrack) return <BookMiniPlayer />;
+  return <PodcastMiniPlayer />;
+}
+
+function PodcastMiniPlayer() {
+  const navigate = useNavigate();
+  const episode = usePlayerStore((s) => s.currentEpisode)!;
+  const feed = usePlayerStore((s) => s.currentFeed);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const isBuffering = usePlayerStore((s) => s.isBuffering);
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
   const volume = usePlayerStore((s) => s.volume);
+  const playError = usePlayerStore((s) => s.playError);
   const togglePlayPause = usePlayerStore((s) => s.togglePlayPause);
   const seek = usePlayerStore((s) => s.seek);
+  const skipBack = usePlayerStore((s) => s.skipBack);
+  const skipForward = usePlayerStore((s) => s.skipForward);
+  const pause = usePlayerStore((s) => s.pause);
+  const resume = usePlayerStore((s) => s.resume);
   const stop = usePlayerStore((s) => s.stop);
   const setVolume = usePlayerStore((s) => s.setVolume);
   const loadEpisode = usePodcastStore((s) => s.loadEpisode);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const isProcessing = useJobStore((s) =>
+    Object.values(s.jobs).some(
+      (j) => j.episodeId === episode.id && j.type === 'transcribe' && j.status === 'running',
+    ),
+  );
 
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
-  const { t } = useTranslation('podcastUi');
-  const progressRef = useRef<HTMLDivElement>(null);
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const [cc, setCc] = useState(false);
+  const [word, setWord] = useState<string | null>(null);
+  const [segments, setSegments] = useState<PodcastTranscriptSegment[]>([]);
+  const [syncPoints, setSyncPoints] = useState<SyncPoint[]>([]);
 
-  if (!currentEpisode) return null;
-  // A catalogue video: the Shell hosts its picture (docked on the watch page, floating elsewhere).
-  if (currentEpisode.youtubeId) return <VideoHost />;
-  // A recording of a published textbook: its own bar (line steps, the book's subtitles, listen count).
-  if (currentEpisode.bookTrack) return <BookMiniPlayer />;
+  // The episode's lines (this computer's copy) and the listener's sync points.
+  useEffect(() => {
+    let live = true;
+    setSegments([]);
+    setSyncPoints([]);
+    setCc(false);
+    setWord(null);
+    invoke<RawPodcastTranscriptSegment[]>('podcast_get_transcript_segments', {
+      episodeId: episode.id,
+    })
+      .then((raw) => live && setSegments(raw.map(mapTranscriptSegment)))
+      .catch(() => {});
+    invoke<RawSyncPoint[]>('podcast_get_sync_points', { episodeId: episode.id })
+      .then((raw) => live && setSyncPoints(raw.map(mapSyncPoint)))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [episode.id, isProcessing]);
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current || duration <= 0) return;
-    const rect = progressRef.current.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    seek(Math.max(0, Math.min(1, ratio)) * duration);
+  const line = useMemo(() => {
+    if (!cc || segments.length === 0) return null;
+    const ms = (currentTime - getEffectiveOffset(currentTime, syncPoints)) * 1000;
+    return segments.find((s) => ms >= s.startMs && ms <= s.endMs) ?? null;
+  }, [cc, segments, syncPoints, currentTime]);
+
+  const expand = () => {
+    loadEpisode(episode, feed ?? undefined);
+    navigate(`/podcast/player/${episode.id}`);
   };
-
-  // The player is a real route now, so expanding is just navigation.
-  const handleExpand = () => {
-    if (!currentEpisode) return;
-    loadEpisode(currentEpisode, currentFeed ?? undefined);
-    navigate(`/podcast/player/${currentEpisode.id}`);
-  };
-
-  const isMuted = volume === 0;
+  const hasTranscription = segments.length > 0;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[200] w-80 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden select-none">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-foreground truncate leading-tight">
-            {currentEpisode.title || t('mini.loading')}
-          </p>
-          {currentFeed && (
-            <p className="text-[10px] text-muted-foreground truncate mt-0.5">{currentFeed.title}</p>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={handleExpand}
-          className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-          title={t('mini.expand')}
-        >
-          <Maximize2 className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={stop}
-          className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
-          title={t('mini.close')}
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* Progress bar */}
-      <div
-        ref={progressRef}
-        className="mx-3 h-1 bg-muted rounded-full cursor-pointer group"
-        onClick={handleProgressClick}
-      >
-        <div
-          className="h-full bg-primary rounded-full transition-all duration-150 group-hover:bg-primary/80"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      {/* Controls row */}
-      <div className="flex items-center gap-3 px-3 pt-2 pb-3">
-        {/* Artwork */}
-        <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden shrink-0">
-          {currentFeed?.artworkUrl ? (
-            <img
-              src={currentFeed.artworkUrl}
-              alt={currentEpisode.title}
-              className="w-full h-full object-cover"
+    <>
+      <MiniPlayerBar
+        title={episode.title}
+        showName={feed?.title}
+        image={episode.imageUrl ?? feed?.artworkUrl}
+        isPlaying={isPlaying}
+        isLoading={isBuffering && isPlaying}
+        currentTime={currentTime}
+        duration={duration}
+        volume={volume}
+        playbackError={!!playError}
+        onPlayPause={togglePlayPause}
+        onSkip={(s) => (s < 0 ? skipBack(-s) : skipForward(s))}
+        onSeek={seek}
+        onVolumeChange={setVolume}
+        onExpand={expand}
+        onExit={stop}
+        hasTranscription={hasTranscription}
+        ccEnabled={cc}
+        onToggleCC={() => setCc((v) => !v)}
+        isProcessing={isProcessing}
+        // The subtitles are made where the web makes them: in the player's status card.
+        onTranscribe={!hasTranscription && !isProcessing ? expand : undefined}
+        subtitleLine={
+          line ? (
+            <MiniSubtitleLine
+              text={line.text}
+              onWordClick={(w) => {
+                pause();
+                setWord(w);
+              }}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Mic className="h-5 w-5 text-muted-foreground/50" />
-            </div>
-          )}
-        </div>
-
-        {/* Time */}
-        <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
-          {formatTime(currentTime)}
-          <span className="opacity-50"> / {formatTime(duration)}</span>
-        </span>
-
-        <div className="flex-1" />
-
-        {/* Volume */}
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setShowVolumeSlider((v) => !v)}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title={t('shared.volume')}
-          >
-            {isMuted ? (
-              <VolumeX className="w-4 h-4" />
-            ) : volume < 0.5 ? (
-              <Volume1 className="w-4 h-4" />
-            ) : (
-              <Volume2 className="w-4 h-4" />
-            )}
-          </button>
-          {showVolumeSlider && (
-            <div className="absolute bottom-full right-0 mb-2 p-3 rounded-xl bg-popover border border-border shadow-xl flex flex-col items-center gap-2 min-w-[72px] z-[1000]">
-              <div
-                className="w-2 h-20 bg-muted rounded cursor-pointer relative"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const percent = 1 - (e.clientY - rect.top) / rect.height;
-                  setVolume(Math.max(0, Math.min(1, percent)));
-                }}
-              >
-                <div
-                  className="absolute bottom-0 left-0 right-0 bg-primary rounded transition-[height] duration-100"
-                  style={{ height: `${volume * 100}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-semibold text-foreground tabular-nums">
-                {Math.round(volume * 100)}%
-              </span>
-              <button
-                type="button"
-                className="w-full py-1 px-1.5 rounded text-[10px] border border-border bg-muted text-foreground cursor-pointer hover:bg-muted/80"
-                onClick={() => setVolume(isMuted ? 1 : 0)}
-              >
-                {isMuted ? t('shared.unmute') : t('shared.mute')}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Play/Pause */}
-        <button
-          type="button"
-          onClick={togglePlayPause}
-          className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors shrink-0"
-        >
-          {isPlaying ? (
-            <Pause className="w-4 h-4 fill-current" />
-          ) : (
-            <Play className="w-4 h-4 fill-current ml-0.5" />
-          )}
-        </button>
-      </div>
-    </div>
+          ) : null
+        }
+      />
+      <WordDialog
+        word={word ?? ''}
+        open={!!word}
+        onOpenChange={(open) => {
+          if (open) return;
+          setWord(null);
+          resume();
+        }}
+        episodeId={episode.id}
+        sourceLang={episodeSourceLang(episode, feed)}
+        sentenceContext={line?.text}
+      />
+    </>
   );
 }

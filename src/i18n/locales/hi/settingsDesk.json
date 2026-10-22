@@ -1,0 +1,151 @@
+{
+  "page": {
+    "title": "सेटिंग्स",
+    "subtitle": "अपना सीखने का अनुभव सेट करें"
+  },
+  "tabs": {
+    "general": "सामान्य",
+    "ai": "मेरा एआई",
+    "whisper": "Whisper",
+    "data": "निर्यात / आयात"
+  },
+  "auth": {
+    "title": "FlexiLingo खाता",
+    "loggedIn": "साइन इन हो गए। क्विज़, Ask Lena और फ़ीडबैक जैसी क्लाउड सुविधाएँ उपलब्ध हैं।",
+    "logout": "साइन आउट",
+    "signInHint": "क्लाउड सुविधाओं का उपयोग करने के लिए साइन इन करें: क्विज़, Ask Lena, फ़ीडबैक और बहुत कुछ।",
+    "email": "ईमेल",
+    "emailPlaceholder": "you@example.com",
+    "sending": "कोड भेजा जा रहा है...",
+    "sendCode": "कोड भेजें",
+    "codeSentTo": "कोड भेजा गया:",
+    "verificationCode": "सत्यापन कोड",
+    "verifying": "जाँच हो रही है...",
+    "verify": "सत्यापित करें",
+    "useAnotherEmail": "दूसरा ईमेल उपयोग करें",
+    "sendingShort": "भेजा जा रहा है...",
+    "resend": "कोड दोबारा भेजें"
+  },
+  "languages": {
+    "title": "भाषाएँ",
+    "subtitle": "अपनी मातृभाषा और सीखने की भाषा चुनें",
+    "native": "मातृभाषा",
+    "learning": "जो भाषा मैं सीख रहा हूँ",
+    "saved": "सहेजा गया",
+    "save": "भाषाएँ सहेजें",
+    "appLanguage": "ऐप की भाषा"
+  },
+  "appearance": {
+    "title": "रूप-रंग",
+    "subtitle": "रूप-रंग अपनी पसंद से बदलें",
+    "theme": "थीम",
+    "light": "हल्का",
+    "dark": "गहरा",
+    "system": "सिस्टम"
+  },
+  "data": {
+    "title": "निर्यात और आयात",
+    "subtitle": "अपनी शब्दावली को इस कंप्यूटर से बाहर या अंदर ले जाएँ",
+    "export": "शब्दावली निर्यात करें",
+    "import": "शब्दावली आयात करें"
+  },
+  "common": {
+    "close": "बंद करें",
+    "back": "वापस",
+    "next": "आगे",
+    "done": "पूर्ण"
+  },
+  "export": {
+    "title": "शब्दावली निर्यात करें",
+    "hint": "अपने शब्दों को एक फ़ाइल में सहेजें जिसे आप रख सकें या किसी दूसरे ऐप में खोल सकें।",
+    "format": "प्रारूप",
+    "csv": "CSV",
+    "anki": "Anki (.apkg)",
+    "csvFiles": "CSV फ़ाइलें",
+    "ankiPackage": "Anki पैकेज",
+    "languageOptional": "भाषा (वैकल्पिक)",
+    "allLanguages": "सभी भाषाएँ",
+    "allLanguagesNote": "कोई भाषा नहीं चुनी: सभी भाषाएँ निर्यात होंगी।",
+    "cefrOptional": "CEFR स्तर (वैकल्पिक)",
+    "allLevels": "सभी स्तर",
+    "done": "{{count}} आइटम {{format}} में निर्यात हुए",
+    "exporting": "निर्यात हो रहा है...",
+    "action": "निर्यात करें"
+  },
+  "import": {
+    "title": "शब्दावली आयात करें",
+    "hint": "CSV फ़ाइल, Quizlet या Anki से शब्द लाएँ।",
+    "fileFilter": "आयात फ़ाइल",
+    "chooseSource": "आयात का स्रोत चुनें:",
+    "sourceCsv": "CSV फ़ाइल",
+    "sourceTsv": "Quizlet (TSV)",
+    "sourceAnki": "Anki (.apkg)",
+    "ankiNote": "Anki कार्ड आयात होते समय सामने का हिस्सा शब्द और पीछे का हिस्सा अनुवाद बनता है।",
+    "targetLanguage": "शब्दों की भाषा",
+    "skipDuplicates": "डुप्लिकेट छोड़ें",
+    "importing": "आयात हो रहा है...",
+    "action": "आयात करें",
+    "complete": "आयात पूरा हुआ",
+    "totalRows": "कुल पंक्तियाँ: {{count}}",
+    "imported": "आयात हुए: {{count}}",
+    "skipped": "छोड़े गए (डुप्लिकेट): {{count}}",
+    "errorsCount": "त्रुटियाँ: {{count}}",
+    "showErrors": "त्रुटियाँ दिखाएँ ({{count}})",
+    "rowError": "पंक्ति {{row}}: {{message}}"
+  },
+  "mapper": {
+    "title": "कॉलम मिलाएँ",
+    "hint": "अपनी फ़ाइल के कॉलम FlexiLingo के फ़ील्ड से मिलाएँ।",
+    "skip": "छोड़ें",
+    "column": "{{name}} (कॉलम {{n}})",
+    "fields": {
+      "word": "शब्द",
+      "translation": "अनुवाद",
+      "definition": "परिभाषा",
+      "pos": "शब्द-भेद",
+      "cefr": "CEFR स्तर",
+      "phonetic": "उच्चारण (IPA)",
+      "examples": "उदाहरण",
+      "context": "संदर्भ वाक्य"
+    }
+  },
+  "preview": {
+    "title": "पूर्वावलोकन",
+    "total": "कुल {{count}} पंक्तियाँ",
+    "word": "शब्द",
+    "translation": "अनुवाद",
+    "cefr": "CEFR",
+    "pos": "शब्द-भेद",
+    "missing": "अनुपस्थित",
+    "showing": "{{total}} में से {{shown}} पूर्वावलोकन पंक्तियाँ"
+  },
+  "sync": {
+    "title": "क्लाउड सिंक",
+    "pending": "({{count}} लंबित)",
+    "hint": "चुनें कि कौन सा डेटा आपके FlexiLingo खाते से सिंक हो। ऑफ़लाइन किए बदलाव कतार में रहते हैं और कनेक्ट होने पर सिंक होते हैं।",
+    "loading": "लोड हो रहा है...",
+    "lastSynced": "अंतिम सिंक: {{date}}",
+    "never": "कभी सिंक नहीं हुआ",
+    "both": "दोनों तरफ़",
+    "push": "केवल अपलोड",
+    "pull": "केवल डाउनलोड",
+    "conflicts": "{{count}} अनसुलझे टकराव। इन्हें सुलझाने के लिए सेटिंग्स, फिर टकराव खोलें।",
+    "status": {
+      "Synced": "सिंक हुआ",
+      "Error": "त्रुटि",
+      "Conflict": "टकराव",
+      "Idle": "निष्क्रिय",
+      "Syncing": "सिंक हो रहा है"
+    },
+    "tables": {
+      "vocabulary": "शब्दावली",
+      "decks": "डेक",
+      "deck_cards": "डेक कार्ड",
+      "srs_progress": "समीक्षा प्रगति",
+      "goals": "लक्ष्य",
+      "daily_stats": "दैनिक आँकड़े",
+      "streaks": "स्ट्रीक",
+      "settings": "सेटिंग्स"
+    }
+  }
+}

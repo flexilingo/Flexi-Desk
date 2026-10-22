@@ -47,9 +47,11 @@ export function AudioVisualizer({ state }: AudioVisualizerProps) {
                 : 'bg-muted'
         }`}
       >
-        {state === 'listening' && <Mic className="h-7 w-7 text-white" />}
+        {state === 'listening' && <Mic className="h-7 w-7 text-primary-foreground" />}
         {state === 'speaking' && <Volume2 className="h-7 w-7 text-primary-foreground" />}
-        {state === 'thinking' && <Loader2 className="h-7 w-7 text-white animate-spin" />}
+        {state === 'thinking' && (
+          <Loader2 className="h-7 w-7 text-primary-foreground animate-spin" />
+        )}
         {state === 'idle' && <Mic className="h-7 w-7 text-muted-foreground" />}
       </div>
     </div>

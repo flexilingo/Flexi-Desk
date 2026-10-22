@@ -14,8 +14,8 @@ import {
   Moon,
   Monitor,
   Check,
-  Cloud,
   Download,
+  Upload,
   Mail,
   ArrowLeft,
 } from 'lucide-react';
@@ -36,6 +36,8 @@ import { SyncSettings } from '@/pages/settings/SyncSettings';
 import { UpdatesSection } from '@/pages/settings/components/UpdatesSection';
 import { AiSettingsSection } from '@/pages/settings/components/AiSettingsSection';
 import { ExportDialog } from '@/pages/settings/ExportDialog';
+import { LanguageSearchSelect } from '@/pages/account/components/LanguageSearchSelect';
+import { getLanguageByCode } from '@/config/languages';
 import { ImportDialog } from '@/pages/settings/ImportDialog';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import { authErrorText } from '@/components/auth/authError';
@@ -47,20 +49,23 @@ type SettingsTab = 'general' | 'ai' | 'whisper' | 'sync' | 'data';
 /** Opens the account area (languages, profile, XP, plan, community, friends) - the website's settings tabs. */
 const ACCOUNT_PATH = '/account/learning';
 
-const TABS: { id: SettingsTab; icon: typeof User; label: string }[] = [
-  { id: 'general', icon: Settings, label: 'General' },
-  { id: 'ai', icon: Brain, label: 'My AI' },
-  { id: 'whisper', icon: Mic, label: 'Whisper' },
-  // TODO: Enable when fully tested
-  // { id: 'sync', icon: Cloud, label: 'Sync' },
-  // { id: 'data', icon: Download, label: 'Export / Import' },
+// The 'sync' tab stays hidden: the sync engine has no transport yet (nothing to push to).
+// The 'data' tab (Export / Import) is local-only and works through the Rust export commands.
+const TABS: { id: SettingsTab; icon: typeof User; labelKey: string }[] = [
+  { id: 'general', icon: Settings, labelKey: 'tabs.general' },
+  { id: 'ai', icon: Brain, labelKey: 'tabs.ai' },
+  { id: 'whisper', icon: Mic, labelKey: 'tabs.whisper' },
+  { id: 'data', icon: Download, labelKey: 'tabs.data' },
 ];
 
 const ALL_TAB_IDS = TABS.map((t) => t.id);
 
+const SETTINGS_NS = 'settingsDesk';
+
 // --- Auth Section ---
 
 function AuthSection() {
+  const { t } = useTranslation(SETTINGS_NS);
   const session = useAuthStore((s) => s.session);
   const isLoading = useAuthStore((s) => s.isLoading);
   const error = useAuthStore((s) => s.error);
@@ -140,19 +145,17 @@ function AuthSection() {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-base">FlexiLingo Account</CardTitle>
+              <CardTitle className="text-base">{t('auth.title')}</CardTitle>
               <CardDescription>{session.email}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Logged in. Cloud features like Quiz, Ask Lena, and Feedback are available.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('auth.loggedIn')}</p>
             <Button variant="outline" size="sm" onClick={logout}>
-              <LogOut className="h-4 w-4 mr-1" />
-              Logout
+              <LogOut className="h-4 w-4 me-1" />
+              {t('auth.logout')}
             </Button>
           </div>
         </CardContent>
@@ -168,10 +171,8 @@ function AuthSection() {
             <Mail className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base">FlexiLingo Account</CardTitle>
-            <CardDescription>
-              Sign in to access cloud features: Quiz, Ask Lena, Feedback, and more.
-            </CardDescription>
+            <CardTitle className="text-base">{t('auth.title')}</CardTitle>
+            <CardDescription>{t('auth.signInHint')}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -193,38 +194,41 @@ function AuthSection() {
                   htmlFor="auth-email"
                   className="block text-sm font-medium text-foreground mb-1.5"
                 >
-                  Email
+                  {t('auth.email')}
                 </label>
                 <input
                   id="auth-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   required
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 />
               </div>
               <Button type="submit" disabled={sending || !email}>
                 {sending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" />
                 ) : (
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Mail className="h-4 w-4 me-2" />
                 )}
-                {sending ? 'Sending code...' : 'Send code'}
+                {sending ? t('auth.sending') : t('auth.sendCode')}
               </Button>
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Code sent to <span className="font-medium text-foreground">{email}</span>
+                {t('auth.codeSentTo')}{' '}
+                <span className="font-medium text-foreground" dir="ltr">
+                  {email}
+                </span>
               </p>
               <div>
                 <label
                   htmlFor="auth-otp"
                   className="block text-sm font-medium text-foreground mb-1.5"
                 >
-                  Verification code
+                  {t('auth.verificationCode')}
                 </label>
                 <input
                   id="auth-otp"
@@ -241,11 +245,11 @@ function AuthSection() {
               </div>
               <Button type="submit" disabled={verifying || otp.length !== 6}>
                 {verifying ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 me-2 animate-spin" />
                 ) : (
-                  <Check className="h-4 w-4 mr-2" />
+                  <Check className="h-4 w-4 me-2" />
                 )}
-                {verifying ? 'Verifying...' : 'Verify'}
+                {verifying ? t('auth.verifying') : t('auth.verify')}
               </Button>
               <div className="flex items-center justify-between">
                 <button
@@ -254,7 +258,7 @@ function AuthSection() {
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="h-3 w-3" />
-                  Use another email
+                  {t('auth.useAnotherEmail')}
                 </button>
                 <button
                   type="button"
@@ -262,7 +266,7 @@ function AuthSection() {
                   disabled={sending}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                 >
-                  {sending ? 'Sending...' : 'Resend code'}
+                  {sending ? t('auth.sendingShort') : t('auth.resend')}
                 </button>
               </div>
             </form>
@@ -275,30 +279,11 @@ function AuthSection() {
 
 // --- Languages Section ---
 
-const TARGET_LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'fa', name: 'Persian' },
-  { code: 'ar', name: 'Arabic' },
-  { code: 'tr', name: 'Turkish' },
-  { code: 'es', name: 'Spanish' },
-  { code: 'fr', name: 'French' },
-  { code: 'de', name: 'German' },
-  { code: 'zh', name: 'Chinese' },
-  { code: 'hi', name: 'Hindi' },
-  { code: 'ru', name: 'Russian' },
-];
-
-const UI_LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'fa', name: 'Persian' },
-  { code: 'ar', name: 'Arabic' },
-  { code: 'fr', name: 'French' },
-  { code: 'hi', name: 'Hindi' },
-  { code: 'zh', name: 'Chinese' },
-];
+const UI_LANGUAGES = ['en', 'fa', 'ar', 'fr', 'hi', 'zh', 'de', 'vi'];
 
 function LanguagesSection() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation(SETTINGS_NS);
+  const { t: ta } = useTranslation('account');
   const [nativeLang, setNativeLang] = useState('');
   const [targetLang, setTargetLang] = useState('');
   const [saving, setSaving] = useState(false);
@@ -337,70 +322,62 @@ function LanguagesSection() {
             <Languages className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base">Languages</CardTitle>
-            <CardDescription>Set your native and target languages</CardDescription>
+            <CardTitle className="text-base">{t('languages.title')}</CardTitle>
+            <CardDescription>{t('languages.subtitle')}</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Native Language */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Native Language</label>
-          <Select value={nativeLang} onValueChange={setNativeLang}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              {TARGET_LANGUAGES.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  {lang.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="text-sm font-medium">{t('languages.native')}</label>
+          <div>
+            <LanguageSearchSelect
+              value={nativeLang || 'en'}
+              onSelect={setNativeLang}
+              label={t('languages.native')}
+              searchPlaceholder={ta('desk.learning.search')}
+              noResults={ta('desk.learning.noResults')}
+            />
+          </div>
         </div>
 
-        {/* Target Language */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Learning Language</label>
-          <Select value={targetLang} onValueChange={setTargetLang}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              {TARGET_LANGUAGES.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  {lang.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="text-sm font-medium">{t('languages.learning')}</label>
+          <div>
+            <LanguageSearchSelect
+              value={targetLang || 'en'}
+              onSelect={setTargetLang}
+              label={t('languages.learning')}
+              searchPlaceholder={ta('desk.learning.search')}
+              noResults={ta('desk.learning.noResults')}
+            />
+          </div>
         </div>
 
         <Button onClick={handleSave} disabled={saving}>
           {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            <Loader2 className="h-4 w-4 animate-spin me-2" />
           ) : saved ? (
-            <Check className="h-4 w-4 mr-2" />
+            <Check className="h-4 w-4 me-2" />
           ) : null}
-          {saved ? 'Saved!' : 'Save Languages'}
+          {saved ? t('languages.saved') : t('languages.save')}
         </Button>
 
-        {/* UI Language */}
         <div className="pt-4 border-t border-border space-y-2">
-          <label className="text-sm font-medium">App Language (UI)</label>
-          <div className="grid grid-cols-3 gap-2">
-            {UI_LANGUAGES.map((lang) => (
+          <label className="text-sm font-medium">{t('languages.appLanguage')}</label>
+          <div className="flex flex-wrap gap-2">
+            {UI_LANGUAGES.map((code) => (
               <button
-                key={lang.code}
-                onClick={() => handleUILanguageChange(lang.code)}
-                className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                  i18n.language === lang.code
+                key={code}
+                type="button"
+                onClick={() => handleUILanguageChange(code)}
+                className={`inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                  i18n.language.split('-')[0] === code
                     ? 'border-primary bg-primary/5 text-primary'
                     : 'border-border hover:bg-muted text-foreground'
                 }`}
               >
-                {lang.name}
+                {getLanguageByCode(code)?.nativeName ?? (code === 'vi' ? 'Tiếng Việt' : code)}
               </button>
             ))}
           </div>
@@ -413,13 +390,14 @@ function LanguagesSection() {
 // --- Appearance Section ---
 
 function AppearanceSection() {
+  const { t } = useTranslation(SETTINGS_NS);
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
 
   const themes: { id: 'light' | 'dark' | 'system'; icon: typeof Sun; label: string }[] = [
-    { id: 'light', icon: Sun, label: 'Light' },
-    { id: 'dark', icon: Moon, label: 'Dark' },
-    { id: 'system', icon: Monitor, label: 'System' },
+    { id: 'light', icon: Sun, label: t('appearance.light') },
+    { id: 'dark', icon: Moon, label: t('appearance.dark') },
+    { id: 'system', icon: Monitor, label: t('appearance.system') },
   ];
 
   return (
@@ -430,22 +408,23 @@ function AppearanceSection() {
             <Palette className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base">Appearance</CardTitle>
-            <CardDescription>Customize the look and feel</CardDescription>
+            <CardTitle className="text-base">{t('appearance.title')}</CardTitle>
+            <CardDescription>{t('appearance.subtitle')}</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Theme</label>
-          <div className="grid grid-cols-3 gap-2">
+          <label className="text-sm font-medium">{t('appearance.theme')}</label>
+          <div className="flex flex-wrap gap-2">
             {themes.map((t) => {
               const Icon = t.icon;
               return (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors ${
+                  type="button"
+                  className={`inline-flex min-w-24 flex-col items-center gap-2 p-4 rounded-lg border transition-colors ${
                     theme === t.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted'
                   }`}
                 >
@@ -466,6 +445,7 @@ function AppearanceSection() {
 // --- Data Section (Export/Import) ---
 
 function DataSection() {
+  const { t } = useTranslation(SETTINGS_NS);
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
 
@@ -478,17 +458,19 @@ function DataSection() {
               <Download className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-base">Export & Import</CardTitle>
-              <CardDescription>Move your vocabulary data in and out</CardDescription>
+              <CardTitle className="text-base">{t('data.title')}</CardTitle>
+              <CardDescription>{t('data.subtitle')}</CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <Button onClick={() => setShowExport(true)} variant="outline" className="w-full">
-            Export Vocabulary
+        <CardContent className="flex flex-wrap gap-3">
+          <Button onClick={() => setShowExport(true)} variant="outline">
+            <Download className="h-4 w-4 me-2" />
+            {t('data.export')}
           </Button>
-          <Button onClick={() => setShowImport(true)} variant="outline" className="w-full">
-            Import Vocabulary
+          <Button onClick={() => setShowImport(true)} variant="outline">
+            <Upload className="h-4 w-4 me-2" />
+            {t('data.import')}
           </Button>
         </CardContent>
       </Card>
@@ -518,6 +500,7 @@ export function SettingsPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t: ta } = useTranslation('account');
+  const { t } = useTranslation(SETTINGS_NS);
   const [activeTab, setActiveTab] = useState<SettingsTab>(
     (searchParams.get('tab') as SettingsTab) || 'general',
   );
@@ -539,8 +522,8 @@ export function SettingsPage() {
               <Settings className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle>Settings</CardTitle>
-              <CardDescription>Configure your learning experience</CardDescription>
+              <CardTitle>{t('page.title')}</CardTitle>
+              <CardDescription>{t('page.subtitle')}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -552,6 +535,7 @@ export function SettingsPage() {
               return (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                     activeTab === tab.id
@@ -560,7 +544,7 @@ export function SettingsPage() {
                   }`}
                 >
                   <Icon className="h-4 w-4" />
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </button>
               );
             })}

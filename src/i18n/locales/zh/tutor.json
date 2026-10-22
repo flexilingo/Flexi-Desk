@@ -1,0 +1,175 @@
+{
+  "landing": {
+    "title": "AI 导师",
+    "subtitle": "与你的 AI 对话伙伴练习口语",
+    "newConversation": "新对话",
+    "loading": "正在加载对话...",
+    "emptyTitle": "还没有对话",
+    "emptyBody": "开始你的第一次 AI 对话，练习用任何语言开口说话。",
+    "startFirst": "开始第一次对话",
+    "active": "进行中",
+    "messages_other": "{{count}} 条消息",
+    "corrections_other": "{{count}} 处纠正"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}} 分钟前",
+    "hoursAgo": "{{count}} 小时前",
+    "daysAgo": "{{count}} 天前"
+  },
+  "modes": {
+    "free": {
+      "name": "自由交谈",
+      "description": "聊任何你喜欢的话题"
+    },
+    "role_play": {
+      "name": "角色扮演",
+      "description": "演练真实生活场景"
+    },
+    "deck_practice": {
+      "name": "卡组练习",
+      "description": "使用你的单词卡组中的词汇"
+    },
+    "vocab_challenge": {
+      "name": "词汇挑战",
+      "description": "在对话中练习新词汇"
+    },
+    "escape_room": {
+      "name": "密室逃脱",
+      "description": "通过说话解开一个故事"
+    }
+  },
+  "categories": {
+    "daily_life": "日常生活",
+    "travel": "旅行",
+    "social": "社交",
+    "professional": "职场",
+    "academic": "学术",
+    "health": "健康",
+    "emergency": "紧急情况",
+    "creative": "创意与趣味"
+  },
+  "topics": {
+    "travel": "旅行与冒险",
+    "food": "美食与烹饪",
+    "movies": "电影与电视剧",
+    "music": "音乐与演唱会",
+    "sports": "运动与健身",
+    "technology": "科技",
+    "books": "书籍与阅读",
+    "work": "工作与职业",
+    "hobbies": "爱好与手工",
+    "nature": "自然与环境",
+    "family": "家庭与人际关系",
+    "health": "健康与养生",
+    "fashion": "时尚与风格",
+    "art": "艺术与文化",
+    "science": "科学与发现",
+    "history": "历史与传统",
+    "routines": "日常作息",
+    "holidays": "节日与庆典",
+    "childhood": "童年回忆",
+    "future": "未来计划与梦想"
+  },
+  "providers": {
+    "ollama": "Ollama（本地）",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "新对话",
+    "stepOf": "第 {{step}} 步，共 {{total}} 步",
+    "back": "返回",
+    "next": "下一步",
+    "start": "开始对话",
+    "starting": "正在开始...",
+    "backAria": "返回",
+    "step1Title": "选择练习模式",
+    "step1Subtitle": "你想怎样练习？",
+    "step2Title": "语言与水平",
+    "step2Subtitle": "设置你的练习选项",
+    "practiceLanguage": "练习语言",
+    "languageSearch": "搜索语言...",
+    "languageNoResults": "未找到语言",
+    "cefrLevel": "CEFR 等级",
+    "aiProvider": "AI 提供方",
+    "model": "模型",
+    "ollamaOffline": "Ollama 未连接。请启动 Ollama 以查看已下载的模型。",
+    "topicTitle": "选择话题",
+    "scenarioTitle": "选择场景",
+    "deckTitle": "选择卡组",
+    "extraTitle": "附加设置",
+    "topicSubtitle": "选择一个话题，或写下你自己的话题",
+    "scenarioSubtitle": "搜索并选择一个角色扮演场景",
+    "deckSubtitle": "练习你的单词卡组中的词汇",
+    "extraSubtitle": "如有需要，可添加自定义指令",
+    "optional": "（可选）",
+    "ownTopic": "写下你自己的话题",
+    "topicPlaceholder": "你想聊些什么？",
+    "suggestedTopic": "或选择推荐话题",
+    "searchScenarios": "搜索场景...",
+    "customGroup": "自定义",
+    "customScenario": "写下你自己的场景",
+    "customScenarioHint": "描述你想练习的任何情境",
+    "customScenarioPlaceholder": "例如：你在跳蚤市场，正和一个固执的摊主讨价还价，想买一盏复古台灯...",
+    "deck": "卡组",
+    "loadingDecks": "正在加载卡组...",
+    "selectDeck": "选择卡组...",
+    "deckCards": "{{name}}（{{count}} 张卡片）",
+    "noDecks": "没有找到卡组。请先在复习部分创建一个卡组。",
+    "customInstructions": "自定义指令",
+    "customInstructionsPlaceholder": "例如：专注商务词汇、说慢一点、对我的纠正更严格一些...",
+    "practiceTitle": "{{language}}练习"
+  },
+  "detail": {
+    "back": "返回对话列表",
+    "resume": "继续",
+    "minutes": "{{count}} 分钟",
+    "messages_other": "{{count}} 条消息",
+    "fixes_other": "{{count}} 处纠正",
+    "conversation": "对话"
+  },
+  "scores": {
+    "grammar": "语法",
+    "vocabulary": "词汇",
+    "fluency": "流利度",
+    "overall": "总分"
+  },
+  "corrections": {
+    "title": "纠正（{{count}}）",
+    "wrong": "原句",
+    "right": "修正后",
+    "why": "原因"
+  },
+  "words": {
+    "title": "新词（{{count}}）",
+    "saved": "已保存",
+    "saveToDeck": "保存到卡组",
+    "saveAll": "全部保存到卡组"
+  },
+  "summary": {
+    "title": "本次练习完成",
+    "startNew": "开始新对话"
+  },
+  "voice": {
+    "listening": "正在聆听...",
+    "transcribing": "正在转写...",
+    "thinking": "正在思考...",
+    "tapInterrupt": "点按以打断",
+    "tapSpeak": "点按开始说话",
+    "hideSubtitles": "隐藏字幕",
+    "showSubtitles": "显示字幕",
+    "end": "结束",
+    "tutor": "导师",
+    "you": "你",
+    "micAria": "麦克风"
+  },
+  "errorDismiss": "关闭",
+  "errors": {
+    "AUTH_REQUIRED": "使用此功能需要先登录。",
+    "NETWORK_ERROR": "无法连接 FlexiLingo。请检查网络后重试。",
+    "MIC_UNAVAILABLE": "麦克风不可用。请确认已连接并已授权，然后重试。",
+    "MODEL_MISSING": "缺少语音模型。请在 Whisper 设置中下载模型后重试。",
+    "UNKNOWN_ERROR": "出了点问题，请重试。"
+  }
+}

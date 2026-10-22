@@ -1,0 +1,201 @@
+{
+  "title": "Writing Practice",
+  "subtitle": "Improve your writing skills with AI-powered feedback",
+  "selectExamType": "Select Exam Type",
+  "selectExamTypeDescription": "Choose the type of writing you want to practice",
+  "generatePrompt": "Generate New Prompt",
+  "generatingPrompt": "Generating prompt...",
+  "startWriting": "Start Writing",
+  "startSession": "Start Session",
+  "submit": "Submit for Grading",
+  "submitting": "Grading your essay...",
+  "retrySumbit": "Retry Grading",
+  "backToList": "Back to Writing Practice",
+  "newSession": "New Practice Session",
+  "examTypes": {
+    "ielts_task1": "IELTS Task 1",
+    "ielts_task2": "IELTS Task 2",
+    "toefl_integrated": "TOEFL Integrated",
+    "toefl_independent": "TOEFL Independent",
+    "celpip": "CELPIP",
+    "cambridge_fce": "Cambridge B2 First",
+    "cambridge_cae": "Cambridge C1 Advanced",
+    "duolingo": "Short Response Writing",
+    "pte": "PTE Academic",
+    "general_email": "Email Writing",
+    "general_essay": "Essay Writing",
+    "general_letter": "Letter Writing",
+    "general_report": "Report Writing"
+  },
+  "examDescriptions": {
+    "ielts_task1": "Describe charts, graphs, or diagrams in 150+ words",
+    "ielts_task2": "Write a discussion essay in 250+ words",
+    "toefl_integrated": "Summarize a reading and lecture in 150-225 words",
+    "toefl_independent": "Express your opinion with examples in 300+ words",
+    "celpip": "Complete practical writing tasks for Canadian immigration",
+    "cambridge_fce": "B2 level writing: essays, articles, and reviews",
+    "cambridge_cae": "C1 level writing: proposals, reports, and essays",
+    "duolingo": "Short writing responses in 50-100 words",
+    "pte": "Academic essays and summaries for PTE scoring",
+    "general_email": "Practice formal and informal email writing",
+    "general_essay": "Write structured essays on various topics",
+    "general_letter": "Practice formal and informal letter writing",
+    "general_report": "Write professional reports with data analysis"
+  },
+  "categories": {
+    "exams": "Exam Preparation",
+    "general": "General Practice"
+  },
+  "timer": {
+    "remaining": "Time Remaining",
+    "disabled": "Timer Off",
+    "enable": "Enable Timer",
+    "disable": "Disable Timer",
+    "timeUp": "Time's up!",
+    "minutes": "{{count}} min",
+    "stopMessage": "This will end your writing session. You won't be able to resume it. Are you sure?",
+    "stop": "End session"
+  },
+  "editor": {
+    "placeholder": "Start writing your response here...",
+    "wordCount": "Words: {{count}}",
+    "wordTarget": "Target: {{min}}-{{max}} words",
+    "autoSaved": "Draft saved",
+    "saving": "Saving...",
+    "wordsToGo": "{{count}} more words to go"
+  },
+  "prompt": {
+    "title": "Writing Prompt",
+    "supplementary": "Supplementary Material",
+    "readingPassage": "Reading Passage",
+    "lectureSummary": "Lecture Summary",
+    "chartDescription": "Chart/Graph Description",
+    "collapse": "Hide Prompt",
+    "expand": "Show Prompt"
+  },
+  "feedback": {
+    "title": "AI Feedback",
+    "overall": "Overall Score",
+    "criteria": "Criteria Breakdown",
+    "strengths": "Strengths",
+    "weaknesses": "Areas to Improve",
+    "errors": "Error Highlights",
+    "errorTypes": {
+      "grammar": "Grammar",
+      "vocabulary": "Vocabulary",
+      "spelling": "Spelling",
+      "punctuation": "Punctuation"
+    },
+    "suggestions": "Suggestions for Improvement",
+    "rewritten": "AI-Improved Version",
+    "rewrittenDescription": "Here's how your essay could be improved while keeping your ideas",
+    "showRewritten": "Show Improved Version",
+    "hideRewritten": "Hide Improved Version",
+    "original": "Your Original Essay",
+    "improved": "Improved",
+    "noFeedback": "Submit your essay to receive AI feedback",
+    "noErrors": "No errors found - great job!",
+    "noSuggestions": "No additional suggestions",
+    "loading": "Loading session...",
+    "gradingDescription": "Our AI is analyzing your writing for grammar, vocabulary, structure, and more...",
+    "scoreDisclaimer": "AI estimate — scores may differ from official exam results",
+    "vocabularyAnalysis": "Vocabulary Analysis",
+    "lexicalDiversity": "Lexical Diversity",
+    "estimatedCEFR": "CEFR Level",
+    "advancedWords": "Advanced Words Used",
+    "suggestedUpgrades": "Vocabulary Upgrades",
+    "doubleChecked": "Double-checked",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "Your own AI"
+    },
+    "badgeTitle": {
+      "pro": "FlexiLingo Pro Grading",
+      "mini": "FlexiLingo Mini Grading",
+      "own": "Graded by your own AI"
+    },
+    "badgeBody": {
+      "pro": "Your essay was graded with our most advanced AI model, with double-checking for more accurate and consistent scores.",
+      "mini": "Your essay was graded with our standard AI model. Upgrade to Pro for more accurate grading, double-checked scores, and detailed feedback.",
+      "own": "Your essay was graded by the AI you set up ({{model}}), not by FlexiLingo's cloud."
+    }
+  },
+  "history": {
+    "title": "Writing History",
+    "noHistory": "No writing sessions yet. Start your first practice!",
+    "viewDetails": "View Details",
+    "filterByExam": "Filter by exam type",
+    "allTypes": "All Types",
+    "score": "Score",
+    "wordsWritten": "words",
+    "timeSpent": "Time Spent",
+    "gradedOn": "Graded"
+  },
+  "stats": {
+    "title": "Your Progress",
+    "totalSessions": "Total Sessions",
+    "gradedSessions": "Graded",
+    "avgScore": "Average Score",
+    "scoreTrend": "Score Trend",
+    "bestCriteria": "Best Area",
+    "weakestCriteria": "Needs Work",
+    "noStats": "Complete a few sessions to see your progress"
+  },
+  "usage": {
+    "remaining": "{{count}} sessions remaining this month",
+    "unlimited": "Unlimited sessions",
+    "used": "{{used}} of {{limit}} used",
+    "upgradePrompt": "Upgrade for more writing practice sessions",
+    "limitReached": "Limit reached",
+    "dailyLimitReached": "Daily limit reached",
+    "monthlyLimitReached": "Monthly limit reached",
+    "limitUsedAllDaily": "Monthly limit ({{monthlyLimit}}) exhausted. Daily allowance ({{dailyLimit}}/day) also used up.",
+    "limitUsedAllMonthly": "Monthly limit reached. You still have {{dailyLimit}} session(s)/day.",
+    "limitUsedAllMonthlyNoDaily": "You've used all your writing practice sessions for this month.",
+    "limitResetDaily": "Resets tomorrow!",
+    "limitResetMonthly": "Resets at the start of next month."
+  },
+  "status": {
+    "active": "In Progress",
+    "submitted": "Submitted",
+    "graded": "Graded"
+  },
+  "activeSession": {
+    "title": "Active Session",
+    "resume": "Resume",
+    "existsMessage": "You already have an active writing session. Please finish or submit it before starting a new one."
+  },
+  "timerToggle": "Enable countdown timer",
+  "disclaimer": "FlexiLingo is an independent practice platform not affiliated with or endorsed by any official exam organization. IELTS is a registered trademark of British Council, IDP, and Cambridge Assessment English. TOEFL is a registered trademark of ETS. CELPIP is a registered trademark of Paragon Testing Enterprises. Cambridge B2 First and C1 Advanced are registered trademarks of Cambridge Assessment English. PTE Academic is a registered trademark of Pearson.",
+  "back": "Back",
+  "cancel": "Cancel",
+  "origin": {
+    "local": "On this computer",
+    "cloud": "Cloud"
+  },
+  "cloudSessionOff": {
+    "title": "This session is in your FlexiLingo cloud",
+    "body": "Turn on cloud AI in Settings to open it."
+  },
+  "dashboardChip": "Practice writing",
+  "errors": {
+    "UNKNOWN_ERROR": "An unexpected error occurred. Please try again.",
+    "WRITING_SESSION_NOT_FOUND": "Writing session not found.",
+    "WRITING_GRADING_FAILED": "AI grading failed. Please try submitting again.",
+    "WRITING_ESSAY_TOO_SHORT": "Your essay is too short. Please write more before submitting.",
+    "WRITING_ESSAY_TOO_LONG": "Your essay is too long. Please shorten it before submitting.",
+    "WRITING_PROMPT_GENERATION_FAILED": "Failed to generate a writing prompt. Please try again.",
+    "DAILY_LIMIT_REACHED": "Daily limit reached. Come back tomorrow!",
+    "MONTHLY_LIMIT_REACHED": "Monthly limit reached. Try again next month or upgrade your plan.",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "This essay has already been submitted for grading.",
+    "SESSION_CREATION_FAILED": "Failed to create writing session. Please try again.",
+    "INVALID_EXAM_TYPE": "Invalid exam type selected.",
+    "MISSING_REQUIRED_FIELDS": "Please fill in all required fields.",
+    "AUTH_REQUIRED": "Please sign in to use this feature.",
+    "WRITING_SESSION_CANCELLED": "This writing session was ended.",
+    "SAVE_DRAFT_FAILED": "Could not save your draft. Try again.",
+    "CANCEL_SESSION_FAILED": "Could not end the session. Try again.",
+    "WRITING_PROMPT_NOT_FOUND": "The writing prompt was not found."
+  }
+}

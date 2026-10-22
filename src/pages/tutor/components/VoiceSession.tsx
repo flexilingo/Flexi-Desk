@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Mic, MicOff, Square, Loader2, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { getLanguageName } from '@/config/languages';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTutorStore } from '../stores/tutorStore';
@@ -12,27 +14,6 @@ interface Subtitle {
   role: 'user' | 'assistant';
   text: string;
 }
-
-const MODE_LABELS: Record<string, string> = {
-  free: 'Free Talk',
-  role_play: 'Role Play',
-  deck_practice: 'Deck Practice',
-  vocab_challenge: 'Vocab Challenge',
-  escape_room: 'Escape Room',
-};
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: 'English',
-  fa: 'Persian',
-  ar: 'Arabic',
-  tr: 'Turkish',
-  es: 'Spanish',
-  fr: 'French',
-  de: 'German',
-  zh: 'Chinese',
-  hi: 'Hindi',
-  ru: 'Russian',
-};
 
 /** Strip correction/vocab blocks from AI content to get clean speech text */
 function cleanSpeechText(content: string): string {
@@ -58,6 +39,7 @@ function cleanSpeechText(content: string): string {
 }
 
 export function VoiceSession() {
+  const { t } = useTranslation('tutor');
   const {
     activeConversation,
     messages,
@@ -219,19 +201,21 @@ export function VoiceSession() {
 
   if (!activeConversation) return null;
 
-  const modeLabel = MODE_LABELS[activeConversation.mode] ?? activeConversation.mode;
-  const languageName = LANGUAGE_NAMES[activeConversation.language] ?? activeConversation.language;
+  const modeLabel = t(`modes.${activeConversation.mode}.name`, {
+    defaultValue: activeConversation.mode,
+  });
+  const languageName = getLanguageName(activeConversation.language);
 
   // Status text for the user
   const statusText = isRecording
-    ? 'Listening...'
+    ? t('voice.listening')
     : isTranscribing
-      ? 'Transcribing...'
+      ? t('voice.transcribing')
       : isSending || isStreaming
-        ? 'Thinking...'
+        ? t('voice.thinking')
         : isSpeaking
-          ? 'Tap to interrupt'
-          : 'Tap to speak';
+          ? t('voice.tapInterrupt')
+          : t('voice.tapSpeak');
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] items-center bg-background">
@@ -250,7 +234,8 @@ export function VoiceSession() {
           <button
             onClick={toggleSubtitles}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-            title={showSubtitles ? 'Hide subtitles' : 'Show subtitles'}
+            title={showSubtitles ? t('voice.hideSubtitles') : t('voice.showSubtitles')}
+            aria-label={showSubtitles ? t('voice.hideSubtitles') : t('voice.showSubtitles')}
           >
             {showSubtitles ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
@@ -259,7 +244,7 @@ export function VoiceSession() {
           </span>
           <Button variant="destructive" size="sm" onClick={handleEnd}>
             <Square className="h-3 w-3 mr-1" />
-            End
+            {t('voice.end')}
           </Button>
         </div>
       </div>
@@ -278,7 +263,7 @@ export function VoiceSession() {
                   currentSubtitle.role === 'assistant' ? 'text-success' : 'text-primary'
                 }`}
               >
-                {currentSubtitle.role === 'assistant' ? 'Tutor' : 'You'}
+                {currentSubtitle.role === 'assistant' ? t('voice.tutor') : t('voice.you')}
               </span>
               <p className="text-base text-foreground mt-1 leading-relaxed">
                 {currentSubtitle.text}
@@ -298,11 +283,12 @@ export function VoiceSession() {
         <div className="flex flex-col items-center gap-3">
           <button
             type="button"
+            aria-label={t('voice.micAria')}
             onClick={handleMicClick}
             disabled={isTranscribing}
             className={`flex h-16 w-16 items-center justify-center rounded-full transition-all ${
               isRecording
-                ? 'bg-error text-error-foreground animate-pulse scale-110 ring-4 ring-error/30'
+                ? 'bg-destructive text-primary-foreground animate-pulse scale-110 ring-4 ring-destructive/30'
                 : isSpeaking
                   ? 'bg-warning text-warning-foreground hover:scale-105 active:scale-95'
                   : isTranscribing || isSending || isStreaming

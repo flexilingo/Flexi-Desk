@@ -1,0 +1,149 @@
+{
+  "setup": {
+    "title": "KI einrichten",
+    "intro": "Dafür brauchst du eine KI. Desk nutzt die, die du selbst einrichtest – die Arbeit läuft also auf deinem Computer oder mit deinem eigenen Schlüssel.",
+    "own": "Die Cloud-KI von FlexiLingo wird nie verwendet, es sei denn, du aktivierst sie in den Einstellungen.",
+    "deviceButton": "Auf diesem Computer einrichten",
+    "keyButton": "Eigenen Schlüssel verwenden",
+    "deviceHint": "Kostenlos und privat. Einmaliger Download von etwa 2 GB. Funktioniert am besten mit 8 GB Arbeitsspeicher oder mehr.",
+    "weakMachine": "Dieser Computer wirkt eher leistungsschwach. Das Modell auf dem Gerät funktioniert, antwortet aber eventuell langsam. Ein eigener Schlüssel ist schneller.",
+    "installing": "Lokale KI-Engine wird installiert...",
+    "starting": "Lokale KI-Engine wird gestartet...",
+    "downloading": "Das Modell {{model}} wird heruntergeladen. Das kann ein paar Minuten dauern...",
+    "working": "Wird eingerichtet...",
+    "provider": "Anbieter",
+    "providers": {
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "compatible": "Andere (OpenAI-kompatibel)"
+    },
+    "baseUrl": "Serveradresse",
+    "baseUrlHint": "Für LM Studio, OpenRouter oder jeden OpenAI-kompatiblen Server, zum Beispiel http://localhost:1234",
+    "key": "API-Schlüssel",
+    "keyOptional": "API-Schlüssel (leer lassen, wenn der Server keinen braucht)",
+    "model": "Modell (optional)",
+    "keyPrivacy": "Der Schlüssel bleibt auf diesem Computer und wird nur an den gewählten Anbieter gesendet.",
+    "saveAndTest": "Speichern und testen",
+    "back": "Zurück"
+  },
+  "reason": {
+    "local_not_installed": "Die lokale KI-Engine ist auf diesem Computer noch nicht installiert.",
+    "local_not_running": "Die lokale KI-Engine ist installiert, läuft aber nicht.",
+    "local_no_model": "Die lokale KI-Engine läuft, hat aber noch kein Modell.",
+    "local_model_missing": "Das ausgewählte Modell ist auf diesem Computer nicht heruntergeladen.",
+    "key_missing": "Für deinen KI-Anbieter ist kein API-Schlüssel gespeichert."
+  },
+  "errors": {
+    "OLLAMA_NOT_RUNNING": "Deine KI läuft auf diesem Computer nicht.",
+    "OLLAMA_MODEL_MISSING": "Das ausgewählte Modell ist auf diesem Computer nicht heruntergeladen.",
+    "AI_KEY_MISSING": "Für deinen KI-Anbieter ist kein API-Schlüssel gespeichert.",
+    "AI_NOT_READY": "Deine KI ist noch nicht eingerichtet.",
+    "AI_KEY_REJECTED": "Der Anbieter hat diesen Schlüssel abgelehnt. Prüfe ihn und versuche es erneut.",
+    "AI_RATE_LIMITED": "Der Anbieter meldet, dass dein Limit vorerst aufgebraucht ist. Versuche es später erneut.",
+    "AI_UNREACHABLE": "Deine KI ist nicht erreichbar. Prüfe die Adresse und deine Verbindung.",
+    "UNKNOWN_ERROR": "Bei deiner KI ist etwas schiefgelaufen. Versuche es erneut."
+  },
+  "origin": {
+    "device": "Auf diesem Gerät",
+    "ownKey": "Dein Schlüssel",
+    "cloud": "FlexiLingo Cloud"
+  },
+  "originHint": {
+    "device": "Von der KI auf deinem Computer erstellt",
+    "ownKey": "Mit deinem eigenen KI-Schlüssel erstellt",
+    "cloud": "Von der Cloud-KI von FlexiLingo erstellt, die du in den Einstellungen aktiviert hast"
+  },
+  "settings": {
+    "title": "Deine KI",
+    "explain": "Desk nutzt für jede KI-Funktion deinen eigenen Computer oder deinen eigenen Schlüssel. Die Arbeit läuft also auf deinem System und kostet FlexiLingo nichts. Prüfungsergebnisse und Wörterbücher kommen weiterhin von FlexiLingo.",
+    "status": {
+      "checking": "Deine KI wird geprüft...",
+      "device": "Auf diesem Computer: {{model}}",
+      "openai": "Dein OpenAI-Schlüssel: {{model}}",
+      "anthropic": "Dein Anthropic-Schlüssel: {{model}}",
+      "compatible": "Dein Server {{url}}: {{model}}"
+    },
+    "test": "Testen",
+    "testOk": "Es funktioniert. {{model}} hat geantwortet: {{reply}}",
+    "modelPicker": "Modell auf diesem Computer",
+    "manageModels": "Modelle herunterladen oder entfernen",
+    "hideModels": "Modelle ausblenden",
+    "change": "Eine andere KI verwenden",
+    "cancelChange": "Abbrechen",
+    "cloudTitle": "FlexiLingo Cloud-KI verwenden",
+    "cloudDesc": "Standardmäßig aus. Wenn aktiviert, werden Wortanalysen und Prüfungs-Insights von den Servern von FlexiLingo statt von deiner eigenen KI erstellt. Alles andere nutzt weiterhin deine KI.",
+    "cloudNeedsSignIn": "Melde dich bei einem Bezahlplan an, um das zu aktivieren.",
+    "cloudNeedsPaid": "Nur in Bezahlplänen verfügbar.",
+    "cloudInactive": "Aktiviert, aber nicht aktiv: Dafür ist ein angemeldeter Bezahlplan nötig.",
+    "cloudActive": "Aktiv für Wortanalysen und Prüfungs-Insights."
+  },
+  "wizard": {
+    "ownKeyLink": "Stattdessen meinen eigenen Schlüssel verwenden (OpenAI, Anthropic oder ein anderer Server)",
+    "ownKeyReady": "Dein eigener KI-Schlüssel ist eingerichtet. Du kannst loslegen."
+  },
+  "engine": {
+    "checking": "Lokale KI-Engine (Ollama) wird geprüft...",
+    "notInstalledTitle": "Ollama ist nicht installiert",
+    "notInstalledDesc": "Ollama ist eine kostenlose Open-Source-KI-Engine, die auf deinem Computer läuft. Installation mit einem Klick.",
+    "download": "Etwa 120 MB Download",
+    "install": "Ollama installieren",
+    "installing": "Ollama wird installiert...",
+    "downloadingBytes": "Wird heruntergeladen... {{done}} / {{total}}",
+    "notRunningTitle": "Ollama ist installiert, läuft aber nicht",
+    "foundAtSystem": "Systeminstallation gefunden unter {{path}}",
+    "foundAt": "Installiert unter {{path}}",
+    "notRunningDesc": "Starte Ollama, um die KI-Funktionen zu aktivieren.",
+    "start": "Ollama starten",
+    "starting": "Ollama wird gestartet...",
+    "waiting": "Warten, bis Ollama bereit ist...",
+    "connected": "Verbunden",
+    "connectedVersion": "Verbunden (v{{version}})",
+    "system": "System",
+    "managed": "Verwaltet",
+    "stop": "Ollama beenden",
+    "refresh": "Aktualisieren",
+    "search": "Modelle suchen...",
+    "installedModels": "Installierte Modelle",
+    "noModels": "Noch keine Modelle installiert. Lade unten eines herunter, um zu starten.",
+    "recommended": "Empfohlene Modelle",
+    "custom": "Eigenes Modell herunterladen",
+    "customPlaceholder": "z. B. codellama:7b",
+    "pull": "Download",
+    "active": "Aktiv",
+    "use": "Verwenden",
+    "delete": "Modell löschen",
+    "readyTitle": "Ollama ist bereit",
+    "installedList": "Installierte Modelle: {{models}}",
+    "chooseTitle": "KI-Modell auswählen",
+    "chooseDesc": "Kleinere Modelle sind schneller. Größere sind leistungsfähiger.",
+    "downloadModel": "{{model}} herunterladen",
+    "downloadModelGeneric": "Modell herunterladen",
+    "downloadingModel": "{{model}} wird heruntergeladen...",
+    "errorTitle": "Etwas ist schiefgelaufen",
+    "skip": "Skip for now",
+    "skipped": "Du kannst die KI später in den Einstellungen einrichten.",
+    "heading": "KI-Assistent",
+    "intro": "Desk nutzt KI, um dir beim Lernen zu helfen. Sie läuft auf deinem eigenen Computer oder mit deinem eigenen Schlüssel.",
+    "speed": {
+      "Fast": "Schnell",
+      "Medium": "Mittel",
+      "Slow": "Langsam"
+    },
+    "accuracy": {
+      "Good": "Gut",
+      "VeryGood": "Sehr gut",
+      "Excellent": "Exzellent"
+    },
+    "models": {
+      "llama3_2": "Schnell, sehr gute Mehrsprachigkeit. Die beste Balance für die meisten.",
+      "llama3_1_8b": "Stärkeres logisches Denken und bessere Grammatikkorrektur. Hervorragend für Nachhilfe.",
+      "gemma3_4b": "Google-Modell mit starker Mehrsprachigkeit. Gut für Vokabelübungen.",
+      "mistral": "Starke Unterstützung für europäische Sprachen (Französisch, Deutsch, Spanisch). Schnell.",
+      "phi4_mini": "Kompaktes Modell von Microsoft. Schnelle Antworten, gut für Gesprächsübungen.",
+      "qwen3_8b": "Am besten für Chinesisch, Arabisch und andere asiatische Sprachen. Modell von Alibaba.",
+      "aya_expanse_8b": "Cohere-Modell, trainiert auf mehr als 23 Sprachen. Für mehrsprachige Aufgaben entwickelt.",
+      "llama3_1_70b": "Am leistungsfähigsten. Benötigt 48 GB Arbeitsspeicher oder mehr. Beste Rückmeldungen zu Grammatik und Schreiben."
+    },
+    "dismiss": "Schließen"
+  }
+}

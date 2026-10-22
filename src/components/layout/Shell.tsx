@@ -26,24 +26,28 @@ export function Shell() {
   const showMiniPlayer = currentEpisode && !pathname.startsWith('/podcast/player/');
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <Header />
-        <AnnouncementBanner />
-        {fillsPage ? (
-          // The PDF reader owns its own scrolling (pages, side panels), so it gets the
-          // whole area instead of a padded scroll column.
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            <Outlet />
-          </main>
-        ) : (
-          <ScrollArea className="flex-1">
-            <main className="mx-auto w-full min-w-0 max-w-[1440px] px-8 py-7">
+    // A column: the app above, the mini player docked full width under it (website: the bottom
+    // bar reserves its own band, so it never covers a page).
+    <div className="flex h-screen flex-col bg-background text-foreground">
+      <div className="flex min-h-0 flex-1">
+        <Sidebar />
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+          <Header />
+          <AnnouncementBanner />
+          {fillsPage ? (
+            // The PDF reader owns its own scrolling (pages, side panels), so it gets the
+            // whole area instead of a padded scroll column.
+            <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <Outlet />
             </main>
-          </ScrollArea>
-        )}
+          ) : (
+            <ScrollArea className="flex-1">
+              <main className="mx-auto w-full min-w-0 max-w-[1440px] px-8 py-7">
+                <Outlet />
+              </main>
+            </ScrollArea>
+          )}
+        </div>
       </div>
       {showMiniPlayer && <MiniPlayer />}
       <JobToastStack />

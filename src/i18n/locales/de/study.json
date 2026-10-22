@@ -1,0 +1,586 @@
+{
+  "title": "Lernen",
+  "subtitle": "Intelligentes Üben über deine Decks hinweg",
+  "wellDone": "Gut gemacht!",
+  "calculatingPlan": "Tagesplan wird berechnet…",
+  "stats": {
+    "cardsLeft": "Karten übrig",
+    "minLeft": "Min. übrig"
+  },
+  "landing": {
+    "today": "Heutiges Lernen",
+    "mastery": "Mastery",
+    "cardsReady": "{{count}} Karten bereit",
+    "noCardsToday": "Du bist auf dem neuesten Stand – gerade ist nichts fällig.",
+    "estMinutes": "~{{minutes}} min",
+    "remaining": "{{done}} / {{total}} erledigt",
+    "startSmart": "Intelligente Sitzung starten",
+    "startStudying": "Lernen starten",
+    "regenerate": "Nach neuen Karten suchen",
+    "noNewCardsFound": "Keine neuen Karten gefunden.",
+    "goToDecks": "Deck erstellen",
+    "focusLabel": "Fokus",
+    "daysWithoutReview": "{{days}} Tage ohne Wiederholung",
+    "settings": "Einstellungen",
+    "preparing": "Dein Plan wird vorbereitet…",
+    "mode": {
+      "normal": "Normal",
+      "shadowing": "Nachsprechen"
+    },
+    "modeHint": {
+      "normal": "Übungen, die dich prüfen und deine nächsten Wiederholungen planen.",
+      "shadowing": "Karten laufen von selbst: jedes Wort hören und nachsprechen. Keine Bewertung."
+    },
+    "modeLabel": "Lernmodus",
+    "startShadowing": "Nachsprechen starten",
+    "stuckCards": "{{count}} hängende Karten",
+    "stuckCardsHint": "Diese Karten üben, bis sie sitzen"
+  },
+  "deckList": {
+    "title": "Deine Decks",
+    "deckCount": "{{count}} Decks",
+    "empty": "Noch keine Decks. Erstelle unter „Decks“ eines, um mit dem Lernen zu beginnen.",
+    "tabAll": "Alle",
+    "tabUrgent": "Dringend",
+    "tabHealthy": "Gesund",
+    "tabNotStarted": "Nicht begonnen",
+    "tabEmpty": "Gerade nichts hier.",
+    "cardsCount": "{{count}} Karten",
+    "newCards": "{{count}} neu",
+    "dueCards": "{{count}} fällig",
+    "leech": "{{count}} schwierig",
+    "start": "Lernen",
+    "deckDetails": "Deck-Details",
+    "mastery": "Mastery",
+    "notStarted": "Nicht begonnen",
+    "justReviewed": "Gerade wiederholt",
+    "onTrack": "Auf Kurs",
+    "warning": "Bald wiederholen",
+    "critical": "Überfällig",
+    "overdueWithDays": "{{days}} T. seit Wiederholung",
+    "urgentWithDays": "{{days}} T. überfällig"
+  },
+  "scope": {
+    "title": "{{deck}} lernen",
+    "titleAll": "Sitzung starten",
+    "pickScope": "Was lernen",
+    "due": "Fällige & neue",
+    "dueDesc": "Für heute geplante Karten plus ein paar neue",
+    "new": "Nur neue",
+    "newDesc": "Nur Wörter, die du noch nicht begonnen hast",
+    "weak": "Schwachstellen",
+    "weakDesc": "Deine Karten mit dem niedrigsten Kenntnisstand",
+    "focus": "Fokus",
+    "force": "Pauken (auch noch nicht fällige Karten)",
+    "start": "Starten",
+    "cancel": "Abbrechen",
+    "forceHint": "Karten dieses Stapels vorziehen, auch wenn sie später geplant sind (Cram).",
+    "random": "Zufällig",
+    "randomDesc": "Alle Karten gemischt – ohne Zeitplanung"
+  },
+  "focus": {
+    "balanced": "Ausgewogen",
+    "listening": "Hören",
+    "production": "Produktion",
+    "recognition": "Erkennung",
+    "custom": "Benutzerdefiniert",
+    "customize": "Aktivitäten feinabstimmen",
+    "desc": {
+      "balanced": "Eine gleichmäßige Mischung aller aktivierten Aktivitäten.",
+      "listening": "Setzt auf Hörübungen und Erinnerung per Audio.",
+      "production": "Bringt dich dazu, die Wörter selbst zu tippen und zu schreiben.",
+      "recognition": "Bevorzugt Karteikarten und Wiedererkennen per Multiple Choice.",
+      "custom": "Deine eigenen Gewichte pro Aktivität, festgelegt unter Einstellungen → Aktivitäten."
+    }
+  },
+  "settings": {
+    "title": "Lerneinstellungen",
+    "min": "Min.",
+    "errorSaving": "Diese Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    "tab": {
+      "schedule": "Tempo & Decks",
+      "activities": "Aktivitäten",
+      "preferences": "Einstellungen"
+    },
+    "section": {
+      "capacity": "Sitzungslänge",
+      "deckStrategy": "Deck-Strategie",
+      "activities": "Aktivitäten",
+      "activitiesHint": "Aktiviere oder deaktiviere Aktivitäten und gewichte, wie oft jede erscheint."
+    },
+    "mixPreview": "Deine Mischung",
+    "mixPreviewHint": "Eine Vorschau der Gewichte. Die tatsächliche Auswahl passt sich auch an deine Schwachstellen und an die Inhalte jeder Karte an.",
+    "deckWeights": "Welche Stapel du lernst – und wie viel",
+    "deckEnableAll": "Alle einschalten",
+    "deckAllOffWarning": "Alle Stapel sind ausgeschaltet, deine Lerneinheiten wären also leer. Schalte mindestens einen wieder ein.",
+    "deckToggleA11y": "{{deck}} in das tägliche Lernen aufnehmen",
+    "activeDeck": "Aktives Deck",
+    "selectDeck": "— Auswählen —",
+    "activeDeckNoneHint": "Noch kein Stapel gewählt – bis dahin nutzen die Einheiten alle deine Stapel.",
+    "dailyMinutes": "Tagesziel (Minuten)",
+    "deckStrategy": "Deck-Strategie",
+    "mix": "Decks mischen",
+    "mix_sub": "Aus jedem Deck ziehen",
+    "isolated": "Ein Deck",
+    "isolated_sub": "Nur das aktive Deck",
+    "rotation": "Rotieren",
+    "rotation_sub": "Das am meisten vernachlässigte Deck",
+    "activities": "Aktivitäten",
+    "preferences": "Einstellungen",
+    "srsAlgorithm": "SRS-Algorithmus",
+    "srsAlgorithmHint": "Gilt für alle Decks. Eine Änderung plant künftige Wiederholungen neu, nicht deinen Verlauf.",
+    "algo": {
+      "leitner": "Leitner",
+      "leitner_sub": "Einfaches Kastensystem. Ideal für Einsteiger.",
+      "sm2": "SM-2",
+      "sm2_sub": "Klassisches SuperMemo. Guter Allrounder.",
+      "fsrs": "FSRS",
+      "fsrs_sub": "Modern, beste Planung. Empfohlen."
+    },
+    "alwaysShowTranslation": "Übersetzung immer anzeigen",
+    "alwaysShowTranslation_sub": "Die Bedeutung aufdecken, ohne die Karte umzudrehen.",
+    "autoPronounce": "Automatische Aussprache",
+    "autoPronounce_sub": "Das Wort aussprechen, sobald eine Karte erscheint.",
+    "reverseCard": "Karten umkehren",
+    "reverseCard_sub": "Zuerst die Bedeutung zeigen und das Wort abrufen.",
+    "useListenAgain": "Hörübungen",
+    "useListenAgain_sub": "Hör- und Erinnerungsaktivitäten einbeziehen.",
+    "useAiGrading": "KI-Bewertung & Coaching",
+    "useAiGrading_sub": "Das lokale Modell nutzen, um Sätze zu bewerten und Übungen zu erstellen.",
+    "autoPlayTTS": "Audio automatisch abspielen",
+    "autoPlayTTSDescription": "Das Wort während einer Sitzung automatisch abspielen.",
+    "delayBeforeNext": "Delay",
+    "delayDescription": "Sekunden Wartezeit vor dem Sprechen.",
+    "voiceAccent": "Stimme",
+    "save": "Speichern",
+    "close": "Schließen",
+    "deckSearchPlaceholder": "Stapel durchsuchen…",
+    "deckSearchNoResults": "Keine Decks passen zu \"{{query}}\".",
+    "deckSearchTunedOnly": "Nur angepasste",
+    "deckSearchResetAll": "Alle auf 1× zurücksetzen",
+    "deckSearchClear": "Suche löschen"
+  },
+  "activity": {
+    "recall": "Karteikarte",
+    "cloze": "Lücke füllen",
+    "type_test": "Wort eintippen",
+    "listen_again": "Nochmals anhören",
+    "speak_test": "Sagen Sie es",
+    "use_in_sentence": "Im Satz verwenden",
+    "synonym_discrim": "Das Synonym wählen",
+    "mini_reading": "Mini-Lesetext",
+    "fromDeck": "Aus Deck {{deck}}",
+    "activityType": "Aktivität"
+  },
+  "activityDesc": {
+    "recall": "Die Karte umdrehen und bewerten, wie gut du sie kanntest.",
+    "cloze": "Das fehlende Wort in einen echten Satz einsetzen.",
+    "type_test": "Das Wort anhand seiner Bedeutung buchstabieren.",
+    "listen_again": "Das Wort hören und es dann abrufen.",
+    "speak_test": "Das Wort laut aussprechen.",
+    "use_in_sentence": "Einen eigenen Satz schreiben; er wird bewertet.",
+    "synonym_discrim": "Das Wort wählen, das zum Kontext passt.",
+    "mini_reading": "Einen kurzen Text lesen und eine Frage beantworten."
+  },
+  "runner": {
+    "show": "Antwort zeigen",
+    "next": "Weiter",
+    "check": "Prüfen",
+    "skip": "Überspringen",
+    "exit": "Beenden",
+    "continueAnother": "Weiterlernen",
+    "exitTitle": "Diese Sitzung verlassen?",
+    "exitBody": "Deine bisherigen Antworten sind gespeichert, aber der Rest der Warteschlange wird verworfen.",
+    "remaining": "noch {{count}}",
+    "typePlaceholder": "Antwort eingeben…",
+    "sentencePlaceholder": "Schreibe einen Satz mit diesem Wort…",
+    "correct": "Richtig",
+    "incorrect": "Nicht ganz",
+    "answer": "Antwort",
+    "corrected": "Korrigiert",
+    "examples": "Mustersätze",
+    "again": "Nochmal",
+    "hard": "Schwer",
+    "good": "Gut",
+    "easy": "Leicht",
+    "perfect": "Perfekt",
+    "listen": "Anhören",
+    "saidIt": "Ich habe es gesagt",
+    "prevCard": "Vorherige Karte",
+    "requeued": "In dieser Sitzung erneut gesehen",
+    "cardType": {
+      "new": "Neu",
+      "learning": "Lernen",
+      "review": "Wiederholen"
+    },
+    "hint": "Hinweis",
+    "stop": "Stoppen",
+    "elapsed": "Vergangen",
+    "abandonConfirm": "Diese Übungssitzung beenden?",
+    "loading": "Wird geladen…",
+    "preparingSession": "Sitzung wird vorbereitet…",
+    "doneTitle": "Übungssitzung abgeschlossen",
+    "card": "Karten",
+    "recallRate": "Abrufquote",
+    "elapsedLabel": "Zeit",
+    "feedbackOptimal": "Ausgezeichnet — du befindest dich im optimalen Bereich (85–90%).",
+    "feedbackGood": "Gut — füge etwas weniger neue Karten hinzu.",
+    "feedbackWeak": "Viele schwere Karten — reduziere die Anzahl neuer Karten.",
+    "feedbackEmpty": "Sitzung ohne Wiederholungen beendet.",
+    "optimalRange": "Optimal: 85–90%",
+    "noAttempts": "Keine Karten abgeschlossen",
+    "noAttemptsHint": "Diese Sitzung endete ohne Wiederholungen. Starte eine neue, um anzufangen.",
+    "back": "Zurück zum Dashboard",
+    "reviewBanner": "Vorherige Karte — nur zur Ansicht",
+    "continuePractice": "Weiter",
+    "abandonConfirmDesc": "Deine bisherigen Antworten sind gespeichert — nur die verbleibenden Karten werden übersprungen.",
+    "requeueBadge": "Wiederholung #{{count}}",
+    "repeatsAdded": "+{{count}}",
+    "requeueHint": "Neue Karten und falsche Antworten kommen vor dem Ende dieser Sitzung noch einmal — deshalb wächst die Gesamtzahl.",
+    "settings": "Einstellungen",
+    "settingsTitle": {
+      "normal": "Einstellungen für normales Lernen",
+      "shadowing": "Nachsprech-Einstellungen"
+    },
+    "textSize": "Schriftgröße",
+    "textSizeOption": {
+      "compact": "Kompakt",
+      "comfortable": "Komfortabel",
+      "large": "Groß",
+      "huge": "Sehr groß"
+    },
+    "focusMode": "Fokusmodus (Vollbild)",
+    "exitFocusMode": "Fokusmodus beenden",
+    "shortcuts": {
+      "replayWord": "Wort erneut abspielen",
+      "prevExample": "Vorheriges Beispiel",
+      "playExample": "Beispiel abspielen",
+      "exampleOf": "Beispiel {{index}}/{{total}}",
+      "showMeaning": "Bedeutung anzeigen",
+      "hideMeaning": "Bedeutung ausblenden",
+      "layoutExamples": "Beispiele zuerst",
+      "layoutMeaning": "Bedeutung zuerst",
+      "flip": "aufdecken",
+      "grade": "bewerten",
+      "exitFocus": "Beenden",
+      "showExampleMeaning": "Beispielbedeutung anzeigen",
+      "hideExampleMeanings": "Beispielbedeutungen ausblenden"
+    },
+    "cardView": "Was die Karte zeigt",
+    "cardViewOption": {
+      "showWord": "Wort anzeigen",
+      "showMeaning": "Bedeutung anzeigen",
+      "showExampleMeanings": "Übersetzung der Beispiele anzeigen"
+    },
+    "cardViewHint": {
+      "showWord": "Aus: erst zuhören — beim Aufdecken erscheinen Wort und Bedeutung zusammen.",
+      "showMeaning": "Aus: die Bedeutung bleibt verdeckt und die Beispiele kommen zuerst.",
+      "showExampleMeanings": "Aus: jede Satzübersetzung selbst aufdecken."
+    },
+    "shortcutsTitle": "Tastenkürzel",
+    "shortcutList": {
+      "flip": "Antwort aufdecken / verbergen",
+      "grade": "Karte bewerten",
+      "nextExample": "Nächstes Beispiel",
+      "exampleMeaning": "Eine Beispielbedeutung aufdecken",
+      "meaning": "Bedeutung anzeigen / verbergen",
+      "toggleMeaningPref": "Bedeutung für alle Karten ein- oder ausschalten",
+      "moreInFocus": "Der Fokusmodus bietet weitere Kurzbefehle."
+    },
+    "viewMenu": "Anzeige",
+    "audio": "Audio",
+    "autoPronounce": "Automatische Aussprache",
+    "autoPronounceHint": "Die nächste Karte wird automatisch vorgelesen",
+    "voiceAccent": "Englischer Akzent",
+    "voiceAccentHint": "Für englische Wörter, in beiden Modi.",
+    "voiceAccentOption": {
+      "us": "Amerikanisch",
+      "uk": "Britisch"
+    },
+    "exitFocus": "Vollbild verlassen",
+    "reverseCard": "Richtung umkehren",
+    "reverseCardHint": "An: Die beiden Seiten der Karte werden getauscht — die Karte zeigt die Bedeutung, du rufst das Wort ab.",
+    "pronounceWordOnReveal": "Wort beim Umdrehen vorlesen",
+    "pronounceWordOnRevealHint": "Das Wort steht jetzt auf der Rückseite — es wird vorgelesen, sobald du die Karte umdrehst.",
+    "pronunciationSettings": "Ausspracheeinstellungen",
+    "pronunciationTitle": "Aussprache",
+    "pronunciationSub": "Die Stimme, die Wörter vorliest — hier und überall in FlexiLingo. Wähle eine aus und du hörst sie sofort.",
+    "reverseCardError": "Einstellung konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    "normalSetupTitle": "Lernen einrichten",
+    "normalSetupSub": "Wähle, was die Karte zeigt, und drücke dann Start.",
+    "clickToReveal": "Klicken oder Leertaste drücken zum Aufdecken",
+    "hiddenWord": "Wort ausgeblendet",
+    "listenThenReveal": "Zuhören, dann klicken oder Leertaste drücken",
+    "translationLabel": "Übersetzung",
+    "hideMeaning": "Bedeutung ausblenden",
+    "revealMeaning": "Bedeutung anzeigen",
+    "corrections": "Korrekturen",
+    "grading": "Wird überprüft…",
+    "useInSentence": "Verwende dieses Wort in einem Satz",
+    "kind": {
+      "spelling": "Rechtschreibung",
+      "grammar": "Grammatik"
+    },
+    "typeIn": "Wort auf {{language}} eintippen",
+    "typeWord": "Wort eintippen",
+    "placeholderIn": "Wort auf {{language}}…",
+    "nearAccent": "Fast — nur ein Akzent stimmt nicht.",
+    "nearTypo": "Fast — nur ein Buchstabe ist anders."
+  },
+  "complete": {
+    "title": "Session complete",
+    "accuracy": "Genauigkeit",
+    "reviewed": "Geprüft",
+    "time": "Zeit",
+    "done": "Fertig",
+    "studyMore": "Mehr lernen",
+    "promotions": "Aufgestiegen",
+    "demotions": "Abgestiegen",
+    "newLearned": "Neu gelernt",
+    "tomorrow": "Morgen fällig",
+    "byDeck": "Nach Deck",
+    "newlyMastered": "Gemeistert",
+    "duesReviewed": "Wiederholungen erledigt",
+    "xpEarned": "Verdiente XP",
+    "xpHint": "Zu deiner Serie und deinem Tagesziel hinzugefügt.",
+    "reviewAgain": "Erneut wiederholen",
+    "tomorrowShort": "Morgen"
+  },
+  "errors": {
+    "NO_CARDS_FOR_SELECTION": "Keine Karten passen zu dieser Auswahl. Versuche einen anderen Umfang.",
+    "SESSION_NOT_ACTIVE": "Diese Sitzung ist bereits beendet.",
+    "CARD_NOT_FOUND": "Diese Karte konnte nicht geladen werden.",
+    "UNKNOWN_ERROR": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
+  },
+  "insights": {
+    "memoryHook": "Gedächtnisstütze",
+    "examples": "Beispiele",
+    "synonyms": "Synonyme",
+    "antonyms": "Antonyme",
+    "collocations": "Kollokationen",
+    "commonMistakes": "Häufige Fehler",
+    "notes": "Notizen"
+  },
+  "shadowing": {
+    "empty": "Diese Sitzung hat noch keine Wörter zum Nachsprechen.",
+    "readyTitle": "Durchlauf einrichten",
+    "idle": "Start drücken — zuhören, dann das Wort nachsprechen.",
+    "start": "Starten",
+    "pause": "Pause",
+    "resume": "Fortsetzen",
+    "reset": "Zurücksetzen",
+    "settings": "Nachsprech-Einstellungen",
+    "wordCount": "{{count}} Wörter",
+    "round": "Durchgang {{pass}}",
+    "elapsed": "Abspielzeit",
+    "listenOf": "Hören {{n}} von {{total}}",
+    "meaning": "Bedeutung",
+    "recall": "Bedeutung erinnern",
+    "shuffle": "Zufällige Reihenfolge",
+    "speakMeaning": "Bedeutung vorlesen",
+    "speakMeaningHint": "Die Bedeutung wird in der Sprache vorgelesen, in der sie geschrieben ist.",
+    "meaningMode": "Bedeutung",
+    "meaningOption": {
+      "always": "Immer",
+      "after": "Nach dem Nachsprechen",
+      "hidden": "Verborgen"
+    },
+    "meaningHint": {
+      "always": "Die Bedeutung steht mit dem Wort auf der Karte.",
+      "after": "Hör das Wort, erinnere dich in der Pause an die Bedeutung, dann sieh sie.",
+      "hidden": "Nur das Wort — die Bedeutung bleibt verdeckt."
+    },
+    "showWordHint": "Aus: nur zuhören — das Wort bleibt verdeckt.",
+    "gap": "Pause zum Nachsprechen",
+    "gapHint": "Diese Pause IST die Übung — lang genug, das Wort vor dem nächsten nachzusprechen.",
+    "gapNone": "Keine Pause",
+    "gapOffHint": "Gerade nicht aktiv: Nach jedem Wort wartet der Durchlauf, bis Sie auf Weiter tippen.",
+    "autoAdvance": "Von selbst weitergehen",
+    "autoAdvanceHint": "Aus: Nach jedem Wort wartet der Durchlauf, bis Sie auf Weiter tippen — so lange Sie brauchen.",
+    "replay": "Noch einmal hören",
+    "next": "Weiter",
+    "repeatEach": "Mal pro Wort",
+    "repeatEachHint": "Zweimal bewährt sich: hören, nachsprechen, nochmal hören und korrigieren.",
+    "repeatMore": "Öfter wiederholen",
+    "repeatLess": "Seltener wiederholen",
+    "rounds": "Durchgänge",
+    "roundsInfinite": "Bis zum Stoppen wiederholen",
+    "hiddenWord": "Wort ausgeblendet",
+    "hiddenMeaning": "Bedeutung ausgeblendet",
+    "size": "Wörter pro Durchlauf",
+    "sizeAll": "Alle",
+    "doneTitle": "Durchlauf beendet",
+    "doneSub": "Gehörte Wörter und tatsächliche Abspielzeit.",
+    "doneWords": "Wörter",
+    "doneTime": "Zeit",
+    "again": "Nochmal",
+    "done": "Fertig",
+    "loadFailed": "Die Wörter für diesen Durchlauf konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "groupRepeat": "Wiederholen und Pause",
+    "groupRun": "Wörter und Runden",
+    "gapSeconds": "Pause in Sekunden",
+    "secondsUnit": "S",
+    "reportFailed": "Der Fortschritt dieses Durchgangs konnte auf diesem Computer nicht gespeichert werden."
+  },
+  "report": {
+    "headlineMastered": "{{count}} Wörter sind ins Langzeitgedächtnis gewandert",
+    "headlineRecalled": "{{count}} Wörter am Ende gewusst",
+    "headlinePlain": "{{count}} Wörter geübt",
+    "factSeen": "{{count}} gesehen",
+    "factFirstTry": "{{percent}}% beim ersten Versuch",
+    "factActive": "{{time}} echte Übungszeit",
+    "durationHm": "{{hours}} Std. {{minutes}} Min.",
+    "durationM": "{{minutes}} Min.",
+    "recallTitle": "Abruf",
+    "firstTry": "Beim ersten Versuch richtig",
+    "byTheEnd": "Am Ende richtig",
+    "attemptsNote": "{{attempts}} Versuche auf {{cards}} Wörter — {{avg}} pro Wort",
+    "gapNote": "{{count}} in dieser Sitzung noch geschafft",
+    "strugglesTitle": "Was sich gewehrt hat",
+    "strugglesNote": "{{count}} Wörter brauchten 3+ Versuche",
+    "drillWeak": "Schwache Wörter üben",
+    "forecastTitle": "Wann sie wiederkommen",
+    "today": "Heute",
+    "inDays": "+{{count}} T",
+    "levelsTitle": "Nach Niveau",
+    "levelsNote": "nur eingestufte Wörter",
+    "missed": "falsch",
+    "decksTitle": "Woher sie kamen"
+  },
+  "tour": {
+    "guideButton": "Anleitung",
+    "next": "Weiter",
+    "back": "Zurück",
+    "skip": "Überspringen",
+    "done": "Fertig",
+    "stepOf": "Schritt {{current}} von {{total}}",
+    "steps": {
+      "intro": {
+        "title": "Willkommen bei Study",
+        "body": "Machen wir eine kurze Tour — was jede Einstellung bewirkt und wie du das Beste aus deinen Sitzungen holst."
+      },
+      "hero": {
+        "title": "Heutiges Lernen",
+        "body": "Zeigt, wie viele Karten noch übrig sind und wie viele Minuten es dauert. Tippe auf „Lernen starten“, um deinen smarten Tagesmix zu beginnen."
+      },
+      "heroShortcuts": {
+        "title": "So lernst du",
+        "body": "Normal: Übungen, die dich prüfen und deine nächsten Wiederholungen planen. Nachsprechen: Karten laufen von selbst — jedes Wort hören und nachsprechen, ohne Bewertung. „Fokus“ stellt die Übungsmischung im normalen Modus ein."
+      },
+      "deckList": {
+        "title": "Deine Decks",
+        "body": "Jedes Deck, das du gerade lernst, mit Status und Beherrschungsgrad. Nutze die Tabs, um nach dem zu filtern, was Aufmerksamkeit braucht."
+      },
+      "deckCard": {
+        "title": "Ein einzelnes Deck starten",
+        "body": "Tippe bei einem beliebigen Deck auf „Starten“, um genau festzulegen, was daraus gelernt werden soll."
+      },
+      "scopeOptions": {
+        "title": "Was lernen",
+        "body": "Wähle einen Bereich: alle fälligen Karten, nur neue Wörter, Wörter, bei denen du dich immer wieder irrst, oder eine zufällige Mischung."
+      },
+      "scopeFocus": {
+        "title": "Fokus",
+        "body": "Wähle, auf welche Art von Übungen der Schwerpunkt liegen soll — Hören, Produktion, Erkennung oder deine eigene benutzerdefinierte Mischung."
+      },
+      "scopeForce": {
+        "title": "Cram-Modus",
+        "body": "Schalte das ein, um die Karten eines Decks zu wiederholen, auch bevor sie offiziell fällig sind."
+      },
+      "scopeStart": {
+        "title": "Lernen starten",
+        "body": "Startet die Sitzung mit allem, was du oben ausgewählt hast."
+      },
+      "settingsTabs": {
+        "title": "Einstellungen",
+        "body": "Alle deine Study-Einstellungen findest du hier, verteilt auf drei Tabs: Tempo & Decks, Aktivitäten und Einstellungen."
+      },
+      "settingsDuration": {
+        "title": "Tagesziel",
+        "body": "Wie viele Minuten du täglich lernen möchtest — das bestimmt, wie viele Karten dein Tagesplan zieht."
+      },
+      "settingsDeckStrategy": {
+        "title": "Deck-Strategie",
+        "body": "„Gemischt“ lernt alle Decks zusammen, „Einzelnes Deck“ lernt jeweils nur eines, und „Rotation“ wählt automatisch das Deck, das am längsten vernachlässigt wurde."
+      },
+      "settingsDeckWeights": {
+        "title": "Deck-Gewichtungen",
+        "body": "Gib einem Deck mehr oder weniger Priorität im Tagesmix — je höher der Wert, desto mehr Karten aus diesem Deck erscheinen."
+      },
+      "settingsFocusChips": {
+        "title": "Übungsmix",
+        "body": "Wähle ein Fokus-Preset und beobachte, wie sich die Leiste darunter entsprechend deinem Sitzungsmix verändert."
+      },
+      "settingsActivityList": {
+        "title": "Jede Übung feinabstimmen",
+        "body": "Schalte jeden Übungstyp ein oder aus und passe seine Gewichtung an — der Anteil rechts zeigt seinen Platz im Mix."
+      },
+      "settingsSrs": {
+        "title": "Spaced-Repetition-Algorithmus",
+        "body": "Wähle, wie die Wiederholungsintervalle berechnet werden — Leitner, SM-2 oder FSRS (die Standardeinstellung und meist die smarteste)."
+      },
+      "settingsAutoRead": {
+        "title": "Automatisches Vorlesen",
+        "body": "Lass jede Karte automatisch vorlesen und wähle eine amerikanische oder britische Stimme."
+      },
+      "outro": {
+        "title": "Das war's!",
+        "body": "Du kennst dich jetzt in Study aus. Öffne diese Tour jederzeit wieder über die Schaltfläche „Anleitung“ neben den Einstellungen."
+      }
+    }
+  },
+  "summary": "Zusammenfassung",
+  "mode": "Modus",
+  "scorecard": {
+    "title": "KI-Prüfung",
+    "criteria": {
+      "meaning": "Bedeutung",
+      "grammar": "Grammatik",
+      "spelling": "Rechtschreibung",
+      "elision": "Elision"
+    },
+    "why": {
+      "meaning": {
+        "pass": "Es sagt, was die Karte verlangt hat.",
+        "fail": "Es sagt nicht, was die Karte verlangt hat."
+      },
+      "grammar": {
+        "pass": "Die Grammatik stimmt.",
+        "fail": "Es gibt einen Grammatikfehler."
+      },
+      "spelling": {
+        "pass": "Richtig geschrieben.",
+        "near": "Richtiges Wort — prüfen Sie einen Akzent.",
+        "fail": "Ein Schreibfehler."
+      },
+      "elision": {
+        "pass": "Die Elisionen stimmen.",
+        "fail": "Eine Elision fehlt — ein Wort, das sich verkürzen muss, steht ausgeschrieben da (zum Beispiel me aider statt m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Formell — passend für einen Brief oder Fremde.",
+      "neutral": "Neutral — passt fast überall.",
+      "informal": "Umgangssprachlich — perfekt für eine Nachricht an Freunde."
+    },
+    "natural": {
+      "yes": "Klingt natürlich — so würde es ein Muttersprachler sagen.",
+      "no": "Richtig, aber ein Muttersprachler würde es anders sagen."
+    },
+    "error": {
+      "gender_agreement": "Vermutlich ein Fehler bei Genus oder Numerus.",
+      "verb_conjugation": "Prüfen Sie Form oder Zeit des Verbs.",
+      "word_order": "Prüfen Sie die Wortstellung.",
+      "preposition_or_article": "Prüfen Sie Präposition oder Artikel.",
+      "spelling_or_accent": "Prüfen Sie die Schreibung.",
+      "negation": "Prüfen Sie die Verneinung.",
+      "wrong_word": "Ein Wort passt nicht zur Bedeutung.",
+      "avoir_expression": "Französisch sagt hier avoir, nicht être: j'ai faim, quel âge avez-vous ?"
+    },
+    "needsAi": "Diesmal keine Auswertung: Richte in den Einstellungen deine eigene KI ein, dann bekommen deine Sätze eine."
+  },
+  "conjugation": {
+    "title": "Konjugation"
+  }
+}

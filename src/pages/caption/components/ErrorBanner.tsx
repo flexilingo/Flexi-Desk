@@ -1,7 +1,9 @@
 import { AlertCircle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useCaptionStore } from '../stores/captionStore';
 
 export function ErrorBanner() {
+  const { t } = useTranslation('caption');
   const { error, clearError } = useCaptionStore();
 
   if (!error) return null;
@@ -12,6 +14,7 @@ export function ErrorBanner() {
       <p className="flex-1 text-sm text-error">{error}</p>
       <button
         onClick={clearError}
+        aria-label={t('common.dismiss')}
         className="shrink-0 rounded-sm p-0.5 text-error/60 hover:text-error transition-colors"
       >
         <X className="h-4 w-4" />

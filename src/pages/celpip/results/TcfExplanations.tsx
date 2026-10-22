@@ -4,7 +4,11 @@ import { subscriptionUrl } from '@/components/layout/sidebarConfig';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, Crown, Languages, Lightbulb, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AiSetupCard } from '@/components/ai/AiSetupCard';
+import { isAiSetupError } from '@/lib/aiSource';
+import { useAiSource } from '@/stores/aiSourceStore';
 import { translateExplanation } from '../services/celpipCloud';
+import { translateTextsLocal } from '../services/explanationLocal';
 import { errorCodeOf } from '../stores/celpipStore';
 import type {
   CelpipModelBand,
@@ -24,8 +28,11 @@ import { ClampText } from './ClampText';
 // key is right, what to do next time, the word that decided it. Writing and
 // speaking: the same task answered at NCLC 5 and 7, and the steps from 5 to 7.
 //
-// The explanations are English; a Pro member can translate one card into the
-// UI language on demand. French is the material being studied and stays
+// The explanations are English; one card can be translated into the UI language
+// on demand. By default the learner's OWN AI does it (the model on this
+// computer, or their own key); the server's cached translation (Pro) is used only
+// when they switched cloud AI on, and an AI that is not set up shows the setup
+// card, never a silent cloud call. French is the material being studied and stays
 // left-to-right everywhere — inside a translation too (each «…» is isolated).
 //
 // Flat on purpose, like QaCard: labelled paragraphs divided by a rule, never a
@@ -80,6 +87,10 @@ interface Translation {
   shown: boolean;
   loading: boolean;
   error: string | null;
+  /** The learner's own AI is not set up: show the setup card instead of the button's result. */
+  needsSetup: boolean;
+  /** The learner set their AI up: hide the card; the button is ready to press again. */
+  setupDone: () => void;
   toggle: () => void;
 }
 
@@ -89,40 +100,59 @@ function useExplanationTranslation(
   questionIndex?: number,
   /** CELPIP listening / reading: the session, whose option order sets the letters. */
   sessionId?: string,
+  /** The English paragraphs on screen by translation key: what the learner's own AI translates. */
+  sources: Record<string, string> = {},
+  /** The server's flag: only a paid account may use the cloud translation. */
+  cloudAllowed = true,
 ): Translation {
   const { i18n, t } = useTranslation('celpip');
+  const { source } = useAiSource();
+  const route = source.kind === 'cloud' ? 'cloud' : 'local';
   const locale = i18n.language.split('-')[0];
   const target = TRANSLATABLE.find((l) => l === locale) ?? null;
-  const cacheKey = `${kind}:${partId}:${questionIndex ?? ''}:${sessionId ?? ''}:${locale}`;
+  const cacheKey = `${route}:${kind}:${partId}:${questionIndex ?? ''}:${sessionId ?? ''}:${locale}`;
   const [texts, setTexts] = useState<Record<string, string> | null>(
     () => translationCache.get(cacheKey) ?? null,
   );
   const [shown, setShown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setLoading] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
 
   const toggle = () => {
     if (texts) {
       setShown((s) => !s);
       return;
     }
-    if (!target || isLoading) return;
+    if (!target || isLoading || source.kind === 'checking') return;
     setError(null);
+    if (source.kind === 'unconfigured') {
+      setNeedsSetup(true);
+      return;
+    }
+    setNeedsSetup(false);
     setLoading(true);
-    translateExplanation({
-      kind,
-      part_id: partId,
-      locale: target,
-      ...(typeof questionIndex === 'number' ? { question_index: questionIndex } : {}),
-      ...(sessionId ? { session_id: sessionId } : {}),
-    })
-      .then((res) => {
-        const got = res?.texts ?? {};
+    const run =
+      source.kind === 'cloud'
+        ? translateExplanation({
+            kind,
+            part_id: partId,
+            locale: target,
+            ...(typeof questionIndex === 'number' ? { question_index: questionIndex } : {}),
+            ...(sessionId ? { session_id: sessionId } : {}),
+          }).then((res) => res?.texts ?? {})
+        : translateTextsLocal(sources, target);
+    run
+      .then((got) => {
         translationCache.set(cacheKey, got);
         setTexts(got);
         setShown(true);
       })
       .catch((err: unknown) => {
+        if (source.kind !== 'cloud' && isAiSetupError(err)) {
+          setNeedsSetup(true);
+          return;
+        }
         const code = errorCodeOf(err);
         setError(
           t(`errors.${code}`, { defaultValue: t('errors.UNKNOWN_ERROR', 'Something went wrong') }),
@@ -132,7 +162,10 @@ function useExplanationTranslation(
   };
 
   return {
-    available: target !== null,
+    // The learner's own AI is free to use; the cloud translation is a paid account's.
+    available: target !== null && (source.kind !== 'cloud' || cloudAllowed),
+    needsSetup,
+    setupDone: () => setNeedsSetup(false),
     locale,
     dir: RTL_LOCALES.has(locale) ? 'rtl' : 'ltr',
     texts: shown ? texts : null,
@@ -168,6 +201,7 @@ function TranslateControl({ tr }: { tr: Translation }) {
         {!tr.loading && <Languages />}
         {label}
       </Button>
+      {tr.needsSetup && <AiSetupCard compact onReady={tr.setupDone} />}
       {tr.error && (
         <p role="alert" className="text-[12.5px] text-error leading-relaxed">
           {tr.error}
@@ -338,7 +372,29 @@ function McqExplanationBody({
 }) {
   const { t } = useTranslation('exam');
   const labels = useInsightLabels();
-  const tr = useExplanationTranslation('mcq', e.part_id, questionIndex, sessionId);
+  const sources: Record<string, string> = {};
+  const addSource = (key: string, text?: string | null) => {
+    if (text) sources[key] = text;
+  };
+  const picked =
+    typeof userChoice === 'number'
+      ? (e.distractors ?? []).find((d) => d.option_index === userChoice && d.why_it_fails)
+      : undefined;
+  if (picked) addSource(`distractor_${picked.option_index}`, picked.why_it_fails);
+  addSource('why_correct', e.why_correct);
+  addSource(
+    e.how_to_spot_next_time ? 'how_to_spot_next_time' : 'technique_how',
+    e.how_to_spot_next_time || e.technique?.how_to_apply,
+  );
+  addSource('vocabulary_gloss', e.vocabulary_note?.term ? e.vocabulary_note.gloss : null);
+  const tr = useExplanationTranslation(
+    'mcq',
+    e.part_id,
+    questionIndex,
+    sessionId,
+    sources,
+    e.can_translate !== false,
+  );
 
   // Unanswered: there is no pick to explain, only the key.
   const distractor =
@@ -354,8 +410,8 @@ function McqExplanationBody({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Pro only — a free account's free full result comes with can_translate: false. */}
-      {tr.available && e.can_translate !== false && <TranslateControl tr={tr} />}
+      {/* The cloud translation is Pro only (can_translate: false); the learner's own AI is open to all. */}
+      {tr.available && <TranslateControl tr={tr} />}
 
       {e.evidence_quote && (
         <figure className="flex flex-col gap-1.5">
@@ -629,7 +685,6 @@ export function TcfModelAnswersBlock({ task, taskBand, exam = 'tcf' }: ModelAnsw
   const { t } = useTranslation('exam');
   const help = useBandHelp(exam);
   const lang = exam === 'celpip' ? 'en' : 'fr';
-  const tr = useExplanationTranslation('model_answer', task.part_id);
   // steps_up is null exactly for free accounts.
   const isPro = task.steps_up !== null;
   const bands = (task.bands as Array<TcfModelBand | CelpipModelBand>)
@@ -663,13 +718,32 @@ export function TcfModelAnswersBlock({ task, taskBand, exam = 'tcf' }: ModelAnsw
     higher: s.in_9,
   }));
 
+  const sources: Record<string, string> = {};
+  for (const b of bands) {
+    if (!b.locked && b.what_sets_this_band) sources[`band_${b.level}_note`] = b.what_sets_this_band;
+  }
+  steps5.forEach((s, i) => {
+    sources[`step_${i}_rule`] = s.rule;
+  });
+  steps9.forEach((s, i) => {
+    sources[`step9_${i}_rule`] = s.rule;
+  });
+  const tr = useExplanationTranslation(
+    'model_answer',
+    task.part_id,
+    undefined,
+    undefined,
+    sources,
+    isPro && task.can_translate !== false,
+  );
+
   if (bands.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className={`${LABEL} pt-1`}>{t('results.tcfHelp.modelAnswersTitle')}</p>
-        {isPro && tr.available && task.can_translate !== false && <TranslateControl tr={tr} />}
+        {tr.available && <TranslateControl tr={tr} />}
       </div>
 
       {bands.map((band, i) => {

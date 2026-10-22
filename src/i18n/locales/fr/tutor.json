@@ -1,0 +1,183 @@
+{
+  "landing": {
+    "title": "Tuteur IA",
+    "subtitle": "Entraînez-vous à parler avec votre partenaire de conversation IA",
+    "newConversation": "Nouvelle conversation",
+    "loading": "Chargement des conversations...",
+    "emptyTitle": "Aucune conversation pour le moment",
+    "emptyBody": "Lancez votre première conversation IA pour vous entraîner à parler dans n'importe quelle langue.",
+    "startFirst": "Commencer ma première conversation",
+    "active": "Active",
+    "messages_one": "{{count}} message",
+    "messages_many": "{{count}} messages",
+    "messages_other": "{{count}} messages",
+    "corrections_one": "{{count}} correction",
+    "corrections_many": "{{count}} corrections",
+    "corrections_other": "{{count}} corrections"
+  },
+  "time": {
+    "justNow": "À l'instant",
+    "minutesAgo": "il y a {{count}} min",
+    "hoursAgo": "il y a {{count}} h",
+    "daysAgo": "il y a {{count}} j"
+  },
+  "modes": {
+    "free": {
+      "name": "Conversation libre",
+      "description": "Parlez de ce que vous voulez"
+    },
+    "role_play": {
+      "name": "Jeu de rôle",
+      "description": "Jouez des situations de la vie réelle"
+    },
+    "deck_practice": {
+      "name": "Entraînement par paquet",
+      "description": "Utilisez les mots de vos paquets de cartes"
+    },
+    "vocab_challenge": {
+      "name": "Défi de vocabulaire",
+      "description": "Pratiquez du nouveau vocabulaire en conversation"
+    },
+    "escape_room": {
+      "name": "Escape game",
+      "description": "Résolvez une histoire en parlant"
+    }
+  },
+  "categories": {
+    "daily_life": "Vie quotidienne",
+    "travel": "Voyage",
+    "social": "Social",
+    "professional": "Professionnel",
+    "academic": "Académique",
+    "health": "Santé",
+    "emergency": "Urgence",
+    "creative": "Créatif et ludique"
+  },
+  "topics": {
+    "travel": "Voyages et aventures",
+    "food": "Cuisine et gastronomie",
+    "movies": "Films et séries",
+    "music": "Musique et concerts",
+    "sports": "Sport et forme",
+    "technology": "Technologie",
+    "books": "Livres et lecture",
+    "work": "Travail et carrière",
+    "hobbies": "Loisirs créatifs",
+    "nature": "Nature et environnement",
+    "family": "Famille et relations",
+    "health": "Santé et bien-être",
+    "fashion": "Mode et style",
+    "art": "Art et culture",
+    "science": "Science et découvertes",
+    "history": "Histoire et traditions",
+    "routines": "Routines quotidiennes",
+    "holidays": "Vacances et fêtes",
+    "childhood": "Souvenirs d'enfance",
+    "future": "Projets et rêves d'avenir"
+  },
+  "providers": {
+    "ollama": "Ollama (local)",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "Nouvelle conversation",
+    "stepOf": "Étape {{step}} sur {{total}}",
+    "back": "Retour",
+    "next": "Suivant",
+    "start": "Commencer la conversation",
+    "starting": "Démarrage...",
+    "backAria": "Retour",
+    "step1Title": "Choisissez un mode d'entraînement",
+    "step1Subtitle": "Comment souhaitez-vous vous entraîner ?",
+    "step2Title": "Langue et niveau",
+    "step2Subtitle": "Réglez votre entraînement",
+    "practiceLanguage": "Langue d'entraînement",
+    "languageSearch": "Rechercher une langue...",
+    "languageNoResults": "Aucune langue trouvée",
+    "cefrLevel": "Niveau CECR",
+    "aiProvider": "Fournisseur d'IA",
+    "model": "Modèle",
+    "ollamaOffline": "Ollama n'est pas connecté. Lancez Ollama pour voir les modèles téléchargés.",
+    "topicTitle": "Choisissez un sujet",
+    "scenarioTitle": "Choisissez un scénario",
+    "deckTitle": "Sélectionnez un paquet",
+    "extraTitle": "Réglages supplémentaires",
+    "topicSubtitle": "Choisissez un sujet ou écrivez le vôtre",
+    "scenarioSubtitle": "Recherchez et sélectionnez un scénario de jeu de rôle",
+    "deckSubtitle": "Pratiquez le vocabulaire de vos paquets de cartes",
+    "extraSubtitle": "Ajoutez des consignes personnalisées si vous le souhaitez",
+    "optional": "(facultatif)",
+    "ownTopic": "Écrivez votre propre sujet",
+    "topicPlaceholder": "De quoi voulez-vous parler ?",
+    "suggestedTopic": "Ou choisissez un sujet suggéré",
+    "searchScenarios": "Rechercher des scénarios...",
+    "customGroup": "Personnalisé",
+    "customScenario": "Écrivez votre propre scénario",
+    "customScenarioHint": "Décrivez n'importe quelle situation à pratiquer",
+    "customScenarioPlaceholder": "Ex. : vous êtes aux puces et vous marchandez le prix d'une lampe ancienne avec un vendeur têtu...",
+    "deck": "Paquet",
+    "loadingDecks": "Chargement des paquets...",
+    "selectDeck": "Sélectionnez un paquet...",
+    "deckCards": "{{name}} ({{count}} cartes)",
+    "noDecks": "Aucun paquet trouvé. Créez d'abord un paquet dans la section Révision.",
+    "customInstructions": "Consignes personnalisées",
+    "customInstructionsPlaceholder": "Ex. : concentre-toi sur le vocabulaire professionnel, parle lentement, corrige-moi plus strictement...",
+    "practiceTitle": "Entraînement en {{language}}"
+  },
+  "detail": {
+    "back": "Retour aux conversations",
+    "resume": "Reprendre",
+    "minutes": "{{count}} min",
+    "messages_one": "{{count}} message",
+    "messages_many": "{{count}} messages",
+    "messages_other": "{{count}} messages",
+    "fixes_one": "{{count}} correction",
+    "fixes_many": "{{count}} corrections",
+    "fixes_other": "{{count}} corrections",
+    "conversation": "Conversation"
+  },
+  "scores": {
+    "grammar": "Grammaire",
+    "vocabulary": "Vocabulaire",
+    "fluency": "Aisance",
+    "overall": "Global"
+  },
+  "corrections": {
+    "title": "Corrections ({{count}})",
+    "wrong": "Original",
+    "right": "Corrigé",
+    "why": "Pourquoi"
+  },
+  "words": {
+    "title": "Nouveaux mots ({{count}})",
+    "saved": "Enregistré",
+    "saveToDeck": "Enregistrer dans un paquet",
+    "saveAll": "Tout enregistrer dans un paquet"
+  },
+  "summary": {
+    "title": "Session terminée",
+    "startNew": "Nouvelle conversation"
+  },
+  "voice": {
+    "listening": "J'écoute...",
+    "transcribing": "Transcription...",
+    "thinking": "Réflexion...",
+    "tapInterrupt": "Touchez pour interrompre",
+    "tapSpeak": "Touchez pour parler",
+    "hideSubtitles": "Masquer les sous-titres",
+    "showSubtitles": "Afficher les sous-titres",
+    "end": "Terminer",
+    "tutor": "Tuteur",
+    "you": "Vous",
+    "micAria": "Microphone"
+  },
+  "errorDismiss": "Fermer",
+  "errors": {
+    "AUTH_REQUIRED": "Vous devez vous connecter pour utiliser cette fonction.",
+    "NETWORK_ERROR": "Impossible de joindre FlexiLingo. Vérifiez votre connexion internet et réessayez.",
+    "MIC_UNAVAILABLE": "Le microphone n'est pas disponible. Vérifiez qu'il est branché et autorisé, puis réessayez.",
+    "MODEL_MISSING": "Le modèle vocal est absent. Téléchargez un modèle dans les réglages Whisper puis réessayez.",
+    "UNKNOWN_ERROR": "Une erreur s'est produite. Veuillez réessayer."
+  }
+}

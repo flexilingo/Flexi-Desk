@@ -1,26 +1,14 @@
-import { ArrowLeft, Trophy, Clock, MessageSquare, AlertCircle, BookOpen, Mic } from 'lucide-react';
+import { ArrowLeft, Clock, MessageSquare, AlertCircle, BookOpen, Mic } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTutorStore } from '../stores/tutorStore';
 import { ScoreRing } from './ScoreRing';
-import type { CorrectionType, GrammarCorrection, VocabSuggestion } from '../types';
-
-const borderColorByType: Record<CorrectionType, string> = {
-  grammar: 'border-l-primary',
-  spelling: 'border-l-warning',
-  word_choice: 'border-l-success',
-  word_order: 'border-l-muted',
-};
-
-const MODE_LABELS: Record<string, string> = {
-  free: 'Free Talk',
-  role_play: 'Role Play',
-  deck_practice: 'Deck Practice',
-  vocab_challenge: 'Vocab Challenge',
-  escape_room: 'Escape Room',
-};
+import { CorrectionItem } from './CorrectionItem';
+import type { GrammarCorrection, VocabSuggestion } from '../types';
 
 export function ConversationDetail() {
+  const { t } = useTranslation('tutor');
   const { activeConversation, messages, setView, openConversation } = useTutorStore();
 
   if (!activeConversation) return null;
@@ -69,6 +57,7 @@ export function ConversationDetail() {
         <button
           type="button"
           onClick={() => setView('landing')}
+          aria-label={t('detail.back')}
           className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -76,7 +65,7 @@ export function ConversationDetail() {
         <div className="flex-1 min-w-0">
           <h2 className="text-sm font-semibold text-foreground truncate">{conv.title}</h2>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{MODE_LABELS[conv.mode] ?? conv.mode}</span>
+            <span>{t(`modes.${conv.mode}.name`, { defaultValue: conv.mode })}</span>
             <span>·</span>
             <span>{conv.cefrLevel}</span>
             <span>·</span>
@@ -86,7 +75,7 @@ export function ConversationDetail() {
         {isActive && (
           <Button size="sm" onClick={() => openConversation(conv.id)} className="gap-1.5">
             <Mic className="h-3.5 w-3.5" />
-            Resume
+            {t('detail.resume')}
           </Button>
         )}
       </div>
@@ -98,25 +87,25 @@ export function ConversationDetail() {
           {chatMessages.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-center gap-6">
-                <ScoreRing score={grammarScore} label="Grammar" />
-                <ScoreRing score={vocabScore} label="Vocabulary" />
-                <ScoreRing score={fluencyScore} label="Fluency" />
-                <ScoreRing score={overallScore} label="Overall" size={96} />
+                <ScoreRing score={grammarScore} label={t('scores.grammar')} />
+                <ScoreRing score={vocabScore} label={t('scores.vocabulary')} />
+                <ScoreRing score={fluencyScore} label={t('scores.fluency')} />
+                <ScoreRing score={overallScore} label={t('scores.overall')} size={96} />
               </div>
 
               <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />
-                  {durationMinutes} min
+                  {t('detail.minutes', { count: durationMinutes })}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <MessageSquare className="h-4 w-4" />
-                  {chatMessages.length} messages
+                  {t('detail.messages', { count: chatMessages.length })}
                 </span>
                 {allCorrections.length > 0 && (
                   <span className="flex items-center gap-1.5">
                     <AlertCircle className="h-4 w-4" />
-                    {allCorrections.length} fixes
+                    {t('detail.fixes', { count: allCorrections.length })}
                   </span>
                 )}
               </div>
@@ -127,20 +116,11 @@ export function ConversationDetail() {
           {allCorrections.length > 0 && (
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground border-b border-border pb-2">
-                Corrections ({allCorrections.length})
+                {t('corrections.title', { count: allCorrections.length })}
               </h4>
               <div className="space-y-2">
                 {allCorrections.map((correction, i) => (
-                  <div
-                    key={i}
-                    className={`border-l-4 ${borderColorByType[correction.type]} rounded bg-muted/30 p-3 space-y-1`}
-                  >
-                    <p className="text-sm text-muted-foreground line-through">
-                      ❌ {correction.original}
-                    </p>
-                    <p className="text-sm font-medium text-foreground">✅ {correction.corrected}</p>
-                    <p className="text-sm text-muted-foreground">💡 {correction.explanation}</p>
-                  </div>
+                  <CorrectionItem key={i} correction={correction} />
                 ))}
               </div>
             </div>
@@ -151,7 +131,7 @@ export function ConversationDetail() {
             <div className="space-y-3">
               <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground border-b border-border pb-2">
                 <BookOpen className="h-4 w-4" />
-                New Words ({allVocab.length})
+                {t('words.title', { count: allVocab.length })}
               </h4>
               <div className="space-y-2">
                 {allVocab.map((vocab, i) => (
@@ -175,7 +155,7 @@ export function ConversationDetail() {
           {/* Full Conversation Transcript */}
           <div className="space-y-3">
             <h4 className="text-sm font-semibold text-foreground border-b border-border pb-2">
-              Conversation
+              {t('detail.conversation')}
             </h4>
             <div className="space-y-3">
               {chatMessages.map((msg) => (

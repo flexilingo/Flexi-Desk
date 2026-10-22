@@ -11,6 +11,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { CaptionLanguage } from './CaptionLanguage';
+import { useTranslation } from 'react-i18next';
 import { useCaptionStore } from '../stores/captionStore';
 
 interface TranscribeFileDialogProps {
@@ -19,6 +21,7 @@ interface TranscribeFileDialogProps {
 }
 
 export function TranscribeFileDialog({ open: isOpen, onClose }: TranscribeFileDialogProps) {
+  const { t } = useTranslation('caption');
   const { isTranscribing, transcribeFile } = useCaptionStore();
 
   const [filePath, setFilePath] = useState('');
@@ -29,9 +32,12 @@ export function TranscribeFileDialog({ open: isOpen, onClose }: TranscribeFileDi
     try {
       const selected = await open({
         multiple: false,
-        title: 'Select audio file',
+        title: t('file.pickTitle'),
         filters: [
-          { name: 'Audio Files', extensions: ['wav', 'mp3', 'flac', 'ogg', 'm4a', 'mp4', 'webm'] },
+          {
+            name: t('file.filterName'),
+            extensions: ['wav', 'mp3', 'flac', 'ogg', 'm4a', 'mp4', 'webm'],
+          },
         ],
       });
       if (selected) {
@@ -45,7 +51,7 @@ export function TranscribeFileDialog({ open: isOpen, onClose }: TranscribeFileDi
 
   const handleSubmit = async () => {
     if (!filePath.trim()) {
-      setError('Please select an audio file');
+      setError(t('file.required'));
       return;
     }
     setError(null);
@@ -73,18 +79,15 @@ export function TranscribeFileDialog({ open: isOpen, onClose }: TranscribeFileDi
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileAudio className="h-5 w-5 text-primary" />
-            Transcribe Audio File
+            {t('file.title')}
           </DialogTitle>
-          <DialogDescription>
-            Select an audio file to transcribe with Whisper. Supported formats: WAV, MP3, FLAC, OGG,
-            M4A, MP4, WebM.
-          </DialogDescription>
+          <DialogDescription>{t('file.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* File path */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Audio File</label>
+            <label className="text-sm font-medium text-foreground">{t('file.fileLabel')}</label>
             <div className="flex gap-2">
               <Input
                 value={filePath}
@@ -92,10 +95,16 @@ export function TranscribeFileDialog({ open: isOpen, onClose }: TranscribeFileDi
                   setFilePath(e.target.value);
                   setError(null);
                 }}
-                placeholder="/path/to/audio.wav"
+                placeholder={t('file.pathPlaceholder')}
                 className="flex-1 font-mono text-sm"
+                dir="ltr"
               />
-              <Button variant="outline" size="icon" onClick={handleBrowse}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleBrowse}
+                aria-label={t('file.browse')}
+              >
                 <FolderOpen className="h-4 w-4" />
               </Button>
             </div>
@@ -103,24 +112,8 @@ export function TranscribeFileDialog({ open: isOpen, onClose }: TranscribeFileDi
 
           {/* Language */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Language</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="block h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="auto">Auto-detect</option>
-              <option value="en">English</option>
-              <option value="fa">Persian</option>
-              <option value="ar">Arabic</option>
-              <option value="tr">Turkish</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="zh">Chinese</option>
-              <option value="hi">Hindi</option>
-              <option value="ru">Russian</option>
-            </select>
+            <label className="text-sm font-medium text-foreground">{t('common.language')}</label>
+            <CaptionLanguage value={language} onChange={setLanguage} />
           </div>
 
           {/* Error */}
@@ -129,16 +122,16 @@ export function TranscribeFileDialog({ open: isOpen, onClose }: TranscribeFileDi
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isTranscribing}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={isTranscribing || !filePath.trim()}>
             {isTranscribing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Transcribing…
+                {t('file.transcribing')}
               </>
             ) : (
-              'Start Transcription'
+              t('file.submit')
             )}
           </Button>
         </DialogFooter>

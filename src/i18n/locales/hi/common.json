@@ -139,7 +139,7 @@
     "backgroundOpacity": "Background Opacity",
     "translationAlignment": "Translation Alignment",
     "autoPauseLabel": "Auto-pause on boundary",
-    "pauseOnWordHover": "Pause on word hover",
+    "pauseOnWordHover": "शब्द पर होवर करने पर रोकें",
     "waitingForSubtitle": "Waiting for subtitle...",
     "cefrBeginner": "Beginner",
     "cefrElementary": "Elementary",

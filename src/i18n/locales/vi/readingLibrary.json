@@ -1,0 +1,72 @@
+{
+  "catalog": {
+    "heading": "Thư viện",
+    "subtitle": "Truyện và sách xếp theo trình độ. Chạm vào bất kỳ từ nào để xem nghĩa.",
+    "allLanguages": "Tất cả ngôn ngữ",
+    "allLevels": "Tất Cả Cấp Độ",
+    "allSeries": "Tất cả loạt truyện",
+    "empty": "Chưa có sách ở đây",
+    "emptyBody": "Hãy thử ngôn ngữ hoặc trình độ khác — truyện mới được thêm thường xuyên.",
+    "read": "Đọc",
+    "add": "Thêm vào thư viện của tôi",
+    "added": "Đã có trong thư viện",
+    "remove": "Xóa",
+    "pages": "{{n}} trang",
+    "minutes": "{{n}} phút",
+    "episode": "Tập {{n}}",
+    "kind": {
+      "original": "Truyện của FlexiLingo",
+      "classic": "Tác phẩm kinh điển",
+      "adapted": "Bản dễ đọc của tác phẩm kinh điển"
+    }
+  },
+  "shelf": {
+    "heading": "Sách bạn đang đọc",
+    "page": "Trang {{n}}/{{total}}",
+    "finished": "Đã xong",
+    "continue": "Tiếp tục",
+    "start": "Bắt đầu"
+  },
+  "book": {
+    "backToLibrary": "Thư viện",
+    "by": "Bởi {{author}}",
+    "source": "Nguồn",
+    "license": {
+      "own": "© FlexiLingo",
+      "public_domain": "Phạm vi công cộng",
+      "cc0": "CC0",
+      "cc_by": "CC BY",
+      "cc_by_sa": "CC BY-SA"
+    },
+    "nextEpisode": "Tập tiếp theo",
+    "chapter": "Chương"
+  },
+  "public": {
+    "listTitle": "Truyện và sách {{language}} theo trình độ | FlexiLingo",
+    "listDescription": "Bài đọc {{language}} miễn phí cho người học: truyện ngắn và sách kinh điển xếp theo trình độ CEFR từ A1 đến C2. Chạm vào bất kỳ từ nào để xem nghĩa.",
+    "listHeading": "Truyện và sách {{language}} theo trình độ",
+    "listIntro": "Truyện ngắn viết cho người học và sách kinh điển, xếp theo trình độ. Đọc trọn vẹn bất kỳ cuốn nào ngay tại đây — mỗi từ đều hiện nghĩa.",
+    "bookTitle": "{{title}} — bài đọc {{language}}, trình độ {{level}} | FlexiLingo",
+    "level": "Trình độ {{level}}",
+    "firstPage": "Trang đầu",
+    "cta": "Đọc tiếp trong FlexiLingo",
+    "ctaBody": "Trong FlexiLingo, những từ bạn tra sẽ thành thẻ ghi nhớ và vị trí đọc của bạn được lưu trên mọi thiết bị. Miễn phí.",
+    "moreInSeries": "Các tập khác trong loạt này",
+    "moreBooks": "Thêm sách {{language}}",
+    "searchPlaceholder": "Tìm theo tên sách hoặc tác giả",
+    "language": "Ngôn Ngữ",
+    "type": "Loại",
+    "allTypes": "Tất Cả Loại",
+    "series": "Loạt truyện",
+    "results_other": "{{count}} cuốn sách",
+    "noResults": "Không có cuốn sách nào khớp với bộ lọc này. Hãy thử cấp độ khác hoặc xóa bộ lọc.",
+    "coverAlt": "Bìa sách {{title}}",
+    "readHere": "Đọc ngay tại đây — chạm vào từ bất kỳ để xem nghĩa",
+    "resume": "Đọc tiếp từ trang {{n}}",
+    "pageError": "Trang này chưa tải được. Hãy kiểm tra kết nối và thử lại.",
+    "readerCtaTitle": "Lưu lại những từ bạn chạm",
+    "filters": "Bộ lọc",
+    "all": "Tất cả",
+    "showResults_other": "Hiện {{count}} cuốn sách"
+  }
+}

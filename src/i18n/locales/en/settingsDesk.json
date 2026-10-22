@@ -1,0 +1,151 @@
+{
+  "page": {
+    "title": "Settings",
+    "subtitle": "Configure your learning experience"
+  },
+  "tabs": {
+    "general": "General",
+    "ai": "My AI",
+    "whisper": "Whisper",
+    "data": "Export / Import"
+  },
+  "auth": {
+    "title": "FlexiLingo account",
+    "loggedIn": "Signed in. Cloud features like Quiz, Ask Lena and Feedback are available.",
+    "logout": "Sign out",
+    "signInHint": "Sign in to use cloud features: Quiz, Ask Lena, Feedback and more.",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sending": "Sending code...",
+    "sendCode": "Send code",
+    "codeSentTo": "Code sent to",
+    "verificationCode": "Verification code",
+    "verifying": "Verifying...",
+    "verify": "Verify",
+    "useAnotherEmail": "Use another email",
+    "sendingShort": "Sending...",
+    "resend": "Resend code"
+  },
+  "languages": {
+    "title": "Languages",
+    "subtitle": "Set your native and learning languages",
+    "native": "Native language",
+    "learning": "Language I am learning",
+    "saved": "Saved",
+    "save": "Save languages",
+    "appLanguage": "App language"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "subtitle": "Customize the look and feel",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "data": {
+    "title": "Export & import",
+    "subtitle": "Move your vocabulary in and out of this computer",
+    "export": "Export vocabulary",
+    "import": "Import vocabulary"
+  },
+  "common": {
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done"
+  },
+  "export": {
+    "title": "Export vocabulary",
+    "hint": "Save your words to a file you can keep or open in another app.",
+    "format": "Format",
+    "csv": "CSV",
+    "anki": "Anki (.apkg)",
+    "csvFiles": "CSV files",
+    "ankiPackage": "Anki package",
+    "languageOptional": "Language (optional)",
+    "allLanguages": "All languages",
+    "allLanguagesNote": "No language chosen: every language is exported.",
+    "cefrOptional": "CEFR level (optional)",
+    "allLevels": "All levels",
+    "done": "Exported {{count}} items as {{format}}",
+    "exporting": "Exporting...",
+    "action": "Export"
+  },
+  "import": {
+    "title": "Import vocabulary",
+    "hint": "Bring words in from a CSV file, Quizlet or Anki.",
+    "fileFilter": "Import file",
+    "chooseSource": "Choose where to import from:",
+    "sourceCsv": "CSV file",
+    "sourceTsv": "Quizlet (TSV)",
+    "sourceAnki": "Anki (.apkg)",
+    "ankiNote": "Anki cards are imported with the front as the word and the back as the translation.",
+    "targetLanguage": "Language of the words",
+    "skipDuplicates": "Skip duplicates",
+    "importing": "Importing...",
+    "action": "Import",
+    "complete": "Import complete",
+    "totalRows": "Total rows: {{count}}",
+    "imported": "Imported: {{count}}",
+    "skipped": "Skipped (duplicates): {{count}}",
+    "errorsCount": "Errors: {{count}}",
+    "showErrors": "Show errors ({{count}})",
+    "rowError": "Row {{row}}: {{message}}"
+  },
+  "mapper": {
+    "title": "Map columns",
+    "hint": "Match your file columns to FlexiLingo fields.",
+    "skip": "Skip",
+    "column": "{{name}} (column {{n}})",
+    "fields": {
+      "word": "Word",
+      "translation": "Translation",
+      "definition": "Definition",
+      "pos": "Part of speech",
+      "cefr": "CEFR level",
+      "phonetic": "Pronunciation (IPA)",
+      "examples": "Examples",
+      "context": "Context sentence"
+    }
+  },
+  "preview": {
+    "title": "Preview",
+    "total": "{{count}} rows in total",
+    "word": "Word",
+    "translation": "Translation",
+    "cefr": "CEFR",
+    "pos": "Part of speech",
+    "missing": "missing",
+    "showing": "Showing {{shown}} of {{total}} preview rows"
+  },
+  "sync": {
+    "title": "Cloud sync",
+    "pending": "({{count}} pending)",
+    "hint": "Choose which data to sync with your FlexiLingo account. Changes made offline are queued and synced when you are connected.",
+    "loading": "Loading...",
+    "lastSynced": "Last synced: {{date}}",
+    "never": "Never synced",
+    "both": "Both ways",
+    "push": "Upload only",
+    "pull": "Download only",
+    "conflicts": "{{count}} unresolved conflicts. Open Settings, then Conflicts, to resolve them.",
+    "status": {
+      "Synced": "Synced",
+      "Error": "Error",
+      "Conflict": "Conflict",
+      "Idle": "Idle",
+      "Syncing": "Syncing"
+    },
+    "tables": {
+      "vocabulary": "Vocabulary",
+      "decks": "Decks",
+      "deck_cards": "Deck cards",
+      "srs_progress": "Review progress",
+      "goals": "Goals",
+      "daily_stats": "Daily stats",
+      "streaks": "Streaks",
+      "settings": "Settings"
+    }
+  }
+}

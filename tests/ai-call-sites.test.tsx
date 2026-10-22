@@ -166,7 +166,8 @@ describe('sentence chat', () => {
       return null;
     });
     sheet();
-    fireEvent.click(screen.getByRole('button', { name: /Translate/ }));
+    // Lena's opening choices come once the conversation so far has been read.
+    fireEvent.click(await screen.findByRole('button', { name: /Translate/ }));
     expect(await screen.findByText('Set up your AI')).toBeInTheDocument();
     expect(screen.queryByText('AI_KEY_MISSING')).toBeNull();
   });

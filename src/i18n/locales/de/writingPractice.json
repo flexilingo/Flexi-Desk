@@ -1,0 +1,201 @@
+{
+  "title": "Schreibübungen",
+  "subtitle": "Verbessere deine Schreibfähigkeiten mit KI-gestütztem Feedback",
+  "selectExamType": "Prüfungstyp auswählen",
+  "selectExamTypeDescription": "Wähle die Art des Schreibens, die du üben möchtest",
+  "generatePrompt": "Neues Thema generieren",
+  "generatingPrompt": "Thema wird generiert...",
+  "startWriting": "Schreiben beginnen",
+  "startSession": "Sitzung starten",
+  "submit": "Zur Bewertung einreichen",
+  "submitting": "Aufsatz wird bewertet...",
+  "retrySumbit": "Bewertung wiederholen",
+  "backToList": "Zurück zu Schreibübungen",
+  "newSession": "Neue Übungssitzung",
+  "examTypes": {
+    "ielts_task1": "IELTS Aufgabe 1",
+    "ielts_task2": "IELTS Aufgabe 2",
+    "toefl_integrated": "TOEFL Integriert",
+    "toefl_independent": "TOEFL Unabhängig",
+    "celpip": "CELPIP",
+    "cambridge_fce": "Cambridge B2 First",
+    "cambridge_cae": "Cambridge C1 Advanced",
+    "duolingo": "Kurzantworten schreiben",
+    "pte": "PTE Academic",
+    "general_email": "E-Mail-Schreiben",
+    "general_essay": "Aufsatz schreiben",
+    "general_letter": "Brief schreiben",
+    "general_report": "Bericht schreiben"
+  },
+  "examDescriptions": {
+    "ielts_task1": "Diagramme, Grafiken oder Schaubilder in 150+ Wörtern beschreiben",
+    "ielts_task2": "Diskussionsaufsatz in 250+ Wörtern verfassen",
+    "toefl_integrated": "Einen Lese- und Vorlesungstext in 150–225 Wörtern zusammenfassen",
+    "toefl_independent": "Meinung mit Beispielen in 300+ Wörtern darlegen",
+    "celpip": "Praktische Schreibaufgaben für die kanadische Einwanderung",
+    "cambridge_fce": "Schreibaufgaben auf B2-Niveau: Aufsätze, Artikel, Rezensionen",
+    "cambridge_cae": "Schreiben auf C1-Niveau: Vorschläge, Berichte, Aufsätze",
+    "duolingo": "Kurze Schreibantworten in 50–100 Wörtern",
+    "pte": "Akademische Aufsätze und Zusammenfassungen für die PTE-Bewertung",
+    "general_email": "Formelle und informelle E-Mails üben",
+    "general_essay": "Strukturierte Aufsätze zu verschiedenen Themen verfassen",
+    "general_letter": "Formelle und informelle Briefe üben",
+    "general_report": "Professionelle Berichte mit Datenanalyse schreiben"
+  },
+  "categories": {
+    "exams": "Prüfungsvorbereitung",
+    "general": "Allgemeine Übung"
+  },
+  "timer": {
+    "remaining": "Verbleibende Zeit",
+    "disabled": "Timer aus",
+    "enable": "Timer aktivieren",
+    "disable": "Timer deaktivieren",
+    "timeUp": "Zeit abgelaufen!",
+    "minutes": "{{count}} Min.",
+    "stopMessage": "Dadurch wird deine Schreibsitzung beendet. Du kannst sie nicht fortsetzen. Bist du sicher?",
+    "stop": "Sitzung beenden"
+  },
+  "editor": {
+    "placeholder": "Beginne hier mit dem Schreiben...",
+    "wordCount": "Wörter: {{count}}",
+    "wordTarget": "Ziel: {{min}}–{{max}} Wörter",
+    "autoSaved": "Entwurf gespeichert",
+    "saving": "Wird gespeichert...",
+    "wordsToGo": "noch {{count}} Wörter"
+  },
+  "prompt": {
+    "title": "Schreibaufgabe",
+    "supplementary": "Ergänzendes Material",
+    "readingPassage": "Lesetext",
+    "lectureSummary": "Vorlesungszusammenfassung",
+    "chartDescription": "Diagramm-/Grafikbeschreibung",
+    "collapse": "Aufgabe ausblenden",
+    "expand": "Aufgabe anzeigen"
+  },
+  "feedback": {
+    "title": "KI-Feedback",
+    "overall": "Gesamtpunktzahl",
+    "criteria": "Kriterienaufschlüsselung",
+    "strengths": "Stärken",
+    "weaknesses": "Verbesserungsbereiche",
+    "errors": "Fehlerhervorhebungen",
+    "errorTypes": {
+      "grammar": "Grammatik",
+      "vocabulary": "Vokabular",
+      "spelling": "Rechtschreibung",
+      "punctuation": "Zeichensetzung"
+    },
+    "suggestions": "Verbesserungsvorschläge",
+    "rewritten": "KI-verbesserte Version",
+    "rewrittenDescription": "So könnte dein Aufsatz verbessert werden, ohne deine Ideen zu ändern",
+    "showRewritten": "Verbesserte Version anzeigen",
+    "hideRewritten": "Verbesserte Version ausblenden",
+    "original": "Dein Originalaufsatz",
+    "improved": "Verbessert",
+    "noFeedback": "Reiche deinen Aufsatz ein, um KI-Feedback zu erhalten",
+    "noErrors": "Keine Fehler gefunden – großartig!",
+    "noSuggestions": "Keine weiteren Vorschläge",
+    "loading": "Sitzung wird geladen...",
+    "gradingDescription": "Unsere KI analysiert dein Schreiben auf Grammatik, Vokabular, Struktur und mehr...",
+    "scoreDisclaimer": "KI-Schätzung — Punkte können von offiziellen Prüfungsergebnissen abweichen",
+    "vocabularyAnalysis": "Vokabelanalyse",
+    "lexicalDiversity": "Lexikalische Vielfalt",
+    "estimatedCEFR": "GER-Niveau",
+    "advancedWords": "Verwendete Fortgeschrittenenwörter",
+    "suggestedUpgrades": "Vokabelverbesserungen",
+    "doubleChecked": "Doppelt geprüft",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "Ihre eigene KI"
+    },
+    "badgeTitle": {
+      "pro": "FlexiLingo Pro-Bewertung",
+      "mini": "FlexiLingo Mini-Bewertung",
+      "own": "Von Ihrer eigenen KI bewertet"
+    },
+    "badgeBody": {
+      "pro": "Dein Aufsatz wurde mit unserem fortschrittlichsten KI-Modell bewertet, mit doppelter Prüfung für genauere und konsistentere Punkte.",
+      "mini": "Dein Aufsatz wurde mit unserem Standard-KI-Modell bewertet. Upgraden auf Pro für genauere Bewertungen, doppelt geprüfte Punkte und detailliertes Feedback.",
+      "own": "Ihr Text wurde von der KI bewertet, die Sie eingerichtet haben ({{model}}), nicht von der FlexiLingo-Cloud."
+    }
+  },
+  "history": {
+    "title": "Schreibverlauf",
+    "noHistory": "Noch keine Schreibsitzungen. Starte deine erste Übung!",
+    "viewDetails": "Details anzeigen",
+    "filterByExam": "Nach Prüfungstyp filtern",
+    "allTypes": "Alle Typen",
+    "score": "Punkte",
+    "wordsWritten": "Wörter",
+    "timeSpent": "Aufgewendete Zeit",
+    "gradedOn": "Bewertet"
+  },
+  "stats": {
+    "title": "Dein Fortschritt",
+    "totalSessions": "Sitzungen gesamt",
+    "gradedSessions": "Bewertet",
+    "avgScore": "Durchschnittspunkte",
+    "scoreTrend": "Punkteentwicklung",
+    "bestCriteria": "Bester Bereich",
+    "weakestCriteria": "Verbesserungsbedarf",
+    "noStats": "Absolviere ein paar Sitzungen, um deinen Fortschritt zu sehen"
+  },
+  "usage": {
+    "remaining": "{{count}} Sitzungen verbleibend diesen Monat",
+    "unlimited": "Unbegrenzte Sitzungen",
+    "used": "{{used}} von {{limit}} verbraucht",
+    "upgradePrompt": "Upgraden für mehr Schreibübungssitzungen",
+    "limitReached": "Limit erreicht",
+    "dailyLimitReached": "Tageslimit erreicht",
+    "monthlyLimitReached": "Monatslimit erreicht",
+    "limitUsedAllDaily": "Monatslimit ({{monthlyLimit}}) aufgebraucht. Tägliches Kontingent ({{dailyLimit}}/Tag) ebenfalls verbraucht.",
+    "limitUsedAllMonthly": "Monatslimit erreicht. Du hast noch {{dailyLimit}} Sitzung(en)/Tag.",
+    "limitUsedAllMonthlyNoDaily": "Du hast alle Schreibübungssitzungen für diesen Monat verbraucht.",
+    "limitResetDaily": "Wird morgen zurückgesetzt!",
+    "limitResetMonthly": "Wird zum Beginn des nächsten Monats zurückgesetzt."
+  },
+  "status": {
+    "active": "In Bearbeitung",
+    "submitted": "Eingereicht",
+    "graded": "Bewertet"
+  },
+  "activeSession": {
+    "title": "Aktive Sitzung",
+    "resume": "Fortsetzen",
+    "existsMessage": "Du hast bereits eine aktive Schreibsitzung. Bitte beende oder reiche sie ein, bevor du eine neue startest."
+  },
+  "timerToggle": "Countdown-Timer aktivieren",
+  "disclaimer": "FlexiLingo ist eine unabhängige Übungsplattform, die weder mit einer offiziellen Prüfungsorganisation verbunden noch von einer solchen unterstützt wird. Alle Prüfungsnamen sind eingetragene Marken der jeweiligen Organisationen.",
+  "back": "Zurück",
+  "cancel": "Abbrechen",
+  "origin": {
+    "local": "Auf diesem Computer",
+    "cloud": "Cloud"
+  },
+  "cloudSessionOff": {
+    "title": "Diese Sitzung liegt in Ihrer FlexiLingo-Cloud",
+    "body": "Aktivieren Sie die Cloud-KI in den Einstellungen, um sie zu öffnen."
+  },
+  "dashboardChip": "Schreiben üben",
+  "errors": {
+    "UNKNOWN_ERROR": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
+    "WRITING_SESSION_NOT_FOUND": "Schreibsitzung nicht gefunden.",
+    "WRITING_GRADING_FAILED": "KI-Bewertung fehlgeschlagen. Bitte versuche es erneut einzureichen.",
+    "WRITING_ESSAY_TOO_SHORT": "Dein Aufsatz ist zu kurz. Bitte schreibe mehr, bevor du einreichst.",
+    "WRITING_ESSAY_TOO_LONG": "Dein Aufsatz ist zu lang. Bitte kürze ihn, bevor du einreichst.",
+    "WRITING_PROMPT_GENERATION_FAILED": "Schreibaufgabe konnte nicht generiert werden. Bitte versuche es erneut.",
+    "DAILY_LIMIT_REACHED": "Tageslimit erreicht. Komm morgen wieder!",
+    "MONTHLY_LIMIT_REACHED": "Monatliches Limit erreicht. Versuche es nächsten Monat erneut oder upgrade deinen Plan.",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "Dieser Aufsatz wurde bereits zur Bewertung eingereicht.",
+    "SESSION_CREATION_FAILED": "Schreibsitzung konnte nicht erstellt werden. Bitte versuche es erneut.",
+    "INVALID_EXAM_TYPE": "Ungültiger Prüfungstyp ausgewählt.",
+    "MISSING_REQUIRED_FIELDS": "Bitte fülle alle Pflichtfelder aus.",
+    "AUTH_REQUIRED": "Bitte melde dich an, um diese Funktion zu nutzen.",
+    "WRITING_SESSION_CANCELLED": "Diese Schreibsitzung wurde beendet.",
+    "SAVE_DRAFT_FAILED": "Der Entwurf konnte nicht gespeichert werden. Versuchen Sie es erneut.",
+    "CANCEL_SESSION_FAILED": "Die Sitzung konnte nicht beendet werden. Versuchen Sie es erneut.",
+    "WRITING_PROMPT_NOT_FOUND": "Die Schreibaufgabe wurde nicht gefunden."
+  }
+}

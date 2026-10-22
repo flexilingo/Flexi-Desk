@@ -40,7 +40,9 @@
   "backToDecks": "डेक पर वापस",
   "deckNotFound": "डेक नहीं मिला",
   "exportSync": "निर्यात और क्लाउड सिंक",
-  "filter": { "all": "सभी" },
+  "filter": {
+    "all": "सभी"
+  },
   "sort": {
     "label": "डेक क्रमबद्ध करें",
     "recent": "सबसे नए",
@@ -89,12 +91,18 @@
     "algorithm": "शेड्यूलिंग एल्गोरिदम",
     "algorithmLocked": "एल्गोरिदम डेक बनाते समय चुना जाता है।",
     "algo": {
-      "fsrs": { "label": "FSRS", "desc": "सबसे अच्छे अंतराल वाली आधुनिक शेड्यूलिंग। अनुशंसित।" },
+      "fsrs": {
+        "label": "FSRS",
+        "desc": "सबसे अच्छे अंतराल वाली आधुनिक शेड्यूलिंग। अनुशंसित।"
+      },
       "sm2": {
         "label": "SM-2",
         "desc": "SuperMemo का क्लासिक एल्गोरिदम। सामान्य उपयोग के लिए अच्छा।"
       },
-      "leitner": { "label": "लाइटनर", "desc": "सरल डिब्बा प्रणाली। शुरुआती लोगों के लिए बढ़िया।" }
+      "leitner": {
+        "label": "लाइटनर",
+        "desc": "सरल डिब्बा प्रणाली। शुरुआती लोगों के लिए बढ़िया।"
+      }
     },
     "makePublic": "सार्वजनिक करें",
     "publicDescription": "दूसरे इस डेक को एक्सप्लोर में ढूँढ सकते हैं और अपनी प्रति सहेज सकते हैं।",
@@ -182,7 +190,11 @@
     "title": "दोहराव का इतिहास",
     "emptyTitle": "अभी कोई दोहराव नहीं",
     "emptyDesc": "इस डेक के आपके पिछले अध्ययन सत्र यहाँ दिखेंगे।",
-    "status": { "completed": "पूरा", "active": "जारी", "abandoned": "रुका हुआ" },
+    "status": {
+      "completed": "पूरा",
+      "active": "जारी",
+      "abandoned": "रुका हुआ"
+    },
     "cards": "कार्ड",
     "accuracy": "सटीकता",
     "today": "आज",
@@ -190,8 +202,14 @@
     "daysAgo": "{{count}} दिन पहले",
     "weeksAgo": "{{count}} सप्ताह पहले"
   },
-  "related": { "title": "देखने के लिए और डेक" },
-  "pagination": { "previous": "पिछला", "next": "अगला", "page": "पृष्ठ {{current}} / {{total}}" },
+  "related": {
+    "title": "देखने के लिए और डेक"
+  },
+  "pagination": {
+    "previous": "पिछला",
+    "next": "अगला",
+    "page": "पृष्ठ {{current}} / {{total}}"
+  },
   "share": {
     "button": "साझा करें",
     "title": "प्रकाशित और साझा करें",
@@ -275,7 +293,11 @@
     "sortLabel": "डेक क्रमबद्ध करें",
     "newest": "सबसे नए",
     "popular": "सबसे लोकप्रिय",
-    "source": { "all": "सभी", "official": "FlexiLingo", "users": "शिक्षार्थी" },
+    "source": {
+      "all": "सभी",
+      "official": "FlexiLingo",
+      "users": "शिक्षार्थी"
+    },
     "filterLanguage": "कार्ड इस भाषा में",
     "allLanguages": "सभी भाषाएँ",
     "clearAll": "सब साफ़ करें",

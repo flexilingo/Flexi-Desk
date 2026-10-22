@@ -3,12 +3,12 @@ import { isTypingTarget, transportAction, type TransportAction } from '../utils/
 
 interface KeyboardShortcutsProps {
   onToggleSubtitles?: () => void;
-  onNote?: () => void;
   onAnalyze?: () => void;
   onTranslate?: () => void;
   onGrammar?: () => void;
   onSync?: () => void;
-  onFocus?: () => void;
+  /** F: a video's full screen (a podcast has nothing to fill the screen with). */
+  onFullscreen?: () => void;
   onHelp?: () => void;
   onExit?: () => void;
   enabled?: boolean;
@@ -20,12 +20,11 @@ interface KeyboardShortcutsProps {
 
 export function KeyboardShortcuts({
   onToggleSubtitles,
-  onNote,
   onAnalyze,
   onTranslate,
   onGrammar,
   onSync,
-  onFocus,
+  onFullscreen,
   onHelp,
   onExit,
   enabled = true,
@@ -44,6 +43,8 @@ export function KeyboardShortcuts({
       if (isTypingTarget(e.target)) return;
       // Ctrl/Cmd/Alt combos belong to the OS (Cmd+C must copy, not toggle subtitles).
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // A dialog or sheet on top owns the keys (its own Escape closes it).
+      if (document.querySelector('[role="dialog"]')) return;
 
       const handlers = transportRef.current;
       if (handlers) {
@@ -60,9 +61,6 @@ export function KeyboardShortcuts({
         case 'c':
           onToggleSubtitles?.();
           break;
-        case 'n':
-          onNote?.();
-          break;
         case 'a':
           onAnalyze?.();
           break;
@@ -76,7 +74,7 @@ export function KeyboardShortcuts({
           onSync?.();
           break;
         case 'f':
-          onFocus?.();
+          onFullscreen?.();
           break;
         case 'h':
           onHelp?.();
@@ -92,12 +90,11 @@ export function KeyboardShortcuts({
   }, [
     enabled,
     onToggleSubtitles,
-    onNote,
     onAnalyze,
     onTranslate,
     onGrammar,
     onSync,
-    onFocus,
+    onFullscreen,
     onHelp,
     onExit,
     volumeKeys,

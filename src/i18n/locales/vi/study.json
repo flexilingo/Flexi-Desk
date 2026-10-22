@@ -1,0 +1,586 @@
+{
+  "title": "Học",
+  "subtitle": "Luyện tập thông minh trên các bộ thẻ của bạn",
+  "wellDone": "Làm tốt lắm!",
+  "calculatingPlan": "Đang tính kế hoạch hôm nay…",
+  "stats": {
+    "cardsLeft": "thẻ còn lại",
+    "minLeft": "phút còn lại"
+  },
+  "landing": {
+    "today": "Học hôm nay",
+    "mastery": "Mastery",
+    "cardsReady": "{{count}} thẻ sẵn sàng",
+    "noCardsToday": "Bạn đã hoàn thành hết — hiện không có thẻ nào đến hạn.",
+    "estMinutes": "~{{minutes}} min",
+    "remaining": "Xong {{done}} / {{total}}",
+    "startSmart": "Bắt đầu phiên học thông minh",
+    "startStudying": "Bắt đầu học",
+    "regenerate": "Kiểm tra thẻ mới",
+    "noNewCardsFound": "Không tìm thấy thẻ mới nào.",
+    "goToDecks": "Tạo Bộ Thẻ",
+    "focusLabel": "Tập trung",
+    "daysWithoutReview": "{{days}} ngày chưa ôn lại",
+    "settings": "Cài Đặt",
+    "preparing": "Đang chuẩn bị kế hoạch của bạn…",
+    "mode": {
+      "normal": "Bình thường",
+      "shadowing": "Nhại theo"
+    },
+    "modeHint": {
+      "normal": "Bài tập kiểm tra bạn và lên lịch cho lần ôn tiếp theo.",
+      "shadowing": "Thẻ tự phát: nghe từng từ rồi nói lại. Không chấm điểm."
+    },
+    "modeLabel": "Chế độ học",
+    "startShadowing": "Bắt đầu nhại theo",
+    "stuckCards": "{{count}} thẻ bị kẹt",
+    "stuckCardsHint": "Luyện các thẻ này đến khi nhớ hẳn"
+  },
+  "deckList": {
+    "title": "Bộ thẻ của bạn",
+    "deckCount": "{{count}} bộ thẻ",
+    "empty": "Chưa có bộ thẻ nào. Hãy tạo một bộ trong Bộ thẻ để bắt đầu học.",
+    "tabAll": "Tất cả",
+    "tabUrgent": "Khẩn cấp",
+    "tabHealthy": "Tốt",
+    "tabNotStarted": "Chưa bắt đầu",
+    "tabEmpty": "Hiện chưa có gì ở đây.",
+    "cardsCount": "{{count}} thẻ",
+    "newCards": "{{count}} mới",
+    "dueCards": "{{count}} cần ôn",
+    "leech": "{{count}} thẻ khó",
+    "start": "Học",
+    "deckDetails": "Chi tiết bộ thẻ",
+    "mastery": "Mastery",
+    "notStarted": "Chưa bắt đầu",
+    "justReviewed": "Vừa ôn xong",
+    "onTrack": "Đúng tiến độ",
+    "warning": "Sắp cần ôn",
+    "critical": "Quá hạn",
+    "overdueWithDays": "{{days}} ngày kể từ lần ôn",
+    "urgentWithDays": "Quá hạn {{days}} ngày"
+  },
+  "scope": {
+    "title": "Học {{deck}}",
+    "titleAll": "Bắt đầu phiên học",
+    "pickScope": "Học gì",
+    "due": "Đến hạn và mới",
+    "dueDesc": "Các thẻ lên lịch cho hôm nay cùng vài thẻ mới",
+    "new": "Chỉ thẻ mới",
+    "newDesc": "Chỉ những từ bạn chưa bắt đầu học",
+    "weak": "Điểm yếu",
+    "weakDesc": "Các thẻ có mức thành thạo thấp nhất của bạn",
+    "focus": "Tập trung",
+    "force": "Học dồn (gồm cả thẻ chưa đến hạn)",
+    "start": "Bắt đầu",
+    "cancel": "Hủy",
+    "forceHint": "Kéo các thẻ của bộ này lên sớm dù chúng được lên lịch cho sau.",
+    "random": "Ngẫu nhiên",
+    "randomDesc": "Tất cả thẻ, xáo trộn — không theo lịch"
+  },
+  "focus": {
+    "balanced": "Cân bằng",
+    "listening": "Nghe",
+    "production": "Sản sinh",
+    "recognition": "Nhận biết",
+    "custom": "Tùy chỉnh",
+    "customize": "Tinh chỉnh hoạt động",
+    "desc": {
+      "balanced": "Hỗn hợp đồng đều của mọi hoạt động đã bật.",
+      "listening": "Thiên về bài nghe và nhớ lại qua âm thanh.",
+      "production": "Thúc đẩy bạn tự gõ và viết các từ.",
+      "recognition": "Ưu tiên thẻ ghi nhớ và nhận diện qua trắc nghiệm.",
+      "custom": "Trọng số riêng của bạn cho từng hoạt động, đặt tại Cài đặt → Hoạt động."
+    }
+  },
+  "settings": {
+    "title": "Cài Đặt Học",
+    "min": "phút",
+    "errorSaving": "Không thể lưu thay đổi đó. Vui lòng thử lại.",
+    "tab": {
+      "schedule": "Tốc độ & Bộ thẻ",
+      "activities": "Hoạt động",
+      "preferences": "Tùy chọn"
+    },
+    "section": {
+      "capacity": "Độ dài phiên học",
+      "deckStrategy": "Chiến lược bộ thẻ",
+      "activities": "Hoạt động",
+      "activitiesHint": "Bật hoặc tắt các hoạt động và đặt trọng số cho mức độ xuất hiện của từng hoạt động."
+    },
+    "mixPreview": "Hỗn hợp của bạn",
+    "mixPreviewHint": "Bản xem trước các trọng số. Lựa chọn thực tế còn thích ứng theo điểm yếu của bạn và nội dung của từng thẻ.",
+    "deckWeights": "Bạn học những bộ thẻ nào, và mỗi bộ bao nhiêu",
+    "deckEnableAll": "Bật tất cả",
+    "deckAllOffWarning": "Mọi bộ thẻ đều đã tắt nên buổi học của bạn sẽ trống. Hãy bật lại ít nhất một bộ.",
+    "deckToggleA11y": "Đưa {{deck}} vào phần học hằng ngày",
+    "activeDeck": "Bộ thẻ đang dùng",
+    "selectDeck": "— Chọn —",
+    "activeDeckNoneHint": "Chưa chọn bộ thẻ nào — cho tới khi bạn chọn, các buổi học sẽ dùng toàn bộ bộ thẻ của bạn.",
+    "dailyMinutes": "Mục tiêu hằng ngày (phút)",
+    "deckStrategy": "Chiến lược bộ thẻ",
+    "mix": "Trộn các bộ thẻ",
+    "mix_sub": "Lấy từ mọi bộ thẻ",
+    "isolated": "Một bộ thẻ",
+    "isolated_sub": "Chỉ bộ thẻ đang hoạt động",
+    "rotation": "Xoay vòng",
+    "rotation_sub": "Bộ thẻ bị bỏ bê nhất",
+    "activities": "Hoạt động",
+    "preferences": "Tùy chọn",
+    "srsAlgorithm": "Thuật toán SRS",
+    "srsAlgorithmHint": "Áp dụng cho mọi bộ thẻ. Thay đổi sẽ lên lịch lại các lần ôn sắp tới, không ảnh hưởng lịch sử của bạn.",
+    "algo": {
+      "leitner": "Leitner",
+      "leitner_sub": "Hệ thống hộp đơn giản. Rất phù hợp cho người mới bắt đầu.",
+      "sm2": "SM-2",
+      "sm2_sub": "SuperMemo cổ điển. Phù hợp đa năng.",
+      "fsrs": "FSRS",
+      "fsrs_sub": "Hiện đại, lập lịch tốt nhất. Được khuyên dùng."
+    },
+    "alwaysShowTranslation": "Luôn hiện bản dịch",
+    "alwaysShowTranslation_sub": "Hiện nghĩa mà không cần lật thẻ.",
+    "autoPronounce": "Tự động phát âm",
+    "autoPronounce_sub": "Đọc to từ ngay khi thẻ xuất hiện.",
+    "reverseCard": "Đảo mặt thẻ",
+    "reverseCard_sub": "Hiện nghĩa trước và nhớ lại từ.",
+    "useListenAgain": "Bài nghe",
+    "useListenAgain_sub": "Bao gồm các hoạt động nghe và nhớ lại.",
+    "useAiGrading": "Chấm điểm và huấn luyện bằng AI",
+    "useAiGrading_sub": "Dùng mô hình cục bộ để chấm câu và tạo bài tập.",
+    "autoPlayTTS": "Tự động phát âm thanh",
+    "autoPlayTTSDescription": "Tự động phát từ trong phiên học.",
+    "delayBeforeNext": "Delay",
+    "delayDescription": "Số giây chờ trước khi đọc.",
+    "voiceAccent": "Giọng",
+    "save": "Lưu",
+    "close": "Đóng",
+    "deckSearchPlaceholder": "Tìm bộ thẻ…",
+    "deckSearchNoResults": "Không có bộ thẻ nào khớp với \"{{query}}\".",
+    "deckSearchTunedOnly": "Chỉ đã điều chỉnh",
+    "deckSearchResetAll": "Đặt lại tất cả về 1×",
+    "deckSearchClear": "Xóa tìm kiếm"
+  },
+  "activity": {
+    "recall": "Thẻ ghi nhớ",
+    "cloze": "Điền vào chỗ trống",
+    "type_test": "Gõ từ",
+    "listen_again": "Nghe Lại",
+    "speak_test": "Nói đi",
+    "use_in_sentence": "Dùng trong câu",
+    "synonym_discrim": "Chọn từ đồng nghĩa",
+    "mini_reading": "Bài đọc ngắn",
+    "fromDeck": "Từ bộ thẻ {{deck}}",
+    "activityType": "Hoạt động"
+  },
+  "activityDesc": {
+    "recall": "Lật thẻ và đánh giá mức độ bạn nhớ.",
+    "cloze": "Điền từ còn thiếu vào một câu thực tế.",
+    "type_test": "Đánh vần từ dựa trên nghĩa của nó.",
+    "listen_again": "Nghe từ rồi nhớ lại.",
+    "speak_test": "Nói to từ đó.",
+    "use_in_sentence": "Viết câu của riêng bạn; câu sẽ được chấm điểm.",
+    "synonym_discrim": "Chọn từ phù hợp với ngữ cảnh.",
+    "mini_reading": "Đọc một đoạn ngắn và trả lời câu hỏi."
+  },
+  "runner": {
+    "show": "Hiện Đáp Án",
+    "next": "Tiếp",
+    "check": "Kiểm tra",
+    "skip": "Bỏ qua",
+    "exit": "Thoát",
+    "continueAnother": "Tiếp tục học",
+    "exitTitle": "Rời khỏi phiên học này?",
+    "exitBody": "Các câu trả lời của bạn cho đến giờ đã được lưu, nhưng phần còn lại của hàng đợi sẽ bị bỏ.",
+    "remaining": "còn {{count}}",
+    "typePlaceholder": "Nhập câu trả lời của bạn…",
+    "sentencePlaceholder": "Viết một câu có từ này…",
+    "correct": "Đúng",
+    "incorrect": "Chưa đúng lắm",
+    "answer": "Câu Trả Lời",
+    "corrected": "Đã sửa",
+    "examples": "Câu mẫu",
+    "again": "Lại",
+    "hard": "Khó",
+    "good": "Tốt",
+    "easy": "Dễ",
+    "perfect": "Hoàn hảo",
+    "listen": "Nghe",
+    "saidIt": "Tôi đã nói",
+    "prevCard": "Thẻ trước",
+    "requeued": "Gặp lại trong phiên này",
+    "cardType": {
+      "new": "Mới",
+      "learning": "Học tập",
+      "review": "Ôn Tập"
+    },
+    "hint": "Gợi ý",
+    "stop": "Dừng",
+    "elapsed": "Đã qua",
+    "abandonConfirm": "Dừng buổi luyện tập này?",
+    "loading": "Đang tải…",
+    "preparingSession": "Đang chuẩn bị buổi học…",
+    "doneTitle": "Buổi luyện tập hoàn thành",
+    "card": "thẻ",
+    "recallRate": "Tỷ lệ nhớ lại",
+    "elapsedLabel": "Thời gian",
+    "feedbackOptimal": "Xuất sắc — bạn đang trong phạm vi tối ưu (85–90%).",
+    "feedbackGood": "Tốt — hãy thêm ít thẻ mới hơn một chút.",
+    "feedbackWeak": "Nhiều thẻ khó — hãy giảm số lượng thẻ mới.",
+    "feedbackEmpty": "Buổi học kết thúc mà không có lần ôn tập nào.",
+    "optimalRange": "Tối ưu: 85–90%",
+    "noAttempts": "Không có thẻ nào hoàn thành",
+    "noAttemptsHint": "Buổi học này kết thúc mà không có lần ôn tập nào. Hãy bắt đầu một buổi khác.",
+    "back": "Quay lại bảng điều khiển",
+    "reviewBanner": "Thẻ trước — chỉ xem lại",
+    "continuePractice": "Tiếp tục",
+    "abandonConfirmDesc": "Các câu trả lời của bạn cho đến nay đã được lưu — chỉ những thẻ còn lại sẽ bị bỏ qua.",
+    "requeueBadge": "Lặp lại #{{count}}",
+    "repeatsAdded": "+{{count}}",
+    "requeueHint": "Thẻ mới và câu trả lời sai sẽ quay lại một lần nữa trước khi phiên này kết thúc — vì vậy tổng số tăng lên.",
+    "settings": "Cài Đặt",
+    "settingsTitle": {
+      "normal": "Cài đặt chế độ thường",
+      "shadowing": "Cài đặt nhại theo"
+    },
+    "textSize": "Cỡ chữ",
+    "textSizeOption": {
+      "compact": "Gọn",
+      "comfortable": "Thoải mái",
+      "large": "Lớn",
+      "huge": "Rất lớn"
+    },
+    "focusMode": "Chế độ tập trung (toàn màn hình)",
+    "exitFocusMode": "Thoát chế độ tập trung",
+    "shortcuts": {
+      "replayWord": "Phát lại từ",
+      "prevExample": "Ví dụ trước",
+      "playExample": "Phát ví dụ",
+      "exampleOf": "Ví dụ {{index}}/{{total}}",
+      "showMeaning": "Hiện nghĩa",
+      "hideMeaning": "Ẩn nghĩa",
+      "layoutExamples": "Ví dụ trước",
+      "layoutMeaning": "Nghĩa trước",
+      "flip": "hiện",
+      "grade": "chấm",
+      "exitFocus": "Thoát",
+      "showExampleMeaning": "Hiện nghĩa ví dụ",
+      "hideExampleMeanings": "Ẩn nghĩa các ví dụ"
+    },
+    "cardView": "Thẻ hiển thị những gì",
+    "cardViewOption": {
+      "showWord": "Hiện từ",
+      "showMeaning": "Hiện nghĩa của từ",
+      "showExampleMeanings": "Hiện nghĩa các câu ví dụ"
+    },
+    "cardViewHint": {
+      "showWord": "Tắt: nghe trước — khi lật sẽ hiện cả từ và nghĩa.",
+      "showMeaning": "Tắt: nghĩa vẫn bị che và các ví dụ hiện trước.",
+      "showExampleMeanings": "Tắt: tự mở từng bản dịch câu."
+    },
+    "shortcutsTitle": "Phím tắt",
+    "shortcutList": {
+      "flip": "Hiện / ẩn đáp án",
+      "grade": "Chấm điểm thẻ",
+      "nextExample": "Ví dụ tiếp theo",
+      "exampleMeaning": "Mở nghĩa một ví dụ",
+      "meaning": "Hiện / ẩn nghĩa",
+      "toggleMeaningPref": "Bật hoặc tắt nghĩa cho mọi thẻ",
+      "moreInFocus": "Chế độ tập trung có thêm phím tắt."
+    },
+    "viewMenu": "Hiển thị",
+    "audio": "Âm thanh",
+    "autoPronounce": "Tự động phát âm",
+    "autoPronounceHint": "Thẻ tiếp theo được đọc tự động",
+    "voiceAccent": "Giọng tiếng Anh",
+    "voiceAccentHint": "Cho từ tiếng Anh, ở cả hai chế độ.",
+    "voiceAccentOption": {
+      "us": "Mỹ",
+      "uk": "Anh"
+    },
+    "exitFocus": "Thoát toàn màn hình",
+    "reverseCard": "Đảo chiều",
+    "reverseCardHint": "Bật: hai mặt của thẻ được đổi chỗ — thẻ hiện nghĩa và bạn nhớ lại từ.",
+    "pronounceWordOnReveal": "Đọc từ khi lật thẻ",
+    "pronounceWordOnRevealHint": "Giờ từ nằm ở mặt sau — từ được đọc to ngay khi bạn lật thẻ.",
+    "pronunciationSettings": "Cài đặt phát âm",
+    "pronunciationTitle": "Phát Âm",
+    "pronunciationSub": "Giọng đọc to các từ — ở đây và mọi nơi trong FlexiLingo. Chọn một giọng và bạn nghe ngay.",
+    "reverseCardError": "Không lưu được cài đặt này. Vui lòng thử lại.",
+    "normalSetupTitle": "Thiết lập buổi học",
+    "normalSetupSub": "Chọn những gì thẻ hiển thị, rồi nhấn Bắt đầu.",
+    "clickToReveal": "Nhấn hoặc bấm phím Space để hiện đáp án",
+    "hiddenWord": "Từ đang ẩn",
+    "listenThenReveal": "Nghe, rồi nhấp hoặc nhấn Space",
+    "translationLabel": "bản dịch",
+    "hideMeaning": "Ẩn nghĩa",
+    "revealMeaning": "Hiện nghĩa",
+    "corrections": "Sửa Lỗi",
+    "grading": "Đang kiểm tra…",
+    "useInSentence": "Dùng từ này trong một câu",
+    "kind": {
+      "spelling": "Chính Tả",
+      "grammar": "Ngữ pháp"
+    },
+    "typeIn": "Gõ từ bằng {{language}}",
+    "typeWord": "Gõ từ",
+    "placeholderIn": "Từ bằng {{language}}…",
+    "nearAccent": "Gần đúng rồi — chỉ sai một dấu.",
+    "nearTypo": "Gần đúng rồi — chỉ sai một chữ cái."
+  },
+  "complete": {
+    "title": "Session complete",
+    "accuracy": "Độ Chính Xác",
+    "reviewed": "Đã Xem Xét",
+    "time": "Thời gian",
+    "done": "Xong",
+    "studyMore": "Học thêm",
+    "promotions": "Được thăng cấp",
+    "demotions": "Bị hạ cấp",
+    "newLearned": "Mới học",
+    "tomorrow": "Đến hạn ngày mai",
+    "byDeck": "Theo bộ thẻ",
+    "newlyMastered": "Đã Thành Thạo",
+    "duesReviewed": "Đã hoàn thành các lượt ôn",
+    "xpEarned": "XP đạt được",
+    "xpHint": "Đã cộng vào chuỗi ngày và mục tiêu hằng ngày của bạn.",
+    "reviewAgain": "Ôn lại lần nữa",
+    "tomorrowShort": "Ngày mai"
+  },
+  "errors": {
+    "NO_CARDS_FOR_SELECTION": "Không có thẻ nào khớp với lựa chọn này. Hãy thử phạm vi khác.",
+    "SESSION_NOT_ACTIVE": "Phiên này đã kết thúc.",
+    "CARD_NOT_FOUND": "Không thể tải thẻ đó.",
+    "UNKNOWN_ERROR": "Đã xảy ra lỗi. Vui lòng thử lại."
+  },
+  "insights": {
+    "memoryHook": "Mẹo Ghi Nhớ",
+    "examples": "Ví Dụ",
+    "synonyms": "Từ Đồng Nghĩa",
+    "antonyms": "Từ Trái Nghĩa",
+    "collocations": "Collocation",
+    "commonMistakes": "Lỗi Thường Gặp",
+    "notes": "Ghi chú"
+  },
+  "shadowing": {
+    "empty": "Phiên này chưa có từ nào để nhại theo.",
+    "readyTitle": "Thiết lập lượt chạy",
+    "idle": "Nhấn Bắt đầu — nghe rồi nhắc lại từ đó.",
+    "start": "Bắt đầu",
+    "pause": "Tạm dừng",
+    "resume": "Tiếp tục",
+    "reset": "Đặt lại",
+    "settings": "Cài đặt nhại theo",
+    "wordCount": "{{count}} từ",
+    "round": "vòng {{pass}}",
+    "elapsed": "Thời gian phát",
+    "listenOf": "nghe lần {{n}}/{{total}}",
+    "meaning": "Nghĩa",
+    "recall": "nhớ lại nghĩa",
+    "shuffle": "Phát ngẫu nhiên",
+    "speakMeaning": "Đọc nghĩa thành tiếng",
+    "speakMeaningHint": "Nghĩa được đọc bằng chính ngôn ngữ mà nó được viết.",
+    "meaningMode": "Nghĩa",
+    "meaningOption": {
+      "always": "Luôn hiện",
+      "after": "Sau khi nhắc lại",
+      "hidden": "Ẩn"
+    },
+    "meaningHint": {
+      "always": "Nghĩa hiện cùng với từ trên thẻ.",
+      "after": "Nghe từ, nhớ lại nghĩa trong khoảng nghỉ, rồi xem nghĩa.",
+      "hidden": "Chỉ có từ — nghĩa luôn được che."
+    },
+    "showWordHint": "Tắt: chỉ nghe — từ được che.",
+    "gap": "Khoảng nghỉ để nhắc lại",
+    "gapHint": "Khoảng nghỉ này chính là bài tập — đủ để bạn nhắc lại từ trước khi sang từ kế.",
+    "gapNone": "Không nghỉ",
+    "gapOffHint": "Hiện không dùng: sau mỗi từ sẽ chờ đến khi bạn bấm Tiếp.",
+    "autoAdvance": "Tự chuyển sang từ tiếp theo",
+    "autoAdvanceHint": "Tắt: sau mỗi từ sẽ chờ đến khi bạn bấm Tiếp, bao lâu cũng được.",
+    "replay": "Nghe lại",
+    "next": "Tiếp",
+    "repeatEach": "Số lần mỗi từ",
+    "repeatEachHint": "Hai lần là vừa: nghe, nhắc lại, nghe lại để tự sửa.",
+    "repeatMore": "Lặp lại nhiều hơn",
+    "repeatLess": "Lặp lại ít hơn",
+    "rounds": "Số vòng",
+    "roundsInfinite": "Lặp đến khi dừng",
+    "hiddenWord": "Từ đang ẩn",
+    "hiddenMeaning": "Nghĩa đang ẩn",
+    "size": "Số từ mỗi lượt",
+    "sizeAll": "Tất cả",
+    "doneTitle": "Đã xong",
+    "doneSub": "Số từ đã nghe và thời gian phát thực tế.",
+    "doneWords": "từ",
+    "doneTime": "Thời gian",
+    "again": "Lượt nữa",
+    "done": "Xong",
+    "loadFailed": "Không tải được các từ cho lượt này.",
+    "retry": "Thử lại",
+    "groupRepeat": "Lặp lại và khoảng nghỉ",
+    "groupRun": "Số từ và lượt",
+    "gapSeconds": "Tạm dừng, tính bằng giây",
+    "secondsUnit": "T7",
+    "reportFailed": "Không thể lưu tiến độ của lượt này trên máy này."
+  },
+  "report": {
+    "headlineMastered": "{{count}} từ đã vào trí nhớ dài hạn",
+    "headlineRecalled": "{{count}} từ nhớ được đến cuối buổi",
+    "headlinePlain": "Đã luyện {{count}} từ",
+    "factSeen": "{{count}} từ",
+    "factFirstTry": "{{percent}}% đúng ngay lần đầu",
+    "factActive": "{{time}} luyện thực tế",
+    "durationHm": "{{hours}} giờ {{minutes}} phút",
+    "durationM": "{{minutes}} phút",
+    "recallTitle": "Nhớ lại",
+    "firstTry": "Đúng ngay lần đầu",
+    "byTheEnd": "Đúng đến cuối buổi",
+    "attemptsNote": "{{attempts}} lượt trả lời trên {{cards}} từ — {{avg}} mỗi từ",
+    "gapNote": "{{count}} từ đã cải thiện ngay trong buổi",
+    "strugglesTitle": "Những từ khó nhằn",
+    "strugglesNote": "{{count}} từ cần 3 lượt trở lên",
+    "drillWeak": "Luyện từ yếu",
+    "forecastTitle": "Khi nào chúng quay lại",
+    "today": "Hôm nay",
+    "inDays": "+{{count}} ngày",
+    "levelsTitle": "Theo cấp độ",
+    "levelsNote": "chỉ các từ đã xếp cấp",
+    "missed": "sai",
+    "decksTitle": "Đến từ bộ thẻ nào"
+  },
+  "tour": {
+    "guideButton": "Hướng Dẫn",
+    "next": "Tiếp",
+    "back": "Quay Lại",
+    "skip": "Bỏ qua",
+    "done": "Xong",
+    "stepOf": "Bước {{current}}/{{total}}",
+    "steps": {
+      "intro": {
+        "title": "Chào mừng đến với Luyện tập",
+        "body": "Hãy cùng xem nhanh qua một lượt — từng cài đặt dùng để làm gì và cách tận dụng tối đa các buổi luyện tập của bạn."
+      },
+      "hero": {
+        "title": "Học hôm nay",
+        "body": "Hiển thị số thẻ còn lại và thời gian cần thiết (tính theo phút). Nhấn “Bắt đầu học” để vào hỗn hợp thông minh hằng ngày của bạn."
+      },
+      "heroShortcuts": {
+        "title": "Cách bạn học",
+        "body": "Thường: bài tập kiểm tra bạn và lên lịch cho lần ôn tiếp theo. Nhại theo: thẻ tự phát — nghe từng từ rồi nói lại, không chấm điểm. Trọng tâm điều chỉnh tỉ lệ bài tập ở chế độ thường."
+      },
+      "deckList": {
+        "title": "Bộ thẻ của bạn",
+        "body": "Mọi bộ thẻ bạn đang học, kèm trạng thái và mức thành thạo. Dùng các tab để lọc theo mức độ cần chú ý."
+      },
+      "deckCard": {
+        "title": "Bắt đầu một bộ thẻ",
+        "body": "Nhấn Bắt đầu trên bất kỳ bộ thẻ nào để chọn chính xác nội dung cần học từ bộ đó."
+      },
+      "scopeOptions": {
+        "title": "Học gì",
+        "body": "Chọn phạm vi: tất cả thẻ đến hạn ngay bây giờ, chỉ từ mới, từ bạn hay làm sai, hoặc xáo trộn ngẫu nhiên."
+      },
+      "scopeFocus": {
+        "title": "Tập trung",
+        "body": "Chọn loại bài tập bạn muốn tập trung vào — Nghe, Sản sinh, Nhận biết, hoặc tổ hợp tùy chỉnh của riêng bạn."
+      },
+      "scopeForce": {
+        "title": "Chế độ ôn dồn",
+        "body": "Bật tùy chọn này để ôn các thẻ của một bộ thẻ ngay cả khi chúng chưa chính thức đến hạn."
+      },
+      "scopeStart": {
+        "title": "Bắt đầu học",
+        "body": "Bắt đầu buổi học với mọi lựa chọn bạn đã chọn ở trên."
+      },
+      "settingsTabs": {
+        "title": "Cài Đặt",
+        "body": "Mọi tùy chọn Luyện tập của bạn đều ở đây, chia thành ba tab: Tốc độ & Bộ thẻ, Hoạt động và Tùy chọn."
+      },
+      "settingsDuration": {
+        "title": "Mục tiêu hàng ngày",
+        "body": "Số phút bạn muốn học mỗi ngày — con số này quyết định kế hoạch hàng ngày của bạn sẽ lấy bao nhiêu thẻ."
+      },
+      "settingsDeckStrategy": {
+        "title": "Chiến lược bộ thẻ",
+        "body": "Kết hợp học tất cả bộ thẻ cùng lúc, Bộ thẻ đơn lẻ học từng bộ một, còn Luân phiên chọn bộ thẻ bị bỏ quên lâu nhất."
+      },
+      "settingsDeckWeights": {
+        "title": "Trọng số bộ thẻ",
+        "body": "Cho một bộ thẻ mức ưu tiên cao hơn hoặc thấp hơn trong hỗn hợp hàng ngày — số càng cao thì càng có nhiều thẻ của bộ đó xuất hiện."
+      },
+      "settingsFocusChips": {
+        "title": "Tổ hợp hoạt động",
+        "body": "Chọn một Trọng tâm có sẵn và xem thanh bên dưới hiển thị chính xác cách hỗn hợp buổi học của bạn thay đổi."
+      },
+      "settingsActivityList": {
+        "title": "Tinh chỉnh từng bài tập",
+        "body": "Bật hoặc tắt bất kỳ loại bài tập nào và điều chỉnh trọng số của nó — tỷ lệ bên phải cho biết phần của nó trong hỗn hợp."
+      },
+      "settingsSrs": {
+        "title": "Thuật toán lặp lại ngắt quãng",
+        "body": "Chọn cách tính khoảng cách giữa các lần ôn tập — Leitner, SM-2, hoặc FSRS (mặc định, và thường thông minh nhất)."
+      },
+      "settingsAutoRead": {
+        "title": "Tự động đọc",
+        "body": "Mỗi thẻ sẽ được đọc to tự động, và bạn có thể chọn giọng Mỹ hoặc Anh."
+      },
+      "outro": {
+        "title": "Vậy là xong!",
+        "body": "Giờ đây bạn đã biết cách sử dụng Luyện tập. Mở lại hướng dẫn này bất cứ lúc nào từ nút Hướng dẫn cạnh Cài đặt."
+      }
+    }
+  },
+  "summary": "Tóm Tắt",
+  "mode": "Chế độ",
+  "scorecard": {
+    "title": "Kiểm tra bằng AI",
+    "criteria": {
+      "meaning": "Nghĩa",
+      "grammar": "Ngữ pháp",
+      "spelling": "Chính Tả",
+      "elision": "Nuốt âm"
+    },
+    "why": {
+      "meaning": {
+        "pass": "Đúng ý thẻ yêu cầu.",
+        "fail": "Chưa đúng ý thẻ yêu cầu."
+      },
+      "grammar": {
+        "pass": "Ngữ pháp đúng.",
+        "fail": "Có một lỗi ngữ pháp."
+      },
+      "spelling": {
+        "pass": "Viết đúng chính tả.",
+        "near": "Đúng từ — kiểm tra dấu.",
+        "fail": "Có một lỗi chính tả."
+      },
+      "elision": {
+        "pass": "Nuốt âm đúng.",
+        "fail": "Thiếu một chỗ nuốt âm — một từ lẽ ra phải rút gọn lại được viết đầy đủ (ví dụ me aider thay vì m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Văn phong trang trọng — hợp với thư hoặc người lạ.",
+      "neutral": "Văn phong trung tính — hợp hầu hết mọi nơi.",
+      "informal": "Văn phong thân mật — hợp để nhắn tin cho bạn."
+    },
+    "natural": {
+      "yes": "Tự nhiên — người bản xứ sẽ nói như vậy.",
+      "no": "Đúng, nhưng người bản xứ sẽ nói khác."
+    },
+    "error": {
+      "gender_agreement": "Có vẻ sai hợp giống hoặc số.",
+      "verb_conjugation": "Kiểm tra dạng hoặc thì của động từ.",
+      "word_order": "Kiểm tra trật tự từ.",
+      "preposition_or_article": "Kiểm tra giới từ hoặc mạo từ.",
+      "spelling_or_accent": "Kiểm tra chính tả.",
+      "negation": "Kiểm tra câu phủ định.",
+      "wrong_word": "Có một từ không hợp nghĩa.",
+      "avoir_expression": "Tiếng Pháp dùng avoir ở đây, không phải être: j'ai faim, quel âge avez-vous ?"
+    },
+    "needsAi": "Lần này không có bảng điểm: hãy thiết lập AI của riêng bạn trong Cài đặt để các câu của bạn được chấm."
+  },
+  "conjugation": {
+    "title": "Chia động từ"
+  }
+}

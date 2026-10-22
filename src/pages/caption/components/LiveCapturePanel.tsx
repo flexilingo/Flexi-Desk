@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Square, Mic, ArrowLeft, HardDrive } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { useCaptionStore } from '../stores/captionStore';
 import { formatDuration, formatTimestampMs } from '../types';
 
 export function LiveCapturePanel() {
+  const { t } = useTranslation('caption');
   const {
     liveSegments,
     isLiveCapturing,
@@ -64,7 +66,7 @@ export function LiveCapturePanel() {
   }, [stopLiveCapture]);
 
   const activeModel = availableModels.find((m) => m.id === activeModelId);
-  const modelLabel = activeModel?.name ?? activeModelId ?? 'Unknown';
+  const modelLabel = activeModel?.name ?? activeModelId ?? t('live.unknownModel');
 
   return (
     <Card className="flex flex-col h-[calc(100vh-12rem)]">
@@ -76,6 +78,7 @@ export function LiveCapturePanel() {
           onClick={goBack}
           disabled={isLiveCapturing}
           className="shrink-0"
+          aria-label={t('common.back')}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -106,13 +109,13 @@ export function LiveCapturePanel() {
         {isLiveCapturing && (
           <Button variant="destructive" size="sm" onClick={handleStop} disabled={isStopping}>
             <Square className="h-3.5 w-3.5" />
-            {isStopping ? 'Stopping…' : 'Stop'}
+            {isStopping ? t('live.stopping') : t('live.stop')}
           </Button>
         )}
 
         {!isLiveCapturing && !isStopping && (
           <Button variant="outline" size="sm" onClick={goBack}>
-            Back
+            {t('common.back')}
           </Button>
         )}
       </div>
@@ -121,10 +124,13 @@ export function LiveCapturePanel() {
       <div className="flex items-center gap-3 border-b border-border px-4 py-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
           <Mic className="h-3 w-3" />
-          {captionStatus?.deviceName ?? 'Microphone'}
+          {captionStatus?.deviceName ?? t('common.microphone')}
         </span>
         <span>
-          Language: {captureLanguage === 'auto' ? 'Auto-detect' : captureLanguage.toUpperCase()}
+          {t('common.languageLine', {
+            value:
+              captureLanguage === 'auto' ? t('common.autoDetect') : captureLanguage.toUpperCase(),
+          })}
         </span>
       </div>
 
@@ -146,9 +152,7 @@ export function LiveCapturePanel() {
                 )}
               </div>
               <p className="text-sm text-muted-foreground">
-                {isLiveCapturing
-                  ? 'Listening… Start speaking to see captions'
-                  : 'Waiting for audio…'}
+                {isLiveCapturing ? t('live.listening') : t('live.waiting')}
               </p>
             </div>
           ) : (
@@ -170,7 +174,7 @@ export function LiveCapturePanel() {
                 >
                   {segment.text}
                   {segment.isPartial && (
-                    <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-primary" />
+                    <span className="ms-1 inline-block h-4 w-0.5 animate-pulse bg-primary" />
                   )}
                 </p>
               </div>

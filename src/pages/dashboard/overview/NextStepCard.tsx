@@ -1,8 +1,18 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Clock, GraduationCap, Headphones, Layers, Library, Play } from 'lucide-react';
+import {
+  BookOpen,
+  Clock,
+  GraduationCap,
+  Headphones,
+  Layers,
+  Library,
+  PenLine,
+  Play,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ENABLED_MODULES } from '@/config/features';
 import { InlineError } from '@/components/common/InlineError';
 import { examName, examFamily, SHORT_PRACTICE, type ExamKey, type Skill } from './exam';
 import {
@@ -29,6 +39,7 @@ const chipClass =
 export function NextStepCard({ data, quiet = false }: { data: OverviewData; quiet?: boolean }) {
   const { t } = useTranslation('dashboard', { keyPrefix: 'home.next' });
   const { t: tSkills } = useTranslation('dashboard', { keyPrefix: 'examWeek.skills' });
+  const { t: tWriting } = useTranslation('writingPractice');
   const navigate = useNavigate();
   const { startStudy, starting, startError } = useStartStudy();
   const [practising, setPractising] = useState(false);
@@ -246,12 +257,16 @@ export function NextStepCard({ data, quiet = false }: { data: OverviewData; quie
             <InlineError message={(practiceError ?? startError) as string} />
           </div>
         )}
-        {after.length > 0 && (
-          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-            <span className="text-xs text-muted-foreground">{t('after')}</span>
-            {after.map(chipFor)}
-          </div>
-        )}
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+          <span className="text-xs text-muted-foreground">{t('after')}</span>
+          {after.map(chipFor)}
+          {ENABLED_MODULES.writingPractice && (
+            <Link to="/writing-practice" className={chipClass}>
+              <PenLine className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <span className="truncate">{tWriting('dashboardChip')}</span>
+            </Link>
+          )}
+        </div>
       </div>
       <div className="hidden sm:block">{art}</div>
     </OverviewCard>

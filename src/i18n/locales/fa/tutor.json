@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "title": "معلم هوش مصنوعی",
+    "subtitle": "با شریک گفتگوی هوش مصنوعی خود صحبت کردن را تمرین کنید",
+    "newConversation": "گفتگوی جدید",
+    "loading": "در حال بارگذاری گفتگوها...",
+    "emptyTitle": "هنوز گفتگویی ندارید",
+    "emptyBody": "اولین گفتگوی هوش مصنوعی خود را شروع کنید تا صحبت کردن به هر زبانی را تمرین کنید.",
+    "startFirst": "شروع اولین گفتگو",
+    "active": "فعال",
+    "messages_one": "{{count}} پیام",
+    "messages_other": "{{count}} پیام",
+    "corrections_one": "{{count}} اصلاح",
+    "corrections_other": "{{count}} اصلاح"
+  },
+  "time": {
+    "justNow": "همین الان",
+    "minutesAgo": "{{count}} دقیقه پیش",
+    "hoursAgo": "{{count}} ساعت پیش",
+    "daysAgo": "{{count}} روز پیش"
+  },
+  "modes": {
+    "free": {
+      "name": "گفتگوی آزاد",
+      "description": "درباره هر چیزی که دوست دارید صحبت کنید"
+    },
+    "role_play": {
+      "name": "ایفای نقش",
+      "description": "موقعیت‌های واقعی زندگی را بازی کنید"
+    },
+    "deck_practice": {
+      "name": "تمرین با دسته",
+      "description": "از واژه‌های دسته‌های فلش‌کارت خود استفاده کنید"
+    },
+    "vocab_challenge": {
+      "name": "چالش واژگان",
+      "description": "واژه‌های جدید را در گفتگو تمرین کنید"
+    },
+    "escape_room": {
+      "name": "اتاق فرار",
+      "description": "با حرف زدن یک داستان را حل کنید"
+    }
+  },
+  "categories": {
+    "daily_life": "زندگی روزمره",
+    "travel": "سفر",
+    "social": "اجتماعی",
+    "professional": "حرفه‌ای",
+    "academic": "دانشگاهی",
+    "health": "سلامت",
+    "emergency": "اضطراری",
+    "creative": "خلاقانه و سرگرمی"
+  },
+  "topics": {
+    "travel": "سفر و ماجراجویی",
+    "food": "غذا و آشپزی",
+    "movies": "فیلم و سریال",
+    "music": "موسیقی و کنسرت",
+    "sports": "ورزش و تناسب اندام",
+    "technology": "فناوری",
+    "books": "کتاب و مطالعه",
+    "work": "کار و شغل",
+    "hobbies": "سرگرمی و صنایع دستی",
+    "nature": "طبیعت و محیط زیست",
+    "family": "خانواده و روابط",
+    "health": "سلامت و تندرستی",
+    "fashion": "مد و سبک",
+    "art": "هنر و فرهنگ",
+    "science": "علم و اکتشافات",
+    "history": "تاریخ و سنت‌ها",
+    "routines": "روال روزانه",
+    "holidays": "تعطیلات و جشن‌ها",
+    "childhood": "خاطرات کودکی",
+    "future": "برنامه‌ها و رویاهای آینده"
+  },
+  "providers": {
+    "ollama": "اولاما (محلی)",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "گفتگوی جدید",
+    "stepOf": "مرحله {{step}} از {{total}}",
+    "back": "بازگشت",
+    "next": "بعدی",
+    "start": "شروع گفتگو",
+    "starting": "در حال شروع...",
+    "backAria": "بازگشت",
+    "step1Title": "حالت تمرین را انتخاب کنید",
+    "step1Subtitle": "چطور می‌خواهید تمرین کنید؟",
+    "step2Title": "زبان و سطح",
+    "step2Subtitle": "تنظیمات تمرین را مشخص کنید",
+    "practiceLanguage": "زبان تمرین",
+    "languageSearch": "جستجوی زبان...",
+    "languageNoResults": "زبانی پیدا نشد",
+    "cefrLevel": "سطح CEFR",
+    "aiProvider": "ارائه‌دهنده هوش مصنوعی",
+    "model": "مدل",
+    "ollamaOffline": "اولاما متصل نیست. برای دیدن مدل‌های دانلودشده، اولاما را اجرا کنید.",
+    "topicTitle": "یک موضوع انتخاب کنید",
+    "scenarioTitle": "یک سناریو انتخاب کنید",
+    "deckTitle": "یک دسته انتخاب کنید",
+    "extraTitle": "تنظیمات بیشتر",
+    "topicSubtitle": "یک موضوع انتخاب کنید یا موضوع خودتان را بنویسید",
+    "scenarioSubtitle": "یک سناریوی ایفای نقش را جستجو و انتخاب کنید",
+    "deckSubtitle": "واژگان دسته‌های فلش‌کارت خود را تمرین کنید",
+    "extraSubtitle": "در صورت تمایل دستور دلخواه اضافه کنید",
+    "optional": "(اختیاری)",
+    "ownTopic": "موضوع خودتان را بنویسید",
+    "topicPlaceholder": "دوست دارید درباره چه چیزی صحبت کنید؟",
+    "suggestedTopic": "یا یکی از موضوع‌های پیشنهادی را انتخاب کنید",
+    "searchScenarios": "جستجوی سناریوها...",
+    "customGroup": "سفارشی",
+    "customScenario": "سناریوی خودتان را بنویسید",
+    "customScenarioHint": "هر موقعیتی را که می‌خواهید تمرین کنید توضیح دهید",
+    "customScenarioPlaceholder": "مثلاً: در بازار کهنه‌فروشان هستید و با یک فروشنده سرسخت درباره قیمت یک چراغ قدیمی چانه می‌زنید...",
+    "deck": "دسته",
+    "loadingDecks": "در حال بارگذاری دسته‌ها...",
+    "selectDeck": "یک دسته انتخاب کنید...",
+    "deckCards": "{{name}} ({{count}} کارت)",
+    "noDecks": "دسته‌ای پیدا نشد. ابتدا در بخش مرور یک دسته بسازید.",
+    "customInstructions": "دستور دلخواه",
+    "customInstructionsPlaceholder": "مثلاً: روی واژگان کاری تمرکز کن، آهسته صحبت کن، سخت‌گیرانه‌تر اصلاحم کن...",
+    "practiceTitle": "تمرین {{language}}"
+  },
+  "detail": {
+    "back": "بازگشت به گفتگوها",
+    "resume": "ادامه",
+    "minutes": "{{count}} دقیقه",
+    "messages_one": "{{count}} پیام",
+    "messages_other": "{{count}} پیام",
+    "fixes_one": "{{count}} اصلاح",
+    "fixes_other": "{{count}} اصلاح",
+    "conversation": "گفتگو"
+  },
+  "scores": {
+    "grammar": "دستور زبان",
+    "vocabulary": "واژگان",
+    "fluency": "روانی",
+    "overall": "کلی"
+  },
+  "corrections": {
+    "title": "اصلاح‌ها ({{count}})",
+    "wrong": "اصلی",
+    "right": "اصلاح‌شده",
+    "why": "دلیل"
+  },
+  "words": {
+    "title": "واژه‌های جدید ({{count}})",
+    "saved": "ذخیره شد",
+    "saveToDeck": "ذخیره در دسته",
+    "saveAll": "ذخیره همه در دسته"
+  },
+  "summary": {
+    "title": "جلسه تمام شد",
+    "startNew": "شروع گفتگوی جدید"
+  },
+  "voice": {
+    "listening": "در حال گوش دادن...",
+    "transcribing": "در حال تبدیل صدا به متن...",
+    "thinking": "در حال فکر کردن...",
+    "tapInterrupt": "برای قطع کردن لمس کنید",
+    "tapSpeak": "برای صحبت لمس کنید",
+    "hideSubtitles": "پنهان کردن زیرنویس",
+    "showSubtitles": "نمایش زیرنویس",
+    "end": "پایان",
+    "tutor": "معلم",
+    "you": "شما",
+    "micAria": "میکروفون"
+  },
+  "errorDismiss": "بستن",
+  "errors": {
+    "AUTH_REQUIRED": "برای استفاده از این بخش باید وارد شوید.",
+    "NETWORK_ERROR": "اتصال به فلکسی‌لینگو برقرار نشد. اینترنت خود را بررسی کنید و دوباره تلاش کنید.",
+    "MIC_UNAVAILABLE": "میکروفون در دسترس نیست. مطمئن شوید وصل است و اجازه دسترسی دارد، سپس دوباره تلاش کنید.",
+    "MODEL_MISSING": "مدل گفتار موجود نیست. در تنظیمات ویسپر یک مدل دانلود کنید و دوباره تلاش کنید.",
+    "UNKNOWN_ERROR": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید."
+  }
+}

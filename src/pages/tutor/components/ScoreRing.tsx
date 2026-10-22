@@ -4,10 +4,10 @@ interface ScoreRingProps {
   size?: number;
 }
 
-function getScoreColor(score: number): string {
-  if (score <= 40) return '#ef4444';
-  if (score <= 70) return '#C58C6E';
-  return '#8BB7A3';
+function getScoreClass(score: number): string {
+  if (score <= 40) return 'stroke-destructive';
+  if (score <= 70) return 'stroke-warning';
+  return 'stroke-success';
 }
 
 export function ScoreRing({ score, label, size = 80 }: ScoreRingProps) {
@@ -16,16 +16,12 @@ export function ScoreRing({ score, label, size = 80 }: ScoreRingProps) {
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
   const center = size / 2;
-  const color = getScoreColor(score);
+  const colorClass = getScoreClass(score);
 
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="relative flex items-center justify-center">
-        <svg
-          width={size}
-          height={size}
-          className="-rotate-90"
-        >
+        <svg width={size} height={size} className="-rotate-90">
           <circle
             cx={center}
             cy={center}
@@ -39,7 +35,7 @@ export function ScoreRing({ score, label, size = 80 }: ScoreRingProps) {
             cy={center}
             r={radius}
             fill="none"
-            stroke={color}
+            className={colorClass}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             style={{
@@ -48,9 +44,7 @@ export function ScoreRing({ score, label, size = 80 }: ScoreRingProps) {
             }}
           />
         </svg>
-        <span className="absolute text-sm font-bold text-foreground">
-          {Math.round(score)}
-        </span>
+        <span className="absolute text-sm font-bold text-foreground">{Math.round(score)}</span>
       </div>
       <span className="text-xs text-muted-foreground">{label}</span>
     </div>

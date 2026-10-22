@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { setSetting } from '@/lib/tauri-bridge';
 import { AiSetupCard } from '@/components/ai/AiSetupCard';
 import { useAiSource } from '@/stores/aiSourceStore';
@@ -14,13 +14,8 @@ import {
 } from '@/pages/caption/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { LanguageSearchSelect } from '@/pages/account/components/LanguageSearchSelect';
+import { targetLanguages } from '@/config/languages';
 import {
   type OllamaInstallStatus,
   type OllamaInstallProgress,
@@ -55,25 +50,11 @@ import {
 
 // ── Constants ────────────────────────────────────────────
 
-const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'fa', name: 'Persian' },
-  { code: 'ar', name: 'Arabic' },
-  { code: 'tr', name: 'Turkish' },
-  { code: 'es', name: 'Spanish' },
-  { code: 'fr', name: 'French' },
-  { code: 'de', name: 'German' },
-  { code: 'zh', name: 'Chinese' },
-  { code: 'hi', name: 'Hindi' },
-  { code: 'ru', name: 'Russian' },
-] as const;
-
 // ── Helpers ──────────────────────────────────────────────
 
 function detectNativeLanguage(): string {
   const browserLang = navigator.language?.split('-')[0]?.toLowerCase() ?? 'en';
-  const supported = LANGUAGES.find((l) => l.code === browserLang);
-  return supported ? supported.code : 'en';
+  return targetLanguages.some((l) => l.code === browserLang) ? browserLang : 'en';
 }
 
 function defaultTargetLanguage(nativeLang: string): string {
@@ -99,13 +80,14 @@ function formatSizeMb(mb: number): string {
 // ── Step indicators ──────────────────────────────────────
 
 const STEPS = [
-  { label: 'Languages', icon: Languages },
-  { label: 'AI Setup', icon: Bot },
-  { label: 'Whisper', icon: Mic },
-  { label: 'Podcast', icon: Podcast },
+  { key: 'languages', icon: Languages },
+  { key: 'ai', icon: Bot },
+  { key: 'whisper', icon: Mic },
+  { key: 'podcast', icon: Podcast },
 ] as const;
 
 function StepIndicator({ currentStep }: { currentStep: number }) {
+  const { t } = useTranslation('onboarding');
   return (
     <div className="flex items-center justify-center gap-2 mb-8">
       {STEPS.map((step, i) => {
@@ -113,7 +95,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
         const isActive = i === currentStep;
         const isCompleted = i < currentStep;
         return (
-          <div key={step.label} className="flex items-center gap-2">
+          <div key={step.key} className="flex items-center gap-2">
             {i > 0 && <div className={`h-px w-8 ${isCompleted ? 'bg-primary' : 'bg-border'}`} />}
             <div
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
@@ -125,7 +107,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{step.label}</span>
+              <span className="hidden sm:inline">{t(`steps.${step.key}`)}</span>
             </div>
           </div>
         );
@@ -147,47 +129,37 @@ function LanguageStep({
   onNativeChange: (v: string) => void;
   onTargetChange: (v: string) => void;
 }) {
+  const { t } = useTranslation('onboarding');
+  const { t: ta } = useTranslation('account');
   return (
     <div className="flex flex-col items-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
         <Languages className="h-7 w-7 text-primary" />
       </div>
-      <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to FlexiDesk</h1>
-      <p className="text-muted-foreground mb-8 text-center max-w-md">
-        Let's set up your learning environment
-      </p>
+      <h1 className="text-2xl font-bold text-foreground mb-2">{t('welcome.title')}</h1>
+      <p className="text-muted-foreground mb-8 text-center max-w-md">{t('welcome.subtitle')}</p>
 
       <div className="w-full max-w-sm space-y-5">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Your native language</label>
-          <Select value={nativeLang} onValueChange={onNativeChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LANGUAGES.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  {lang.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col items-start gap-2">
+          <label className="text-sm font-medium text-foreground">{t('welcome.native')}</label>
+          <LanguageSearchSelect
+            value={nativeLang}
+            onSelect={onNativeChange}
+            label={t('welcome.native')}
+            searchPlaceholder={ta('desk.learning.search')}
+            noResults={ta('desk.learning.noResults')}
+          />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Language you're learning</label>
-          <Select value={targetLang} onValueChange={onTargetChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LANGUAGES.filter((l) => l.code !== nativeLang).map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  {lang.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col items-start gap-2">
+          <label className="text-sm font-medium text-foreground">{t('welcome.target')}</label>
+          <LanguageSearchSelect
+            value={targetLang}
+            onSelect={onTargetChange}
+            label={t('welcome.target')}
+            searchPlaceholder={ta('desk.learning.search')}
+            noResults={ta('desk.learning.noResults')}
+          />
         </div>
       </div>
     </div>
@@ -244,7 +216,7 @@ function AISetupStep({
       <h1 className="text-2xl font-bold text-foreground mb-2">{t('engine.heading')}</h1>
       <p className="text-muted-foreground mb-8 text-center max-w-md">{t('engine.intro')}</p>
 
-      <div className="w-full max-w-md space-y-4">
+      <div className="flex w-full max-w-md flex-col space-y-4">
         {/* Checking state */}
         {ollamaState === 'checking' && (
           <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
@@ -448,7 +420,7 @@ function AISetupStep({
         {!skipped && ollamaState !== 'ready' && (
           <button
             onClick={onSkip}
-            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+            className="self-center text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
           >
             {t('engine.skip')}
           </button>
@@ -479,7 +451,7 @@ function OwnKeyAlternative() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="w-full text-center text-sm text-accent hover:underline underline-offset-4"
+      className="self-center text-sm text-accent hover:underline underline-offset-4"
     >
       {t('wizard.ownKeyLink')}
     </button>
@@ -491,14 +463,17 @@ function OwnKeyAlternative() {
 function PodcastStep({
   subscribedUrls,
   subscribingUrl,
+  subscribeError,
   onSubscribe,
   onAddCustomFeed,
 }: {
   subscribedUrls: Set<string>;
   subscribingUrl: string | null;
+  subscribeError: string | null;
   onSubscribe: (url: string) => void;
   onAddCustomFeed: (url: string) => void;
 }) {
+  const { t } = useTranslation('onboarding');
   const [customUrl, setCustomUrl] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
 
@@ -516,7 +491,7 @@ function PodcastStep({
     try {
       new URL(trimmed);
     } catch {
-      setCustomError('Please enter a valid URL');
+      setCustomError(t('podcast.invalidUrl'));
       return;
     }
     setCustomError(null);
@@ -529,17 +504,15 @@ function PodcastStep({
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
         <Podcast className="h-7 w-7 text-primary" />
       </div>
-      <h1 className="text-2xl font-bold text-foreground mb-2">Add Your First Podcast</h1>
-      <p className="text-muted-foreground mb-6 text-center max-w-md">
-        Learn by listening to real content
-      </p>
+      <h1 className="text-2xl font-bold text-foreground mb-2">{t('podcast.title')}</h1>
+      <p className="text-muted-foreground mb-6 text-center max-w-md">{t('podcast.subtitle')}</p>
 
       <div className="w-full max-w-lg space-y-3">
         <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1">
           {isStarterLoading ? (
             <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Loading podcasts…</span>
+              <span className="text-sm">{t('podcast.loading')}</span>
             </div>
           ) : (
             starterPodcasts.map((podcast) => {
@@ -564,7 +537,7 @@ function PodcastStep({
                       {podcast.author && (
                         <span className="text-muted-foreground font-normal">
                           {' '}
-                          by {podcast.author}
+                          {t('podcast.by', { author: podcast.author })}
                         </span>
                       )}
                     </p>
@@ -587,7 +560,7 @@ function PodcastStep({
                       ) : (
                         <Plus className="h-3.5 w-3.5" />
                       )}
-                      {isSubscribing ? 'Adding...' : 'Subscribe'}
+                      {isSubscribing ? t('podcast.adding') : t('podcast.subscribe')}
                     </Button>
                   )}
                 </div>
@@ -598,16 +571,16 @@ function PodcastStep({
 
         {/* Custom RSS URL */}
         <div className="pt-3 border-t border-border space-y-2">
-          <label className="text-sm font-medium text-foreground">Add by RSS URL</label>
-          <div className="flex gap-2">
+          <label className="text-sm font-medium text-foreground">{t('podcast.byRss')}</label>
+          <div className="flex items-center gap-2">
             <Input
               value={customUrl}
               onChange={(e) => {
                 setCustomUrl(e.target.value);
                 setCustomError(null);
               }}
-              placeholder="https://example.com/feed.rss"
-              className="flex-1"
+              placeholder={t('podcast.rssPlaceholder')}
+              className="min-w-0"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddCustom();
               }}
@@ -619,10 +592,15 @@ function PodcastStep({
               className="gap-1.5"
             >
               <Plus className="h-4 w-4" />
-              Add
+              {t('podcast.add')}
             </Button>
           </div>
           {customError && <p className="text-xs text-error">{customError}</p>}
+          {subscribeError && (
+            <p role="alert" className="text-xs text-error">
+              {subscribeError}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -634,6 +612,7 @@ function PodcastStep({
 const WIZARD_WHISPER_MODELS = ['tiny', 'base', 'small', 'large-v3-turbo-q5_0', 'large-v3-turbo'];
 
 function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void }) {
+  const { t } = useTranslation('onboarding');
   const {
     whisperInfo,
     whisperInstallStatus,
@@ -656,6 +635,10 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
     setWhisperInstallMessage,
   } = useCaptionStore();
 
+  const speedLabel = (raw: string) => {
+    const m = /(\d+)x/.exec(raw);
+    return m ? t('whisper.realtime', { n: m[1] }) : raw;
+  };
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -762,17 +745,15 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
         <Mic className="h-7 w-7 text-primary" />
       </div>
-      <h1 className="text-2xl font-bold text-foreground mb-2">Speech Recognition</h1>
-      <p className="text-muted-foreground mb-8 text-center max-w-md">
-        Whisper transcribes audio locally. Used by Live Caption and Podcast features.
-      </p>
+      <h1 className="text-2xl font-bold text-foreground mb-2">{t('whisper.title')}</h1>
+      <p className="text-muted-foreground mb-8 text-center max-w-md">{t('whisper.subtitle')}</p>
 
-      <div className="w-full max-w-md space-y-4">
+      <div className="flex w-full max-w-md flex-col space-y-4">
         {/* Checking */}
         {checking && (
           <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Detecting Whisper...</span>
+            <span className="text-sm text-muted-foreground">{t('whisper.detecting')}</span>
           </div>
         )}
 
@@ -782,15 +763,13 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-foreground">Whisper not found</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Click below to install whisper-cli automatically.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t('whisper.notFoundTitle')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('whisper.notFoundDesc')}</p>
               </div>
             </div>
-            <Button onClick={handleInstallWhisper} className="w-full gap-2">
+            <Button onClick={handleInstallWhisper} className="gap-2 self-start">
               <Download className="h-4 w-4" />
-              Install Whisper
+              {t('whisper.install')}
             </Button>
           </div>
         )}
@@ -801,7 +780,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
             <div className="flex items-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <span className="text-sm text-foreground">
-                {isInstallingHomebrew ? 'Setting up dependencies...' : 'Installing Whisper...'}
+                {isInstallingHomebrew ? t('whisper.settingUp') : t('whisper.installing')}
               </span>
             </div>
             {whisperInstallMessage && (
@@ -816,16 +795,14 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
             <div className="flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-accent mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-foreground">Choose a Whisper model</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Larger models are more accurate but slower and need more RAM.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t('whisper.chooseTitle')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('whisper.chooseDesc')}</p>
               </div>
             </div>
             {isLoadingModels ? (
               <div className="flex items-center gap-2 py-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Loading models...</span>
+                <span className="text-xs text-muted-foreground">{t('whisper.loadingModels')}</span>
               </div>
             ) : (
               <div className="space-y-2">
@@ -837,10 +814,18 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-foreground">{model.name}</span>
-                        <span className="text-xs text-muted-foreground">{model.sizeMb} MB</span>
-                        <span className="text-xs text-muted-foreground">{model.speed}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatSizeMb(model.sizeMb)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {speedLabel(model.speed)}
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{model.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t(`whisper.models.${model.id.replace(/[^a-z0-9]/gi, '_')}`, {
+                          defaultValue: model.description,
+                        })}
+                      </p>
                     </div>
                     {model.isDownloaded ? (
                       <Button
@@ -850,7 +835,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
                         className="shrink-0 gap-1.5"
                       >
                         <CheckCircle className="h-3.5 w-3.5" />
-                        Use
+                        {t('whisper.use')}
                       </Button>
                     ) : (
                       <Button
@@ -860,7 +845,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
                         className="shrink-0 gap-1.5"
                       >
                         <Download className="h-3.5 w-3.5" />
-                        Download
+                        {t('whisper.download')}
                       </Button>
                     )}
                   </div>
@@ -875,7 +860,7 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
           <div className="rounded-lg border border-border bg-card p-4 space-y-3">
             <div className="flex items-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="text-sm text-foreground">Downloading model...</span>
+              <span className="text-sm text-foreground">{t('whisper.downloadingModel')}</span>
             </div>
             <div className="space-y-1">
               <progress
@@ -897,10 +882,10 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
           <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/5 p-4">
             <CheckCircle className="h-5 w-5 text-success shrink-0" />
             <div>
-              <p className="text-sm font-medium text-foreground">Whisper is ready!</p>
+              <p className="text-sm font-medium text-foreground">{t('whisper.readyTitle')}</p>
               {whisperInfo?.modelName && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Active model: {whisperInfo.modelName}
+                  {t('whisper.activeModel', { model: whisperInfo.modelName })}
                 </p>
               )}
             </div>
@@ -913,44 +898,39 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-foreground">
-                  CPU not compatible with this build
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your processor doesn't support AVX2 instructions required by the pre-built Whisper
-                  binary. This affects CPUs made before 2013 (Intel 3rd gen or older, early AMD).
-                </p>
+                <p className="text-sm font-semibold text-foreground">{t('whisper.avx.title')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('whisper.avx.desc')}</p>
               </div>
             </div>
             <div className="space-y-2 pl-8">
-              <p className="text-xs font-medium text-foreground">How to fix:</p>
+              <p className="text-xs font-medium text-foreground">{t('whisper.avx.howTo')}</p>
               <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
                 <li>
-                  Download a compatible build from{' '}
-                  <a
-                    href="https://github.com/ggerganov/whisper.cpp/releases"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline underline-offset-2 hover:text-primary/80"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      openUrl('https://github.com/ggerganov/whisper.cpp/releases');
+                  <Trans
+                    t={t}
+                    i18nKey="whisper.avx.step1"
+                    components={{
+                      link: (
+                        <a
+                          href="https://github.com/ggerganov/whisper.cpp/releases"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline underline-offset-2 hover:text-primary/80"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openUrl('https://github.com/ggerganov/whisper.cpp/releases');
+                          }}
+                        />
+                      ),
+                      b: <strong />,
                     }}
-                  >
-                    whisper.cpp releases
-                  </a>{' '}
-                  — look for a <strong>noavx</strong> or <strong>compat</strong> build if available,
-                  or build from source with AVX2 disabled.
+                  />
                 </li>
                 <li>
-                  Once installed, set the binary path manually in{' '}
-                  <strong>Settings → Speech Recognition → Custom binary path</strong>.
+                  <Trans t={t} i18nKey="whisper.avx.step2" components={{ b: <strong /> }} />
                 </li>
               </ol>
-              <p className="text-xs text-muted-foreground pt-1">
-                Or skip for now and use the AI Tutor and other features — transcription is only
-                needed for Live Caption and Podcast.
-              </p>
+              <p className="text-xs text-muted-foreground pt-1">{t('whisper.avx.skipHint')}</p>
             </div>
           </div>
         )}
@@ -967,15 +947,13 @@ function WhisperStep({ skipped, onSkip }: { skipped: boolean; onSkip: () => void
         {!skipped && !isReady && (
           <button
             onClick={onSkip}
-            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+            className="self-center text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
           >
-            Skip for now
+            {t('whisper.skip')}
           </button>
         )}
         {skipped && (
-          <p className="text-center text-xs text-muted-foreground">
-            You can set up Whisper later in Settings.
-          </p>
+          <p className="text-center text-xs text-muted-foreground">{t('whisper.skippedNote')}</p>
         )}
       </div>
     </div>
@@ -989,6 +967,9 @@ interface SetupWizardProps {
 }
 
 export function SetupWizard({ onComplete }: SetupWizardProps) {
+  const { t } = useTranslation('onboarding');
+  const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
   const [step, setStep] = useState(0);
 
   // Step 1 state
@@ -1017,6 +998,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   // Step 4 state
   const [subscribedUrls, setSubscribedUrls] = useState<Set<string>>(new Set());
   const [subscribingUrl, setSubscribingUrl] = useState<string | null>(null);
+  const [subscribeError, setSubscribeError] = useState<string | null>(null);
 
   // Fix target language if native changes to match it
   const handleNativeChange = useCallback(
@@ -1174,30 +1156,42 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
   }, [selectedModelName]);
 
   // ── Podcast actions ────────────────────────────────────
-  const handleSubscribe = useCallback(async (url: string) => {
-    setSubscribingUrl(url);
-    try {
-      await invoke('podcast_add_feed', { feedUrl: url });
-      setSubscribedUrls((prev) => new Set(prev).add(url));
-    } catch (err) {
-      console.error('Failed to subscribe:', err);
-    } finally {
-      setSubscribingUrl(null);
-    }
-  }, []);
+  const handleSubscribe = useCallback(
+    async (url: string) => {
+      setSubscribingUrl(url);
+      setSubscribeError(null);
+      try {
+        await invoke('podcast_add_feed', { feedUrl: url });
+        setSubscribedUrls((prev) => new Set(prev).add(url));
+      } catch (err) {
+        setSubscribeError(t('podcast.subscribeFailed', { message: String(err) }));
+      } finally {
+        setSubscribingUrl(null);
+      }
+    },
+    [t],
+  );
 
   // ── Finish onboarding ─────────────────────────────────
   const handleComplete = useCallback(async () => {
-    await setSetting('native_language', nativeLang);
-    await setSetting('target_language', targetLang);
+    setFinishing(true);
+    setFinishError(null);
+    try {
+      await setSetting('native_language', nativeLang);
+      await setSetting('target_language', targetLang);
 
-    if (modelPulled) {
-      await setSetting('ai_model', selectedModelName);
-      await setSetting('ai_provider', 'ollama');
+      if (modelPulled) {
+        await setSetting('ai_model', selectedModelName);
+        await setSetting('ai_provider', 'ollama');
+      }
+
+      await setSetting('onboarding_complete', 'true');
+      onComplete();
+    } catch (err) {
+      setFinishError(String(err));
+    } finally {
+      setFinishing(false);
     }
-
-    await setSetting('onboarding_complete', 'true');
-    onComplete();
   }, [nativeLang, targetLang, modelPulled, selectedModelName, onComplete]);
 
   // ── Can proceed to next step ──────────────────────────
@@ -1256,27 +1250,34 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
             <PodcastStep
               subscribedUrls={subscribedUrls}
               subscribingUrl={subscribingUrl}
+              subscribeError={subscribeError}
               onSubscribe={handleSubscribe}
               onAddCustomFeed={handleSubscribe}
             />
           )}
         </div>
 
+        {finishError && (
+          <p role="alert" className="mt-4 text-center text-sm text-destructive">
+            {finishError}
+          </p>
+        )}
+
         {/* Navigation */}
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
           <div>
             {step > 0 && (
               <Button variant="ghost" onClick={() => setStep((s) => s - 1)} className="gap-1.5">
-                <ChevronLeft className="h-4 w-4" />
-                Back
+                <ChevronLeft className="h-4 w-4 rtl:-scale-x-100" />
+                {t('nav.back')}
               </Button>
             )}
           </div>
 
           <div className="flex items-center gap-3">
             {step === 3 && (
-              <Button variant="ghost" onClick={handleComplete}>
-                Skip
+              <Button variant="ghost" onClick={handleComplete} disabled={finishing}>
+                {t('nav.skip')}
               </Button>
             )}
 
@@ -1286,13 +1287,13 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                 disabled={!canGoNext()}
                 className="gap-1.5"
               >
-                Next
-                <ChevronRight className="h-4 w-4" />
+                {t('nav.next')}
+                <ChevronRight className="h-4 w-4 rtl:-scale-x-100" />
               </Button>
             ) : (
-              <Button onClick={handleComplete} className="gap-1.5">
+              <Button onClick={handleComplete} loading={finishing} className="gap-1.5">
                 <Sparkles className="h-4 w-4" />
-                Get Started!
+                {t('nav.start')}
               </Button>
             )}
           </div>

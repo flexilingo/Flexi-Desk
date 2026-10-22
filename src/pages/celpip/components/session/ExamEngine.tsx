@@ -108,7 +108,7 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
   // before, so a submit lost offline plus a restart cannot throw the answers away.
   useEffect(() => {
     if (!detail) return;
-    detail.section_results.forEach((r) => {
+    (detail.section_results ?? []).forEach((r) => {
       if (r.status !== 'pending') void clearDraft(sessionId, r.section_type);
     });
   }, [detail, sessionId]);

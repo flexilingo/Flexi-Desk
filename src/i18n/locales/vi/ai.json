@@ -1,0 +1,149 @@
+{
+  "setup": {
+    "title": "Thiết lập AI của bạn",
+    "intro": "Tính năng này cần AI. Desk dùng AI do chính bạn thiết lập, nên mọi việc chạy trên máy của bạn hoặc bằng khóa của bạn.",
+    "own": "AI đám mây của FlexiLingo sẽ không bao giờ được dùng trừ khi bạn bật nó trong Cài đặt.",
+    "deviceButton": "Thiết lập trên máy này",
+    "keyButton": "Dùng khóa của tôi",
+    "deviceHint": "Miễn phí và riêng tư. Tải xuống một lần khoảng 2 GB. Hoạt động tốt nhất với 8 GB bộ nhớ trở lên.",
+    "weakMachine": "Máy này có vẻ cấu hình khiêm tốn. Mô hình trên thiết bị vẫn chạy được nhưng câu trả lời có thể chậm. Dùng khóa riêng sẽ nhanh hơn.",
+    "installing": "Đang cài đặt công cụ AI cục bộ...",
+    "starting": "Đang khởi động công cụ AI cục bộ...",
+    "downloading": "Đang tải mô hình {{model}}. Việc này có thể mất vài phút...",
+    "working": "Đang thiết lập...",
+    "provider": "Nhà cung cấp",
+    "providers": {
+      "openai": "OpenAI",
+      "anthropic": "Anthropic",
+      "compatible": "Khác (tương thích OpenAI)"
+    },
+    "baseUrl": "Địa chỉ máy chủ",
+    "baseUrlHint": "Dành cho LM Studio, OpenRouter hoặc bất kỳ máy chủ tương thích OpenAI nào, ví dụ http://localhost:1234",
+    "key": "Khóa API",
+    "keyOptional": "Khóa API (để trống nếu máy chủ không cần)",
+    "model": "Mô hình (tùy chọn)",
+    "keyPrivacy": "Khóa được giữ trên máy này và chỉ được gửi đến nhà cung cấp bạn đã chọn.",
+    "saveAndTest": "Lưu và kiểm tra",
+    "back": "Quay Lại"
+  },
+  "reason": {
+    "local_not_installed": "Công cụ AI cục bộ chưa được cài đặt trên máy này.",
+    "local_not_running": "Công cụ AI cục bộ đã được cài đặt nhưng chưa chạy.",
+    "local_no_model": "Công cụ AI cục bộ đang chạy nhưng chưa có mô hình nào.",
+    "local_model_missing": "Mô hình đã chọn chưa được tải xuống trên máy này.",
+    "key_missing": "Chưa lưu khóa API nào cho nhà cung cấp AI của bạn."
+  },
+  "errors": {
+    "OLLAMA_NOT_RUNNING": "AI của bạn không chạy trên máy này.",
+    "OLLAMA_MODEL_MISSING": "Mô hình đã chọn chưa được tải xuống trên máy này.",
+    "AI_KEY_MISSING": "Chưa lưu khóa API nào cho nhà cung cấp AI của bạn.",
+    "AI_NOT_READY": "AI của bạn chưa được thiết lập.",
+    "AI_KEY_REJECTED": "Nhà cung cấp đã từ chối khóa này. Hãy kiểm tra và thử lại.",
+    "AI_RATE_LIMITED": "Nhà cung cấp cho biết bạn đã dùng hết hạn mức lúc này. Hãy thử lại sau.",
+    "AI_UNREACHABLE": "Không thể kết nối với AI của bạn. Hãy kiểm tra địa chỉ và kết nối của bạn.",
+    "UNKNOWN_ERROR": "AI của bạn gặp sự cố. Hãy thử lại."
+  },
+  "origin": {
+    "device": "Trên thiết bị này",
+    "ownKey": "Khóa của bạn",
+    "cloud": "FlexiLingo Cloud"
+  },
+  "originHint": {
+    "device": "Được tạo bởi AI trên máy của bạn",
+    "ownKey": "Được tạo bằng khóa AI của riêng bạn",
+    "cloud": "Được tạo bởi AI đám mây của FlexiLingo mà bạn đã bật trong Cài đặt"
+  },
+  "settings": {
+    "title": "AI của bạn",
+    "explain": "Desk dùng máy tính hoặc khóa của chính bạn cho mọi tính năng AI, nên mọi việc chạy trên hệ thống của bạn và FlexiLingo không tốn chi phí. Điểm thi và từ điển vẫn đến từ FlexiLingo.",
+    "status": {
+      "checking": "Đang kiểm tra AI của bạn...",
+      "device": "Trên máy này: {{model}}",
+      "openai": "Khóa OpenAI của bạn: {{model}}",
+      "anthropic": "Khóa Anthropic của bạn: {{model}}",
+      "compatible": "Máy chủ {{url}} của bạn: {{model}}"
+    },
+    "test": "Kiểm tra",
+    "testOk": "Hoạt động tốt. {{model}} đã trả lời: {{reply}}",
+    "modelPicker": "Mô hình trên máy này",
+    "manageModels": "Tải xuống hoặc xóa mô hình",
+    "hideModels": "Ẩn mô hình",
+    "change": "Dùng AI khác",
+    "cancelChange": "Hủy",
+    "cloudTitle": "Dùng AI đám mây của FlexiLingo",
+    "cloudDesc": "Mặc định tắt. Khi bật, phân tích từ và nhận xét bài thi sẽ do máy chủ của FlexiLingo tạo thay vì AI của bạn. Mọi thứ khác vẫn dùng AI của bạn.",
+    "cloudNeedsSignIn": "Hãy đăng nhập gói trả phí để bật tính năng này.",
+    "cloudNeedsPaid": "Chỉ có trong các gói trả phí.",
+    "cloudInactive": "Đã bật nhưng chưa hoạt động: cần đăng nhập gói trả phí.",
+    "cloudActive": "Đang hoạt động cho phân tích từ và nhận xét bài thi."
+  },
+  "wizard": {
+    "ownKeyLink": "Dùng khóa của tôi thay thế (OpenAI, Anthropic hoặc máy chủ khác)",
+    "ownKeyReady": "Khóa AI của riêng bạn đã được thiết lập. Bạn đã sẵn sàng."
+  },
+  "engine": {
+    "checking": "Đang kiểm tra công cụ AI cục bộ (Ollama)...",
+    "notInstalledTitle": "Ollama chưa được cài đặt",
+    "notInstalledDesc": "Ollama là công cụ AI mã nguồn mở miễn phí chạy trên máy của bạn. Cài đặt chỉ bằng một cú nhấp.",
+    "download": "Tải xuống khoảng 120 MB",
+    "install": "Cài đặt Ollama",
+    "installing": "Đang cài đặt Ollama...",
+    "downloadingBytes": "Đang tải xuống... {{done}} / {{total}}",
+    "notRunningTitle": "Ollama đã được cài đặt nhưng chưa chạy",
+    "foundAtSystem": "Đã tìm thấy bản cài đặt hệ thống tại {{path}}",
+    "foundAt": "Đã cài đặt tại {{path}}",
+    "notRunningDesc": "Hãy khởi động Ollama để bật các tính năng AI.",
+    "start": "Khởi động Ollama",
+    "starting": "Đang khởi động Ollama...",
+    "waiting": "Đang chờ Ollama sẵn sàng...",
+    "connected": "Đã kết nối",
+    "connectedVersion": "Đã kết nối (v{{version}})",
+    "system": "Hệ thống",
+    "managed": "Được quản lý",
+    "stop": "Dừng Ollama",
+    "refresh": "Làm mới",
+    "search": "Tìm mô hình...",
+    "installedModels": "Mô hình đã cài đặt",
+    "noModels": "Chưa cài đặt mô hình nào. Hãy tải một mô hình bên dưới để bắt đầu.",
+    "recommended": "Mô hình được đề xuất",
+    "custom": "Tải xuống mô hình tùy chọn",
+    "customPlaceholder": "ví dụ: codellama:7b",
+    "pull": "Tải xuống",
+    "active": "Đang Hoạt Động",
+    "use": "Sử dụng",
+    "delete": "Xóa mô hình",
+    "readyTitle": "Ollama đã sẵn sàng",
+    "installedList": "Mô hình đã cài đặt: {{models}}",
+    "chooseTitle": "Chọn mô hình AI",
+    "chooseDesc": "Mô hình nhỏ hơn thì nhanh hơn. Mô hình lớn hơn thì mạnh hơn.",
+    "downloadModel": "Tải xuống {{model}}",
+    "downloadModelGeneric": "Tải xuống mô hình",
+    "downloadingModel": "Đang tải xuống {{model}}...",
+    "errorTitle": "Có lỗi xảy ra",
+    "skip": "Skip for now",
+    "skipped": "Bạn có thể thiết lập AI sau trong Cài đặt.",
+    "heading": "Trợ lý AI",
+    "intro": "Desk dùng AI để hỗ trợ bạn học. AI chạy trên máy của bạn hoặc bằng khóa của bạn.",
+    "speed": {
+      "Fast": "Nhanh",
+      "Medium": "Trung Bình",
+      "Slow": "Chậm"
+    },
+    "accuracy": {
+      "Good": "Tốt",
+      "VeryGood": "Rất tốt",
+      "Excellent": "Xuất sắc"
+    },
+    "models": {
+      "llama3_2": "Nhanh, hỗ trợ đa ngôn ngữ rất tốt. Cân bằng tốt nhất cho đa số người dùng.",
+      "llama3_1_8b": "Suy luận mạnh hơn và sửa ngữ pháp tốt hơn. Rất phù hợp để kèm học.",
+      "gemma3_4b": "Mô hình của Google với khả năng đa ngôn ngữ mạnh. Phù hợp cho bài tập từ vựng.",
+      "mistral": "Hỗ trợ mạnh các ngôn ngữ châu Âu (Pháp, Đức, Tây Ban Nha). Nhanh.",
+      "phi4_mini": "Mô hình gọn nhẹ của Microsoft. Trả lời nhanh, phù hợp để luyện hội thoại.",
+      "qwen3_8b": "Tốt nhất cho tiếng Trung, tiếng Ả Rập và các ngôn ngữ châu Á khác. Mô hình của Alibaba.",
+      "aya_expanse_8b": "Mô hình của Cohere được huấn luyện trên hơn 23 ngôn ngữ. Được xây dựng cho các tác vụ đa ngôn ngữ.",
+      "llama3_1_70b": "Mạnh nhất. Cần 48 GB bộ nhớ trở lên. Phản hồi ngữ pháp và viết tốt nhất."
+    },
+    "dismiss": "Đóng"
+  }
+}

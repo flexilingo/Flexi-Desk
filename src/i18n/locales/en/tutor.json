@@ -1,0 +1,179 @@
+{
+  "landing": {
+    "title": "AI Tutor",
+    "subtitle": "Practice speaking with your AI conversation partner",
+    "newConversation": "New conversation",
+    "loading": "Loading conversations...",
+    "emptyTitle": "No conversations yet",
+    "emptyBody": "Start your first AI conversation to practice speaking in any language.",
+    "startFirst": "Start your first conversation",
+    "active": "Active",
+    "messages_one": "{{count}} message",
+    "messages_other": "{{count}} messages",
+    "corrections_one": "{{count}} correction",
+    "corrections_other": "{{count}} corrections"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "modes": {
+    "free": {
+      "name": "Free Talk",
+      "description": "Chat about anything you like"
+    },
+    "role_play": {
+      "name": "Role Play",
+      "description": "Act out real-life situations"
+    },
+    "deck_practice": {
+      "name": "Deck Practice",
+      "description": "Use words from your flashcard decks"
+    },
+    "vocab_challenge": {
+      "name": "Vocab Challenge",
+      "description": "Practice new vocabulary in conversation"
+    },
+    "escape_room": {
+      "name": "Escape Room",
+      "description": "Solve a story by speaking"
+    }
+  },
+  "categories": {
+    "daily_life": "Daily Life",
+    "travel": "Travel",
+    "social": "Social",
+    "professional": "Professional",
+    "academic": "Academic",
+    "health": "Health",
+    "emergency": "Emergency",
+    "creative": "Creative & Fun"
+  },
+  "topics": {
+    "travel": "Travel & Adventures",
+    "food": "Food & Cooking",
+    "movies": "Movies & TV Shows",
+    "music": "Music & Concerts",
+    "sports": "Sports & Fitness",
+    "technology": "Technology",
+    "books": "Books & Reading",
+    "work": "Work & Career",
+    "hobbies": "Hobbies & Crafts",
+    "nature": "Nature & Environment",
+    "family": "Family & Relationships",
+    "health": "Health & Wellness",
+    "fashion": "Fashion & Style",
+    "art": "Art & Culture",
+    "science": "Science & Discoveries",
+    "history": "History & Traditions",
+    "routines": "Daily Routines",
+    "holidays": "Holidays & Celebrations",
+    "childhood": "Childhood Memories",
+    "future": "Future Plans & Dreams"
+  },
+  "providers": {
+    "ollama": "Ollama (Local)",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "New conversation",
+    "stepOf": "Step {{step}} of {{total}}",
+    "back": "Back",
+    "next": "Next",
+    "start": "Start conversation",
+    "starting": "Starting...",
+    "backAria": "Go back",
+    "step1Title": "Choose practice mode",
+    "step1Subtitle": "How would you like to practice?",
+    "step2Title": "Language and level",
+    "step2Subtitle": "Configure your practice settings",
+    "practiceLanguage": "Practice language",
+    "languageSearch": "Search languages...",
+    "languageNoResults": "No language found",
+    "cefrLevel": "CEFR level",
+    "aiProvider": "AI provider",
+    "model": "Model",
+    "ollamaOffline": "Ollama is not connected. Start Ollama to see downloaded models.",
+    "topicTitle": "Choose a topic",
+    "scenarioTitle": "Choose a scenario",
+    "deckTitle": "Select a deck",
+    "extraTitle": "Additional settings",
+    "topicSubtitle": "Pick a topic or write your own",
+    "scenarioSubtitle": "Search and select a role-play scenario",
+    "deckSubtitle": "Practice vocabulary from your flashcard decks",
+    "extraSubtitle": "Add custom instructions if you want",
+    "optional": "(optional)",
+    "ownTopic": "Write your own topic",
+    "topicPlaceholder": "What would you like to talk about?",
+    "suggestedTopic": "Or pick a suggested topic",
+    "searchScenarios": "Search scenarios...",
+    "customGroup": "Custom",
+    "customScenario": "Write your own scenario",
+    "customScenarioHint": "Describe any situation you want to practice",
+    "customScenarioPlaceholder": "E.g., You're at a flea market negotiating the price of a vintage lamp with a stubborn seller...",
+    "deck": "Deck",
+    "loadingDecks": "Loading decks...",
+    "selectDeck": "Select a deck...",
+    "deckCards": "{{name}} ({{count}} cards)",
+    "noDecks": "No decks found. Create a deck in the Review section first.",
+    "customInstructions": "Custom instructions",
+    "customInstructionsPlaceholder": "E.g., Focus on business vocabulary, speak slowly, correct me more strictly...",
+    "practiceTitle": "{{language}} Practice"
+  },
+  "detail": {
+    "back": "Back to conversations",
+    "resume": "Resume",
+    "minutes": "{{count}} min",
+    "messages_one": "{{count}} message",
+    "messages_other": "{{count}} messages",
+    "fixes_one": "{{count}} fix",
+    "fixes_other": "{{count}} fixes",
+    "conversation": "Conversation"
+  },
+  "scores": {
+    "grammar": "Grammar",
+    "vocabulary": "Vocabulary",
+    "fluency": "Fluency",
+    "overall": "Overall"
+  },
+  "corrections": {
+    "title": "Corrections ({{count}})",
+    "wrong": "Original",
+    "right": "Corrected",
+    "why": "Why"
+  },
+  "words": {
+    "title": "New words ({{count}})",
+    "saved": "Saved",
+    "saveToDeck": "Save to deck",
+    "saveAll": "Save all to deck"
+  },
+  "summary": {
+    "title": "Session complete",
+    "startNew": "Start new conversation"
+  },
+  "voice": {
+    "listening": "Listening...",
+    "transcribing": "Transcribing...",
+    "thinking": "Thinking...",
+    "tapInterrupt": "Tap to interrupt",
+    "tapSpeak": "Tap to speak",
+    "hideSubtitles": "Hide subtitles",
+    "showSubtitles": "Show subtitles",
+    "end": "End",
+    "tutor": "Tutor",
+    "you": "You",
+    "micAria": "Microphone"
+  },
+  "errorDismiss": "Dismiss",
+  "errors": {
+    "AUTH_REQUIRED": "You need to sign in to use this feature.",
+    "NETWORK_ERROR": "Could not reach FlexiLingo. Check your internet connection and try again.",
+    "MIC_UNAVAILABLE": "The microphone is not available. Check that it is connected and allowed, then try again.",
+    "MODEL_MISSING": "The speech model is missing. Download a model in Whisper settings and try again.",
+    "UNKNOWN_ERROR": "Something went wrong. Please try again."
+  }
+}

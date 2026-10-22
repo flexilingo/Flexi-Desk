@@ -13,12 +13,12 @@ import {
   Target,
   ArrowLeft,
   Search,
-  Info,
   ChevronDown,
   ChevronUp,
   Languages,
   AlertCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { listen } from '@tauri-apps/api/event';
@@ -35,7 +35,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useCaptionStore } from '../stores/captionStore';
 import type { RawDownloadProgress } from '../types';
-import { mapDownloadProgress } from '../types';
+import { mapDownloadProgress, speedLabel } from '../types';
 
 type SetupTab = 'download' | 'manual';
 
@@ -44,6 +44,7 @@ interface WhisperSetupProps {
 }
 
 export function WhisperSetup({ onClose }: WhisperSetupProps) {
+  const { t } = useTranslation('caption');
   const {
     whisperInfo,
     isConfiguringWhisper,
@@ -131,7 +132,7 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
     try {
       const selected = await open({
         multiple: false,
-        title: 'Select whisper.cpp binary',
+        title: t('setup.pickBinary'),
       });
       if (selected) setBinaryPath(selected as string);
     } catch {
@@ -143,8 +144,8 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
     try {
       const selected = await open({
         multiple: false,
-        title: 'Select Whisper model file (.bin)',
-        filters: [{ name: 'Whisper Model', extensions: ['bin'] }],
+        title: t('setup.pickModel'),
+        filters: [{ name: t('setup.modelFilter'), extensions: ['bin'] }],
       });
       if (selected) setModelPath(selected as string);
     } catch {
@@ -184,7 +185,12 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
       <CardHeader>
         <div className="flex items-center gap-3">
           {(whisperInfo?.isAvailable || onClose) && (
-            <Button variant="ghost" size="icon" onClick={onClose ?? (() => setView('sessions'))}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose ?? (() => setView('sessions'))}
+              aria-label={t('common.back')}
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
@@ -192,10 +198,8 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
             <Settings className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle>Whisper Setup</CardTitle>
-            <CardDescription>
-              Live Caption uses whisper.cpp for speech-to-text. All models support 99+ languages.
-            </CardDescription>
+            <CardTitle>{t('setup.title')}</CardTitle>
+            <CardDescription>{t('setup.subtitle')}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -205,65 +209,60 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
         {whisperInfo?.isAvailable && (
           <div className="flex items-center gap-2 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
             <CheckCircle2 className="h-4 w-4" />
-            Whisper is configured and ready
+            {t('setup.ready')}
           </div>
         )}
 
         {/* Info Section */}
         <div className="rounded-lg border border-primary/20 bg-primary/5">
-          <button
+          <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={infoExpanded}
             onClick={() => setInfoExpanded(!infoExpanded)}
-            className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') setInfoExpanded(!infoExpanded);
+            }}
+            className="flex cursor-pointer items-center gap-2 px-3 py-2.5 text-start"
           >
             <Languages className="h-4 w-4 text-primary shrink-0" />
             <span className="flex-1 text-sm font-medium text-foreground">
-              All models support 99+ languages — which one should I pick?
+              {t('setup.infoTitle')}
             </span>
             {infoExpanded ? (
               <ChevronUp className="h-4 w-4 text-muted-foreground" />
             ) : (
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             )}
-          </button>
+          </div>
           {infoExpanded && (
             <div className="border-t border-primary/10 px-3 py-3 space-y-3 text-xs text-muted-foreground">
-              <p>
-                Whisper is an open-source speech-to-text engine by OpenAI. Every model listed here
-                is <strong className="text-foreground">multilingual</strong> and supports{' '}
-                <strong className="text-foreground">99+ languages</strong> including English,
-                Persian, Arabic, French, Spanish, Chinese, Japanese, Korean, German, Hindi, Russian,
-                Turkish, and many more.
-              </p>
+              <p>{t('setup.infoIntro')}</p>
               <div className="space-y-1.5">
-                <p className="font-medium text-foreground">How to choose:</p>
-                <ul className="space-y-1 ml-3 list-disc">
+                <p className="font-medium text-foreground">{t('setup.howToChoose')}</p>
+                <ul className="space-y-1 ms-3 list-disc">
                   <li>
-                    <strong className="text-foreground">Tiny / Base</strong> — Fast, low resource
-                    usage. Good for quick tests or older hardware.
+                    <strong className="text-foreground">{t('setup.tinyBase')}</strong> -{' '}
+                    {t('setup.tinyBaseBody')}
                   </li>
                   <li>
-                    <strong className="text-foreground">Small / Medium</strong> — Balanced. Good
-                    accuracy for most languages.
+                    <strong className="text-foreground">{t('setup.smallMedium')}</strong> -{' '}
+                    {t('setup.smallMediumBody')}
                   </li>
                   <li>
-                    <strong className="text-foreground">Large v3 Turbo</strong> —{' '}
-                    <span className="text-success font-medium">Recommended.</span> Near-best
-                    accuracy with significantly faster speed than full Large models.
+                    <strong className="text-foreground">{t('setup.turbo')}</strong> -{' '}
+                    <span className="text-success font-medium">{t('setup.recommended')}</span>{' '}
+                    {t('setup.turboBody')}
                   </li>
                   <li>
-                    <strong className="text-foreground">Large v3</strong> — Highest accuracy, but
-                    slowest. Use if you need maximum precision and have a powerful machine.
+                    <strong className="text-foreground">{t('setup.large')}</strong> -{' '}
+                    {t('setup.largeBody')}
                   </li>
                 </ul>
               </div>
               <div className="space-y-1.5">
-                <p className="font-medium text-foreground">What are Q5 / Q8 variants?</p>
-                <p>
-                  Quantized versions that are{' '}
-                  <strong className="text-foreground">smaller in size</strong> with nearly identical
-                  accuracy. Q8 is closer to the original; Q5 is the smallest. Great if you want to
-                  save disk space.
-                </p>
+                <p className="font-medium text-foreground">{t('setup.quantTitle')}</p>
+                <p>{t('setup.quantBody')}</p>
               </div>
             </div>
           )}
@@ -273,16 +272,16 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs font-mono">
-              Step 1
+              {t('setup.step1')}
             </Badge>
-            <label className="text-sm font-medium text-foreground">Whisper Binary</label>
+            <label className="text-sm font-medium text-foreground">{t('setup.binary')}</label>
           </div>
 
           {/* Auto-detecting */}
           {isAutoDetecting && (
             <div className="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Detecting whisper-cli...
+              {t('setup.detecting')}
             </div>
           )}
 
@@ -303,18 +302,13 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-foreground">
-                        CPU not compatible with this build
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Your processor (pre-2013) doesn't support AVX2 instructions required by the
-                        pre-built Whisper binary.
-                      </p>
+                      <p className="text-xs font-semibold text-foreground">{t('setup.avxTitle')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('setup.avxBody')}</p>
                     </div>
                   </div>
-                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside pl-1">
+                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside ps-1">
                     <li>
-                      Download a compatible build from{' '}
+                      {t('setup.avxStep1')}{' '}
                       <a
                         href="https://github.com/ggerganov/whisper.cpp/releases"
                         target="_blank"
@@ -325,17 +319,14 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                           openUrl('https://github.com/ggerganov/whisper.cpp/releases');
                         }}
                       >
-                        whisper.cpp releases
+                        {t('setup.avxLink')}
                       </a>{' '}
-                      (look for a noavx or compat build, or build from source).
+                      {t('setup.avxStep1b')}
                     </li>
-                    <li>
-                      Use <strong>Custom binary path</strong> below to point to your installed
-                      binary.
-                    </li>
+                    <li>{t('setup.avxStep2')}</li>
                   </ol>
                   <button onClick={clearError} className="text-xs text-muted-foreground underline">
-                    Dismiss
+                    {t('common.dismiss')}
                   </button>
                 </div>
               )}
@@ -344,8 +335,8 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
               {storeError && !storeError.includes('AVX2') && (
                 <div className="flex items-center justify-between rounded-md bg-error/10 px-3 py-2 text-sm text-error">
                   <span className="truncate text-xs">{storeError}</span>
-                  <button onClick={clearError} className="ml-2 shrink-0 text-xs underline">
-                    Dismiss
+                  <button onClick={clearError} className="ms-2 shrink-0 text-xs underline">
+                    {t('common.dismiss')}
                   </button>
                 </div>
               )}
@@ -355,13 +346,10 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                 !isInstallingWhisper &&
                 !isInstallingHomebrew && (
                   <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      whisper-cli was not found on your system. Click below to install it
-                      automatically.
-                    </p>
-                    <Button onClick={installWhisper} className="w-full" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Install Whisper
+                    <p className="text-xs text-muted-foreground">{t('setup.notFound')}</p>
+                    <Button onClick={installWhisper} size="sm">
+                      <Download className="h-4 w-4" />
+                      {t('setup.installWhisper')}
                     </Button>
                   </div>
                 )}
@@ -373,16 +361,14 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                 !isInstallingWhisper && (
                   <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                     <p className="text-xs text-muted-foreground">
-                      Homebrew (macOS package manager) is needed to install Whisper.
+                      {t('setup.needBrew')}
                       {whisperInstallStatus.arch === 'x86_64' && (
-                        <span className="block mt-1 text-warning">
-                          Note: On Intel Macs, Homebrew installation may require your password.
-                        </span>
+                        <span className="block mt-1 text-warning">{t('setup.intelNote')}</span>
                       )}
                     </p>
-                    <Button onClick={installHomebrew} className="w-full" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Install Homebrew
+                    <Button onClick={installHomebrew} size="sm">
+                      <Download className="h-4 w-4" />
+                      {t('setup.installBrew')}
                     </Button>
                   </div>
                 )}
@@ -392,9 +378,9 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                 <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm font-medium">Installing Homebrew...</span>
+                    <span className="text-sm font-medium">{t('setup.installingBrew')}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">This may take a few minutes.</p>
+                  <p className="text-xs text-muted-foreground">{t('setup.fewMinutes')}</p>
                 </div>
               )}
 
@@ -403,9 +389,9 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                 <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm font-medium">Installing Whisper...</span>
+                    <span className="text-sm font-medium">{t('setup.installingWhisper')}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">This may take a few minutes.</p>
+                  <p className="text-xs text-muted-foreground">{t('setup.fewMinutes')}</p>
                 </div>
               )}
             </div>
@@ -417,24 +403,28 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
               onClick={() => setShowManualSetup(!showManualSetup)}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
             >
-              {showManualSetup ? 'Hide manual setup' : 'Manual setup (advanced)'}
+              {showManualSetup ? t('setup.hideManual') : t('setup.showManual')}
             </button>
           )}
 
           {/* Manual setup (collapsed by default) */}
           {showManualSetup && !binaryPath && (
             <div className="space-y-2 rounded-lg border border-border p-3">
-              <p className="text-xs text-muted-foreground">
-                Browse for an existing whisper-cli binary on your system.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('setup.manualBinaryBody')}</p>
               <div className="flex gap-2">
                 <Input
                   value={binaryPath}
                   onChange={(e) => setBinaryPath(e.target.value)}
                   placeholder="/usr/local/bin/whisper-cli"
                   className="flex-1 font-mono text-sm"
+                  dir="ltr"
                 />
-                <Button variant="outline" size="icon" onClick={handleBrowseBinary}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleBrowseBinary}
+                  aria-label={t('setup.browse')}
+                >
                   <FolderOpen className="h-4 w-4" />
                 </Button>
               </div>
@@ -446,34 +436,34 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs font-mono">
-              Step 2
+              {t('setup.step2')}
             </Badge>
-            <label className="text-sm font-medium text-foreground">Whisper Model</label>
+            <label className="text-sm font-medium text-foreground">{t('setup.model')}</label>
           </div>
 
           {/* Tab Switcher */}
           <div className="flex gap-1 rounded-lg bg-muted p-1">
             <button
               onClick={() => setTab('download')}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 tab === 'download'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Download className="h-3.5 w-3.5" />
-              Download Model
+              {t('setup.tabDownload')}
             </button>
             <button
               onClick={() => setTab('manual')}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 tab === 'manual'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <FolderOpen className="h-3.5 w-3.5" />
-              Manual Path
+              {t('setup.tabManual')}
             </button>
           </div>
 
@@ -482,12 +472,12 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
             <div className="space-y-3">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={modelSearch}
                   onChange={(e) => setModelSearch(e.target.value)}
-                  placeholder="Search models... (e.g. turbo, large, q5, EN)"
-                  className="pl-8 h-8 text-sm"
+                  placeholder={t('setup.searchModels')}
+                  className="ps-8 h-8 text-sm"
                 />
               </div>
 
@@ -496,7 +486,7 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <div className="grid gap-2 max-h-[400px] overflow-y-auto pr-1">
+                <div className="grid gap-2 max-h-[400px] overflow-y-auto pe-1">
                   {availableModels
                     .filter((m) => {
                       if (!modelSearch.trim()) return true;
@@ -531,23 +521,26 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
           {/* Manual Tab */}
           {tab === 'manual' && (
             <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Point to an existing GGML model file (
-                <code className="bg-muted px-1 rounded">.bin</code>)
-              </p>
+              <p className="text-xs text-muted-foreground">{t('setup.manualModelBody')}</p>
               <div className="flex gap-2">
                 <Input
                   value={modelPath}
                   onChange={(e) => setModelPath(e.target.value)}
                   placeholder="/path/to/models/ggml-base.bin"
                   className="flex-1 font-mono text-sm"
+                  dir="ltr"
                 />
-                <Button variant="outline" size="icon" onClick={handleBrowseModel}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleBrowseModel}
+                  aria-label={t('setup.browse')}
+                >
                   <FolderOpen className="h-4 w-4" />
                 </Button>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Model Name (optional)</label>
+                <label className="text-xs text-muted-foreground">{t('setup.modelName')}</label>
                 <Input
                   value={modelName}
                   onChange={(e) => setModelName(e.target.value)}
@@ -565,10 +558,10 @@ export function WhisperSetup({ onClose }: WhisperSetupProps) {
           {isConfiguringWhisper ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Validating…
+              {t('setup.validating')}
             </>
           ) : (
-            'Save Configuration'
+            t('setup.save')
           )}
         </Button>
       </CardFooter>
@@ -604,6 +597,7 @@ function ModelRow({
   onSelect: () => void;
   isActive: boolean;
 }) {
+  const { t } = useTranslation('caption');
   const isThisDownloading = downloadProgress !== null;
 
   return (
@@ -631,19 +625,19 @@ function ModelRow({
           <span className="text-sm font-medium">{model.name}</span>
           <span className="text-xs text-muted-foreground">{formatSize(model.sizeMb)}</span>
           <Badge variant="outline" className="text-[10px] px-1 py-0">
-            <Globe className="h-2.5 w-2.5 mr-0.5" />
-            99+ langs
+            <Globe className="h-2.5 w-2.5 me-0.5" />
+            {t('row.langs')}
           </Badge>
           {isActive && (
             <Badge className="text-[10px] px-1.5 py-0 bg-primary text-primary-foreground">
-              Active
+              {t('row.active')}
             </Badge>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
             <Zap className="h-3 w-3" />
-            {model.speed}
+            {speedLabel(t, model.speed)}
           </span>
           <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
             <Target className="h-3 w-3" />
@@ -675,8 +669,8 @@ function ModelRow({
           <>
             {!isActive && (
               <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onSelect}>
-                <Monitor className="h-3 w-3 mr-1" />
-                Use
+                <Monitor className="h-3 w-3" />
+                {t('row.use')}
               </Button>
             )}
             <Button
@@ -685,6 +679,7 @@ function ModelRow({
               className="h-7 px-1.5"
               onClick={onDelete}
               disabled={isActive}
+              aria-label={t('row.delete')}
             >
               <Trash2 className="h-3.5 w-3.5 text-error" />
             </Button>
@@ -701,8 +696,8 @@ function ModelRow({
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <>
-                <Download className="h-3 w-3 mr-1" />
-                Download
+                <Download className="h-3 w-3" />
+                {t('row.download')}
               </>
             )}
           </Button>

@@ -8,5 +8,4 @@ export const VIDEO_PLAYER_CAPABILITIES = {
   sync: false,
   feedback: false,
   download: false,
-  learningQuiz: false,
 } as const;

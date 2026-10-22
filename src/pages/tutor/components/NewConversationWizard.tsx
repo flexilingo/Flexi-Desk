@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, ArrowRight, Search, Mic, PenLine } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Search, Mic, PenLine, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { LanguageSearchSelect } from '@/pages/account/components/LanguageSearchSelect';
+import { getLanguageName } from '@/config/languages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InlineError } from '@/components/common/InlineError';
@@ -11,26 +14,9 @@ import { AiSetupCard } from '@/components/ai/AiSetupCard';
 import { ModeCard } from './ModeCard';
 import type { ConversationMode } from '../types';
 
-const LANGUAGES = [
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'fa', name: 'Persian', flag: '🇮🇷' },
-  { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-  { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { code: 'fr', name: 'French', flag: '🇫🇷' },
-  { code: 'de', name: 'German', flag: '🇩🇪' },
-  { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-  { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
-  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-];
-
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
-const PROVIDERS = [
-  { value: 'ollama', label: 'Ollama (Local)' },
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'anthropic', label: 'Anthropic' },
-];
+const PROVIDERS = ['ollama', 'openai', 'anthropic'];
 
 const DEFAULT_MODELS: Record<string, string> = {
   ollama: 'llama3.2',
@@ -39,38 +25,27 @@ const DEFAULT_MODELS: Record<string, string> = {
 };
 
 const SUGGESTED_TOPICS = [
-  'Travel & Adventures',
-  'Food & Cooking',
-  'Movies & TV Shows',
-  'Music & Concerts',
-  'Sports & Fitness',
-  'Technology',
-  'Books & Reading',
-  'Work & Career',
-  'Hobbies & Crafts',
-  'Nature & Environment',
-  'Family & Relationships',
-  'Health & Wellness',
-  'Fashion & Style',
-  'Art & Culture',
-  'Science & Discoveries',
-  'History & Traditions',
-  'Daily Routines',
-  'Holidays & Celebrations',
-  'Childhood Memories',
-  'Future Plans & Dreams',
+  'travel',
+  'food',
+  'movies',
+  'music',
+  'sports',
+  'technology',
+  'books',
+  'work',
+  'hobbies',
+  'nature',
+  'family',
+  'health',
+  'fashion',
+  'art',
+  'science',
+  'history',
+  'routines',
+  'holidays',
+  'childhood',
+  'future',
 ];
-
-const CATEGORY_LABELS: Record<string, string> = {
-  daily_life: 'Daily Life',
-  travel: 'Travel',
-  social: 'Social',
-  professional: 'Professional',
-  academic: 'Academic',
-  health: 'Health',
-  emergency: 'Emergency',
-  creative: 'Creative & Fun',
-};
 
 const CUSTOM_SCENARIO_ID = '__custom__';
 
@@ -78,6 +53,7 @@ const selectClassName =
   'flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary';
 
 export function NewConversationWizard() {
+  const { t } = useTranslation('tutor');
   const {
     startConversation,
     fetchModes,
@@ -182,7 +158,7 @@ export function NewConversationWizard() {
     setError(null);
 
     try {
-      const title = `${LANGUAGES.find((l) => l.code === language)?.name ?? language} Practice`;
+      const title = t('wizard.practiceTitle', { language: getLanguageName(language) });
 
       const isCustomScenario = scenarioId === CUSTOM_SCENARIO_ID;
       const effectiveScenarioId =
@@ -223,13 +199,14 @@ export function NewConversationWizard() {
         <button
           type="button"
           onClick={() => (step === 1 ? setView('landing') : setStep(step - 1))}
-          className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors"
+          aria-label={t('wizard.backAria')}
+          className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted/50 text-muted-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
-          <h2 className="text-sm font-semibold text-foreground">New Conversation</h2>
-          <p className="text-xs text-muted-foreground">Step {step} of 3</p>
+          <h2 className="text-sm font-semibold text-foreground">{t('wizard.title')}</h2>
+          <p className="text-xs text-muted-foreground">{t('wizard.stepOf', { step, total: 3 })}</p>
         </div>
         {/* Step indicators */}
         <div className="flex gap-1.5">
@@ -302,18 +279,22 @@ export function NewConversationWizard() {
           onClick={() => (step === 1 ? setView('landing') : setStep(step - 1))}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          {t('wizard.back')}
         </Button>
 
         {step < 3 ? (
           <Button onClick={() => setStep(step + 1)} disabled={!canGoNext}>
-            Next
+            {t('wizard.next')}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         ) : (
           <Button onClick={handleStart} disabled={isStarting || !canGoNext}>
-            {isStarting ? 'Starting...' : 'Start Conversation'}
-            <Mic className="h-4 w-4 ml-2" />
+            {isStarting ? t('wizard.starting') : t('wizard.start')}
+            {isStarting ? (
+              <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+            ) : (
+              <Mic className="h-4 w-4 ml-2" />
+            )}
           </Button>
         )}
       </div>
@@ -332,11 +313,12 @@ function StepMode({
   selectedMode: ConversationMode | null;
   onSelectMode: (mode: ConversationMode) => void;
 }) {
+  const { t } = useTranslation('tutor');
   return (
     <div className="space-y-4">
       <div className="text-center space-y-1">
-        <h3 className="text-lg font-semibold text-foreground">Choose Practice Mode</h3>
-        <p className="text-sm text-muted-foreground">How would you like to practice?</p>
+        <h3 className="text-lg font-semibold text-foreground">{t('wizard.step1Title')}</h3>
+        <p className="text-sm text-muted-foreground">{t('wizard.step1Subtitle')}</p>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {modes.map((mode) => (
@@ -377,45 +359,38 @@ function StepLevelModel({
   ollamaConnected: boolean;
   installedModels: { name: string; size: number }[];
 }) {
+  const { t } = useTranslation('tutor');
   return (
     <div className="space-y-6">
       <div className="text-center space-y-1">
-        <h3 className="text-lg font-semibold text-foreground">Language & Level</h3>
-        <p className="text-sm text-muted-foreground">Configure your practice settings</p>
+        <h3 className="text-lg font-semibold text-foreground">{t('wizard.step2Title')}</h3>
+        <p className="text-sm text-muted-foreground">{t('wizard.step2Subtitle')}</p>
       </div>
 
       {/* Language */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Practice Language</label>
-        <div className="grid grid-cols-5 gap-2">
-          {LANGUAGES.map((lang) => (
-            <button
-              key={lang.code}
-              type="button"
-              onClick={() => setLanguage(lang.code)}
-              className={`flex flex-col items-center gap-1 rounded-lg p-2.5 text-center transition-colors ${
-                language === lang.code
-                  ? 'border-2 border-primary bg-primary/5'
-                  : 'border border-border bg-card hover:bg-muted/50'
-              }`}
-            >
-              <span className="text-lg">{lang.flag}</span>
-              <span className="text-[11px] font-medium text-foreground">{lang.name}</span>
-            </button>
-          ))}
-        </div>
+        <label className="text-sm font-medium text-foreground">
+          {t('wizard.practiceLanguage')}
+        </label>
+        <LanguageSearchSelect
+          value={language}
+          onSelect={setLanguage}
+          label={t('wizard.practiceLanguage')}
+          searchPlaceholder={t('wizard.languageSearch')}
+          noResults={t('wizard.languageNoResults')}
+        />
       </div>
 
       {/* CEFR Level */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">CEFR Level</label>
+        <label className="text-sm font-medium text-foreground">{t('wizard.cefrLevel')}</label>
         <div className="flex gap-2">
           {CEFR_LEVELS.map((level) => (
             <button
               key={level}
               type="button"
               onClick={() => setCefrLevel(level)}
-              className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                 cefrLevel === level
                   ? 'bg-primary text-primary-foreground'
                   : 'border border-border bg-card text-foreground hover:bg-muted/50'
@@ -429,15 +404,15 @@ function StepLevelModel({
 
       {/* AI Provider */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">AI Provider</label>
+        <label className="text-sm font-medium text-foreground">{t('wizard.aiProvider')}</label>
         <select
           value={provider}
           onChange={(e) => onProviderChange(e.target.value)}
           className={selectClassName}
         >
           {PROVIDERS.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
+            <option key={p} value={p}>
+              {t(`providers.${p}`)}
             </option>
           ))}
         </select>
@@ -445,7 +420,7 @@ function StepLevelModel({
 
       {/* Model */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Model</label>
+        <label className="text-sm font-medium text-foreground">{t('wizard.model')}</label>
         {provider === 'ollama' && ollamaConnected && installedModels.length > 0 ? (
           <select
             value={model}
@@ -465,9 +440,7 @@ function StepLevelModel({
               onChange={(e) => setModel(e.target.value)}
               placeholder={DEFAULT_MODELS[provider]}
             />
-            <p className="text-xs text-warning">
-              Ollama is not connected. Start Ollama to see downloaded models.
-            </p>
+            <p className="text-xs text-warning">{t('wizard.ollamaOffline')}</p>
           </div>
         ) : (
           <Input
@@ -521,21 +494,21 @@ function StepTopic({
   customPrompt: string;
   setCustomPrompt: (v: string) => void;
 }) {
+  const { t } = useTranslation('tutor');
   return (
     <div className="space-y-6">
       <div className="text-center space-y-1">
         <h3 className="text-lg font-semibold text-foreground">
-          {mode === 'free' && 'Choose a Topic'}
-          {mode === 'role_play' && 'Choose a Scenario'}
-          {mode === 'deck_practice' && 'Select a Deck'}
-          {(mode === 'vocab_challenge' || mode === 'escape_room') && 'Additional Settings'}
+          {mode === 'free' && t('wizard.topicTitle')}
+          {mode === 'role_play' && t('wizard.scenarioTitle')}
+          {mode === 'deck_practice' && t('wizard.deckTitle')}
+          {(mode === 'vocab_challenge' || mode === 'escape_room') && t('wizard.extraTitle')}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {mode === 'free' && 'Pick a topic or write your own'}
-          {mode === 'role_play' && 'Search and select a role-play scenario'}
-          {mode === 'deck_practice' && 'Practice vocabulary from your flashcard decks'}
-          {(mode === 'vocab_challenge' || mode === 'escape_room') &&
-            'Add custom instructions if you want'}
+          {mode === 'free' && t('wizard.topicSubtitle')}
+          {mode === 'role_play' && t('wizard.scenarioSubtitle')}
+          {mode === 'deck_practice' && t('wizard.deckSubtitle')}
+          {(mode === 'vocab_challenge' || mode === 'escape_room') && t('wizard.extraSubtitle')}
         </p>
       </div>
 
@@ -544,30 +517,32 @@ function StepTopic({
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              Write your own topic{' '}
-              <span className="text-muted-foreground font-normal">(optional)</span>
+              {t('wizard.ownTopic')}{' '}
+              <span className="text-muted-foreground font-normal">{t('wizard.optional')}</span>
             </label>
             <Input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="What would you like to talk about?"
+              placeholder={t('wizard.topicPlaceholder')}
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Or pick a suggested topic</label>
+            <label className="text-sm font-medium text-foreground">
+              {t('wizard.suggestedTopic')}
+            </label>
             <div className="flex flex-wrap gap-2">
-              {SUGGESTED_TOPICS.map((t) => (
+              {SUGGESTED_TOPICS.map((key) => (
                 <button
-                  key={t}
+                  key={key}
                   type="button"
-                  onClick={() => setTopic(t)}
+                  onClick={() => setTopic(t(`topics.${key}`))}
                   className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                    topic === t
+                    topic === t(`topics.${key}`)
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-card text-foreground hover:bg-muted/50 hover:border-primary/50'
                   }`}
                 >
-                  {t}
+                  {t(`topics.${key}`)}
                 </button>
               ))}
             </div>
@@ -584,7 +559,7 @@ function StepTopic({
             <Input
               value={scenarioSearch}
               onChange={(e) => setScenarioSearch(e.target.value)}
-              placeholder="Search scenarios..."
+              placeholder={t('wizard.searchScenarios')}
               className="pl-9"
             />
           </div>
@@ -594,7 +569,7 @@ function StepTopic({
             {Object.entries(scenariosByCategory).map(([category, categoryScenarios]) => (
               <div key={category} className="space-y-2">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {CATEGORY_LABELS[category] ?? category}
+                  {t(`categories.${category}`, { defaultValue: category })}
                 </h4>
                 <div className="space-y-1.5">
                   {categoryScenarios.map((s) => (
@@ -602,7 +577,7 @@ function StepTopic({
                       key={s.id}
                       type="button"
                       onClick={() => setScenarioId(s.id === scenarioId ? '' : s.id)}
-                      className={`w-full text-left rounded-lg p-3 transition-colors ${
+                      className={`block text-start rounded-lg p-3 transition-colors ${
                         scenarioId === s.id
                           ? 'border-2 border-primary bg-primary/5'
                           : 'border border-border bg-card hover:bg-muted/50'
@@ -626,14 +601,14 @@ function StepTopic({
             {/* Custom scenario option */}
             <div className="space-y-2">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Custom
+                {t('wizard.customGroup')}
               </h4>
               <button
                 type="button"
                 onClick={() =>
                   setScenarioId(scenarioId === CUSTOM_SCENARIO_ID ? '' : CUSTOM_SCENARIO_ID)
                 }
-                className={`w-full text-left rounded-lg p-3 transition-colors ${
+                className={`block text-start rounded-lg p-3 transition-colors ${
                   scenarioId === CUSTOM_SCENARIO_ID
                     ? 'border-2 border-primary bg-primary/5'
                     : 'border border-border bg-card hover:bg-muted/50'
@@ -642,18 +617,18 @@ function StepTopic({
                 <div className="flex items-center gap-2">
                   <PenLine className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">
-                    Write your own scenario
+                    {t('wizard.customScenario')}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Describe any situation you want to practice
+                  {t('wizard.customScenarioHint')}
                 </p>
               </button>
               {scenarioId === CUSTOM_SCENARIO_ID && (
                 <textarea
                   value={customScenario}
                   onChange={(e) => setCustomScenario(e.target.value)}
-                  placeholder="E.g., You're at a flea market negotiating the price of a vintage lamp with a stubborn seller..."
+                  placeholder={t('wizard.customScenarioPlaceholder')}
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                   rows={3}
                 />
@@ -666,26 +641,24 @@ function StepTopic({
       {/* Deck Practice */}
       {mode === 'deck_practice' && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Deck</label>
+          <label className="text-sm font-medium text-foreground">{t('wizard.deck')}</label>
           {isLoadingDecks ? (
-            <p className="text-sm text-muted-foreground">Loading decks...</p>
+            <p className="text-sm text-muted-foreground">{t('wizard.loadingDecks')}</p>
           ) : decks.length > 0 ? (
             <select
               value={deckId}
               onChange={(e) => setDeckId(e.target.value)}
               className={selectClassName}
             >
-              <option value="">Select a deck...</option>
+              <option value="">{t('wizard.selectDeck')}</option>
               {decks.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.name} ({d.cardCount} cards)
+                  {t('wizard.deckCards', { name: d.name, count: d.cardCount })}
                 </option>
               ))}
             </select>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No decks found. Create a deck in the Review section first.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('wizard.noDecks')}</p>
           )}
         </div>
       )}
@@ -693,12 +666,13 @@ function StepTopic({
       {/* Custom instructions (all modes) */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-foreground">
-          Custom Instructions <span className="text-muted-foreground font-normal">(optional)</span>
+          {t('wizard.customInstructions')}{' '}
+          <span className="text-muted-foreground font-normal">{t('wizard.optional')}</span>
         </label>
         <textarea
           value={customPrompt}
           onChange={(e) => setCustomPrompt(e.target.value)}
-          placeholder="E.g., Focus on business vocabulary, speak slowly, correct me more strictly..."
+          placeholder={t('wizard.customInstructionsPlaceholder')}
           className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
           rows={2}
         />

@@ -1,0 +1,151 @@
+{
+  "page": {
+    "title": "Paramètres",
+    "subtitle": "Configurez votre expérience d'apprentissage"
+  },
+  "tabs": {
+    "general": "Général",
+    "ai": "Mon IA",
+    "whisper": "Whisper",
+    "data": "Export / Import"
+  },
+  "auth": {
+    "title": "Compte FlexiLingo",
+    "loggedIn": "Connecté. Les fonctions en ligne comme le quiz, Ask Lena et les retours sont disponibles.",
+    "logout": "Se déconnecter",
+    "signInHint": "Connectez-vous pour utiliser les fonctions en ligne : quiz, Ask Lena, retours et plus.",
+    "email": "E-mail",
+    "emailPlaceholder": "vous@exemple.com",
+    "sending": "Envoi du code...",
+    "sendCode": "Envoyer le code",
+    "codeSentTo": "Code envoyé à",
+    "verificationCode": "Code de vérification",
+    "verifying": "Vérification...",
+    "verify": "Vérifier",
+    "useAnotherEmail": "Utiliser un autre e-mail",
+    "sendingShort": "Envoi...",
+    "resend": "Renvoyer le code"
+  },
+  "languages": {
+    "title": "Langues",
+    "subtitle": "Choisissez votre langue maternelle et la langue à apprendre",
+    "native": "Langue maternelle",
+    "learning": "Langue que j'apprends",
+    "saved": "Enregistré",
+    "save": "Enregistrer les langues",
+    "appLanguage": "Langue de l'application"
+  },
+  "appearance": {
+    "title": "Apparence",
+    "subtitle": "Personnalisez l'apparence",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "data": {
+    "title": "Export et import",
+    "subtitle": "Sortez ou importez votre vocabulaire sur cet ordinateur",
+    "export": "Exporter le vocabulaire",
+    "import": "Importer le vocabulaire"
+  },
+  "common": {
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Terminé"
+  },
+  "export": {
+    "title": "Exporter le vocabulaire",
+    "hint": "Enregistrez vos mots dans un fichier à conserver ou à ouvrir dans une autre application.",
+    "format": "Format",
+    "csv": "CSV",
+    "anki": "Anki (.apkg)",
+    "csvFiles": "Fichiers CSV",
+    "ankiPackage": "Paquet Anki",
+    "languageOptional": "Langue (facultatif)",
+    "allLanguages": "Toutes les langues",
+    "allLanguagesNote": "Aucune langue choisie : toutes les langues sont exportées.",
+    "cefrOptional": "Niveau CECRL (facultatif)",
+    "allLevels": "Tous les niveaux",
+    "done": "{{count}} éléments exportés au format {{format}}",
+    "exporting": "Export en cours...",
+    "action": "Exporter"
+  },
+  "import": {
+    "title": "Importer le vocabulaire",
+    "hint": "Importez des mots depuis un fichier CSV, Quizlet ou Anki.",
+    "fileFilter": "Fichier à importer",
+    "chooseSource": "Choisissez la source de l'import :",
+    "sourceCsv": "Fichier CSV",
+    "sourceTsv": "Quizlet (TSV)",
+    "sourceAnki": "Anki (.apkg)",
+    "ankiNote": "Les cartes Anki sont importées avec le recto comme mot et le verso comme traduction.",
+    "targetLanguage": "Langue des mots",
+    "skipDuplicates": "Ignorer les doublons",
+    "importing": "Import en cours...",
+    "action": "Importer",
+    "complete": "Import terminé",
+    "totalRows": "Lignes au total : {{count}}",
+    "imported": "Importées : {{count}}",
+    "skipped": "Ignorées (doublons) : {{count}}",
+    "errorsCount": "Erreurs : {{count}}",
+    "showErrors": "Afficher les erreurs ({{count}})",
+    "rowError": "Ligne {{row}} : {{message}}"
+  },
+  "mapper": {
+    "title": "Associer les colonnes",
+    "hint": "Associez les colonnes de votre fichier aux champs FlexiLingo.",
+    "skip": "Ignorer",
+    "column": "{{name}} (colonne {{n}})",
+    "fields": {
+      "word": "Mot",
+      "translation": "Traduction",
+      "definition": "Définition",
+      "pos": "Nature du mot",
+      "cefr": "Niveau CECRL",
+      "phonetic": "Prononciation (API)",
+      "examples": "Exemples",
+      "context": "Phrase de contexte"
+    }
+  },
+  "preview": {
+    "title": "Aperçu",
+    "total": "{{count}} lignes au total",
+    "word": "Mot",
+    "translation": "Traduction",
+    "cefr": "CECRL",
+    "pos": "Nature",
+    "missing": "manquant",
+    "showing": "{{shown}} lignes sur {{total}} affichées"
+  },
+  "sync": {
+    "title": "Synchronisation cloud",
+    "pending": "({{count}} en attente)",
+    "hint": "Choisissez les données à synchroniser avec votre compte FlexiLingo. Les modifications hors ligne sont mises en file d'attente et synchronisées à la reconnexion.",
+    "loading": "Chargement...",
+    "lastSynced": "Dernière synchronisation : {{date}}",
+    "never": "Jamais synchronisé",
+    "both": "Dans les deux sens",
+    "push": "Envoi seulement",
+    "pull": "Réception seulement",
+    "conflicts": "{{count}} conflits non résolus. Ouvrez Paramètres, puis Conflits, pour les résoudre.",
+    "status": {
+      "Synced": "Synchronisé",
+      "Error": "Erreur",
+      "Conflict": "Conflit",
+      "Idle": "Inactif",
+      "Syncing": "Synchronisation"
+    },
+    "tables": {
+      "vocabulary": "Vocabulaire",
+      "decks": "Paquets",
+      "deck_cards": "Cartes des paquets",
+      "srs_progress": "Progression des révisions",
+      "goals": "Objectifs",
+      "daily_stats": "Statistiques quotidiennes",
+      "streaks": "Séries",
+      "settings": "Paramètres"
+    }
+  }
+}

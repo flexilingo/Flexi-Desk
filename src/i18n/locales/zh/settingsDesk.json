@@ -1,0 +1,151 @@
+{
+  "page": {
+    "title": "设置",
+    "subtitle": "设置你的学习体验"
+  },
+  "tabs": {
+    "general": "通用",
+    "ai": "我的 AI",
+    "whisper": "Whisper",
+    "data": "导出 / 导入"
+  },
+  "auth": {
+    "title": "FlexiLingo 账户",
+    "loggedIn": "已登录。测验、询问 Lena 和反馈等云端功能可用。",
+    "logout": "退出登录",
+    "signInHint": "登录后可使用云端功能：测验、询问 Lena、反馈等。",
+    "email": "邮箱",
+    "emailPlaceholder": "you@example.com",
+    "sending": "正在发送验证码...",
+    "sendCode": "发送验证码",
+    "codeSentTo": "验证码已发送至",
+    "verificationCode": "验证码",
+    "verifying": "正在验证...",
+    "verify": "验证",
+    "useAnotherEmail": "使用其他邮箱",
+    "sendingShort": "发送中...",
+    "resend": "重新发送验证码"
+  },
+  "languages": {
+    "title": "语言",
+    "subtitle": "设置你的母语和学习语言",
+    "native": "母语",
+    "learning": "我正在学习的语言",
+    "saved": "已保存",
+    "save": "保存语言",
+    "appLanguage": "应用语言"
+  },
+  "appearance": {
+    "title": "外观",
+    "subtitle": "自定义外观",
+    "theme": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统"
+  },
+  "data": {
+    "title": "导出与导入",
+    "subtitle": "在此电脑上导入或导出你的词汇",
+    "export": "导出词汇",
+    "import": "导入词汇"
+  },
+  "common": {
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "done": "完成"
+  },
+  "export": {
+    "title": "导出词汇",
+    "hint": "将你的单词保存为文件，可保留或在其他应用中打开。",
+    "format": "格式",
+    "csv": "CSV",
+    "anki": "Anki (.apkg)",
+    "csvFiles": "CSV 文件",
+    "ankiPackage": "Anki 包",
+    "languageOptional": "语言（可选）",
+    "allLanguages": "所有语言",
+    "allLanguagesNote": "未选择语言：将导出所有语言。",
+    "cefrOptional": "CEFR 等级（可选）",
+    "allLevels": "所有等级",
+    "done": "已导出 {{count}} 项（{{format}}）",
+    "exporting": "正在导出...",
+    "action": "导出"
+  },
+  "import": {
+    "title": "导入词汇",
+    "hint": "从 CSV 文件、Quizlet 或 Anki 导入单词。",
+    "fileFilter": "导入文件",
+    "chooseSource": "选择导入来源：",
+    "sourceCsv": "CSV 文件",
+    "sourceTsv": "Quizlet (TSV)",
+    "sourceAnki": "Anki (.apkg)",
+    "ankiNote": "Anki 卡片导入时，正面作为单词，背面作为翻译。",
+    "targetLanguage": "单词的语言",
+    "skipDuplicates": "跳过重复项",
+    "importing": "正在导入...",
+    "action": "导入",
+    "complete": "导入完成",
+    "totalRows": "总行数：{{count}}",
+    "imported": "已导入：{{count}}",
+    "skipped": "已跳过（重复）：{{count}}",
+    "errorsCount": "错误：{{count}}",
+    "showErrors": "显示错误（{{count}}）",
+    "rowError": "第 {{row}} 行：{{message}}"
+  },
+  "mapper": {
+    "title": "匹配列",
+    "hint": "将文件中的列与 FlexiLingo 字段对应。",
+    "skip": "跳过",
+    "column": "{{name}}（第 {{n}} 列）",
+    "fields": {
+      "word": "单词",
+      "translation": "翻译",
+      "definition": "释义",
+      "pos": "词性",
+      "cefr": "CEFR 等级",
+      "phonetic": "发音（IPA）",
+      "examples": "例句",
+      "context": "语境句"
+    }
+  },
+  "preview": {
+    "title": "预览",
+    "total": "共 {{count}} 行",
+    "word": "单词",
+    "translation": "翻译",
+    "cefr": "CEFR",
+    "pos": "词性",
+    "missing": "缺失",
+    "showing": "显示 {{total}} 行预览中的 {{shown}} 行"
+  },
+  "sync": {
+    "title": "云同步",
+    "pending": "（{{count}} 项待处理）",
+    "hint": "选择要与你的 FlexiLingo 账户同步的数据。离线所做的更改会排队，联网后同步。",
+    "loading": "加载中...",
+    "lastSynced": "上次同步：{{date}}",
+    "never": "从未同步",
+    "both": "双向",
+    "push": "仅上传",
+    "pull": "仅下载",
+    "conflicts": "有 {{count}} 个未解决的冲突。请打开“设置”，再进入“冲突”处理。",
+    "status": {
+      "Synced": "已同步",
+      "Error": "错误",
+      "Conflict": "冲突",
+      "Idle": "空闲",
+      "Syncing": "同步中"
+    },
+    "tables": {
+      "vocabulary": "词汇",
+      "decks": "卡组",
+      "deck_cards": "卡组卡片",
+      "srs_progress": "复习进度",
+      "goals": "目标",
+      "daily_stats": "每日统计",
+      "streaks": "连续天数",
+      "settings": "设置"
+    }
+  }
+}

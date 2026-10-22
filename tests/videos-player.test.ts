@@ -201,6 +201,6 @@ describe('the shared player store on a video', () => {
   });
 
   it('a video has no transcribe, sync, feedback or download', () => {
-    expect(VIDEO_PLAYER_CAPABILITIES).toEqual({ transcribe: false, sync: false, feedback: false, download: false, learningQuiz: false });
+    expect(VIDEO_PLAYER_CAPABILITIES).toEqual({ transcribe: false, sync: false, feedback: false, download: false });
   });
 });

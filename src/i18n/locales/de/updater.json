@@ -1,0 +1,17 @@
+{
+  "title": "Updates",
+  "subtitle": "FlexiDesk auf dem neuesten Stand halten",
+  "currentVersion": "Aktuelle Version {{version}}",
+  "check": "Nach Updates suchen",
+  "checking": "Wird geprüft...",
+  "upToDate": "Du hast die neueste Version.",
+  "available": "Version {{version}} ist verfügbar.",
+  "install": "Herunterladen und installieren",
+  "installing": "Wird heruntergeladen...",
+  "downloading": "Wird heruntergeladen... {{percent}}%",
+  "downloadingUnknown": "Wird heruntergeladen...",
+  "ready": "Das Update ist installiert. Starte neu, um es abzuschließen.",
+  "restart": "Jetzt neu starten",
+  "dismiss": "Schließen",
+  "error": "Update fehlgeschlagen: {{message}}"
+}

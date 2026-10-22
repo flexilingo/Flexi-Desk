@@ -1,0 +1,69 @@
+{
+  "steps": {
+    "languages": "Ngôn ngữ",
+    "ai": "AI",
+    "whisper": "Whisper",
+    "podcast": "Podcast"
+  },
+  "welcome": {
+    "title": "Chào mừng đến với FlexiDesk",
+    "subtitle": "Hãy thiết lập môi trường học của bạn",
+    "native": "Your native language",
+    "target": "Ngôn ngữ bạn đang học"
+  },
+  "nav": {
+    "back": "Quay Lại",
+    "next": "Tiếp",
+    "skip": "Bỏ qua",
+    "start": "Bắt đầu"
+  },
+  "podcast": {
+    "title": "Thêm podcast đầu tiên của bạn",
+    "subtitle": "Học qua việc lắng nghe nội dung thật",
+    "loading": "Đang tải podcast...",
+    "by": "Bởi {{author}}",
+    "subscribe": "Đăng ký",
+    "adding": "Đang thêm...",
+    "byRss": "Thêm bằng liên kết RSS",
+    "rssPlaceholder": "https://example.com/feed.rss",
+    "add": "Thêm",
+    "invalidUrl": "Vui lòng nhập liên kết hợp lệ.",
+    "subscribeFailed": "Không thể thêm podcast: {{message}}"
+  },
+  "whisper": {
+    "title": "Nhận dạng giọng nói",
+    "subtitle": "Whisper chuyển âm thanh thành văn bản ngay trên máy của bạn. Phụ đề trực tiếp và Podcast đều dùng nó.",
+    "detecting": "Đang tìm Whisper...",
+    "notFoundTitle": "Không tìm thấy Whisper",
+    "notFoundDesc": "Nhấn nút để cài đặt tự động.",
+    "install": "Cài đặt Whisper",
+    "installing": "Đang cài đặt Whisper...",
+    "settingUp": "Đang thiết lập những gì Whisper cần...",
+    "chooseTitle": "Chọn mô hình Whisper",
+    "chooseDesc": "Mô hình lớn hơn chính xác hơn nhưng chậm hơn và cần nhiều bộ nhớ hơn.",
+    "loadingModels": "Đang tải mô hình...",
+    "use": "Sử dụng",
+    "download": "Tải xuống",
+    "downloadingModel": "Đang tải mô hình...",
+    "readyTitle": "Whisper đã sẵn sàng",
+    "activeModel": "Mô hình đang dùng: {{model}}",
+    "skip": "Skip for now",
+    "skippedNote": "Bạn có thể thiết lập Whisper sau trong Cài đặt.",
+    "realtime": "~{{n}}x thời gian thực",
+    "models": {
+      "tiny": "Mô hình nhanh nhất. Phù hợp để thử nghiệm. Hỗ trợ mọi ngôn ngữ.",
+      "base": "Cân bằng tốt giữa tốc độ và độ chính xác. Hỗ trợ mọi ngôn ngữ.",
+      "small": "Độ chính xác tốt hơn, tốc độ vừa phải. Hỗ trợ mọi ngôn ngữ.",
+      "large_v3_turbo": "Cân bằng tốt nhất giữa tốc độ và độ chính xác. Được khuyên dùng cho đa số người dùng.",
+      "large_v3_turbo_q5_0": "Mô hình turbo gọn nhẹ. Nhỏ và nhanh."
+    },
+    "avx": {
+      "title": "Máy này không tương thích với bản dựng này",
+      "desc": "Bộ xử lý của bạn không hỗ trợ các lệnh AVX2 mà bản Whisper dựng sẵn yêu cầu. Điều này ảnh hưởng đến các bộ xử lý sản xuất trước năm 2013 (Intel thế hệ 3 trở về trước, AMD đời đầu).",
+      "howTo": "Cách khắc phục:",
+      "step1": "Tải bản dựng tương thích từ <link>các bản phát hành whisper.cpp</link>. Hãy tìm bản dựng <b>noavx</b> hoặc <b>compat</b>, hoặc tự dựng với AVX2 bị tắt.",
+      "step2": "Khi đã cài xong, hãy đặt đường dẫn của nó tại <b>Cài đặt, Whisper, Đường dẫn tệp tùy chỉnh</b>.",
+      "skipHint": "Hoặc bỏ qua lúc này và dùng gia sư AI cùng các tính năng khác. Phiên âm chỉ cần cho Phụ đề trực tiếp và Podcast."
+    }
+  }
+}

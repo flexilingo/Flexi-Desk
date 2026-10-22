@@ -15,6 +15,7 @@
   "matchCount_many": "{{count}} فيديو مطابقًا",
   "matchCount_other": "{{count}} فيديو مطابق",
   "matchCount": "{{count}} فيديو مطابق",
+  "matchCount_zero": "لا توجد فيديوهات مطابقة",
   "removeFilter": "إزالة الفلتر: {{name}}",
   "minutes": "{{count}} دقيقة",
   "backToCatalogue": "العودة إلى الفيديوهات",
@@ -110,11 +111,8 @@
     "page": "الصفحة {{page}} من {{total}}"
   },
   "watch": {
-    "startHint": "اضغط زر التشغيل على الفيديو نفسه لبدء التشغيل. بعد ذلك تعمل أزرار التحكم في الأسفل.",
     "preparing": "جارٍ فتح الفيديو…",
-    "importFailed": "تعذّر فتح هذا الفيديو. حاول مرة أخرى.",
-    "noTranscript": "لا توجد ترجمة تفاعلية لهذا الفيديو بعد.",
-    "replay": "شاهد مرة أخرى"
+    "importFailed": "تعذّر فتح هذا الفيديو. حاول مرة أخرى."
   },
   "watchWithSubtitles": "شاهد مع الترجمة"
 }

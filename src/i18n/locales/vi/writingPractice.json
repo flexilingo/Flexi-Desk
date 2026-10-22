@@ -1,0 +1,201 @@
+{
+  "title": "Luyện Viết",
+  "subtitle": "Cải thiện kỹ năng viết với phản hồi hỗ trợ AI",
+  "selectExamType": "Chọn Loại Bài Thi",
+  "selectExamTypeDescription": "Chọn loại bài viết bạn muốn luyện tập",
+  "generatePrompt": "Tạo Đề Bài Mới",
+  "generatingPrompt": "Đang tạo đề bài...",
+  "startWriting": "Bắt Đầu Viết",
+  "startSession": "Bắt Đầu Buổi Học",
+  "submit": "Nộp để Chấm Điểm",
+  "submitting": "Đang chấm bài...",
+  "retrySumbit": "Thử Lại Chấm Điểm",
+  "backToList": "Quay Lại Luyện Viết",
+  "newSession": "Buổi Luyện Mới",
+  "examTypes": {
+    "ielts_task1": "IELTS Task 1",
+    "ielts_task2": "IELTS Task 2",
+    "toefl_integrated": "TOEFL Tích Hợp",
+    "toefl_independent": "TOEFL Độc Lập",
+    "celpip": "CELPIP",
+    "cambridge_fce": "Cambridge B2 First",
+    "cambridge_cae": "Cambridge C1 Advanced",
+    "duolingo": "Viết Câu Trả Lời Ngắn",
+    "pte": "PTE Academic",
+    "general_email": "Viết Email",
+    "general_essay": "Viết Luận Văn",
+    "general_letter": "Viết Thư",
+    "general_report": "Viết Báo Cáo"
+  },
+  "examDescriptions": {
+    "ielts_task1": "Mô tả biểu đồ, đồ thị hoặc sơ đồ trong 150+ từ",
+    "ielts_task2": "Viết bài luận thảo luận trong 250+ từ",
+    "toefl_integrated": "Tóm tắt bài đọc và bài giảng trong 150-225 từ",
+    "toefl_independent": "Bày tỏ ý kiến với ví dụ trong 300+ từ",
+    "celpip": "Hoàn thành các bài viết thực tế cho định cư Canada",
+    "cambridge_fce": "Bài viết cấp B2: bài luận, bài viết, đánh giá",
+    "cambridge_cae": "Bài viết cấp C1: đề xuất, báo cáo, bài luận",
+    "duolingo": "Phản hồi viết ngắn trong 50-100 từ",
+    "pte": "Bài luận học thuật và tóm tắt cho điểm PTE",
+    "general_email": "Luyện viết email trang trọng và thông thường",
+    "general_essay": "Viết bài luận có cấu trúc về các chủ đề khác nhau",
+    "general_letter": "Luyện viết thư trang trọng và thông thường",
+    "general_report": "Viết báo cáo chuyên nghiệp với phân tích dữ liệu"
+  },
+  "categories": {
+    "exams": "Chuẩn Bị Thi",
+    "general": "Luyện Tập Chung"
+  },
+  "timer": {
+    "remaining": "Thời Gian Còn",
+    "disabled": "Tắt Đồng Hồ",
+    "enable": "Bật Đồng Hồ",
+    "disable": "Tắt Đồng Hồ",
+    "timeUp": "Hết giờ!",
+    "minutes": "{{count}} phút",
+    "stopMessage": "Điều này sẽ kết thúc buổi viết. Bạn không thể tiếp tục. Bạn có chắc không?",
+    "stop": "Kết thúc phiên"
+  },
+  "editor": {
+    "placeholder": "Bắt đầu viết phản hồi tại đây...",
+    "wordCount": "Từ: {{count}}",
+    "wordTarget": "Mục tiêu: {{min}}-{{max}} từ",
+    "autoSaved": "Bản nháp đã lưu",
+    "saving": "Đang lưu...",
+    "wordsToGo": "còn {{count}} từ nữa"
+  },
+  "prompt": {
+    "title": "Đề Bài Viết",
+    "supplementary": "Tài Liệu Bổ Sung",
+    "readingPassage": "Đoạn Đọc",
+    "lectureSummary": "Tóm Tắt Bài Giảng",
+    "chartDescription": "Mô Tả Biểu Đồ/Đồ Thị",
+    "collapse": "Ẩn Đề Bài",
+    "expand": "Hiện Đề Bài"
+  },
+  "feedback": {
+    "title": "Phản Hồi AI",
+    "overall": "Điểm Tổng",
+    "criteria": "Phân Tích Tiêu Chí",
+    "strengths": "Điểm Mạnh",
+    "weaknesses": "Lĩnh Vực Cần Cải Thiện",
+    "errors": "Đánh Dấu Lỗi",
+    "errorTypes": {
+      "grammar": "Ngữ Pháp",
+      "vocabulary": "Từ Vựng",
+      "spelling": "Chính Tả",
+      "punctuation": "Dấu Câu"
+    },
+    "suggestions": "Gợi Ý Cải Thiện",
+    "rewritten": "Phiên Bản Cải Thiện Bởi AI",
+    "rewrittenDescription": "Đây là cách bài luận của bạn có thể được cải thiện trong khi vẫn giữ ý tưởng",
+    "showRewritten": "Hiện Phiên Bản Cải Thiện",
+    "hideRewritten": "Ẩn Phiên Bản Cải Thiện",
+    "original": "Bài Luận Gốc Của Bạn",
+    "improved": "Đã Cải Thiện",
+    "noFeedback": "Nộp bài để nhận phản hồi AI",
+    "noErrors": "Không tìm thấy lỗi - làm tốt lắm!",
+    "noSuggestions": "Không có gợi ý thêm",
+    "loading": "Đang tải buổi học...",
+    "gradingDescription": "AI của chúng tôi đang phân tích bài viết về ngữ pháp, từ vựng, cấu trúc và nhiều hơn...",
+    "scoreDisclaimer": "Ước tính AI — điểm có thể khác kết quả thi chính thức",
+    "vocabularyAnalysis": "Phân Tích Từ Vựng",
+    "lexicalDiversity": "Đa Dạng Từ Vựng",
+    "estimatedCEFR": "Cấp Độ CEFR",
+    "advancedWords": "Từ Nâng Cao Đã Dùng",
+    "suggestedUpgrades": "Nâng Cấp Từ Vựng",
+    "doubleChecked": "Đã Kiểm Tra Kép",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "AI của riêng bạn"
+    },
+    "badgeTitle": {
+      "pro": "Chấm Điểm FlexiLingo Pro",
+      "mini": "Chấm Điểm FlexiLingo Mini",
+      "own": "Được chấm bởi AI của riêng bạn"
+    },
+    "badgeBody": {
+      "pro": "Bài luận của bạn được chấm với mô hình AI tiên tiến nhất, với kiểm tra kép để đạt điểm chính xác và nhất quán hơn.",
+      "mini": "Bài luận của bạn được chấm với mô hình AI tiêu chuẩn. Nâng cấp lên Pro để chấm điểm chính xác hơn, điểm được kiểm tra kép và phản hồi chi tiết.",
+      "own": "Bài viết của bạn được chấm bởi AI bạn đã thiết lập ({{model}}), không phải đám mây của FlexiLingo."
+    }
+  },
+  "history": {
+    "title": "Lịch Sử Viết",
+    "noHistory": "Chưa có buổi viết nào. Bắt đầu luyện tập đầu tiên!",
+    "viewDetails": "Xem Chi Tiết",
+    "filterByExam": "Lọc theo loại bài thi",
+    "allTypes": "Tất Cả Loại",
+    "score": "Điểm",
+    "wordsWritten": "từ",
+    "timeSpent": "Thời Gian Học",
+    "gradedOn": "Đã Chấm"
+  },
+  "stats": {
+    "title": "Tiến Độ Của Bạn",
+    "totalSessions": "Tổng Buổi Học",
+    "gradedSessions": "Đã Chấm Điểm",
+    "avgScore": "Điểm Trung Bình",
+    "scoreTrend": "Xu Hướng Điểm",
+    "bestCriteria": "Lĩnh Vực Tốt Nhất",
+    "weakestCriteria": "Cần Cải Thiện",
+    "noStats": "Hoàn thành vài buổi học để xem tiến độ"
+  },
+  "usage": {
+    "remaining": "Còn {{count}} buổi học tháng này",
+    "unlimited": "Buổi học không giới hạn",
+    "used": "{{used}} trong {{limit}} đã dùng",
+    "upgradePrompt": "Nâng cấp để có thêm buổi luyện viết",
+    "limitReached": "Đã đạt giới hạn",
+    "dailyLimitReached": "Đã đạt giới hạn ngày",
+    "monthlyLimitReached": "Đã đạt giới hạn tháng",
+    "limitUsedAllDaily": "Giới hạn hàng tháng ({{monthlyLimit}}) đã hết. Phần bổ sung hàng ngày ({{dailyLimit}}/ngày) cũng đã dùng hết.",
+    "limitUsedAllMonthly": "Đã đạt giới hạn tháng. Bạn vẫn còn {{dailyLimit}} buổi/ngày.",
+    "limitUsedAllMonthlyNoDaily": "Bạn đã dùng hết tất cả buổi luyện viết tháng này.",
+    "limitResetDaily": "Đặt lại vào ngày mai!",
+    "limitResetMonthly": "Đặt lại vào đầu tháng sau."
+  },
+  "status": {
+    "active": "Đang Thực Hiện",
+    "submitted": "Đã Nộp",
+    "graded": "Đã Chấm Điểm"
+  },
+  "activeSession": {
+    "title": "Buổi Học Đang Hoạt Động",
+    "resume": "Tiếp Tục",
+    "existsMessage": "Bạn đã có buổi viết đang hoạt động. Vui lòng hoàn thành hoặc nộp trước khi bắt đầu buổi mới."
+  },
+  "timerToggle": "Bật đồng hồ đếm ngược",
+  "disclaimer": "FlexiLingo là nền tảng luyện tập độc lập, không liên kết hoặc được chứng thực bởi bất kỳ tổ chức thi chính thức nào. Tất cả tên bài thi đều là thương hiệu đã đăng ký của tổ chức tương ứng.",
+  "back": "Quay Lại",
+  "cancel": "Hủy",
+  "origin": {
+    "local": "Trên máy tính này",
+    "cloud": "Đám mây"
+  },
+  "cloudSessionOff": {
+    "title": "Phiên này nằm trong đám mây FlexiLingo của bạn",
+    "body": "Bật AI đám mây trong Cài đặt để mở phiên này."
+  },
+  "dashboardChip": "Luyện viết",
+  "errors": {
+    "UNKNOWN_ERROR": "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.",
+    "WRITING_SESSION_NOT_FOUND": "Không tìm thấy phiên viết.",
+    "WRITING_GRADING_FAILED": "Chấm điểm AI thất bại. Vui lòng thử nộp lại.",
+    "WRITING_ESSAY_TOO_SHORT": "Bài luận của bạn quá ngắn. Vui lòng viết thêm trước khi nộp.",
+    "WRITING_ESSAY_TOO_LONG": "Bài luận của bạn quá dài. Vui lòng rút ngắn trước khi nộp.",
+    "WRITING_PROMPT_GENERATION_FAILED": "Không thể tạo đề bài. Vui lòng thử lại.",
+    "DAILY_LIMIT_REACHED": "Đã đạt giới hạn hàng ngày. Hãy quay lại vào ngày mai!",
+    "MONTHLY_LIMIT_REACHED": "Đã đạt giới hạn hàng tháng. Hãy thử lại vào tháng sau hoặc nâng cấp gói của bạn.",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "Bài luận này đã được nộp để chấm điểm.",
+    "SESSION_CREATION_FAILED": "Không thể tạo phiên viết. Vui lòng thử lại.",
+    "INVALID_EXAM_TYPE": "Loại bài thi được chọn không hợp lệ.",
+    "MISSING_REQUIRED_FIELDS": "Vui lòng điền vào tất cả các trường bắt buộc.",
+    "AUTH_REQUIRED": "Vui lòng đăng nhập để sử dụng tính năng này.",
+    "WRITING_SESSION_CANCELLED": "Phiên viết này đã kết thúc.",
+    "SAVE_DRAFT_FAILED": "Không thể lưu bản nháp. Hãy thử lại.",
+    "CANCEL_SESSION_FAILED": "Không thể kết thúc phiên. Hãy thử lại.",
+    "WRITING_PROMPT_NOT_FOUND": "Không tìm thấy đề bài viết."
+  }
+}

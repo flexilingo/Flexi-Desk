@@ -1,0 +1,116 @@
+{
+  "confidence": {
+    "level_1": "verloren",
+    "level_2": "Die Hälfte",
+    "level_3": "Verstanden",
+    "question": "Wie viel hast du verstanden?"
+  },
+  "controls": {
+    "again": "Nochmal",
+    "begin": "Loslegen",
+    "continue": "Weiter",
+    "next": "Weiter",
+    "resume": "Fortsetzen",
+    "skip": "Überspringen"
+  },
+  "launcher": {
+    "label": "Übung"
+  },
+  "picker": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "minutes": "{{n}} Min.",
+    "range": "Abschnitt",
+    "rangeFrom": "Von {{at}} bis {{to}}",
+    "resume": "Übung fortsetzen – Schritt {{n}} von {{total}}",
+    "start": "Starten",
+    "subtitle": "Wähle einen kurzen Abschnitt und trainiere ihn. Kurz schlägt lang.",
+    "title": "Diesen Podcast üben"
+  },
+  "programs": {
+    "dictation": {
+      "description": "Schreib, was du hörst – Wort für Wort geprüft",
+      "label": "Diktat"
+    },
+    "loopCrack": {
+      "description": "Ein kurzer Abschnitt in Schleife, bis du jedes Wort hörst",
+      "label": "Wiederholen, bis es sitzt"
+    },
+    "threePass": {
+      "description": "Ohne Untertitel, dann mit, dann wieder ohne",
+      "label": "Drei Durchgänge"
+    }
+  },
+  "rail": {
+    "cycleIdle": "Zuhören – nächste Übung in ein paar Minuten",
+    "exit": "Übung beenden",
+    "stepOf": "{{n}} von {{total}}",
+    "working": "Übung"
+  },
+  "steps": {
+    "blind1": {
+      "body": "Versuch nicht, jedes Wort zu erwischen. Erfasse nur die Form.",
+      "title": "Erster Durchgang – ohne Untertitel"
+    },
+    "blind2": {
+      "body": "Dasselbe Audio. Achte darauf, wie viel mehr jetzt ankommt.",
+      "title": "Dritter Durchgang – ohne Untertitel"
+    },
+    "confidence": {
+      "title": "Wie lief es?"
+    },
+    "dictation": {
+      "check": "Prüfen",
+      "hint": "Bisher {{replays}} Wiederholungen. Nimm so viele, wie du brauchst.",
+      "placeholder": "Schreib, was du gehört hast…",
+      "retry": "Erneut versuchen",
+      "title": "Schreib, was du hörst",
+      "verdict_close": "{{pct}}% – knapp",
+      "verdict_missed": "{{pct}}% – lohnt sich, nochmal zu hören",
+      "verdict_pass": "{{pct}}% – geschafft"
+    },
+    "dictationBrief": {
+      "body": "Du hörst einen kurzen Abschnitt zweimal. Schreib auf, was du hörst – Wiederholungen sind kostenlos.",
+      "title": "Diktat"
+    },
+    "dictationCheck": {
+      "body": "Dasselbe Audio mit 0,85x und sichtbarem Text.",
+      "title": "Nochmal hören, langsamer"
+    },
+    "guided": {
+      "body": "Lies jetzt mit und finde, was du verpasst hast.",
+      "title": "Zweiter Durchgang – mit Untertiteln"
+    },
+    "loop": {
+      "gotIt": "Hab’s verstanden",
+      "hint": "Wird wiederholt, bis du es hast.",
+      "revealedHint": "Hör es jetzt noch einmal mit dem Text vor Augen.",
+      "showMe": "Zeig es mir",
+      "title": "Hör genau hin"
+    },
+    "loopBrief": {
+      "body": "Ein kurzer Abschnitt wiederholt sich. Tippe, sobald du jedes Wort hörst.",
+      "title": "Wiederholen, bis es sitzt"
+    },
+    "preteach": {
+      "body": "Zwanzig Sekunden, um die schweren kennenzulernen, bevor du sie hörst.",
+      "empty": "Nichts Ungewöhnliches in diesem Abschnitt – leg direkt los.",
+      "loading": "Wortniveaus werden geprüft…",
+      "startListening": "Zuhören starten",
+      "title": "Wörter, die gleich kommen"
+    }
+  },
+  "summary": {
+    "addToDeck": "{{n}} Wörter hinzufügen",
+    "delta": "{{from}} auf {{to}} – +{{n}} beim selben Audio",
+    "deltaFlat": "Beide Male dasselbe Ergebnis",
+    "deltaFlatHint": "Hier lohnt es sich, morgen noch einmal reinzuhören.",
+    "done": "Fertig",
+    "keepGoing": "Weitermachen – nächste Übung in {{n}} Min.",
+    "missedWords": "Wörter, die du verpasst hast",
+    "statAccuracy": "Genauigkeit",
+    "statCracked": "Geknackt",
+    "statMinutes": "Minuten",
+    "title": "Session complete"
+  }
+}

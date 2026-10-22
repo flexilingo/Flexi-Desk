@@ -111,6 +111,7 @@
       "subtitlesRule_few": "تُفتح ترجمة كل تسجيل بعد أن تستمع إليه كاملًا {{required}} مرات دون التقديم.",
       "subtitlesRule_many": "تُفتح ترجمة كل تسجيل بعد أن تستمع إليه كاملًا {{required}} مرة دون التقديم.",
       "subtitlesRule_other": "تُفتح ترجمة كل تسجيل بعد أن تستمع إليه كاملًا {{required}} مرة دون التقديم.",
+      "subtitlesRule_zero": "تُفتح ترجمة كل تسجيل بعد أن تستمع إليه كاملًا مرة واحدة دون تخطٍّ.",
       "subtitlesOpen": "الترجمة",
       "subtitlesLocked": "الترجمة {{n}}/{{required}}",
       "subtitlesLockedTitle": "استُمع إليه كاملًا {{n}} من {{required}} مرات"

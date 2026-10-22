@@ -1,0 +1,116 @@
+{
+  "confidence": {
+    "level_1": "lạc lối",
+    "level_2": "Một nửa",
+    "level_3": "Hiểu rồi",
+    "question": "Bạn nghe được bao nhiêu?"
+  },
+  "controls": {
+    "again": "Lại",
+    "begin": "Bắt đầu",
+    "continue": "Tiếp tục",
+    "next": "Tiếp",
+    "resume": "Tiếp tục",
+    "skip": "Bỏ qua"
+  },
+  "launcher": {
+    "label": "Luyện tập"
+  },
+  "picker": {
+    "cancel": "Hủy",
+    "close": "Đóng",
+    "minutes": "{{n}} phút",
+    "range": "Đoạn",
+    "rangeFrom": "Từ {{at}} đến {{to}}",
+    "resume": "Tiếp tục bài luyện — bước {{n}}/{{total}}",
+    "start": "Bắt đầu",
+    "subtitle": "Chọn một đoạn ngắn và luyện thật kỹ. Ngắn hiệu quả hơn dài.",
+    "title": "Luyện tập podcast này"
+  },
+  "programs": {
+    "dictation": {
+      "description": "Gõ lại những gì bạn nghe, kiểm tra từng từ",
+      "label": "Nghe Chép"
+    },
+    "loopCrack": {
+      "description": "Một đoạn ngắn phát lặp lại đến khi bạn nghe rõ từng từ",
+      "label": "Lặp lại đến khi nghe ra"
+    },
+    "threePass": {
+      "description": "Nghe không phụ đề, rồi có phụ đề, rồi lại không phụ đề",
+      "label": "Nghe ba lượt"
+    }
+  },
+  "rail": {
+    "cycleIdle": "Đang nghe — bài luyện tiếp theo sau vài phút",
+    "exit": "Thoát luyện tập",
+    "stepOf": "{{n}} trên {{total}}",
+    "working": "Luyện tập"
+  },
+  "steps": {
+    "blind1": {
+      "body": "Đừng cố bắt từng từ. Chỉ cần nắm ý chung.",
+      "title": "Lượt một — không phụ đề"
+    },
+    "blind2": {
+      "body": "Cùng đoạn âm thanh. Hãy để ý bạn nghe ra được nhiều hơn thế nào.",
+      "title": "Lượt ba — không phụ đề"
+    },
+    "confidence": {
+      "title": "Lượt vừa rồi thế nào?"
+    },
+    "dictation": {
+      "check": "Kiểm tra",
+      "hint": "Đã nghe lại {{replays}} lần. Nghe bao nhiêu lần cũng được.",
+      "placeholder": "Gõ những gì bạn nghe được…",
+      "retry": "Thử lại",
+      "title": "Viết lại những gì bạn nghe",
+      "verdict_close": "{{pct}}% — gần đúng",
+      "verdict_missed": "{{pct}}% — nên nghe lại",
+      "verdict_pass": "{{pct}}% — chính xác"
+    },
+    "dictationBrief": {
+      "body": "Bạn sẽ nghe một đoạn ngắn hai lần. Hãy viết lại những gì nghe được — nghe lại không giới hạn.",
+      "title": "Nghe Chép"
+    },
+    "dictationCheck": {
+      "body": "Cùng đoạn âm thanh ở tốc độ 0,85x, có hiện lời.",
+      "title": "Nghe lại, chậm hơn"
+    },
+    "guided": {
+      "body": "Giờ hãy đọc theo và tìm những gì bạn đã bỏ lỡ.",
+      "title": "Lượt hai — có phụ đề"
+    },
+    "loop": {
+      "gotIt": "Tôi nghe ra rồi",
+      "hint": "Đang lặp lại đến khi bạn nghe ra.",
+      "revealedHint": "Giờ nghe lại với lời thoại trước mặt.",
+      "showMe": "Cho tôi xem",
+      "title": "Nghe thật kỹ"
+    },
+    "loopBrief": {
+      "body": "Một đoạn ngắn được lặp lại. Chạm khi bạn nghe rõ từng từ.",
+      "title": "Lặp lại đến khi nghe ra"
+    },
+    "preteach": {
+      "body": "Hai mươi giây để làm quen với các từ khó trước khi nghe.",
+      "empty": "Đoạn này không có gì khó — nghe luôn nhé.",
+      "loading": "Đang kiểm tra trình độ từ…",
+      "startListening": "Bắt đầu nghe",
+      "title": "Những từ sắp xuất hiện"
+    }
+  },
+  "summary": {
+    "addToDeck": "Thêm {{n}} từ",
+    "delta": "Từ {{from}} lên {{to}} — +{{n}} trên cùng đoạn âm thanh",
+    "deltaFlat": "Hai lần cùng điểm",
+    "deltaFlatHint": "Đoạn này đáng để quay lại vào ngày mai.",
+    "done": "Xong",
+    "keepGoing": "Tiếp tục — luyện lại sau {{n}} phút",
+    "missedWords": "Những từ bạn bỏ lỡ",
+    "statAccuracy": "Độ Chính Xác",
+    "statCracked": "Đã nghe ra",
+    "statMinutes": "phút",
+    "title": "Session complete"
+  }
+}

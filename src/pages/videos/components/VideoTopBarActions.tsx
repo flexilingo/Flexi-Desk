@@ -4,11 +4,12 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { Tv, Youtube } from 'lucide-react';
 import { youtubeWatchUrl } from '../lib/videoFilters';
 import type { VideoSummary } from '../lib/videosApi';
+import { CARD_ICON_BUTTON } from '@/pages/podcast/components/now-playing/CardActions';
 
-const ICON_BUTTON =
-  'flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground';
+// The same plain icon button as the player card's Bookmark, Episodes and Share (website: CardActions).
+const ICON_BUTTON = CARD_ICON_BUTTON;
 
-/** Player top-bar extras for a video: its channel page, and the video on YouTube (in the browser). */
+/** The player card's extras for a video: its channel page, and the video on YouTube (in the browser). */
 export function VideoTopBarActions({ video }: { video: VideoSummary }) {
   const { t } = useTranslation('videos');
   return (
@@ -24,7 +25,7 @@ export function VideoTopBarActions({ video }: { video: VideoSummary }) {
           aria-label={t('player.openChannel')}
           className={ICON_BUTTON}
         >
-          <Tv className="h-4 w-4" />
+          <Tv className="h-[18px] w-[18px]" />
         </Link>
       )}
       <button
@@ -34,7 +35,7 @@ export function VideoTopBarActions({ video }: { video: VideoSummary }) {
         aria-label={t('player.openOnYoutube')}
         className={ICON_BUTTON}
       >
-        <Youtube className="h-4 w-4" />
+        <Youtube className="h-[18px] w-[18px]" />
       </button>
     </>
   );

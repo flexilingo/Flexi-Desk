@@ -1,0 +1,201 @@
+{
+  "title": "写作练习",
+  "subtitle": "通过AI反馈提升您的写作技能",
+  "selectExamType": "选择考试类型",
+  "selectExamTypeDescription": "选择您想要练习的写作类型",
+  "generatePrompt": "生成新题目",
+  "generatingPrompt": "正在生成题目...",
+  "startWriting": "开始写作",
+  "startSession": "开始练习",
+  "submit": "提交评分",
+  "submitting": "正在评分...",
+  "retrySumbit": "重新评分",
+  "backToList": "返回写作练习",
+  "newSession": "新练习",
+  "examTypes": {
+    "ielts_task1": "雅思 Task 1",
+    "ielts_task2": "雅思 Task 2",
+    "toefl_integrated": "托福综合写作",
+    "toefl_independent": "托福独立写作",
+    "celpip": "CELPIP",
+    "cambridge_fce": "剑桥 B2 First",
+    "cambridge_cae": "剑桥 C1 Advanced",
+    "duolingo": "短文写作",
+    "pte": "PTE 学术",
+    "general_email": "邮件写作",
+    "general_essay": "论文写作",
+    "general_letter": "信件写作",
+    "general_report": "报告写作"
+  },
+  "examDescriptions": {
+    "ielts_task1": "用150+字描述图表和图形",
+    "ielts_task2": "用250+字撰写议论文",
+    "toefl_integrated": "用150-225字总结阅读和讲座",
+    "toefl_independent": "用300+字表达观点并举例",
+    "celpip": "加拿大移民实用写作任务",
+    "cambridge_fce": "B2级写作：论文、文章、评论",
+    "cambridge_cae": "C1级写作：提案、报告、论文",
+    "duolingo": "50-100字的简短写作回答",
+    "pte": "PTE评分的学术论文和摘要",
+    "general_email": "练习正式和非正式邮件写作",
+    "general_essay": "就各种主题撰写结构化论文",
+    "general_letter": "练习正式和非正式信件写作",
+    "general_report": "撰写带数据分析的专业报告"
+  },
+  "categories": {
+    "exams": "考试准备",
+    "general": "通用练习"
+  },
+  "timer": {
+    "remaining": "剩余时间",
+    "disabled": "计时器关闭",
+    "enable": "开启计时器",
+    "disable": "关闭计时器",
+    "timeUp": "时间到！",
+    "minutes": "{{count}} 分钟",
+    "stopMessage": "这将结束您的写作练习。您将无法继续。确定吗？",
+    "stop": "结束本次练习"
+  },
+  "editor": {
+    "placeholder": "在此开始写作...",
+    "wordCount": "字数：{{count}}",
+    "wordTarget": "目标：{{min}}-{{max}} 字",
+    "autoSaved": "草稿已保存",
+    "saving": "保存中...",
+    "wordsToGo": "还差 {{count}} 个词"
+  },
+  "prompt": {
+    "title": "写作题目",
+    "supplementary": "补充材料",
+    "readingPassage": "阅读文章",
+    "lectureSummary": "讲座摘要",
+    "chartDescription": "图表描述",
+    "collapse": "隐藏题目",
+    "expand": "显示题目"
+  },
+  "feedback": {
+    "title": "AI 评估",
+    "overall": "总分",
+    "criteria": "评分标准详情",
+    "strengths": "优势",
+    "weaknesses": "改进方向",
+    "errors": "错误提示",
+    "errorTypes": {
+      "grammar": "语法",
+      "vocabulary": "词汇",
+      "spelling": "拼写",
+      "punctuation": "标点"
+    },
+    "suggestions": "改进建议",
+    "rewritten": "AI 改进版本",
+    "rewrittenDescription": "保留您的想法的同时，展示文章如何改进",
+    "showRewritten": "显示改进版本",
+    "hideRewritten": "隐藏改进版本",
+    "original": "您的原文",
+    "improved": "已改进",
+    "noFeedback": "提交文章以获取AI评估",
+    "noErrors": "未发现错误 - 太棒了！",
+    "noSuggestions": "没有其他建议",
+    "loading": "正在加载...",
+    "gradingDescription": "AI正在分析您的语法、词汇、结构等...",
+    "scoreDisclaimer": "AI 估分 — 分数可能与正式考试结果不同",
+    "vocabularyAnalysis": "词汇分析",
+    "lexicalDiversity": "词汇多样性",
+    "estimatedCEFR": "CEFR 等级",
+    "advancedWords": "使用的高级词汇",
+    "suggestedUpgrades": "词汇提升建议",
+    "doubleChecked": "双重验证",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "你自己的 AI"
+    },
+    "badgeTitle": {
+      "pro": "FlexiLingo Pro 评估",
+      "mini": "FlexiLingo Mini 评估",
+      "own": "由你自己的 AI 批改"
+    },
+    "badgeBody": {
+      "pro": "您的文章使用最先进的AI模型评分，并经过双重验证以确保更准确一致的分数。",
+      "mini": "您的文章使用标准AI模型评分。升级到Pro获取更精准的评分、双重验证和详细反馈。",
+      "own": "你的作文由你设置的 AI（{{model}}）批改，而不是 FlexiLingo 云端。"
+    }
+  },
+  "history": {
+    "title": "写作历史",
+    "noHistory": "还没有写作记录。开始您的第一次练习！",
+    "viewDetails": "查看详情",
+    "filterByExam": "按考试类型筛选",
+    "allTypes": "所有类型",
+    "score": "分数",
+    "wordsWritten": "字",
+    "timeSpent": "用时",
+    "gradedOn": "评分日期"
+  },
+  "stats": {
+    "title": "您的进度",
+    "totalSessions": "总练习次数",
+    "gradedSessions": "已评分",
+    "avgScore": "平均分",
+    "scoreTrend": "分数趋势",
+    "bestCriteria": "最佳领域",
+    "weakestCriteria": "需要加强",
+    "noStats": "完成几次练习后查看您的进度"
+  },
+  "usage": {
+    "remaining": "本月剩余 {{count}} 次",
+    "unlimited": "无限次练习",
+    "used": "已使用 {{used}}/{{limit}}",
+    "upgradePrompt": "升级以获取更多写作练习次数",
+    "limitReached": "已达到限制",
+    "dailyLimitReached": "已达到每日限制",
+    "monthlyLimitReached": "已达到月度限制",
+    "limitUsedAllDaily": "月度额度（{{monthlyLimit}}）已用完。每日额度（{{dailyLimit}}/天）也已用完。",
+    "limitUsedAllMonthly": "月度额度已用完。您每天还有 {{dailyLimit}} 次练习机会。",
+    "limitUsedAllMonthlyNoDaily": "您本月的写作练习次数已用完。",
+    "limitResetDaily": "明天重置！",
+    "limitResetMonthly": "下月初重置。"
+  },
+  "status": {
+    "active": "进行中",
+    "submitted": "已提交",
+    "graded": "已评分"
+  },
+  "activeSession": {
+    "title": "进行中的练习",
+    "resume": "继续",
+    "existsMessage": "你已有一个进行中的写作练习。请先完成或提交，再开始新的练习。"
+  },
+  "timerToggle": "启用倒计时",
+  "disclaimer": "FlexiLingo是一个独立的练习平台，与任何官方考试机构无隶属关系或背书。所有考试名称均为各自组织的注册商标。",
+  "back": "返回",
+  "cancel": "取消",
+  "origin": {
+    "local": "在这台电脑上",
+    "cloud": "云端"
+  },
+  "cloudSessionOff": {
+    "title": "这次练习在你的 FlexiLingo 云端",
+    "body": "请在设置中开启云端 AI 后再打开。"
+  },
+  "dashboardChip": "写作练习",
+  "errors": {
+    "UNKNOWN_ERROR": "发生意外错误。请重试。",
+    "WRITING_SESSION_NOT_FOUND": "未找到写作会话。",
+    "WRITING_GRADING_FAILED": "AI评分失败。请重新提交。",
+    "WRITING_ESSAY_TOO_SHORT": "您的作文太短了。请在提交前多写一些。",
+    "WRITING_ESSAY_TOO_LONG": "您的作文太长了。请在提交前缩短内容。",
+    "WRITING_PROMPT_GENERATION_FAILED": "生成写作题目失败。请重试。",
+    "DAILY_LIMIT_REACHED": "已达每日限额。明天再来吧！",
+    "MONTHLY_LIMIT_REACHED": "已达月度限额。请下月再试或升级您的套餐。",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "该作文已提交评分。",
+    "SESSION_CREATION_FAILED": "创建语音会话失败。请重试。",
+    "INVALID_EXAM_TYPE": "所选考试类型无效。",
+    "MISSING_REQUIRED_FIELDS": "请填写所有必填项。",
+    "AUTH_REQUIRED": "请登录以使用此功能。",
+    "WRITING_SESSION_CANCELLED": "这次写作练习已结束。",
+    "SAVE_DRAFT_FAILED": "草稿保存失败，请重试。",
+    "CANCEL_SESSION_FAILED": "无法结束练习，请重试。",
+    "WRITING_PROMPT_NOT_FOUND": "找不到写作题目。"
+  }
+}

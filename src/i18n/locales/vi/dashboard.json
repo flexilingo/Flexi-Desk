@@ -1,0 +1,413 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "Chào buổi sáng, {{name}}",
+      "afternoon": "Chào buổi chiều, {{name}}",
+      "evening": "Chào buổi tối, {{name}}"
+    },
+    "greetingNoName": {
+      "morning": "Chào buổi sáng",
+      "afternoon": "Chào buổi chiều",
+      "evening": "Chào buổi tối"
+    },
+    "streak_other": "{{count, number}} ngày liên tiếp",
+    "streakNone": "Bắt đầu chuỗi ngày học từ hôm nay",
+    "level": "Cấp {{level, number}}",
+    "achievements_exact0": "Chưa có thành tích nào",
+    "achievements_other": "{{count, number}} thành tích",
+    "loadError": "Không tải được một số số liệu của bạn. Hãy tải lại trang để thử lại.",
+    "duration": {
+      "hours": "{{h, number}} giờ {{m, number}} phút",
+      "minutes": "{{m, number}} phút"
+    },
+    "next": {
+      "eyebrowExam": "Bước tiếp theo · {{exam}}",
+      "eyebrowMinutes_other": "Bước tiếp theo · khoảng {{count, number}} phút",
+      "eyebrowMinutesLeft_other": "Bước tiếp theo · còn {{count, number}} phút",
+      "eyebrowReading": "Bước tiếp theo · đọc tiếp",
+      "eyebrowFirst": "Bước đầu tiên · 5 phút",
+      "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
+      "practice": {
+        "title": "Một bài luyện ngắn: {{skill}}",
+        "whyLowest": "Phần yếu nhất của bạn trong các bài gần đây — một bài ngắn, có điểm ngay.",
+        "whyUntried": "Bạn chưa thử phần này — một bài ngắn, có điểm ngay.",
+        "cta": "Bắt đầu luyện tập"
+      },
+      "review": {
+        "title_other": "{{count, number}} thẻ đang chờ ôn tập",
+        "why": "Những từ bạn đã thu thập, quay lại ngay trước khi bạn quên.",
+        "cta": "Bắt Đầu Ôn Tập"
+      },
+      "episode": {
+        "title": "Nghe hết {{title}}",
+        "why": "Tiếp tục từ chỗ bạn dừng. Chạm vào từ bạn chưa biết để xem nghĩa và lưu lại.",
+        "cta": "Nghe tiếp"
+      },
+      "book": {
+        "title": "Đọc tiếp {{title}}",
+        "page": "Bạn đang ở trang {{page, number}} trên {{total, number}}.",
+        "pageOnly": "Bạn đang ở trang {{page, number}}.",
+        "cta": "Đọc tiếp"
+      },
+      "start": {
+        "title": "Nghe một tập ngắn và chạm vào mọi từ bạn chưa biết",
+        "why": "Nghĩa hiện ngay tại chỗ và từ được giữ trong “Từ vựng của tôi”. Sau đó FlexiLingo biến nó thành thẻ ôn tập.",
+        "cta": "Chọn một tập"
+      },
+      "after": "Sau đó:",
+      "chip": {
+        "practice": "Luyện ngắn: {{skill}}",
+        "review_other": "{{count, number}} thẻ cần ôn tập",
+        "episode": "{{title}} · còn {{count, number}} phút",
+        "book": "Đọc tiếp {{title}}",
+        "library": "Hoặc đọc một cuốn sách dễ",
+        "exam": "Bạn đang ôn thi?"
+      }
+    },
+    "week": {
+      "title": "7 ngày qua",
+      "year": "Cả năm",
+      "caption": "thời gian ôn và học",
+      "emptyBody": "Mỗi phút bạn ôn tập hoặc tự ghi lại sẽ thành một cột ở đây. Mười phút mỗi ngày là đủ để thấy khác biệt trong một tuần.",
+      "goal": "Mục tiêu hằng ngày {{count, number}} phút",
+      "today": "Hôm nay",
+      "activeDays": "Hoạt động {{count, number}} trong 7 ngày qua",
+      "best_other": "Chuỗi dài nhất: {{count, number}} ngày"
+    },
+    "path": {
+      "title": "Lộ trình học của bạn",
+      "lead": "Những gì bạn nghe và đọc trở thành từ vựng, ôn tập giữ những từ đó trong đầu, và cuối cùng chúng thể hiện trong bài thi của bạn.",
+      "here": "Bước tiếp theo của bạn ở đây",
+      "listen": {
+        "title": "Nghe và đọc",
+        "emptyTitle": "Chưa có gì",
+        "emptyBody": "Podcast và sách có sẵn đúng trình độ của bạn, tất cả đều có văn bản đầy đủ. Chạm vào từ bạn chưa biết.",
+        "unitHours": "giờ nghe, 30 ngày qua",
+        "unitMinutes": "phút nghe, 30 ngày qua",
+        "episodes": "Tập đã bắt đầu",
+        "followed": "Podcast đang theo dõi",
+        "books": "Sách và tệp",
+        "link": "Podcast"
+      },
+      "words": {
+        "title": "Thu thập từ",
+        "emptyTitle": "Chưa có từ",
+        "emptyBody": "Ở bất cứ đâu gặp từ chưa biết, hãy chạm vào. Bạn thấy nghĩa, cách phát âm và một ví dụ, và từ được giữ ở đây.",
+        "unit": "từ đã thu thập",
+        "thisWeek": "+{{count, number}} tuần này",
+        "suggested": "Gặp nhiều, chưa thành thẻ",
+        "notes": "Ghi chú",
+        "link": "Từ Vựng Của Tôi"
+      },
+      "review": {
+        "title": "Ôn Tập",
+        "emptyTitle": "Chưa có thẻ nào",
+        "emptyBody": "Những từ bạn thu thập trở thành thẻ, và mỗi thẻ quay lại ngay trước khi bạn quên.",
+        "emptyLink": "Bộ thẻ có sẵn",
+        "unit": "thẻ đã thuộc",
+        "due_other": "{{count, number}} thẻ đến hạn hôm nay",
+        "noneDue": "Hôm nay không có thẻ đến hạn",
+        "learned": "Đã thuộc",
+        "reviewing": "Đang ôn",
+        "unseen": "Chưa xem",
+        "decks": "Bộ thẻ",
+        "accuracy": "Câu Trả Lời Đúng",
+        "link": "Bộ thẻ"
+      },
+      "exam": {
+        "title": "Tự kiểm tra",
+        "emptyTitle": "Chưa chọn kỳ thi",
+        "emptyBody": "Bạn đang ôn CELPIP hoặc TCF? Một bài luyện 10 phút cho biết bạn đang ở đâu.",
+        "emptyBodyNone": "Không ôn thi — không sao cả. Nếu có lúc cần, một bài luyện 10 phút cho biết bạn đang ở đâu.",
+        "emptyLink": "Xem các kỳ thi",
+        "daysUnit_other": "ngày đến {{exam}}",
+        "takenUnit": "bài luyện {{exam}} đã làm",
+        "weekProgress": "{{done, number}} trên {{target, number}} buổi luyện tập tuần này",
+        "weakest": "Phần yếu nhất của bạn",
+        "scale": "Trung bình các bài gần đây, theo {{label}}",
+        "noScores": "Chưa có điểm. Làm một bài ngắn để biết bạn đang ở đâu.",
+        "taken": "Bài luyện đã làm",
+        "addDate": "Thêm ngày thi của bạn"
+      }
+    },
+    "shelf": {
+      "title": "Tiếp tục từ chỗ bạn dừng",
+      "starterTitle": "Sách để bắt đầu, đúng trình độ của bạn",
+      "library": "Thư viện",
+      "allPodcasts": "Podcast",
+      "minLeft": "còn {{count, number}} phút",
+      "page": "Trang {{page, number}} trên {{total, number}}",
+      "pageOnly": "Trang {{page, number}}",
+      "examTitle": "Luyện {{exam}}",
+      "examMeta": "Chưa hoàn thành",
+      "due_other": "{{count, number}} thẻ đến hạn hôm nay",
+      "level": "Trình độ {{level}}",
+      "kind": {
+        "podcast": "Podcast",
+        "book": "Sách",
+        "file": "Tệp",
+        "exam": "Kỳ thi",
+        "deck": "Bộ thẻ"
+      }
+    }
+  },
+  "examGoal": {
+    "title": "Bạn đang chuẩn bị cho kỳ thi nào?",
+    "subtitle": "Chọn một kỳ thi và bắt đầu một bài luyện ngắn ngay. Bạn có thể đổi sau trong Cài đặt.",
+    "celpip": "CELPIP",
+    "celpipHint": "Tiếng Anh · Canada",
+    "tcf": "TCF Canada",
+    "tcfHint": "Tiếng Pháp · Canada",
+    "tcfQuebec": "TCF Québec",
+    "tcfQuebecHint": "Tiếng Pháp · Québec",
+    "none": "Không thi",
+    "noneHint": "Tôi chỉ muốn tiến bộ",
+    "dateLabel": "Khi nào bạn thi? (không bắt buộc)",
+    "ctaCelpip": "Bắt đầu 10 phút luyện Reading",
+    "ctaTcf": "Bắt đầu 10 câu luyện nghe",
+    "ctaNone": "Khám phá Podcast",
+    "celpipNote": "Reading phần 1 · khoảng 10 phút · ước tính CLB",
+    "tcfNote": "Compréhension orale, câu 1–10 · khoảng 10 phút · không cần micro",
+    "notNow": "Để sau",
+    "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "nudgeTitle": "Bạn đang ôn CELPIP hay TCF?",
+    "nudgeBody": "Chọn kỳ thi của bạn và bắt đầu một bài luyện ngắn.",
+    "nudgeCta": "Chọn kỳ thi",
+    "nudgeClose": "Đóng",
+    "ctaSave": "Lưu kỳ thi của tôi",
+    "webOnlyNote": "Hiện tại phần luyện tập cho kỳ thi này mở trên trang web. Lựa chọn của bạn được lưu vào tài khoản."
+  },
+  "examResult": {
+    "title": "Bài thi {{exam}} của bạn thế nào?",
+    "subtitle": "Nhập điểm chính thức của bạn — dù chỉ một kỹ năng cũng hữu ích. Chúng tôi so sánh với điểm ước tính để bạn biết có thể tin chúng đến đâu.",
+    "notOutYet": "Chưa có kết quả",
+    "notTakenYet": "Tôi chưa thi",
+    "newDate": "Ngày thi mới",
+    "saveDate": "Lưu ngày",
+    "save": "Lưu điểm của tôi",
+    "enterOne": "Hãy nhập ít nhất một điểm.",
+    "outOfRange": "{{skill}} phải từ {{min}} đến {{max}}.",
+    "thanks": "Cảm ơn, điểm của bạn đã được lưu. Điều này giúp mọi người học ở đây biết điểm ước tính của chúng tôi chính xác đến đâu.",
+    "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "skills": {
+      "listening": "Nghe",
+      "reading": "Đọc",
+      "writing": "Viết",
+      "speaking": "Nói"
+    }
+  },
+  "examWeek": {
+    "title": "{{exam}} của bạn tuần này",
+    "daysLeft_other": "{{count, number}} ngày nữa đến kỳ thi của bạn",
+    "today": "Hôm nay là ngày thi — chúc bạn may mắn!",
+    "addDate": "Thêm ngày thi của bạn",
+    "progress": "{{done}}/{{target}} bài luyện tuần này",
+    "practiceTitle": "Luyện {{skill}}",
+    "practiceWhyUntried": "Bạn chưa thử phần này — một bài ngắn, có điểm ngay.",
+    "practiceWhyLowest": "Phần yếu nhất của bạn gần đây — một bài ngắn, có điểm ngay.",
+    "practiceCta": "Bắt đầu",
+    "listenTitleEn": "Nghe một podcast tiếng Anh",
+    "listenTitleFr": "Nghe một podcast tiếng Pháp",
+    "listenWhy": "15 phút kèm bản ghi — phần nghe chấm đúng điều này.",
+    "listenCta": "Chọn tập",
+    "readTitle": "Đọc vài trang",
+    "readWhy": "Sách của bạn hoặc sách trong thư viện — chạm vào từ bạn chưa biết.",
+    "readCta": "Mở Reader",
+    "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "skills": {
+      "celpip": {
+        "listening": "Nghe",
+        "reading": "Đọc",
+        "writing": "Viết",
+        "speaking": "Nói"
+      },
+      "tcf": {
+        "listening": "Compréhension orale",
+        "reading": "Compréhension écrite",
+        "writing": "Expression écrite",
+        "speaking": "Expression orale"
+      }
+    }
+  },
+  "pendingReviews": {
+    "title": "Ôn Tập Đang Chờ",
+    "totalDue": "{{count}} thẻ đến hạn",
+    "dueOf": "{{due}} đến hạn trong số {{total}} thẻ",
+    "moreDecks": "+{{count}} bộ thẻ khác",
+    "startReview": "Ôn Tập",
+    "allCaughtUp": "Đã xong tất cả!",
+    "allCaughtUpDesc": "Không có thẻ đến hạn ngay bây giờ. Làm tốt lắm!"
+  },
+  "statusBar": {
+    "streakDays": "ngày liên tiếp",
+    "bestStreak": "Tốt nhất: {{count}}",
+    "levelShort": "Cấp {{level}}",
+    "today": "Hôm nay",
+    "minutesToday": "{{minutes}} phút",
+    "xpToday": "{{xp}} XP"
+  },
+  "goalSuggestion": {
+    "increaseTitle": "Làm tốt lắm! Đã đến lúc nâng cao mục tiêu",
+    "decreaseTitle": "Đề Xuất Điều Chỉnh Mục Tiêu",
+    "increaseDescription": "Bạn đã đạt mục tiêu {{days}} ngày liên tiếp! Hiện tại: {{current}} từ. Đề xuất: {{suggested}} từ",
+    "decreaseDescription": "Mục tiêu hiện tại có vẻ khó khăn. Bạn chỉ đạt được {{days}} trong 7 ngày. Đề xuất: {{suggested}} từ",
+    "accept": "Chấp Nhận ({{goal}} từ)",
+    "dismiss": "Có Thể Sau"
+  },
+  "xp": {
+    "toNextLevel": "{{xp}} XP đến cấp tiếp theo",
+    "maxLevel": "Đã đạt cấp tối đa!"
+  },
+  "heatmap": {
+    "title": "Lịch Chuỗi Học",
+    "consecutiveDays": "ngày liên tiếp",
+    "clickToEdit": "Nhấp vào bất kỳ ngày nào để ghi hoặc chỉnh sửa thời gian học thủ công",
+    "loading": "Đang tải...",
+    "days": {
+      "sat": "T7",
+      "sun": "T7",
+      "mon": "T2",
+      "tue": "T3",
+      "wed": "T4",
+      "thu": "T3",
+      "fri": "T6"
+    },
+    "less": "Less",
+    "more": "Thêm",
+    "manualTime": "Thời gian thủ công đã ghi",
+    "futureDate": "Ngày trong tương lai",
+    "cardsReviewed": "Thẻ đã ôn:",
+    "autoTime": "Thời gian tự động:",
+    "manualTimeLabel": "Thời gian nhập tay:",
+    "total": "Tổng:",
+    "minutes": "phút",
+    "activeDays": "Ngày hoạt động:",
+    "addManualTime": "Thêm thời gian thủ công",
+    "ringLegend": "Vòng = thời gian học thủ công đã ghi",
+    "studyLabel": "Học:",
+    "listenLabel": "Nghe:",
+    "readLabel": "Đọc:"
+  },
+  "manualStudy": {
+    "title": "Ghi Thời Gian Học Thủ Công",
+    "description": "Ghi thời gian học thủ công để theo dõi tiến độ",
+    "date": "Ngày",
+    "studyTime": "Thời Gian Học (phút)",
+    "placeholder": "vd. 90 cho một tiếng rưỡi",
+    "equivalent": "Tương đương:",
+    "error": "Lỗi",
+    "invalidMinutes": "Số phút phải nằm trong khoảng từ 0 đến 600",
+    "invalidDate": "Ngày không hợp lệ",
+    "futureDate": "Không thể ghi thời gian học cho ngày trong tương lai",
+    "errorSaving": "Lỗi khi lưu thời gian học",
+    "errorDeleting": "Lỗi khi xóa thời gian học",
+    "delete": "Xóa",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "close": "Đóng",
+    "hours": "giờ",
+    "minutes": "phút",
+    "and": "và",
+    "zeroMinutes": "0 phút",
+    "dayTotal": "Tóm tắt ngày",
+    "activityTime": "Hoạt động",
+    "manualTime": "thủ công",
+    "total": "Tổng",
+    "cloudError": "Đã lưu trên máy này nhưng chưa lưu được vào tài khoản của bạn. Hãy thử lại."
+  },
+  "achievements": {
+    "title": "Thành Tích",
+    "unlocked": "Đã mở khóa",
+    "noAchievements": "Chưa có thành tích nào",
+    "startLearning": "Bắt đầu học để mở khóa thành tích đầu tiên!",
+    "showAll": "Hiển thị tất cả ({{count}})",
+    "showLess": "Thu gọn",
+    "levelUp": "Lên Cấp",
+    "levelUnlocked": "Trình độ {{level}}",
+    "maxed": "Tối Đa",
+    "locked": "Đã khóa",
+    "levels": "Cấp Độ",
+    "classic": "Tác phẩm kinh điển",
+    "nextLevel": "Tiếp:",
+    "progress": "Tiến Độ",
+    "detailTitle": "Chi Tiết Thành Tích",
+    "currentProgress": "Tiến Độ Hiện Tại",
+    "levelsList": "Cấp Độ",
+    "goAction": "Bắt Đầu!",
+    "pointsLabel": "{{points}} XP",
+    "thresholdLabel": "{{threshold}}",
+    "nextUnlock": "Mở khóa tiếp theo",
+    "nextUnlockProgress": "{{current}} / {{total}} · hoàn thành {{pct}}%",
+    "tier": {
+      "streak_master": "Chuỗi {{n, number}} ngày",
+      "word_scholar": "{{n, number}} từ",
+      "card_master": "{{n, number}} lần ôn tập",
+      "time_investor": "{{n, number}} phút",
+      "episode_explorer": "{{n, number}} tập",
+      "bookworm": "{{n, number}} tài liệu",
+      "steady_learner": "{{n, number}} ngày hoạt động"
+    },
+    "groups": {
+      "streak_master": {
+        "name": "Bậc thầy chuỗi ngày",
+        "hint": "Học vào những ngày liên tiếp. Mỗi ngày liên tiếp đều được tính.",
+        "action": "Học hôm nay"
+      },
+      "word_scholar": {
+        "name": "Học giả từ vựng",
+        "hint": "Lưu những từ bạn gặp khi nghe và đọc.",
+        "action": "Tìm từ mới"
+      },
+      "card_master": {
+        "name": "Bậc thầy thẻ",
+        "hint": "Ôn tập thẻ của bạn khi đến hạn.",
+        "action": "Bắt đầu ôn tập"
+      },
+      "time_investor": {
+        "name": "Nhà đầu tư thời gian",
+        "hint": "Số phút học, nghe và đọc cộng dồn lại.",
+        "action": "Cứ tiếp tục"
+      },
+      "episode_explorer": {
+        "name": "Nhà thám hiểm tập podcast",
+        "hint": "Bắt đầu các tập podcast và lắng nghe.",
+        "action": "Chọn một tập"
+      },
+      "bookworm": {
+        "name": "Mọt sách",
+        "hint": "Mở sách và tệp của riêng bạn trong trình đọc.",
+        "action": "Mở Reader"
+      },
+      "steady_learner": {
+        "name": "Người học đều đặn",
+        "hint": "Hãy hoạt động vào nhiều ngày khác nhau. Không cần liên tiếp.",
+        "action": "Học hôm nay"
+      }
+    }
+  },
+  "desk": {
+    "signIn": "Đăng nhập",
+    "retry": "Thử lại",
+    "cardError": "Không thể tải phần này.",
+    "close": "Đóng",
+    "loadErrorSome": "Không thể tải một số số liệu của bạn.",
+    "examSignedOutTitle": "Bạn đang ôn CELPIP hay TCF?",
+    "examSignedOutBody": "Hãy đăng nhập để chọn kỳ thi và ngày thi, xem tiến độ luyện tập và giữ đồng bộ với trang web.",
+    "streakMilestone": "Chuỗi {{n, number}} ngày!",
+    "streakMilestoneBody": "Hãy tiếp tục nhé. Hẹn gặp bạn ngày mai.",
+    "unlockedToast": "Đã mở khóa thành tích",
+    "dismiss": "Đóng",
+    "pendingSignedOut": "Thẻ của bạn nằm trên máy này."
+  },
+  "goal": {
+    "set": "Đặt mục tiêu hằng ngày",
+    "title": "Mục tiêu học hằng ngày",
+    "body": "Số phút mỗi ngày bạn muốn học. Nó vẽ đường nét đứt trong tuần của bạn.",
+    "minutes": "phút mỗi ngày",
+    "save": "Lưu",
+    "remove": "Xóa mục tiêu",
+    "error": "Không thể lưu mục tiêu.",
+    "invalid": "Nhập một số từ 5 đến 600."
+  }
+}

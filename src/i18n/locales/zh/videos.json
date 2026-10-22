@@ -106,11 +106,8 @@
     "page": "第 {{page}} 页，共 {{total}} 页"
   },
   "watch": {
-    "startHint": "请点击视频本身的播放按钮开始播放，之后下方的控制按钮才可使用。",
     "preparing": "正在打开视频…",
-    "importFailed": "无法打开此视频，请重试。",
-    "noTranscript": "此视频暂无互动字幕。",
-    "replay": "再看一遍"
+    "importFailed": "无法打开此视频，请重试。"
   },
   "watchWithSubtitles": "带字幕观看"
 }

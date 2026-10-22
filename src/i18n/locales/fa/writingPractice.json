@@ -1,0 +1,201 @@
+{
+  "title": "تمرین نگارش",
+  "subtitle": "مهارت نوشتن خود را با بازخورد هوش مصنوعی بهبود دهید",
+  "selectExamType": "نوع آزمون را انتخاب کنید",
+  "selectExamTypeDescription": "نوع نوشتاری که می‌خواهید تمرین کنید را انتخاب کنید",
+  "generatePrompt": "تولید سؤال جدید",
+  "generatingPrompt": "در حال تولید سؤال...",
+  "startWriting": "شروع نوشتن",
+  "startSession": "شروع جلسه",
+  "submit": "ارسال برای نمره‌دهی",
+  "submitting": "در حال نمره‌دهی مقاله شما...",
+  "retrySumbit": "تلاش مجدد برای نمره‌دهی",
+  "backToList": "بازگشت به تمرین نگارش",
+  "newSession": "جلسه تمرین جدید",
+  "examTypes": {
+    "ielts_task1": "IELTS Task 1",
+    "ielts_task2": "IELTS Task 2",
+    "toefl_integrated": "TOEFL Integrated",
+    "toefl_independent": "TOEFL Independent",
+    "celpip": "CELPIP",
+    "cambridge_fce": "Cambridge B2 First",
+    "cambridge_cae": "Cambridge C1 Advanced",
+    "duolingo": "نگارش پاسخ کوتاه",
+    "pte": "PTE Academic",
+    "general_email": "نگارش ایمیل",
+    "general_essay": "نگارش مقاله",
+    "general_letter": "نگارش نامه",
+    "general_report": "نگارش گزارش"
+  },
+  "examDescriptions": {
+    "ielts_task1": "توصیف نمودارها و دیاگرام‌ها در ۱۵۰+ کلمه",
+    "ielts_task2": "نوشتن مقاله بحثی در ۲۵۰+ کلمه",
+    "toefl_integrated": "خلاصه‌نویسی از متن و سخنرانی در ۱۵۰-۲۲۵ کلمه",
+    "toefl_independent": "بیان نظر شخصی با مثال در ۳۰۰+ کلمه",
+    "celpip": "تکالیف نوشتاری عملی برای مهاجرت کانادا",
+    "cambridge_fce": "تکالیف نوشتاری سطح B2: مقاله، مطلب، نقد",
+    "cambridge_cae": "نوشتار سطح C1: پیشنهادها، گزارش‌ها، مقالات",
+    "duolingo": "پاسخ‌های کوتاه نوشتاری در ۵۰-۱۰۰ کلمه",
+    "pte": "مقالات و خلاصه‌های آکادمیک برای امتیازدهی PTE",
+    "general_email": "تمرین نوشتن ایمیل رسمی و غیررسمی",
+    "general_essay": "نوشتن مقالات ساختارمند در موضوعات مختلف",
+    "general_letter": "تمرین نوشتن نامه رسمی و غیررسمی",
+    "general_report": "نوشتن گزارش‌های حرفه‌ای با تحلیل داده"
+  },
+  "categories": {
+    "exams": "آمادگی آزمون",
+    "general": "تمرین عمومی"
+  },
+  "timer": {
+    "remaining": "زمان باقیمانده",
+    "disabled": "تایمر خاموش",
+    "enable": "فعال‌سازی تایمر",
+    "disable": "غیرفعال‌سازی تایمر",
+    "timeUp": "زمان تمام شد!",
+    "minutes": "{{count}} دقیقه",
+    "stopMessage": "این کار جلسه نوشتن شما را پایان می‌دهد. امکان ادامه دادن وجود نخواهد داشت. مطمئن هستید؟",
+    "stop": "پایان جلسه"
+  },
+  "editor": {
+    "placeholder": "نوشتن پاسخ خود را اینجا شروع کنید...",
+    "wordCount": "تعداد کلمات: {{count}}",
+    "wordTarget": "هدف: {{min}}-{{max}} کلمه",
+    "autoSaved": "پیش‌نویس ذخیره شد",
+    "saving": "در حال ذخیره...",
+    "wordsToGo": "{{count}} کلمه دیگر مانده"
+  },
+  "prompt": {
+    "title": "سؤال نوشتاری",
+    "supplementary": "مطالب تکمیلی",
+    "readingPassage": "متن خوانداری",
+    "lectureSummary": "خلاصه سخنرانی",
+    "chartDescription": "توضیح نمودار/گراف",
+    "collapse": "پنهان کردن سؤال",
+    "expand": "نمایش سؤال"
+  },
+  "feedback": {
+    "title": "بازخورد هوش مصنوعی",
+    "overall": "نمره کلی",
+    "criteria": "جزئیات معیارها",
+    "strengths": "نقاط قوت",
+    "weaknesses": "نکات قابل بهبود",
+    "errors": "خطاهای برجسته",
+    "errorTypes": {
+      "grammar": "گرامر",
+      "vocabulary": "واژگان",
+      "spelling": "املا",
+      "punctuation": "نشانه‌گذاری"
+    },
+    "suggestions": "پیشنهادات برای بهبود",
+    "rewritten": "نسخه بهبود یافته با هوش مصنوعی",
+    "rewrittenDescription": "اینگونه مقاله شما می‌تواند بهبود یابد در حالی که ایده‌هایتان حفظ شود",
+    "showRewritten": "نمایش نسخه بهبود یافته",
+    "hideRewritten": "پنهان کردن نسخه بهبود یافته",
+    "original": "مقاله اصلی شما",
+    "improved": "بهبود یافته",
+    "noFeedback": "مقاله خود را ارسال کنید تا بازخورد هوش مصنوعی دریافت کنید",
+    "noErrors": "خطایی یافت نشد - عالی!",
+    "noSuggestions": "پیشنهاد اضافی وجود ندارد",
+    "loading": "در حال بارگذاری جلسه...",
+    "gradingDescription": "هوش مصنوعی ما در حال تحلیل نوشتار شما از نظر گرامر، واژگان، ساختار و موارد دیگر است...",
+    "scoreDisclaimer": "تخمین هوش مصنوعی — نمرات ممکن است با نتایج واقعی آزمون متفاوت باشد",
+    "vocabularyAnalysis": "تحلیل واژگان",
+    "lexicalDiversity": "تنوع واژگانی",
+    "estimatedCEFR": "سطح CEFR",
+    "advancedWords": "واژگان پیشرفته استفاده شده",
+    "suggestedUpgrades": "ارتقای واژگان",
+    "doubleChecked": "بررسی مضاعف",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "هوش مصنوعی خودتان"
+    },
+    "badgeTitle": {
+      "pro": "نمره‌دهی FlexiLingo Pro",
+      "mini": "نمره‌دهی FlexiLingo Mini",
+      "own": "تصحیح با هوش مصنوعی خودتان"
+    },
+    "badgeBody": {
+      "pro": "مقاله شما با پیشرفته‌ترین مدل هوش مصنوعی ما نمره‌دهی شده، با بررسی مضاعف برای نمرات دقیق‌تر و سازگارتر.",
+      "mini": "مقاله شما با مدل استاندارد هوش مصنوعی نمره‌دهی شده. برای نمره‌دهی دقیق‌تر، نمرات بررسی مضاعف و بازخورد جزئی‌تر به Pro ارتقا دهید.",
+      "own": "انشای شما با هوش مصنوعی‌ای که خودتان راه انداخته‌اید ({{model}}) تصحیح شد، نه با ابر فلکسی‌لینگو."
+    }
+  },
+  "history": {
+    "title": "تاریخچه نگارش",
+    "noHistory": "هنوز جلسه نگارشی ندارید. اولین تمرین خود را شروع کنید!",
+    "viewDetails": "مشاهده جزئیات",
+    "filterByExam": "فیلتر بر اساس نوع آزمون",
+    "allTypes": "همه انواع",
+    "score": "نمره",
+    "wordsWritten": "کلمه",
+    "timeSpent": "زمان صرف شده",
+    "gradedOn": "نمره‌دهی شده"
+  },
+  "stats": {
+    "title": "پیشرفت شما",
+    "totalSessions": "کل جلسات",
+    "gradedSessions": "نمره‌دهی شده",
+    "avgScore": "میانگین نمره",
+    "scoreTrend": "روند نمره",
+    "bestCriteria": "بهترین حوزه",
+    "weakestCriteria": "نیاز به تقویت",
+    "noStats": "چند جلسه را تکمیل کنید تا پیشرفت خود را ببینید"
+  },
+  "usage": {
+    "remaining": "{{count}} جلسه باقیمانده در این ماه",
+    "unlimited": "جلسات نامحدود",
+    "used": "{{used}} از {{limit}} استفاده شده",
+    "upgradePrompt": "برای جلسات بیشتر تمرین نگارش ارتقا دهید",
+    "limitReached": "محدودیت تمام شده",
+    "dailyLimitReached": "محدودیت روزانه تمام شده",
+    "monthlyLimitReached": "محدودیت ماهانه تمام شده",
+    "limitUsedAllDaily": "سقف ماهانه ({{monthlyLimit}}) تمام شد. سهمیه روزانه ({{dailyLimit}} در روز) هم استفاده شده.",
+    "limitUsedAllMonthly": "سقف ماهانه تمام شد. هنوز {{dailyLimit}} جلسه در روز دارید.",
+    "limitUsedAllMonthlyNoDaily": "تمام جلسات تمرین نگارش این ماه را استفاده کرده‌اید.",
+    "limitResetDaily": "فردا بازنشانی می‌شود!",
+    "limitResetMonthly": "ابتدای ماه آینده بازنشانی می‌شود."
+  },
+  "status": {
+    "active": "در حال انجام",
+    "submitted": "ارسال شده",
+    "graded": "نمره‌دهی شده"
+  },
+  "activeSession": {
+    "title": "جلسه فعال",
+    "resume": "ادامه",
+    "existsMessage": "یک جلسه‌ی نوشتن فعال دارید. پیش از شروع جلسه‌ی جدید، آن را تمام یا ارسال کنید."
+  },
+  "timerToggle": "فعال‌سازی تایمر شمارش معکوس",
+  "disclaimer": "FlexiLingo یک پلتفرم تمرینی مستقل است و با هیچ سازمان آزمون رسمی وابستگی یا تأییدیه‌ای ندارد. تمام نام‌های آزمون‌ها علائم تجاری ثبت‌شده سازمان‌های مربوطه می‌باشند.",
+  "back": "بازگشت",
+  "cancel": "لغو",
+  "origin": {
+    "local": "روی این کامپیوتر",
+    "cloud": "ابر"
+  },
+  "cloudSessionOff": {
+    "title": "این جلسه در ابر فلکسی‌لینگوی شما است",
+    "body": "برای باز کردنش، هوش مصنوعی ابری را در تنظیمات روشن کنید."
+  },
+  "dashboardChip": "تمرین نوشتن",
+  "errors": {
+    "UNKNOWN_ERROR": "خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.",
+    "WRITING_SESSION_NOT_FOUND": "جلسه نوشتن یافت نشد.",
+    "WRITING_GRADING_FAILED": "نمره‌دهی هوش مصنوعی ناموفق بود. لطفاً دوباره ارسال کنید.",
+    "WRITING_ESSAY_TOO_SHORT": "انشای شما خیلی کوتاه است. لطفاً بیشتر بنویسید.",
+    "WRITING_ESSAY_TOO_LONG": "انشای شما خیلی بلند است. لطفاً قبل از ارسال آن را کوتاه‌تر کنید.",
+    "WRITING_PROMPT_GENERATION_FAILED": "خطا در ایجاد موضوع نوشتن. لطفاً دوباره تلاش کنید.",
+    "DAILY_LIMIT_REACHED": "سقف روزانه تمام شد. فردا دوباره امتحان کنید!",
+    "MONTHLY_LIMIT_REACHED": "سقف ماهانه تمام شد. ماه بعد دوباره امتحان کنید یا پلن خود را ارتقا دهید.",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "این انشا قبلاً برای نمره‌دهی ارسال شده است.",
+    "SESSION_CREATION_FAILED": "خطا در ایجاد جلسه صوتی. لطفاً دوباره تلاش کنید.",
+    "INVALID_EXAM_TYPE": "نوع آزمون انتخابی نامعتبر است.",
+    "MISSING_REQUIRED_FIELDS": "لطفاً تمام فیلدهای الزامی را پر کنید.",
+    "AUTH_REQUIRED": "لطفاً برای استفاده از این ویژگی وارد شوید.",
+    "WRITING_SESSION_CANCELLED": "این جلسه نوشتن پایان یافت.",
+    "SAVE_DRAFT_FAILED": "پیش‌نویس ذخیره نشد. دوباره تلاش کنید.",
+    "CANCEL_SESSION_FAILED": "جلسه پایان نیافت. دوباره تلاش کنید.",
+    "WRITING_PROMPT_NOT_FOUND": "موضوع نوشتن پیدا نشد."
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "landing": {
+    "title": "Gia sư AI",
+    "subtitle": "Luyện nói với đối tác trò chuyện AI của bạn",
+    "newConversation": "Cuộc trò chuyện mới",
+    "loading": "Đang tải các cuộc trò chuyện...",
+    "emptyTitle": "Chưa có cuộc trò chuyện nào",
+    "emptyBody": "Hãy bắt đầu cuộc trò chuyện AI đầu tiên để luyện nói bằng bất kỳ ngôn ngữ nào.",
+    "startFirst": "Bắt đầu cuộc trò chuyện đầu tiên",
+    "active": "Đang Hoạt Động",
+    "messages_other": "{{count}} tin nhắn",
+    "corrections_other": "{{count}} lần sửa"
+  },
+  "time": {
+    "justNow": "Vừa xong",
+    "minutesAgo": "{{count}} phút trước",
+    "hoursAgo": "{{count}} giờ trước",
+    "daysAgo": "{{count}} ngày trước"
+  },
+  "modes": {
+    "free": {
+      "name": "Trò chuyện tự do",
+      "description": "Trò chuyện về bất cứ điều gì bạn thích"
+    },
+    "role_play": {
+      "name": "Nhập Vai",
+      "description": "Nhập vai các tình huống đời thực"
+    },
+    "deck_practice": {
+      "name": "Luyện theo bộ thẻ",
+      "description": "Dùng các từ trong bộ thẻ ghi nhớ của bạn"
+    },
+    "vocab_challenge": {
+      "name": "Thử thách từ vựng",
+      "description": "Luyện từ vựng mới trong hội thoại"
+    },
+    "escape_room": {
+      "name": "Phòng thoát hiểm",
+      "description": "Giải một câu chuyện bằng cách nói"
+    }
+  },
+  "categories": {
+    "daily_life": "Đời sống hằng ngày",
+    "travel": "Du lịch",
+    "social": "Xã Hội",
+    "professional": "Công việc chuyên môn",
+    "academic": "Học thuật",
+    "health": "Sức khỏe",
+    "emergency": "Khẩn cấp",
+    "creative": "Sáng tạo & vui nhộn"
+  },
+  "topics": {
+    "travel": "Du lịch & phiêu lưu",
+    "food": "Ẩm thực & nấu ăn",
+    "movies": "Phim điện ảnh & truyền hình",
+    "music": "Âm nhạc & hòa nhạc",
+    "sports": "Thể thao & thể hình",
+    "technology": "Công Nghệ",
+    "books": "Sách & đọc sách",
+    "work": "Công việc & sự nghiệp",
+    "hobbies": "Sở thích & thủ công",
+    "nature": "Thiên nhiên & môi trường",
+    "family": "Gia đình và các mối quan hệ",
+    "health": "Sức khỏe và lối sống",
+    "fashion": "Thời trang & phong cách",
+    "art": "Nghệ thuật & văn hóa",
+    "science": "Khoa học & khám phá",
+    "history": "Lịch sử & truyền thống",
+    "routines": "Thói quen hằng ngày",
+    "holidays": "Ngày lễ & lễ kỷ niệm",
+    "childhood": "Ký ức tuổi thơ",
+    "future": "Kế hoạch & ước mơ tương lai"
+  },
+  "providers": {
+    "ollama": "Ollama (cục bộ)",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "Cuộc trò chuyện mới",
+    "stepOf": "Step {{step}} of {{total}}",
+    "back": "Quay Lại",
+    "next": "Tiếp",
+    "start": "Bắt đầu trò chuyện",
+    "starting": "Đang bắt đầu...",
+    "backAria": "Quay lại",
+    "step1Title": "Chọn chế độ luyện tập",
+    "step1Subtitle": "Bạn muốn luyện tập theo cách nào?",
+    "step2Title": "Ngôn ngữ và trình độ",
+    "step2Subtitle": "Cấu hình thiết lập luyện tập của bạn",
+    "practiceLanguage": "Ngôn ngữ luyện tập",
+    "languageSearch": "Tìm ngôn ngữ...",
+    "languageNoResults": "Không tìm thấy ngôn ngữ",
+    "cefrLevel": "Cấp Độ CEFR",
+    "aiProvider": "Nhà cung cấp AI",
+    "model": "Mô hình",
+    "ollamaOffline": "Ollama chưa được kết nối. Hãy khởi động Ollama để xem các mô hình đã tải.",
+    "topicTitle": "Chọn chủ đề",
+    "scenarioTitle": "Chọn tình huống",
+    "deckTitle": "Chọn Bộ Thẻ",
+    "extraTitle": "Cài đặt bổ sung",
+    "topicSubtitle": "Chọn một chủ đề hoặc tự viết chủ đề của bạn",
+    "scenarioSubtitle": "Tìm và chọn một tình huống nhập vai",
+    "deckSubtitle": "Luyện từ vựng từ các bộ thẻ ghi nhớ của bạn",
+    "extraSubtitle": "Thêm hướng dẫn riêng nếu bạn muốn",
+    "optional": "(tùy chọn)",
+    "ownTopic": "Viết chủ đề của riêng bạn",
+    "topicPlaceholder": "Bạn muốn nói về điều gì?",
+    "suggestedTopic": "Hoặc chọn một chủ đề gợi ý",
+    "searchScenarios": "Tìm tình huống...",
+    "customGroup": "Tùy chỉnh",
+    "customScenario": "Viết tình huống của riêng bạn",
+    "customScenarioHint": "Mô tả bất kỳ tình huống nào bạn muốn luyện",
+    "customScenarioPlaceholder": "Ví dụ: Bạn đang ở một chợ trời, mặc cả giá một chiếc đèn cổ với người bán cứng đầu...",
+    "deck": "Bộ thẻ",
+    "loadingDecks": "Đang tải bộ thẻ...",
+    "selectDeck": "Chọn một bộ thẻ...",
+    "deckCards": "{{name}} ({{count}} thẻ)",
+    "noDecks": "Không tìm thấy bộ thẻ nào. Hãy tạo một bộ trong mục Ôn tập trước.",
+    "customInstructions": "Hướng dẫn riêng",
+    "customInstructionsPlaceholder": "Ví dụ: Tập trung vào từ vựng kinh doanh, nói chậm, sửa lỗi cho tôi nghiêm khắc hơn...",
+    "practiceTitle": "Luyện tập {{language}}"
+  },
+  "detail": {
+    "back": "Quay lại các cuộc trò chuyện",
+    "resume": "Tiếp tục",
+    "minutes": "{{count}} phút",
+    "messages_other": "{{count}} tin nhắn",
+    "fixes_other": "{{count}} chỗ sửa",
+    "conversation": "Hội thoại"
+  },
+  "scores": {
+    "grammar": "Ngữ pháp",
+    "vocabulary": "Từ vựng",
+    "fluency": "Độ trôi chảy",
+    "overall": "Overall"
+  },
+  "corrections": {
+    "title": "Các lần sửa ({{count}})",
+    "wrong": "Bản gốc",
+    "right": "Đã sửa",
+    "why": "Why"
+  },
+  "words": {
+    "title": "Từ mới ({{count}})",
+    "saved": "Đã Lưu",
+    "saveToDeck": "Save to deck",
+    "saveAll": "Lưu tất cả vào bộ thẻ"
+  },
+  "summary": {
+    "title": "Session complete",
+    "startNew": "Bắt đầu cuộc trò chuyện mới"
+  },
+  "voice": {
+    "listening": "Đang nghe...",
+    "transcribing": "Đang phiên âm...",
+    "thinking": "Đang suy nghĩ...",
+    "tapInterrupt": "Chạm để ngắt",
+    "tapSpeak": "Chạm để nghe",
+    "hideSubtitles": "Ẩn phụ đề",
+    "showSubtitles": "Hiện phụ đề",
+    "end": "Kết Thúc",
+    "tutor": "Gia sư",
+    "you": "Bạn",
+    "micAria": "Micro"
+  },
+  "errorDismiss": "Đóng",
+  "errors": {
+    "AUTH_REQUIRED": "Bạn cần đăng nhập để dùng tính năng này.",
+    "NETWORK_ERROR": "Không thể kết nối với FlexiLingo. Hãy kiểm tra kết nối internet và thử lại.",
+    "MIC_UNAVAILABLE": "Micro không khả dụng. Hãy kiểm tra xem nó đã được kết nối và cho phép chưa, rồi thử lại.",
+    "MODEL_MISSING": "Thiếu mô hình giọng nói. Hãy tải một mô hình trong cài đặt Whisper rồi thử lại.",
+    "UNKNOWN_ERROR": "Đã xảy ra lỗi. Vui lòng thử lại."
+  }
+}

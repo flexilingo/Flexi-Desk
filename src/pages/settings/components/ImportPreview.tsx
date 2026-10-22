@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface ColumnMapping {
   word_column: number;
   translation_column: number | null;
@@ -16,29 +18,34 @@ interface ImportPreviewProps {
   totalRows: number;
 }
 
-export function ImportPreview({
-  headers,
-  sampleRows,
-  mapping,
-  totalRows,
-}: ImportPreviewProps) {
-  const getCell = (row: string[], col: number | null) =>
-    col !== null ? row[col] ?? '' : '';
+export function ImportPreview({ headers, sampleRows, mapping, totalRows }: ImportPreviewProps) {
+  const { t } = useTranslation('settingsDesk');
+  const getCell = (row: string[], col: number | null) => (col !== null ? (row[col] ?? '') : '');
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-foreground">Preview</p>
-        <span className="text-xs text-muted-foreground">{totalRows} rows total</span>
+        <p className="text-sm font-medium text-foreground">{t('preview.title')}</p>
+        <span className="text-xs text-muted-foreground">
+          {t('preview.total', { count: totalRows })}
+        </span>
       </div>
       <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-2 py-1.5 text-left font-medium text-foreground">Word</th>
-              <th className="px-2 py-1.5 text-left font-medium text-foreground">Translation</th>
-              <th className="px-2 py-1.5 text-left font-medium text-foreground">CEFR</th>
-              <th className="px-2 py-1.5 text-left font-medium text-foreground">POS</th>
+              <th className="px-2 py-1.5 text-start font-medium text-foreground">
+                {t('preview.word')}
+              </th>
+              <th className="px-2 py-1.5 text-start font-medium text-foreground">
+                {t('preview.translation')}
+              </th>
+              <th className="px-2 py-1.5 text-start font-medium text-foreground">
+                {t('preview.cefr')}
+              </th>
+              <th className="px-2 py-1.5 text-start font-medium text-foreground">
+                {t('preview.pos')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -54,7 +61,9 @@ export function ImportPreview({
                   }`}
                 >
                   <td className="px-2 py-1.5 text-foreground">
-                    {word || <span className="text-destructive italic">missing</span>}
+                    {word || (
+                      <span className="text-destructive italic">{t('preview.missing')}</span>
+                    )}
                   </td>
                   <td className="px-2 py-1.5 text-muted-foreground">
                     {getCell(row, mapping.translation_column) || '-'}
@@ -73,7 +82,7 @@ export function ImportPreview({
       </div>
       {sampleRows.length > 5 && (
         <p className="text-xs text-muted-foreground text-center">
-          Showing 5 of {sampleRows.length} preview rows
+          {t('preview.showing', { shown: 5, total: sampleRows.length })}
         </p>
       )}
     </div>

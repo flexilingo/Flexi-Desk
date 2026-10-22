@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BookOpen, Check, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import type { VocabSuggestion } from '../types';
 
 interface VocabChipProps {
@@ -10,6 +11,7 @@ interface VocabChipProps {
 }
 
 export function VocabChip({ vocab, onSave }: VocabChipProps) {
+  const { t } = useTranslation('tutor');
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -49,9 +51,7 @@ export function VocabChip({ vocab, onSave }: VocabChipProps) {
         <Badge variant="outline">{vocab.cefr}</Badge>
       </div>
 
-      {vocab.example && (
-        <p className="text-sm italic text-muted-foreground">{vocab.example}</p>
-      )}
+      {vocab.example && <p className="text-sm italic text-muted-foreground">{vocab.example}</p>}
 
       {onSave && (
         <Button
@@ -63,12 +63,12 @@ export function VocabChip({ vocab, onSave }: VocabChipProps) {
           {saved ? (
             <>
               <Check className="h-3.5 w-3.5" />
-              Saved
+              {t('words.saved')}
             </>
           ) : (
             <>
               <Plus className="h-3.5 w-3.5" />
-              Save to Deck
+              {t('words.saveToDeck')}
             </>
           )}
         </Button>

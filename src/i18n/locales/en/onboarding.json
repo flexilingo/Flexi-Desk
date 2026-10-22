@@ -1,0 +1,69 @@
+{
+  "steps": {
+    "languages": "Languages",
+    "ai": "AI",
+    "whisper": "Whisper",
+    "podcast": "Podcast"
+  },
+  "welcome": {
+    "title": "Welcome to FlexiDesk",
+    "subtitle": "Let's set up your learning environment",
+    "native": "Your native language",
+    "target": "The language you are learning"
+  },
+  "nav": {
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "start": "Get started"
+  },
+  "podcast": {
+    "title": "Add your first podcast",
+    "subtitle": "Learn by listening to real content",
+    "loading": "Loading podcasts...",
+    "by": "by {{author}}",
+    "subscribe": "Subscribe",
+    "adding": "Adding...",
+    "byRss": "Add by RSS link",
+    "rssPlaceholder": "https://example.com/feed.rss",
+    "add": "Add",
+    "invalidUrl": "Please enter a valid link.",
+    "subscribeFailed": "Could not add the podcast: {{message}}"
+  },
+  "whisper": {
+    "title": "Speech recognition",
+    "subtitle": "Whisper turns audio into text on your computer. Live Caption and Podcast use it.",
+    "detecting": "Looking for Whisper...",
+    "notFoundTitle": "Whisper was not found",
+    "notFoundDesc": "Press the button to install it automatically.",
+    "install": "Install Whisper",
+    "installing": "Installing Whisper...",
+    "settingUp": "Setting up what Whisper needs...",
+    "chooseTitle": "Choose a Whisper model",
+    "chooseDesc": "Bigger models are more accurate but slower and need more memory.",
+    "loadingModels": "Loading models...",
+    "use": "Use",
+    "download": "Download",
+    "downloadingModel": "Downloading model...",
+    "readyTitle": "Whisper is ready",
+    "activeModel": "Active model: {{model}}",
+    "skip": "Skip for now",
+    "skippedNote": "You can set up Whisper later in Settings.",
+    "realtime": "~{{n}}x realtime",
+    "models": {
+      "tiny": "Fastest model. Good for testing. Supports all languages.",
+      "base": "Good balance of speed and accuracy. Supports all languages.",
+      "small": "Better accuracy, moderate speed. Supports all languages.",
+      "large_v3_turbo": "Best speed and accuracy balance. Recommended for most people.",
+      "large_v3_turbo_q5_0": "Compact turbo model. Small and fast."
+    },
+    "avx": {
+      "title": "This computer is not compatible with this build",
+      "desc": "Your processor does not support the AVX2 instructions the ready-made Whisper needs. This affects processors made before 2013 (Intel 3rd generation or older, early AMD).",
+      "howTo": "How to fix it:",
+      "step1": "Download a compatible build from <link>whisper.cpp releases</link>. Look for a <b>noavx</b> or <b>compat</b> build, or build it yourself with AVX2 turned off.",
+      "step2": "When it is installed, set its path in <b>Settings, Whisper, Custom binary path</b>.",
+      "skipHint": "Or skip for now and use the AI tutor and the other features. Transcription is only needed for Live Caption and Podcast."
+    }
+  }
+}

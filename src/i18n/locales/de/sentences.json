@@ -1,0 +1,461 @@
+{
+  "title": "Satztraining",
+  "tagline": "Sieh den Satz und sag, was er bedeutet – oder sieh die Bedeutung und schreib den Satz. Nach deiner Antwort öffnet sich der ganze Satz: welche Rolle jedes Wort hat, woher das Verb kommt und welche Regeln ihn bilden.",
+  "empty": "Keine Sätze zum Üben.",
+  "direction": {
+    "recognize": "Satz → Bedeutung",
+    "produce": "Bedeutung → Satz",
+    "listen": "Nur Audio"
+  },
+  "prompt": {
+    "recognize": "Was bedeutet dieser Satz?",
+    "produce": "Schreib das auf Französisch:",
+    "listen": "Hör zu – weißt du, was es bedeutet?"
+  },
+  "progress": "Karte {{index}} von {{total}}",
+  "next": "Weiter",
+  "nextRound": "Nächste Runde",
+  "knewIt": "I knew it",
+  "showMeaning": "Bedeutung anzeigen",
+  "literal": "Wort für Wort",
+  "typeHere": "Satz hier eintippen…",
+  "check": "Prüfen",
+  "hint": "Hinweis",
+  "chunk": "eine Einheit",
+  "readMore": "Die vollständige Seite zu dieser Regel im Spickzettel",
+  "verdict": {
+    "exact": "Richtig",
+    "accents": "Richtig – aber achte auf die Schreibweise",
+    "variant": "Das ist auch korrektes Französisch",
+    "wrong": "Das ist nicht der Satz dieser Karte",
+    "alternative": "Richtig — Französisch, das die Karte nicht kannte"
+  },
+  "verdictVariantDetail": "Was du geschrieben hast, ist richtig, aber es gehört zum Register «{{register}}». Diese Karte wollte eine andere Form – kenne beide, denn sie werden in unterschiedlichen Situationen benutzt.",
+  "sections": {
+    "verb": "Das Verb – woher es kommt",
+    "agreement": "Warum diese Form",
+    "mechanics": "Änderungen in Schreibung und Klang",
+    "notes": "Hinweise zu diesem Satz",
+    "rules": "Die Regeln in diesem Satz",
+    "rulesHint": "Tippe auf eine Regel, um ihre vollständige Erklärung hier zu öffnen.",
+    "registers": "Derselbe Satz in drei Registern",
+    "registersHint": "Eine Bedeutung, drei soziale Situationen. Sie sind nicht austauschbar.",
+    "breakdown": "Der Satz, Wort für Wort",
+    "pattern": "Muster"
+  },
+  "verb": {
+    "noStem": "Dieses Verb ist unregelmäßig – es wird aus nichts gebildet und muss gelernt werden. Die vollständige Tabelle steht unten in der Erklärung der Regel.",
+    "mood": "Modus",
+    "tense": "Zeit",
+    "person": "Person",
+    "agreesWith": "Mit",
+    "auxiliary": "Hilfsverb",
+    "conjugationTable": "Vollständige Konjugation von «{{verb}}»"
+  },
+  "families": {
+    "group-1-er": "Gruppe 1 · Verben auf -er",
+    "group-2-ir": "Gruppe 2 · Verben auf -ir",
+    "group-3-irregular": "Gruppe 3 · unregelmäßig"
+  },
+  "moods": {
+    "indicatif": "Indikativ",
+    "conditionnel": "Konditional",
+    "infinitif": "Infinitiv",
+    "imperatif": "Imperativ",
+    "subjonctif": "Subjonctif"
+  },
+  "tenses": {
+    "present": "Präsens",
+    "passe-compose": "Perfekt (passé composé)",
+    "imperatif": "—",
+    "imparfait": "Imperfekt (imparfait)",
+    "futur-simple": "Futur (futur simple)"
+  },
+  "persons": {
+    "1sg": "1. Person Singular (je)",
+    "2sg": "2. Person Singular (tu)",
+    "3sg": "3. Person Singular (il/elle/on)",
+    "1pl": "1. Person Plural (nous)",
+    "2pl": "2. Person Plural (vous)",
+    "3pl": "3. Person Plural (ils/elles)"
+  },
+  "verbNotes": {
+    "doubled-l": "In dieser Form wird das l verdoppelt. Regel: Wo die Endung nicht gesprochen wird, verdoppelt sich l, damit der è-Laut bleibt – j'appelle, aber nous appelons.",
+    "memorised": "Unregelmäßig. Es gibt keinen Stamm und keine Endung – die ganze Tabelle wird auswendig gelernt.",
+    "silent-ending": "Die Endung wird nicht gesprochen. -e, -es und -ent klingen gleich, gesprochen verrät nur das Pronomen, wer handelt.",
+    "fixed-expression": "Teil einer festen Wendung und wird nicht einzeln konjugiert. il y a hat eine Form für Singular und Plural.",
+    "politeness-form": "Das ist der Konditional, er macht die Bitte weicher. je veux ist korrekt, aber schroff; je voudrais sagt dasselbe höflich – wie «ich will» und «ich möchte».",
+    "stays-infinitive": "Es ist das zweite Verb und bleibt im Infinitiv. Folgen zwei Verben aufeinander, wird nur das erste konjugiert.",
+    "on-takes-3sg": "on bedeutet «wir», aber sein Verb steht in der 3. Person Singular, wie il – wie das deutsche «man». «on allons» ist falsch.",
+    "impersonal-subject": "Das Subjekt bezieht sich auf niemanden – wie das deutsche «es» in «es regnet». Es steht da, weil Französisch keine Sätze ohne Subjekt bildet.",
+    "noun-subject-is-3sg": "Das Subjekt ist ein Nomen, kein Pronomen – das Verb nimmt trotzdem die 3. Person Singular.",
+    "participle-irregular": "Das Partizip ist unregelmäßig und muss gelernt werden – es wird nicht aus dem Infinitiv gebildet.",
+    "etre-verb": "Dieses Verb bildet die Vergangenheit mit être, nicht avoir – wie im Deutschen «sein» statt «haben». Das Partizip richtet sich dann wie ein Adjektiv nach dem Subjekt.",
+    "agreement-with-etre": "Weil das Hilfsverb être ist, richtet sich das Partizip nach dem Subjekt. Man hört es nicht, geschrieben ist es Pflicht.",
+    "imperative-drops-s": "In der tu-Form verlieren die Verben auf -er ihr s: tu parles, aber «Parle !».",
+    "imperative-no-subject": "Im Imperativ fällt das Subjektpronomen weg – der einzige Fall, in dem Französisch das erlaubt.",
+    "impersonal-invariable": "Wird nie konjugiert. Es hat eine einzige Form, und sein Subjekt bezieht sich auf niemanden.",
+    "imparfait-from-nous": "Der Stamm kommt von nous im Präsens (nous parl-ons → parl-), die Endungen sind für alle Verben gleich: ais · ais · ait · ions · iez · aient. Einzige Ausnahme: être, ét-.",
+    "futur-from-infinitive": "Der Stamm ist der Infinitiv selbst (bei -re ohne e), die Endungen sind die von avoir: ai · as · a · ons · ez · ont.",
+    "futur-stem-irregular": "Der Futurstamm ist unregelmäßig und muss gelernt werden; die Endungen sind die üblichen: ai · as · a · ons · ez · ont.",
+    "subjonctif-from-ils": "Der Stamm kommt von ils im Präsens (ils partent → part-), die Endungen sind: e · es · e · ions · iez · ent.",
+    "pronominal-etre": "Ein reflexives Verb bildet die Vergangenheit immer mit être, und das Partizip richtet sich nach dem Subjekt.",
+    "advice-form": "Der Konditional für Ratschläge: tu dois = du musst (Pflicht), tu devrais = du solltest (Rat). Stamm wie im Futur (devr-), Endungen wie im imparfait.",
+    "recent-past": "venir steht im Präsens, die Bedeutung ist aber jüngste Vergangenheit: venir de + Infinitiv = gerade eben … getan haben."
+  },
+  "genders": {
+    "m": "maskulin Singular",
+    "f": "feminin Singular",
+    "m_pl": "maskulin Plural",
+    "f_pl": "feminin Plural"
+  },
+  "agreementBecause": "Wurde zu {{form}}, weil es sich auf «{{because}}» bezieht",
+  "agreementAudible": "hörbar",
+  "agreementSilent": "nur geschrieben",
+  "roles": {
+    "subject": "Betreff",
+    "subject_dummy": "Scheinsubjekt – bezieht sich auf niemanden",
+    "subject_existential": "das, dessen Existenz genannt wird",
+    "predicate": "Verb",
+    "copula": "Kopula (sein)",
+    "object": "Objekt",
+    "object_interrogative": "Fragewort als Objekt",
+    "attribute": "Prädikativ – was über das Subjekt gesagt wird",
+    "modifier": "Adverb – bestimmt das Verb näher",
+    "determiner": "Begleiter – Artikel, Zahl oder Possessiv",
+    "reflexive": "Reflexivpronomen – bezieht sich auf das Subjekt",
+    "negation": "Verneinung",
+    "question-marker": "Fragemarker – ohne eigene Bedeutung",
+    "existential": "«es gibt»",
+    "existential_negative": "«es gibt kein»",
+    "presentative": "Präsentativ – «das ist»",
+    "future-marker": "Zukunftsmarker",
+    "politeness": "Höflichkeitsformel",
+    "quantity": "Menge / Zahl",
+    "unit": "Einheit",
+    "complement": "Ergänzung",
+    "complement_place": "Ortsangabe – wo",
+    "complement_time": "Zeitangabe – wann",
+    "complement_manner": "Art und Weise – wie",
+    "complement_frequency": "Häufigkeit – wie oft",
+    "complement_language": "Sprache",
+    "complement_origin": "Herkunft – woher",
+    "preposition_place": "Ortspräposition",
+    "preposition_origin": "Präposition der Herkunft",
+    "predicate_subject": "Verb + nachgestelltes Subjekt",
+    "interjection": "Interjektion"
+  },
+  "mechanics": {
+    "elision": "élision – ein Vokal fällt weg",
+    "contraction": "Kurzform",
+    "liaison": "liaison – Bindung zweier Wörter"
+  },
+  "kinds": {
+    "structure": "Struktur",
+    "question": "Frage",
+    "word-order": "Wortstellung",
+    "verb": "Verb",
+    "article": "Artikel",
+    "negation": "Verneinung",
+    "pronoun": "Pronomen",
+    "agreement": "Angleichung",
+    "preposition": "Präposition",
+    "spelling": "Schreibung und Klang",
+    "vocabulary": "Wortgebrauch"
+  },
+  "registers": {
+    "familiar": "umgangssprachlich",
+    "standard": "neutral",
+    "formal": "gehoben"
+  },
+  "channels": {
+    "spoken": "gesprochen",
+    "written": "geschrieben"
+  },
+  "errors": {
+    "QUOTA_USER": "Du hast das heutige Übungslimit erreicht. Mach morgen weiter.",
+    "QUOTA_IP": "Von diesem Netzwerk wurde heute zu viel geübt. Versuch es später.",
+    "TOO_FAST": "Etwas langsamer – beantworte zuerst jede Karte.",
+    "NOT_DEALT": "Diese Karte ist nicht mehr gültig; starte eine neue Runde.",
+    "AUTH_REQUIRED": "Melde dich an, um weiterzumachen.",
+    "RATE_LIMITED": "Du bist etwas schnell – warte einen Moment.",
+    "UNKNOWN_ERROR": "Die nächste Runde wurde nicht geladen. Versuch es noch einmal.",
+    "AUDIO_UNAVAILABLE": "Das Audio konnte nicht geladen werden. Versuche es erneut.",
+    "NOT_REVEALED": "Öffne die Karte, bevor du sie beantwortest.",
+    "ANSWER_FIRST": "Schreibe zuerst deine Antwort.",
+    "PENDING_LOCALE": "Die Erklärungen für diese Sprache sind noch nicht fertig.",
+    "NETWORK": "FlexiLingo ist nicht erreichbar. Prüfe deine Verbindung."
+  },
+  "facts": {
+    "subject-masculine": "Subjekt: männlich (il)",
+    "subject-feminine": "Subjekt: weiblich (elle)",
+    "subject-on": "Subjekt: on (gesprochen)",
+    "subject-nous": "Subjekt: nous",
+    "address-tu": "Anrede: tu (du)",
+    "address-vous": "Anrede: vous (Sie/ihr)",
+    "register-familiar": "Register: umgangssprachlich",
+    "register-standard": "Register: neutral",
+    "register-formal": "Register: gehoben"
+  },
+  "verdictWrongDetail": "Das ist nicht der Satz, den diese Karte wollte. Wenn deine Antwort korrektes Französisch ist, ist sie nicht falsch – die Karte suchte nur die Form unten. Sieh dir die Unterschiede an:",
+  "toolbar": {
+    "language": "Sprache",
+    "level": "Niveau",
+    "direction": "Richtung",
+    "topic": "Thema",
+    "order": "Reihenfolge",
+    "unit": "Einheit",
+    "path": "Pfad",
+    "task": "Prüfungsteil"
+  },
+  "langs": {
+    "fr": "Französisch",
+    "en": "Englisch"
+  },
+  "finished": {
+    "title": "Niveau {{level}} abgeschlossen",
+    "body": "Du hast alle Sätze dieses Niveaus gesehen. Starte eine neue Runde – nichts wird gelöscht, es beginnt nur von vorn.",
+    "unitTitle": "Einheit {{unit}} abgeschlossen",
+    "unitBody": "Du hast alle Sätze dieser Einheit gesehen. Das Niveau geht weiter — der Kurs macht mit der nächsten Einheit weiter.",
+    "nextUnit": "Zu Einheit {{unit}}",
+    "againUnit": "Einheit {{unit}} noch einmal",
+    "topicTitle": "Dieses Thema ist abgeschlossen",
+    "topicBody": "Du hast alle Sätze dieses Themas auf diesem Niveau gesehen. Nimm den Filter weg, der Rest des Niveaus ist da.",
+    "again": "Nochmal"
+  },
+  "orders": {
+    "course": "Kursreihenfolge",
+    "random": "Zufällig",
+    "easy": "Leicht bis schwer",
+    "hard": "Nur schwere",
+    "review": "Fehler wiederholen"
+  },
+  "unitLabel": "Lektion {{unit}}",
+  "allUnits": "Alle Lektionen",
+  "allTopics": "Alle Themen",
+  "topics": {
+    "identity": "Person und Vorstellung",
+    "place": "Orte",
+    "time": "Zeit",
+    "food": "Essen",
+    "politeness": "Höflichkeit",
+    "routine": "Alltag",
+    "shopping": "Einkaufen",
+    "opinion": "Meinung",
+    "work": "Arbeit",
+    "leisure": "Freizeit",
+    "class": "Im Unterricht",
+    "language": "Sprachen",
+    "family": "Familie",
+    "greeting": "Begrüßung",
+    "money": "Geld",
+    "directions": "Wegbeschreibung",
+    "health": "Gesundheit",
+    "transport": "Verkehr",
+    "weather": "Wetter",
+    "description": "Beschreibung",
+    "travel": "Reisen",
+    "clothes": "Kleidung",
+    "phone": "Telefon",
+    "home": "Startseite",
+    "restaurant": "Restaurant",
+    "rules": "Regeln und Schilder",
+    "school": "Schule und Studium",
+    "technology": "Technologie"
+  },
+  "listen": {
+    "play": "Satz abspielen",
+    "again": "Nochmal",
+    "slow": "Langsamer",
+    "count": "{{count}}-mal gehört",
+    "reveal": "Bedeutung ansehen",
+    "seeText": "Text ansehen",
+    "textStep": "Lies ihn jetzt – was bedeutet er?",
+    "askHeard": "Hattest du die Wörter verstanden, bevor du den Text gesehen hast?",
+    "heardIt": "Ja, verstanden",
+    "missedIt": "Nein, erst mit dem Text",
+    "earAgain": "Beim Hören hast du ihn nicht verstanden – er kommt bald zum Hörtraining zurück.",
+    "askHeardHint": "Dass du ihn jetzt mit dem Text verstehst, zählt nicht; entscheidend ist der Moment des Hörens."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "autoPlay": "Audio automatisch abspielen",
+    "autoPlayHint": "Der Satz wird vorgelesen, sobald er erscheint – im Schreibmodus, nachdem du die Antwort gesehen hast.",
+    "autoPlayShort": "Auto-Audio",
+    "mix": "Automatische Wiederholung",
+    "mixHint": "Alle paar Karten ersetzt ein fälliger Satz einen neuen. Ausgeschaltet läuft die Runde genau so, wie du sie eingestellt hast.",
+    "mixShort": "Auto-Wiederholung"
+  },
+  "stats": {
+    "line": "{{practiced}} geübt · {{learned}} gekonnt",
+    "streak": "{{days}}-Tage-Serie"
+  },
+  "review": {
+    "link": "Wiederholen ({{count}})",
+    "start": "{{count}} Sätze wiederholen",
+    "empty": "Gerade gibt es nichts zu wiederholen. Jeder falsch beantwortete Satz kommt ein paar Minuten später hierher zurück.",
+    "back": "Neues Training"
+  },
+  "schedule": {
+    "again": "Dieser kommt in ein paar Minuten wieder – und so lange, bis du ihn richtig hast.",
+    "later_one": "Richtig – du siehst sie in {{days}} Tag wieder.",
+    "later_other": "Richtig – du siehst sie in {{days}} Tagen wieder.",
+    "later": "Richtig – du siehst sie in {{days}} Tagen wieder.",
+    "learned_one": "Das kannst du jetzt. Wir fragen in {{days}} Tag noch einmal, damit es sitzt.",
+    "learned_other": "Das kannst du jetzt. Wir fragen in {{days}} Tagen noch einmal, damit es sitzt.",
+    "learned": "Das kannst du jetzt. Wir fragen in {{days}} Tagen noch einmal, damit es sitzt."
+  },
+  "history": {
+    "link": "Record",
+    "title": "Dein Satztraining-Verlauf",
+    "subtitle": "Sätze, die du beantwortet hast – welche du kannst und welche wiederkommen.",
+    "tabs": {
+      "weak": "Fehler",
+      "learned": "Gekonnt",
+      "all": "Alle",
+      "misheard": "Überhört"
+    },
+    "empty": {
+      "weak": "Gerade keine Fehler übrig.",
+      "learned": "Du hast noch keinen Satz zweimal hintereinander richtig beantwortet – die zweite richtige Antwort markiert ihn als «gekonnt».",
+      "all": "Du hast noch keinen Satz beantwortet.",
+      "misheard": "Keine Sätze, die dein Ohr verpasst hat."
+    },
+    "counts": "{{correct}} richtig · {{wrong}} falsch",
+    "yourAnswer": "Deine Antwort",
+    "status": {
+      "learned": "Gekonnt",
+      "weak": "Kommt wieder",
+      "seen": "In Bearbeitung"
+    },
+    "dueNow": "Bereit zur Wiederholung",
+    "dueMinutes": "Wiederholung: in ein paar Minuten",
+    "dueDays": "Wiederholung: in {{days}} Tagen",
+    "reviewAll": "{{count}} Sätze wiederholen",
+    "back": "Zurück zum Training",
+    "prev": "Zurück",
+    "next": "Weiter",
+    "heard": "Beim Hören",
+    "heardTimes": "Beim Hören, {{count}}-mal",
+    "misheard": "Nicht verstanden"
+  },
+  "revealMeaning": "Bedeutung ansehen",
+  "didntKnow": "Wusste ich nicht",
+  "askKnew": "Wusstest du es?",
+  "askKnewHint": "Sei ehrlich zu dir: Hattest du das im Kopf, bevor du die Bedeutung gesehen hast?",
+  "liaisonHint": "Diese beiden Wörter werden verbunden und in einem Atemzug gesprochen (liaison).",
+  "paths": {
+    "general": "Allgemein"
+  },
+  "allTasks": "Alle Prüfungsteile",
+  "ui": {
+    "playOnce": "Satz abspielen",
+    "playSlow": "Langsamer",
+    "repeat3": "3-mal hintereinander",
+    "repeat5": "5-mal hintereinander",
+    "repeatLoop": "Wiederholen, bis ich stoppe",
+    "stop": "Audio stoppen",
+    "playOptions": "Wiedergabeoptionen"
+  },
+  "qa": {
+    "prompt": "Hör zu – was antwortest du?",
+    "step": "Lies die Frage und schreib deine Antwort",
+    "heard": "Hattest du die Frage beim Hören verstanden?",
+    "write": "Schreib deine Antwort auf Französisch",
+    "placeholder": "Deine Antwort…",
+    "slotsHint": "Setz deinen Namen, deine Zahlen und deine Stadt ein.",
+    "answers": "Mögliche Antworten",
+    "yours": "deine",
+    "yourAnswer": "Deine Antwort",
+    "grade": {
+      "exact": "Richtig",
+      "accents": "Richtig – achte auf die Akzente",
+      "unmatched": "Passt zu keiner Musterantwort – vergleiche und urteile selbst"
+    },
+    "askRight": "War deine Antwort richtig?",
+    "askRightHint": "Vergleiche sie mit den Antworten oben. Stimmt der Sinn und ist das Französisch korrekt, ist sie richtig – auch wenn sie nicht wörtlich gleich ist.",
+    "kinds": {
+      "affirmative": "Ja",
+      "negative": "Nein",
+      "short": "Kurz"
+    },
+    "details": "Details",
+    "matchedModel": "Passt zu:",
+    "wasRight": "War richtig",
+    "wasWrong": "War falsch",
+    "questionAnalysis": "Grammatik der Frage",
+    "open": "Öffnen"
+  },
+  "scorecard": {
+    "title": "KI-Prüfung",
+    "criteria": {
+      "meaning": "Bedeutung",
+      "grammar": "Grammatik",
+      "spelling": "Rechtschreibung",
+      "elision": "Elision"
+    },
+    "why": {
+      "meaning": {
+        "pass": "Es sagt, was die Karte verlangt hat.",
+        "fail": "Es sagt nicht, was die Karte verlangt hat."
+      },
+      "grammar": {
+        "pass": "Die Grammatik stimmt.",
+        "fail": "Es gibt einen Grammatikfehler."
+      },
+      "spelling": {
+        "pass": "Richtig geschrieben.",
+        "near": "Richtiges Wort — prüfen Sie einen Akzent.",
+        "fail": "Ein Schreibfehler."
+      },
+      "elision": {
+        "pass": "Die Elisionen stimmen.",
+        "fail": "Eine Elision fehlt — ein Wort, das sich verkürzen muss, steht ausgeschrieben da (zum Beispiel me aider statt m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Formell — passend für einen Brief oder Fremde.",
+      "neutral": "Neutral — passt fast überall.",
+      "informal": "Umgangssprachlich — perfekt für eine Nachricht an Freunde."
+    },
+    "natural": {
+      "yes": "Klingt natürlich — so würde es ein Muttersprachler sagen.",
+      "no": "Richtig, aber ein Muttersprachler würde es anders sagen."
+    },
+    "error": {
+      "gender_agreement": "Vermutlich ein Fehler bei Genus oder Numerus.",
+      "verb_conjugation": "Prüfen Sie Form oder Zeit des Verbs.",
+      "word_order": "Prüfen Sie die Wortstellung.",
+      "preposition_or_article": "Prüfen Sie Präposition oder Artikel.",
+      "spelling_or_accent": "Prüfen Sie die Schreibung.",
+      "negation": "Prüfen Sie die Verneinung.",
+      "wrong_word": "Ein Wort passt nicht zur Bedeutung.",
+      "avoir_expression": "Französisch sagt hier avoir, nicht être: j'ai faim, quel âge avez-vous ?"
+    }
+  },
+  "retry": {
+    "title": "Diesen Satz hast du falsch geschrieben — schreib ihn noch einmal",
+    "hint": "Er kommt zurück, weil er falsch war. Schreib ihn einmal richtig, um weiterzugehen. Du kannst ihn jetzt überspringen — beim nächsten Mal geht das nicht mehr.",
+    "skip": "Skip for now",
+    "lockedTitle": "Du hast diesen Satz {{count}}-mal falsch geschrieben",
+    "lockedHint": "Letztes Mal hast du ihn übersprungen. Diesmal musst du ihn richtig schreiben, um weiterzukommen."
+  },
+  "desk": {
+    "comingTitle": "Kommt mit dem nächsten Server-Update",
+    "comingBody": "Die Satzübung auf diesem Computer braucht ein kleines Update auf dem FlexiLingo-Server. Sie öffnet sich hier, sobald das Update live ist. Nichts geht verloren und du musst nichts tun.",
+    "checkAgain": "Erneut prüfen",
+    "signInTitle": "Melde dich an, um Sätze zu üben",
+    "signInBody": "Dein Satzverlauf wird in deinem Konto gespeichert und folgt dir so auf jedes Gerät.",
+    "loadingRound": "Wird geladen…",
+    "tryAgain": "Erneut versuchen",
+    "aiChecking": "Deine KI prüft deinen Satz…",
+    "aiSetup": "Richte deine eigene KI ein, damit geschriebene Sätze auf Bedeutung, Grammatik und Rechtschreibung geprüft werden. Bis dahin zählt nur der Satz der Karte selbst.",
+    "aiFallback": "Deine KI konnte diesen Satz nicht prüfen, deshalb hat die eigene Prüfung der Karte entschieden.",
+    "notSaved": "Diese Antwort konnte nicht in deinem Verlauf gespeichert werden.",
+    "pendingBody": "Die Erklärungen für diese Sprache sind noch nicht fertig.",
+    "historyBack": "Zurück zum Training",
+    "close": "Schließen",
+    "signIn": "Anmelden",
+    "loadMore": "Liste wird geladen…"
+  }
+}

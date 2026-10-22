@@ -298,7 +298,6 @@ export function ProgramProvider({
         wasPlaying: !audio.paused,
       };
 
-      usePlayerStore.getState().clearABRepeat();
       const at = fromSec ?? audio.currentTime;
 
       if (runMode === 'continuous') {

@@ -111,11 +111,8 @@
     "page": "Page {{page}} sur {{total}}"
   },
   "watch": {
-    "startHint": "Appuyez sur lecture sur la vidéo elle-même pour la lancer. Les commandes du bas fonctionnent ensuite.",
     "preparing": "Ouverture de la vidéo…",
-    "importFailed": "Cette vidéo n'a pas pu être ouverte. Réessayez.",
-    "noTranscript": "Cette vidéo n'a pas encore de sous-titres interactifs.",
-    "replay": "Revoir"
+    "importFailed": "Cette vidéo n'a pas pu être ouverte. Réessayez."
   },
   "watchWithSubtitles": "Regarder avec les sous-titres"
 }

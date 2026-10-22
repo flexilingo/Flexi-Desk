@@ -105,6 +105,18 @@ export const LOCALE_COPY: Record<
     close: 'بستن',
     dir: 'rtl',
   },
+  de: {
+    text: 'Diese App gibt es auch auf Deutsch.',
+    cta: 'Zu Deutsch wechseln',
+    close: 'Schließen',
+    dir: 'ltr',
+  },
+  vi: {
+    text: 'Ứng dụng này cũng có tiếng Việt.',
+    cta: 'Chuyển sang tiếng Việt',
+    close: 'Đóng',
+    dir: 'ltr',
+  },
   en: {
     text: 'This app is also in English.',
     cta: 'Switch to English',

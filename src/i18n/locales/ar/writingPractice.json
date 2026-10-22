@@ -1,0 +1,201 @@
+{
+  "title": "تمرين الكتابة",
+  "subtitle": "حسّن مهاراتك في الكتابة مع تقييم الذكاء الاصطناعي",
+  "selectExamType": "اختر نوع الامتحان",
+  "selectExamTypeDescription": "اختر نوع الكتابة التي تريد التمرن عليها",
+  "generatePrompt": "إنشاء سؤال جديد",
+  "generatingPrompt": "جارٍ إنشاء السؤال...",
+  "startWriting": "ابدأ الكتابة",
+  "startSession": "بدء الجلسة",
+  "submit": "إرسال للتقييم",
+  "submitting": "جارٍ تقييم مقالتك...",
+  "retrySumbit": "إعادة التقييم",
+  "backToList": "العودة إلى تمرين الكتابة",
+  "newSession": "جلسة تمرين جديدة",
+  "examTypes": {
+    "ielts_task1": "IELTS Task 1",
+    "ielts_task2": "IELTS Task 2",
+    "toefl_integrated": "TOEFL Integrated",
+    "toefl_independent": "TOEFL Independent",
+    "celpip": "CELPIP",
+    "cambridge_fce": "Cambridge B2 First",
+    "cambridge_cae": "Cambridge C1 Advanced",
+    "duolingo": "كتابة الإجابات القصيرة",
+    "pte": "PTE Academic",
+    "general_email": "كتابة البريد الإلكتروني",
+    "general_essay": "كتابة المقالات",
+    "general_letter": "كتابة الرسائل",
+    "general_report": "كتابة التقارير"
+  },
+  "examDescriptions": {
+    "ielts_task1": "وصف الرسوم البيانية والمخططات في ١٥٠+ كلمة",
+    "ielts_task2": "كتابة مقال نقاشي في ٢٥٠+ كلمة",
+    "toefl_integrated": "تلخيص نص ومحاضرة في ١٥٠-٢٢٥ كلمة",
+    "toefl_independent": "عبّر عن رأيك مع أمثلة في ٣٠٠+ كلمة",
+    "celpip": "مهام كتابة عملية للهجرة إلى كندا",
+    "cambridge_fce": "مهام كتابة المستوى B2: مقالات ومراجعات",
+    "cambridge_cae": "كتابة المستوى C1: مقترحات وتقارير ومقالات",
+    "duolingo": "ردود كتابية قصيرة في ٥٠-١٠٠ كلمة",
+    "pte": "مقالات وملخصات أكاديمية لتقييم PTE",
+    "general_email": "تمرين كتابة البريد الإلكتروني الرسمي وغير الرسمي",
+    "general_essay": "كتابة مقالات منظمة في مواضيع مختلفة",
+    "general_letter": "تمرين كتابة الرسائل الرسمية وغير الرسمية",
+    "general_report": "كتابة تقارير احترافية مع تحليل البيانات"
+  },
+  "categories": {
+    "exams": "التحضير للامتحان",
+    "general": "تمرين عام"
+  },
+  "timer": {
+    "remaining": "الوقت المتبقي",
+    "disabled": "المؤقت معطل",
+    "enable": "تفعيل المؤقت",
+    "disable": "تعطيل المؤقت",
+    "timeUp": "انتهى الوقت!",
+    "minutes": "{{count}} دقيقة",
+    "stopMessage": "سيؤدي هذا إلى إنهاء جلسة الكتابة. لن تتمكن من استئنافها. هل أنت متأكد؟",
+    "stop": "إنهاء الجلسة"
+  },
+  "editor": {
+    "placeholder": "ابدأ كتابة إجابتك هنا...",
+    "wordCount": "الكلمات: {{count}}",
+    "wordTarget": "الهدف: {{min}}-{{max}} كلمة",
+    "autoSaved": "تم حفظ المسودة",
+    "saving": "جارٍ الحفظ...",
+    "wordsToGo": "تبقّت {{count}} كلمة"
+  },
+  "prompt": {
+    "title": "سؤال الكتابة",
+    "supplementary": "مواد تكميلية",
+    "readingPassage": "نص القراءة",
+    "lectureSummary": "ملخص المحاضرة",
+    "chartDescription": "وصف الرسم البياني",
+    "collapse": "إخفاء السؤال",
+    "expand": "عرض السؤال"
+  },
+  "feedback": {
+    "title": "تقييم الذكاء الاصطناعي",
+    "overall": "الدرجة الإجمالية",
+    "criteria": "تفصيل المعايير",
+    "strengths": "نقاط القوة",
+    "weaknesses": "مجالات التحسين",
+    "errors": "الأخطاء البارزة",
+    "errorTypes": {
+      "grammar": "القواعد",
+      "vocabulary": "المفردات",
+      "spelling": "الإملاء",
+      "punctuation": "علامات الترقيم"
+    },
+    "suggestions": "اقتراحات للتحسين",
+    "rewritten": "نسخة محسّنة بالذكاء الاصطناعي",
+    "rewrittenDescription": "إليك كيف يمكن تحسين مقالتك مع الحفاظ على أفكارك",
+    "showRewritten": "عرض النسخة المحسّنة",
+    "hideRewritten": "إخفاء النسخة المحسّنة",
+    "original": "مقالتك الأصلية",
+    "improved": "محسّن",
+    "noFeedback": "أرسل مقالتك لتلقي تقييم الذكاء الاصطناعي",
+    "noErrors": "لم يتم العثور على أخطاء - عمل رائع!",
+    "noSuggestions": "لا توجد اقتراحات إضافية",
+    "loading": "جارٍ تحميل الجلسة...",
+    "gradingDescription": "يقوم الذكاء الاصطناعي بتحليل كتابتك من حيث القواعد والمفردات والبنية والمزيد...",
+    "scoreDisclaimer": "تقدير الذكاء الاصطناعي — قد تختلف الدرجات عن نتائج الامتحان الرسمية",
+    "vocabularyAnalysis": "تحليل المفردات",
+    "lexicalDiversity": "التنوع المعجمي",
+    "estimatedCEFR": "مستوى CEFR",
+    "advancedWords": "الكلمات المتقدمة المستخدمة",
+    "suggestedUpgrades": "ترقيات المفردات",
+    "doubleChecked": "فحص مزدوج",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "ذكاؤك الاصطناعي الخاص"
+    },
+    "badgeTitle": {
+      "pro": "تقييم FlexiLingo Pro",
+      "mini": "تقييم FlexiLingo Mini",
+      "own": "تم التصحيح بذكائك الاصطناعي الخاص"
+    },
+    "badgeBody": {
+      "pro": "تم تقييم مقالتك بأكثر نماذج الذكاء الاصطناعي تقدمًا، مع فحص مزدوج لدرجات أكثر دقة واتساقًا.",
+      "mini": "تم تقييم مقالتك بنموذج الذكاء الاصطناعي القياسي. قم بالترقية إلى Pro لتقييم أدق ودرجات مراجعة مزدوجة وتقييم أكثر تفصيلاً.",
+      "own": "صُحّح مقالك بالذكاء الاصطناعي الذي أعددته ({{model}})، وليس بسحابة FlexiLingo."
+    }
+  },
+  "history": {
+    "title": "سجل الكتابة",
+    "noHistory": "لا توجد جلسات كتابة بعد. ابدأ أول تمرين لك!",
+    "viewDetails": "عرض التفاصيل",
+    "filterByExam": "تصفية حسب نوع الامتحان",
+    "allTypes": "جميع الأنواع",
+    "score": "الدرجة",
+    "wordsWritten": "كلمة",
+    "timeSpent": "الوقت المستغرق",
+    "gradedOn": "تم التقييم"
+  },
+  "stats": {
+    "title": "تقدمك",
+    "totalSessions": "إجمالي الجلسات",
+    "gradedSessions": "تم التقييم",
+    "avgScore": "متوسط الدرجة",
+    "scoreTrend": "اتجاه الدرجة",
+    "bestCriteria": "أفضل مجال",
+    "weakestCriteria": "يحتاج تحسين",
+    "noStats": "أكمل بضع جلسات لرؤية تقدمك"
+  },
+  "usage": {
+    "remaining": "{{count}} جلسة متبقية هذا الشهر",
+    "unlimited": "جلسات غير محدودة",
+    "used": "{{used}} من {{limit}} مستخدمة",
+    "upgradePrompt": "قم بالترقية للحصول على المزيد من جلسات تمرين الكتابة",
+    "limitReached": "تم الوصول للحد",
+    "dailyLimitReached": "تم الوصول للحد اليومي",
+    "monthlyLimitReached": "تم الوصول للحد الشهري",
+    "limitUsedAllDaily": "الحد الشهري ({{monthlyLimit}}) انتهى. البدل اليومي ({{dailyLimit}}/يوم) انتهى أيضاً.",
+    "limitUsedAllMonthly": "تم بلوغ الحد الشهري. لا يزال لديك {{dailyLimit}} جلسة/يوم.",
+    "limitUsedAllMonthlyNoDaily": "لقد استخدمت جميع جلسات تمرين الكتابة لهذا الشهر.",
+    "limitResetDaily": "يتم التجديد غداً!",
+    "limitResetMonthly": "يتم التجديد في بداية الشهر القادم."
+  },
+  "status": {
+    "active": "قيد التنفيذ",
+    "submitted": "تم الإرسال",
+    "graded": "تم التقييم"
+  },
+  "activeSession": {
+    "title": "جلسة نشطة",
+    "resume": "استئناف",
+    "existsMessage": "لديك جلسة كتابة نشطة بالفعل. يرجى إنهاؤها أو إرسالها قبل بدء جلسة جديدة."
+  },
+  "timerToggle": "تفعيل مؤقت العد التنازلي",
+  "disclaimer": "FlexiLingo منصة تدريب مستقلة غير تابعة ولا معتمدة من أي منظمة امتحانات رسمية. جميع أسماء الامتحانات علامات تجارية مسجلة لمنظماتها المعنية.",
+  "back": "رجوع",
+  "cancel": "إلغاء",
+  "origin": {
+    "local": "على هذا الكمبيوتر",
+    "cloud": "السحابة"
+  },
+  "cloudSessionOff": {
+    "title": "هذه الجلسة في سحابة FlexiLingo الخاصة بك",
+    "body": "فعّل الذكاء الاصطناعي السحابي في الإعدادات لفتحها."
+  },
+  "dashboardChip": "تدرّب على الكتابة",
+  "errors": {
+    "UNKNOWN_ERROR": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+    "WRITING_SESSION_NOT_FOUND": "جلسة الكتابة غير موجودة.",
+    "WRITING_GRADING_FAILED": "فشل التقييم بالذكاء الاصطناعي. يرجى إعادة التقديم.",
+    "WRITING_ESSAY_TOO_SHORT": "مقالتك قصيرة جداً. يرجى الكتابة أكثر قبل التقديم.",
+    "WRITING_ESSAY_TOO_LONG": "مقالتك طويلة جداً. يرجى اختصارها قبل التقديم.",
+    "WRITING_PROMPT_GENERATION_FAILED": "فشل في إنشاء موضوع كتابة. يرجى المحاولة مرة أخرى.",
+    "DAILY_LIMIT_REACHED": "تم بلوغ الحد اليومي. عُد غداً!",
+    "MONTHLY_LIMIT_REACHED": "تم بلوغ الحد الشهري. حاول مرة أخرى الشهر المقبل أو قم بترقية خطتك.",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "تم بالفعل تقديم هذا المقال للتقييم.",
+    "SESSION_CREATION_FAILED": "فشل في إنشاء جلسة صوتية. يرجى المحاولة مرة أخرى.",
+    "INVALID_EXAM_TYPE": "نوع الامتحان المحدد غير صالح.",
+    "MISSING_REQUIRED_FIELDS": "يرجى ملء جميع الحقول المطلوبة.",
+    "AUTH_REQUIRED": "يرجى تسجيل الدخول لاستخدام هذه الميزة.",
+    "WRITING_SESSION_CANCELLED": "انتهت جلسة الكتابة هذه.",
+    "SAVE_DRAFT_FAILED": "تعذّر حفظ المسودة. حاول مرة أخرى.",
+    "CANCEL_SESSION_FAILED": "تعذّر إنهاء الجلسة. حاول مرة أخرى.",
+    "WRITING_PROMPT_NOT_FOUND": "لم يتم العثور على موضوع الكتابة."
+  }
+}

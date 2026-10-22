@@ -1,5 +1,6 @@
 import { MessageCircle, Drama, Layers, Brain, LockKeyhole, HelpCircle } from 'lucide-react';
 import type { ModeInfo } from '../types';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -17,6 +18,7 @@ interface ModeCardProps {
 }
 
 export function ModeCard({ mode, isSelected, onClick }: ModeCardProps) {
+  const { t } = useTranslation('tutor');
   const Icon = ICON_MAP[mode.icon] ?? HelpCircle;
 
   return (
@@ -32,8 +34,12 @@ export function ModeCard({ mode, isSelected, onClick }: ModeCardProps) {
     >
       <Icon className={cn('h-5 w-5', isSelected ? 'text-primary' : 'text-muted-foreground')} />
       <div>
-        <p className="text-sm font-bold text-foreground">{mode.name}</p>
-        <p className="text-sm text-muted-foreground">{mode.description}</p>
+        <p className="text-sm font-bold text-foreground">
+          {t(`modes.${mode.id}.name`, { defaultValue: mode.name })}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t(`modes.${mode.id}.description`, { defaultValue: mode.description })}
+        </p>
       </div>
     </button>
   );

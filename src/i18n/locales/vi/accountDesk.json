@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "account": "Tài Khoản Của Tôi",
+    "community": "Cộng Đồng",
+    "pro": "Pro",
+    "whatsNew": "Có gì mới"
+  },
+  "signedOut": {
+    "title": "Đăng nhập để xem tài khoản của bạn tại đây",
+    "body": "Trang này hiển thị tài khoản FlexiLingo của bạn. Hãy đăng nhập bằng email hoặc Google để xem.",
+    "button": "Đăng nhập"
+  },
+  "source": {
+    "account": "Số liệu tài khoản",
+    "local": "Trên máy này",
+    "localNote": "Bạn đã đăng xuất nên các số liệu này chỉ lấy từ máy này. Hãy đăng nhập để xem số liệu của tài khoản."
+  },
+  "learning": {
+    "search": "Tìm ngôn ngữ",
+    "noResults": "Không tìm thấy ngôn ngữ",
+    "mirrored": "Đã lưu vào tài khoản của bạn và cũng được giữ trên máy này.",
+    "signedOutNote": "Bạn đã đăng xuất: các lựa chọn này chỉ được lưu trên máy này.",
+    "notAppLanguage": "Mục này đặt thứ bạn học và ngôn ngữ của bản dịch. Ngôn ngữ của chính ứng dụng được chọn tại Cài đặt, Chung.",
+    "conflictTitle": "Máy này dùng một cặp ngôn ngữ khác",
+    "conflictBody": "Máy này: {{local}}. Tài khoản của bạn: {{account}}. Chưa có gì được thay đổi.",
+    "useAccount": "Dùng ngôn ngữ của tài khoản tôi",
+    "keepLocal": "Lưu ngôn ngữ của máy này vào tài khoản của tôi",
+    "offerPush": "Tài khoản của bạn chưa có ngôn ngữ nào. Máy này đang dùng {{local}}.",
+    "pushLocal": "Lưu vào tài khoản của tôi"
+  },
+  "voice": {
+    "deskNote": "Trên máy này, giọng tự nhiên, Google và giọng FlexiLingo được phát như một giọng trực tuyến (khi bạn đã đăng nhập); giọng của thiết bị hoạt động ngoại tuyến. Lựa chọn của bạn được lưu vào tài khoản để dùng cho trang web và tiện ích mở rộng."
+  },
+  "profile": {
+    "tooBig": "Ảnh này lớn hơn 5 MB. Hãy chọn ảnh nhỏ hơn."
+  },
+  "subscription": {
+    "openedInBrowser": "Trang thanh toán đã mở trong trình duyệt. Hãy quay lại đây khi hoàn tất; trang này tự cập nhật.",
+    "checkAgain": "Kiểm tra lại",
+    "updated": "Gói của bạn hiện là {{plan}}.",
+    "notYet": "Chưa có thay đổi. Nếu bạn vừa thanh toán, có thể mất một phút.",
+    "daysLeft": "Còn {{count}} ngày"
+  },
+  "redeem": {
+    "title": "Bạn có mã quà tặng?",
+    "hint": "Dán mã hoặc toàn bộ liên kết từ email của bạn.",
+    "placeholder": "Mã hoặc liên kết",
+    "invalid": "Đây không giống mã quà tặng hoặc liên kết.",
+    "until": "có hiệu lực đến {{date}}"
+  },
+  "shared": {
+    "title": "Bộ thẻ được chia sẻ với bạn",
+    "body": "Khi bạn bè chia sẻ một buổi ôn tập với bạn, nó sẽ xuất hiện cùng các bộ thẻ của bạn. Hãy theo dõi nhau trước, rồi chia sẻ từ một bộ thẻ."
+  },
+  "links": {
+    "title": "Liên Kết Chia Sẻ",
+    "body": "Tạo liên kết cho một bộ thẻ của bạn từ trang của bộ thẻ đó và quản lý ngay tại đó."
+  },
+  "openDecks": "Mở bộ thẻ của tôi",
+  "oauth": {
+    "google": "Tiếp tục với Google",
+    "waiting": "Hoàn tất đăng nhập trong trình duyệt của bạn...",
+    "hint": "Một cửa sổ trình duyệt đã mở. Hãy chọn tài khoản Google của bạn ở đó; cửa sổ này sẽ tự tiếp tục.",
+    "or": "hoặc dùng email của bạn bên dưới",
+    "errors": {
+      "GOOGLE_TIMEOUT": "Đăng nhập mất quá nhiều thời gian và đã bị dừng. Hãy thử lại.",
+      "GOOGLE_STATE_MISMATCH": "Phản hồi từ trình duyệt không khớp với lần đăng nhập này. Hãy thử lại.",
+      "GOOGLE_NOT_CONFIGURED": "Đăng nhập Google chưa được thiết lập trong phiên bản này. Hãy dùng email của bạn.",
+      "GOOGLE_OPEN_FAILED": "Không thể mở trình duyệt của bạn. Hãy dùng email thay thế.",
+      "GOOGLE_LISTEN_FAILED": "Máy này không thể chờ trình duyệt. Hãy dùng email thay thế.",
+      "GOOGLE_TOKEN_FAILED": "Google đã không chấp nhận đăng nhập. Hãy thử lại.",
+      "GOOGLE_SIGN_IN_FAILED": "Đăng nhập Google không thành công. Hãy thử lại hoặc dùng email của bạn.",
+      "GOOGLE_CANCELLED": "Đã hủy đăng nhập."
+    }
+  },
+  "whatsNew": {
+    "title": "Có gì mới",
+    "subtitle": "Mọi thứ FlexiLingo có thể làm, mới nhất trước.",
+    "all": "Tất cả",
+    "openOnWeb": "Mở trên trang web"
+  }
+}

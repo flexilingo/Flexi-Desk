@@ -1,0 +1,69 @@
+{
+  "steps": {
+    "languages": "语言",
+    "ai": "AI",
+    "whisper": "Whisper",
+    "podcast": "播客"
+  },
+  "welcome": {
+    "title": "欢迎使用 FlexiDesk",
+    "subtitle": "让我们来设置你的学习环境",
+    "native": "你的母语",
+    "target": "你正在学习的语言"
+  },
+  "nav": {
+    "back": "上一步",
+    "next": "下一步",
+    "skip": "跳过",
+    "start": "开始使用"
+  },
+  "podcast": {
+    "title": "添加你的第一个播客",
+    "subtitle": "通过收听真实内容来学习",
+    "loading": "正在加载播客...",
+    "by": "作者 {{author}}",
+    "subscribe": "订阅",
+    "adding": "正在添加...",
+    "byRss": "通过 RSS 链接添加",
+    "rssPlaceholder": "https://example.com/feed.rss",
+    "add": "添加",
+    "invalidUrl": "请输入有效的链接。",
+    "subscribeFailed": "无法添加播客：{{message}}"
+  },
+  "whisper": {
+    "title": "语音识别",
+    "subtitle": "Whisper 在你的电脑上把音频转成文字。实时字幕和播客会用到它。",
+    "detecting": "正在查找 Whisper...",
+    "notFoundTitle": "未找到 Whisper",
+    "notFoundDesc": "点击按钮即可自动安装。",
+    "install": "安装 Whisper",
+    "installing": "正在安装 Whisper...",
+    "settingUp": "正在准备 Whisper 所需的组件...",
+    "chooseTitle": "选择 Whisper 模型",
+    "chooseDesc": "模型越大越准确，但速度更慢，也需要更多内存。",
+    "loadingModels": "正在加载模型...",
+    "use": "使用",
+    "download": "下载",
+    "downloadingModel": "正在下载模型...",
+    "readyTitle": "Whisper 已就绪",
+    "activeModel": "当前模型：{{model}}",
+    "skip": "暂时跳过",
+    "skippedNote": "你可以稍后在设置中配置 Whisper。",
+    "realtime": "约 {{n}} 倍实时速度",
+    "models": {
+      "tiny": "最快的模型，适合测试，支持所有语言。",
+      "base": "速度与准确度均衡，支持所有语言。",
+      "small": "准确度更好，速度适中，支持所有语言。",
+      "large_v3_turbo": "速度与准确度的最佳平衡，推荐大多数人使用。",
+      "large_v3_turbo_q5_0": "精简的 Turbo 模型，体积小、速度快。"
+    },
+    "avx": {
+      "title": "此电脑与该版本不兼容",
+      "desc": "你的处理器不支持预编译版 Whisper 所需的 AVX2 指令。这影响 2013 年之前生产的处理器（英特尔第三代或更早、早期 AMD）。",
+      "howTo": "解决方法：",
+      "step1": "从 <link>whisper.cpp releases</link> 下载兼容版本，查找 <b>noavx</b> 或 <b>compat</b> 版本，或自行关闭 AVX2 编译。",
+      "step2": "安装后，请在 <b>设置、Whisper、自定义程序路径</b> 中填写其路径。",
+      "skipHint": "或者暂时跳过，使用 AI 导师和其他功能。只有实时字幕和播客需要转写。"
+    }
+  }
+}

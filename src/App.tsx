@@ -12,7 +12,7 @@ import { ReadingPage } from '@/pages/reading';
 import { TutorPage } from '@/pages/tutor';
 import { CaptionPage } from '@/pages/caption';
 import { PronunciationPage } from '@/pages/pronunciation';
-import { WritingPage } from '@/pages/writing';
+import { WritingPracticePage } from '@/pages/writing-practice';
 import { CelpipPage } from '@/pages/celpip';
 import { ReaderPage } from '@/pages/reader';
 import { CheatsheetPage } from '@/pages/cheatsheet';
@@ -99,7 +99,9 @@ function App() {
           {ENABLED_MODULES.pronunciation && (
             <Route path="pronunciation" element={<PronunciationPage />} />
           )}
-          {ENABLED_MODULES.writing && <Route path="writing" element={<WritingPage />} />}
+          {ENABLED_MODULES.writingPractice && (
+            <Route path="writing-practice/*" element={<WritingPracticePage />} />
+          )}
           {ENABLED_MODULES.celpip && <Route path="celpip/*" element={<CelpipPage />} />}
           {(ENABLED_MODULES.celpip || ENABLED_MODULES.tcf) && (
             <Route path="exam/:examType/*" element={<CelpipPage />} />

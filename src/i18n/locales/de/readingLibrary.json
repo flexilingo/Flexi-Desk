@@ -1,0 +1,74 @@
+{
+  "catalog": {
+    "heading": "Bibliothek",
+    "subtitle": "Geschichten und Bücher nach Niveau sortiert. Tippe auf ein Wort, um seine Bedeutung zu sehen.",
+    "allLanguages": "Alle Sprachen",
+    "allLevels": "Alle Niveaus",
+    "allSeries": "Alle Reihen",
+    "empty": "Hier gibt es noch keine Bücher",
+    "emptyBody": "Probiere eine andere Sprache oder ein anderes Niveau — neue Geschichten kommen regelmäßig dazu.",
+    "read": "Lesen",
+    "add": "Zu meiner Bibliothek",
+    "added": "In deiner Bibliothek",
+    "remove": "Entfernen",
+    "pages": "{{n}} Seiten",
+    "minutes": "{{n}} Min.",
+    "episode": "Folge {{n}}",
+    "kind": {
+      "original": "FlexiLingo-Geschichte",
+      "classic": "Klassisch",
+      "adapted": "Leichte Fassung eines Klassikers"
+    }
+  },
+  "shelf": {
+    "heading": "Bücher, die du liest",
+    "page": "Seite {{n}} von {{total}}",
+    "finished": "Erledigt",
+    "continue": "Weiter",
+    "start": "Starten"
+  },
+  "book": {
+    "backToLibrary": "Bibliothek",
+    "by": "Von {{author}}",
+    "source": "Quelle",
+    "license": {
+      "own": "© FlexiLingo",
+      "public_domain": "Gemeinfrei",
+      "cc0": "CC0",
+      "cc_by": "CC BY",
+      "cc_by_sa": "CC BY-SA"
+    },
+    "nextEpisode": "Nächste Folge",
+    "chapter": "Kapitel"
+  },
+  "public": {
+    "listTitle": "Geschichten und Bücher auf {{language}} nach Niveau | FlexiLingo",
+    "listDescription": "Kostenlose Lektüre auf {{language}} für Lernende: Kurzgeschichten und Klassiker, nach GER-Niveau von A1 bis C2 sortiert. Tippe auf ein Wort, um seine Bedeutung zu sehen.",
+    "listHeading": "Geschichten und Bücher auf {{language}} nach Niveau",
+    "listIntro": "Kurzgeschichten für Lernende und klassische Bücher, nach Niveau sortiert. Lies jedes davon hier vollständig — jedes Wort zeigt seine Bedeutung.",
+    "bookTitle": "{{title}} — Lektüre auf {{language}}, Niveau {{level}} | FlexiLingo",
+    "level": "Niveau {{level}}",
+    "firstPage": "Erste Seite",
+    "cta": "In FlexiLingo weiterlesen",
+    "ctaBody": "In FlexiLingo werden die Wörter, die du nachschlägst, zu Karteikarten, und deine Stelle im Buch wird auf allen Geräten gespeichert. Kostenlos.",
+    "moreInSeries": "Mehr aus dieser Reihe",
+    "moreBooks": "Weitere Bücher auf {{language}}",
+    "searchPlaceholder": "Nach Titel oder Autor suchen",
+    "language": "Sprache",
+    "type": "Wortart",
+    "allTypes": "Alle Typen",
+    "series": "Reihe",
+    "results_one": "{{count}} Buch",
+    "results_other": "{{count}} Bücher",
+    "noResults": "Kein Buch passt zu diesen Filtern. Probier ein anderes Niveau oder setz die Filter zurück.",
+    "coverAlt": "Cover von {{title}}",
+    "readHere": "Hier lesen — tippe auf ein Wort für seine Bedeutung",
+    "resume": "Ab Seite {{n}} weiterlesen",
+    "pageError": "Diese Seite wurde nicht geladen. Prüfe deine Verbindung und versuche es erneut.",
+    "readerCtaTitle": "Behalte die Wörter, die du antippst",
+    "filters": "Filter",
+    "all": "Alle",
+    "showResults_one": "{{count}} Buch anzeigen",
+    "showResults_other": "{{count}} Bücher anzeigen"
+  }
+}

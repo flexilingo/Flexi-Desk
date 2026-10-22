@@ -1,3 +1,4 @@
+import { localErrorText } from '@/lib/localError';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
@@ -235,7 +236,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
           s.isLoadingDevices = false;
         });
       }
@@ -266,7 +267,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
           s.isCheckingWhisper = false;
         });
       }
@@ -289,7 +290,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
           s.isConfiguringWhisper = false;
         });
       }
@@ -321,7 +322,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },
@@ -359,7 +360,7 @@ export const useCaptionStore = create<CaptionState>()(
       } catch (err) {
         set((s) => {
           s.isInstallingWhisper = false;
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },
@@ -381,7 +382,7 @@ export const useCaptionStore = create<CaptionState>()(
       } catch (err) {
         set((s) => {
           s.isInstallingHomebrew = false;
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },
@@ -406,7 +407,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
           s.isLoadingModels = false;
         });
       }
@@ -435,7 +436,7 @@ export const useCaptionStore = create<CaptionState>()(
         set((s) => {
           s.isDownloading = false;
           s.downloadProgress = null;
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
         return null;
       }
@@ -453,7 +454,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },
@@ -489,7 +490,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },
@@ -516,7 +517,7 @@ export const useCaptionStore = create<CaptionState>()(
         return session;
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
         return null;
       }
@@ -560,7 +561,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
           s.isLoadingSessions = false;
         });
       }
@@ -579,7 +580,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },
@@ -598,7 +599,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
           s.isLoadingSegments = false;
         });
       }
@@ -629,7 +630,7 @@ export const useCaptionStore = create<CaptionState>()(
       } catch (err) {
         set((s) => {
           s.isTranscribing = false;
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
         return null;
       }
@@ -657,7 +658,7 @@ export const useCaptionStore = create<CaptionState>()(
       } catch (err) {
         set((s) => {
           s.isTranscribing = false;
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
         return null;
       }
@@ -707,7 +708,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },
@@ -749,7 +750,7 @@ export const useCaptionStore = create<CaptionState>()(
         return session;
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
           s.isLiveCapturing = false;
         });
         return null;
@@ -784,7 +785,7 @@ export const useCaptionStore = create<CaptionState>()(
         });
       } catch (err) {
         set((s) => {
-          s.error = String(err);
+          s.error = localErrorText(err, 'caption');
         });
       }
     },

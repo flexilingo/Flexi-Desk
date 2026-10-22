@@ -1,0 +1,124 @@
+{
+  "home": {
+    "openPdf": "Mở một PDF",
+    "signInHint": "Hãy đăng nhập để xem thư viện có sẵn và kệ sách của bạn tại đây. Tài liệu của riêng bạn luôn ở đây, trên máy này.",
+    "signIn": "Đăng nhập",
+    "retry": "Thử lại",
+    "libraryFailed": "Hiện không thể tải thư viện. Tài liệu của bạn không bị ảnh hưởng.",
+    "cancel": "Hủy",
+    "kindText": "Văn bản"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "PDF này được bảo vệ bằng mật khẩu.",
+    "PDF_COULD_NOT_OPEN": "Không mở được PDF này. Có thể tệp đã hỏng.",
+    "UNKNOWN_ERROR": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "DOCUMENT_NOT_FOUND": "Không tìm thấy tài liệu này.",
+    "FILE_MISSING": "Tệp của tài liệu này không còn trên máy này.",
+    "FILE_NOT_FOUND": "Tệp của tài liệu này không còn trên máy này.",
+    "NOT_A_PDF": "Tệp này không phải PDF.",
+    "UNSUPPORTED_FILE_TYPE": "Loại tệp này không được hỗ trợ. Hãy dùng PDF, JPG, PNG hoặc WebP.",
+    "EMPTY_FILE": "Tệp này trống.",
+    "FILE_READ_FAILED": "Không thể đọc tệp.",
+    "FILE_WRITE_FAILED": "Không thể lưu tệp trên máy này.",
+    "INVALID_FILE_PATH": "Không thể đọc tệp.",
+    "OCR_FAILED": "Đọc trang này không thành công.",
+    "OCR_PAGE_FAILED": "Đọc trang này không thành công.",
+    "POSITION_SAVE_FAILED": "Không thể lưu vị trí đọc của bạn trong sách.",
+    "WORD_LOG_FAILED": "Không thể lưu từ này vào danh sách của bạn.",
+    "DOCUMENTS_FETCH_FAILED": "Không thể tải tài liệu của bạn.",
+    "DOCUMENT_FETCH_FAILED": "Không tìm thấy tài liệu này.",
+    "DOCUMENT_CREATE_FAILED": "Không thể lưu tệp trên máy này.",
+    "INVALID_FILE": "Không thể đọc ảnh này.",
+    "OCR_ENGINE_FAILED": "Không thể khởi động công cụ đọc trên máy này.",
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "Không thể tải dữ liệu đọc cho ngôn ngữ này. Hãy kiểm tra kết nối và thử lại.",
+    "BOOK_NOT_FOUND": "Không tìm thấy cuốn sách này.",
+    "PAGE_NOT_FOUND": "Không tìm thấy trang này.",
+    "PAGE_FETCH_FAILED": "Không thể tải trang này.",
+    "EMPTY_TEXT": "Không có văn bản nào để thêm.",
+    "TEXT_TOO_LONG": "Văn bản này quá dài để thêm. Hãy chia thành nhiều phần.",
+    "INVALID_URL": "Đây không phải địa chỉ web. Địa chỉ phải bắt đầu bằng https://",
+    "URL_FETCH_FAILED": "Không thể lấy trang. Hãy kiểm tra địa chỉ và kết nối của bạn.",
+    "URL_NOT_TEXT": "Địa chỉ này không phải trang web có văn bản.",
+    "URL_TOO_LARGE": "Trang này quá lớn để thêm.",
+    "URL_NO_TEXT": "Không tìm thấy văn bản đọc được trên trang này."
+  },
+  "upload": {
+    "hint": {
+      "file": "PDF, JPG, PNG hoặc WebP. Không giới hạn kích thước.",
+      "text": "Dán bất kỳ văn bản nào bạn muốn đọc. Văn bản được chia thành các trang và được giữ trên máy này.",
+      "url": "Dán địa chỉ của một trang web. Văn bản của trang được lấy về và giữ trên máy này."
+    },
+    "filterName": "PDF và ảnh",
+    "privacy": "Được giữ trên máy này. Không có gì được tải lên.",
+    "submitting": "Đang thêm...",
+    "clear": "Chọn tệp khác",
+    "dropHere": "Thả vào để thêm vào mục đọc của bạn",
+    "duplicate": {
+      "again": "Thêm một bản sao mới"
+    },
+    "mode": {
+      "file": "Tệp",
+      "text": "Dán văn bản",
+      "url": "Từ một trang web"
+    },
+    "text": {
+      "label": "Văn bản",
+      "placeholder": "Dán hoặc nhập văn bản vào đây",
+      "title": "Tiêu đề (tùy chọn)",
+      "titlePlaceholder": "Lấy từ dòng đầu tiên nếu để trống"
+    },
+    "url": {
+      "label": "Địa chỉ trang web",
+      "autoLanguage": "Nhận dạng từ trang"
+    },
+    "privacyUrl": "Trang được máy này lấy về và lưu tại đây."
+  },
+  "ocr": {
+    "downloading": "Đang tải dữ liệu đọc cho {{language}}… {{percent}}%",
+    "languageFallback": "Đang đọc tài liệu này như tiếng Anh"
+  },
+  "notes": {
+    "saveFailed": "Không thể lưu ghi chú. Văn bản của bạn vẫn còn đây — hãy thử lại.",
+    "deleteFailed": "Không thể xóa ghi chú. Hãy thử lại.",
+    "bold": "Đậm",
+    "italic": "Nghiêng",
+    "list": "Danh sách gạch đầu dòng",
+    "preview": "Xem Trước",
+    "write": "Chỉnh Sửa"
+  },
+  "library": {
+    "level": "Cấp Độ",
+    "levelName": {
+      "A1": "Sơ Cấp",
+      "A2": "Tiểu Học",
+      "B1": "Trung Cấp",
+      "B2": "Trung cao cấp",
+      "C1": "Nâng Cao",
+      "C2": "Thành Thạo"
+    },
+    "clearAll": "Xóa tất cả",
+    "pages": "Trang",
+    "prevPage": "Trang trước",
+    "nextPage": "Trang sau",
+    "pageN": "Trang {{n}}"
+  },
+  "language": {
+    "set": "Đã đặt ngôn ngữ là {{language}}",
+    "change": "Thay đổi",
+    "dismiss": "Đóng",
+    "detected": "Nhận dạng từ văn bản: {{language}}"
+  },
+  "audio": {
+    "hostedNeedsAccount": "Các bản ghi âm của cuốn sách này được giữ trong tài khoản của bạn và chỉ được mở cho bản sao trong thư viện trực tuyến của bạn. Bản sao này nằm trên máy này nên chưa thể phát ở đây.",
+    "hostedFailed": "Hiện không thể tải các bản ghi âm. Hãy kiểm tra kết nối và đăng nhập của bạn, rồi mở lại bảng này.",
+    "signInForEditions": "Hãy đăng nhập để cho trình đọc biết đây là cuốn sách đã xuất bản nào. Bản ghi âm, video và phụ đề sẽ đi kèm."
+  },
+  "book": {
+    "backToBook": "Quay lại cuốn sách",
+    "playFailed": "Không thể phát bản ghi âm này.",
+    "lockedTitle": "Phụ đề: đã nghe trọn {{n}}/{{required}} lần",
+    "lockedHeading": "Nghe trước, đọc sau",
+    "lockedRule_other": "Phụ đề mở khi bạn đã nghe trọn bản ghi này {{required}} lần: từ đầu đến cuối, không tua qua. Tua lại thì không sao. Tốc độ nhanh hơn 1× không được tính.",
+    "lockedProgress": "Đã nghe trọn: {{n}}/{{required}} lần"
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "page": {
+    "title": "الإعدادات",
+    "subtitle": "اضبط تجربة التعلم الخاصة بك"
+  },
+  "tabs": {
+    "general": "عام",
+    "ai": "ذكائي الاصطناعي",
+    "whisper": "Whisper",
+    "data": "تصدير / استيراد"
+  },
+  "auth": {
+    "title": "حساب FlexiLingo",
+    "loggedIn": "تم تسجيل الدخول. ميزات السحابة مثل الاختبار وسؤال لينا والملاحظات متاحة.",
+    "logout": "تسجيل الخروج",
+    "signInHint": "سجّل الدخول لاستخدام ميزات السحابة: الاختبار وسؤال لينا والملاحظات والمزيد.",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "you@example.com",
+    "sending": "جارٍ إرسال الرمز...",
+    "sendCode": "إرسال الرمز",
+    "codeSentTo": "تم إرسال الرمز إلى",
+    "verificationCode": "رمز التحقق",
+    "verifying": "جارٍ التحقق...",
+    "verify": "تحقق",
+    "useAnotherEmail": "استخدم بريدًا آخر",
+    "sendingShort": "جارٍ الإرسال...",
+    "resend": "إعادة إرسال الرمز"
+  },
+  "languages": {
+    "title": "اللغات",
+    "subtitle": "حدّد لغتك الأم ولغة التعلم",
+    "native": "اللغة الأم",
+    "learning": "اللغة التي أتعلمها",
+    "saved": "تم الحفظ",
+    "save": "حفظ اللغات",
+    "appLanguage": "لغة التطبيق"
+  },
+  "appearance": {
+    "title": "المظهر",
+    "subtitle": "خصّص شكل التطبيق",
+    "theme": "السمة",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
+  },
+  "data": {
+    "title": "التصدير والاستيراد",
+    "subtitle": "انقل مفرداتك من هذا الحاسوب وإليه",
+    "export": "تصدير المفردات",
+    "import": "استيراد المفردات"
+  },
+  "common": {
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "done": "تم"
+  },
+  "export": {
+    "title": "تصدير المفردات",
+    "hint": "احفظ كلماتك في ملف يمكنك الاحتفاظ به أو فتحه في تطبيق آخر.",
+    "format": "الصيغة",
+    "csv": "CSV",
+    "anki": "Anki (.apkg)",
+    "csvFiles": "ملفات CSV",
+    "ankiPackage": "حزمة Anki",
+    "languageOptional": "اللغة (اختياري)",
+    "allLanguages": "كل اللغات",
+    "allLanguagesNote": "لم تُختر لغة: ستُصدَّر كل اللغات.",
+    "cefrOptional": "مستوى CEFR (اختياري)",
+    "allLevels": "كل المستويات",
+    "done": "تم تصدير {{count}} عنصرًا بصيغة {{format}}",
+    "exporting": "جارٍ التصدير...",
+    "action": "تصدير"
+  },
+  "import": {
+    "title": "استيراد المفردات",
+    "hint": "أضف كلمات من ملف CSV أو Quizlet أو Anki.",
+    "fileFilter": "ملف الاستيراد",
+    "chooseSource": "اختر مصدر الاستيراد:",
+    "sourceCsv": "ملف CSV",
+    "sourceTsv": "Quizlet (TSV)",
+    "sourceAnki": "Anki (.apkg)",
+    "ankiNote": "تُستورد بطاقات Anki بحيث يكون الوجه الأمامي هو الكلمة والخلفي هو الترجمة.",
+    "targetLanguage": "لغة الكلمات",
+    "skipDuplicates": "تخطي المكرر",
+    "importing": "جارٍ الاستيراد...",
+    "action": "استيراد",
+    "complete": "اكتمل الاستيراد",
+    "totalRows": "إجمالي الصفوف: {{count}}",
+    "imported": "المستورد: {{count}}",
+    "skipped": "تم تخطيها (مكررة): {{count}}",
+    "errorsCount": "الأخطاء: {{count}}",
+    "showErrors": "عرض الأخطاء ({{count}})",
+    "rowError": "الصف {{row}}: {{message}}"
+  },
+  "mapper": {
+    "title": "مطابقة الأعمدة",
+    "hint": "طابق أعمدة ملفك مع حقول FlexiLingo.",
+    "skip": "تخطي",
+    "column": "{{name}} (العمود {{n}})",
+    "fields": {
+      "word": "الكلمة",
+      "translation": "الترجمة",
+      "definition": "التعريف",
+      "pos": "نوع الكلمة",
+      "cefr": "مستوى CEFR",
+      "phonetic": "النطق (IPA)",
+      "examples": "أمثلة",
+      "context": "جملة السياق"
+    }
+  },
+  "preview": {
+    "title": "معاينة",
+    "total": "{{count}} صفًا في المجموع",
+    "word": "الكلمة",
+    "translation": "الترجمة",
+    "cefr": "CEFR",
+    "pos": "النوع",
+    "missing": "مفقود",
+    "showing": "عرض {{shown}} من {{total}} صفوف المعاينة"
+  },
+  "sync": {
+    "title": "المزامنة السحابية",
+    "pending": "({{count}} قيد الانتظار)",
+    "hint": "اختر البيانات التي تُزامَن مع حسابك في FlexiLingo. التغييرات دون اتصال تنتظر في قائمة وتُزامَن عند الاتصال.",
+    "loading": "جارٍ التحميل...",
+    "lastSynced": "آخر مزامنة: {{date}}",
+    "never": "لم تتم المزامنة أبدًا",
+    "both": "في الاتجاهين",
+    "push": "رفع فقط",
+    "pull": "تنزيل فقط",
+    "conflicts": "{{count}} تعارضات غير محلولة. افتح الإعدادات ثم التعارضات لحلها.",
+    "status": {
+      "Synced": "متزامن",
+      "Error": "خطأ",
+      "Conflict": "تعارض",
+      "Idle": "خامل",
+      "Syncing": "جارٍ المزامنة"
+    },
+    "tables": {
+      "vocabulary": "المفردات",
+      "decks": "المجموعات",
+      "deck_cards": "بطاقات المجموعات",
+      "srs_progress": "تقدم المراجعة",
+      "goals": "الأهداف",
+      "daily_stats": "الإحصاءات اليومية",
+      "streaks": "السلاسل",
+      "settings": "الإعدادات"
+    }
+  }
+}

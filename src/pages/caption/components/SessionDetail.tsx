@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { SegmentTimeline } from './SegmentTimeline';
 import { formatDuration } from '../types';
 
 export function SessionDetail() {
+  const { t } = useTranslation('caption');
   const {
     activeSession,
     activeSegments,
@@ -73,7 +75,7 @@ export function SessionDetail() {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={goBack}>
+          <Button variant="ghost" size="icon" onClick={goBack} aria-label={t('common.back')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1 min-w-0">
@@ -85,8 +87,8 @@ export function SessionDetail() {
               )}
               <span className="truncate">
                 {isFile
-                  ? (session.sourceFile?.split('/').pop() ?? 'Audio File')
-                  : (session.deviceName ?? 'Microphone Recording')}
+                  ? (session.sourceFile?.split('/').pop() ?? t('common.audioFile'))
+                  : (session.deviceName ?? t('detail.recordingTitle'))}
               </span>
             </CardTitle>
           </div>
@@ -101,18 +103,18 @@ export function SessionDetail() {
           {session.segmentCount > 0 && (
             <span className="flex items-center gap-1">
               <Hash className="h-3.5 w-3.5" />
-              {session.segmentCount} segments
+              {t('common.segments', { count: session.segmentCount })}
             </span>
           )}
           {session.wordCount > 0 && (
             <span className="flex items-center gap-1">
               <Type className="h-3.5 w-3.5" />
-              {session.wordCount} words
+              {t('common.words', { count: session.wordCount })}
             </span>
           )}
           <span>{dateStr}</span>
           <Badge className="text-xs">
-            {session.language === 'auto' ? 'Auto' : session.language.toUpperCase()}
+            {session.language === 'auto' ? t('common.autoDetect') : session.language.toUpperCase()}
           </Badge>
         </div>
       </CardHeader>
@@ -123,7 +125,7 @@ export function SessionDetail() {
           <div className="flex items-start gap-3 rounded-lg border border-error/30 bg-error/5 p-4">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-error" />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-error">Transcription Failed</p>
+              <p className="text-sm font-medium text-error">{t('detail.failed')}</p>
               {session.errorMessage && (
                 <p className="text-xs text-error/80">{session.errorMessage}</p>
               )}
@@ -138,12 +140,10 @@ export function SessionDetail() {
               <Play className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Ready to transcribe</p>
-              <p className="text-sm text-muted-foreground">
-                Run Whisper to generate the transcript for this recording
-              </p>
+              <p className="text-sm font-medium text-foreground">{t('detail.ready')}</p>
+              <p className="text-sm text-muted-foreground">{t('detail.readyBody')}</p>
             </div>
-            <Button onClick={handleTranscribe}>Start Transcription</Button>
+            <Button onClick={handleTranscribe}>{t('detail.start')}</Button>
           </div>
         )}
 
@@ -152,10 +152,8 @@ export function SessionDetail() {
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <div>
-              <p className="text-sm font-medium text-foreground">Transcribing…</p>
-              <p className="text-sm text-muted-foreground">
-                Processing audio with Whisper. This may take a while.
-              </p>
+              <p className="text-sm font-medium text-foreground">{t('capture.transcribing')}</p>
+              <p className="text-sm text-muted-foreground">{t('detail.transcribingBody')}</p>
             </div>
           </div>
         )}
@@ -170,7 +168,7 @@ export function SessionDetail() {
             <SegmentTimeline segments={activeSegments} />
           ) : (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No transcript segments found.
+              {t('detail.noSegments')}
             </p>
           ))}
       </CardContent>
@@ -179,7 +177,7 @@ export function SessionDetail() {
         <div className="flex gap-2">
           {isFailed && (
             <Button variant="outline" onClick={handleTranscribe} disabled={isTranscribing}>
-              Retry Transcription
+              {t('detail.retry')}
             </Button>
           )}
         </div>
@@ -189,12 +187,12 @@ export function SessionDetail() {
               {copied ? (
                 <>
                   <Check className="h-4 w-4 text-success" />
-                  Copied
+                  {t('detail.copied')}
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4" />
-                  Copy Text
+                  {t('detail.copy')}
                 </>
               )}
             </Button>
@@ -211,7 +209,7 @@ export function SessionDetail() {
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            Delete
+            {t('detail.delete')}
           </Button>
         </div>
       </CardFooter>

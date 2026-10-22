@@ -54,6 +54,7 @@ pub async fn ai_sentence_chat(
     sentence_context: String,
     target_language: String,
     action: Option<String>,
+    display_text: Option<String>,
 ) -> Result<String, String> {
     let settings = {
         let conn = lock_db(&state)?;
@@ -73,7 +74,8 @@ pub async fn ai_sentence_chat(
         let mut stmt = conn
             .prepare(
                 "SELECT role, content FROM sentence_chat_messages \
-                 WHERE episode_id = ?1 ORDER BY created_at ASC LIMIT 20",
+                 WHERE episode_id = ?1 AND role IN ('user', 'assistant') \
+                 ORDER BY created_at ASC LIMIT 20",
             )
             .map_err(|e| format!("Query error: {e}"))?;
         let rows = stmt
@@ -119,7 +121,13 @@ pub async fn ai_sentence_chat(
         conn.execute(
             "INSERT INTO sentence_chat_messages (id, episode_id, role, content, sentence_context) \
              VALUES (?1, ?2, 'user', ?3, ?4)",
-            rusqlite::params![user_id, episode_id, user_content, sentence_context],
+            // What the learner pressed ("Explain the grammar"), not the prompt built from it.
+            rusqlite::params![
+                user_id,
+                episode_id,
+                display_text.as_deref().unwrap_or(&user_content),
+                sentence_context
+            ],
         )
         .map_err(|e| format!("Insert error: {e}"))?;
         conn.execute(
@@ -131,6 +139,62 @@ pub async fn ai_sentence_chat(
     }
 
     Ok(reply)
+}
+
+/// Lena's structured analysis of one sentence (the website's analysis card), made by the user's own
+/// AI. Kept in the sentence chat as an `analysis` message, so reopening Lena shows it again.
+#[tauri::command]
+pub async fn ai_sentence_analysis(
+    state: State<'_, AppState>,
+    episode_id: String,
+    sentence: String,
+    prev_sentence: Option<String>,
+    next_sentence: Option<String>,
+    target_language: String,
+) -> Result<serde_json::Value, String> {
+    let settings = {
+        let conn = lock_db(&state)?;
+        read_ai_settings(&conn)
+    };
+    let (system, user) = sentence_chat::build_analysis_messages(
+        &sentence,
+        prev_sentence.as_deref(),
+        next_sentence.as_deref(),
+        &target_language,
+    );
+    let response = chat_completion(
+        &settings.provider,
+        &settings.model,
+        vec![
+            ChatMessage { role: "system".into(), content: system },
+            ChatMessage { role: "user".into(), content: user },
+        ],
+        settings.api_key.as_deref(),
+        settings.base_url.as_deref(),
+        Some(0.2),
+        Some(1200),
+        true,
+    )
+    .await?;
+    let mut value = extract_json(&response)?;
+    if let Some(obj) = value.as_object_mut() {
+        obj.insert("sentence".into(), serde_json::Value::String(sentence.clone()));
+    }
+    {
+        let conn = lock_db(&state)?;
+        conn.execute(
+            "INSERT INTO sentence_chat_messages (id, episode_id, role, content, sentence_context) \
+             VALUES (?1, ?2, 'analysis', ?3, ?4)",
+            rusqlite::params![
+                format!("msg-{}", uuid::Uuid::new_v4()),
+                episode_id,
+                value.to_string(),
+                sentence
+            ],
+        )
+        .map_err(|e| format!("Insert error: {e}"))?;
+    }
+    Ok(value)
 }
 
 #[tauri::command]
@@ -239,6 +303,78 @@ pub async fn ai_translate_words(
     }
 
     Ok(all_results)
+}
+
+// ── Explanation translation ───────────────────────────────
+
+fn language_name(code: &str) -> &'static str {
+    match code {
+        "fa" => "Persian (Farsi)",
+        "ar" => "Arabic",
+        "fr" => "French",
+        "hi" => "Hindi",
+        "zh" => "Simplified Chinese",
+        _ => "English",
+    }
+}
+
+/// Translates a few short English explanation paragraphs into the UI language with
+/// the user's own AI (the model on this computer, or their own key). `texts` maps a
+/// key to an English paragraph; the answer maps the same keys to the translation.
+/// Quoted French/English exam text inside a paragraph is kept as written.
+#[tauri::command]
+pub async fn ai_translate_texts(
+    state: State<'_, AppState>,
+    texts: std::collections::BTreeMap<String, String>,
+    target_lang: String,
+) -> Result<std::collections::BTreeMap<String, String>, String> {
+    if texts.is_empty() {
+        return Ok(Default::default());
+    }
+    let settings = {
+        let conn = lock_db(&state)?;
+        read_ai_settings(&conn)
+    };
+    let language = language_name(&target_lang);
+    let input = serde_json::to_string(&texts).map_err(|e| format!("Serialize error: {e}"))?;
+    let messages = vec![
+        ChatMessage {
+            role: "system".to_string(),
+            content: format!(
+                "You translate short explanations for a language learner into {language}. \
+                 You get a JSON object whose values are English paragraphs. Reply with ONLY a JSON object \
+                 with exactly the same keys, each value being the {language} translation. \
+                 Keep any text inside quotation marks (« », \" \", ' ') exactly as written, untranslated."
+            ),
+        },
+        ChatMessage { role: "user".to_string(), content: input },
+    ];
+    let response = chat_completion(
+        &settings.provider,
+        &settings.model,
+        messages,
+        settings.api_key.as_deref(),
+        settings.base_url.as_deref(),
+        Some(0.2),
+        Some(3000),
+        true,
+    )
+    .await?;
+    let parsed = extract_json(&response)?;
+    let mut out = std::collections::BTreeMap::new();
+    if let Some(obj) = parsed.as_object() {
+        for key in texts.keys() {
+            if let Some(v) = obj.get(key).and_then(|v| v.as_str()) {
+                if !v.trim().is_empty() {
+                    out.insert(key.clone(), v.trim().to_string());
+                }
+            }
+        }
+    }
+    if out.is_empty() {
+        return Err("AI_EMPTY_TRANSLATION".to_string());
+    }
+    Ok(out)
 }
 
 // ── Writing Evaluation ────────────────────────────────────

@@ -40,7 +40,9 @@
   "backToDecks": "返回卡组",
   "deckNotFound": "未找到卡组",
   "exportSync": "导出与云同步",
-  "filter": { "all": "全部" },
+  "filter": {
+    "all": "全部"
+  },
   "sort": {
     "label": "卡组排序",
     "recent": "最新优先",
@@ -89,9 +91,18 @@
     "algorithm": "调度算法",
     "algorithmLocked": "算法在创建卡组时选定。",
     "algo": {
-      "fsrs": { "label": "FSRS", "desc": "现代调度算法,间隔最优。推荐。" },
-      "sm2": { "label": "SM-2", "desc": "经典的 SuperMemo 算法。适合一般使用。" },
-      "leitner": { "label": "莱特纳", "desc": "简单的盒子系统。非常适合初学者。" }
+      "fsrs": {
+        "label": "FSRS",
+        "desc": "现代调度算法,间隔最优。推荐。"
+      },
+      "sm2": {
+        "label": "SM-2",
+        "desc": "经典的 SuperMemo 算法。适合一般使用。"
+      },
+      "leitner": {
+        "label": "莱特纳",
+        "desc": "简单的盒子系统。非常适合初学者。"
+      }
     },
     "makePublic": "设为公开",
     "publicDescription": "其他人可以在探索中找到这个卡组并保存一份副本。",
@@ -171,12 +182,19 @@
     "new": "新卡",
     "moreOptions": "更多学习选项"
   },
-  "study": { "noCards": "这个卡组目前没有可学习的卡片。", "startFailed": "无法开始学习。请重试。" },
+  "study": {
+    "noCards": "这个卡组目前没有可学习的卡片。",
+    "startFailed": "无法开始学习。请重试。"
+  },
   "history": {
     "title": "复习记录",
     "emptyTitle": "还没有复习记录",
     "emptyDesc": "你之前对这个卡组的学习记录会显示在这里。",
-    "status": { "completed": "已完成", "active": "进行中", "abandoned": "已中止" },
+    "status": {
+      "completed": "已完成",
+      "active": "进行中",
+      "abandoned": "已中止"
+    },
     "cards": "张卡片",
     "accuracy": "正确率",
     "today": "今天",
@@ -184,8 +202,14 @@
     "daysAgo": "{{count}} 天前",
     "weeksAgo": "{{count}} 周前"
   },
-  "related": { "title": "更多可探索的卡组" },
-  "pagination": { "previous": "上一页", "next": "下一页", "page": "第 {{current}} / {{total}} 页" },
+  "related": {
+    "title": "更多可探索的卡组"
+  },
+  "pagination": {
+    "previous": "上一页",
+    "next": "下一页",
+    "page": "第 {{current}} / {{total}} 页"
+  },
   "share": {
     "button": "分享",
     "title": "发布与分享",
@@ -269,7 +293,11 @@
     "sortLabel": "卡组排序",
     "newest": "最新",
     "popular": "最受欢迎",
-    "source": { "all": "全部", "official": "FlexiLingo", "users": "学习者" },
+    "source": {
+      "all": "全部",
+      "official": "FlexiLingo",
+      "users": "学习者"
+    },
     "filterLanguage": "卡片语言",
     "allLanguages": "所有语言",
     "clearAll": "全部清除",
@@ -292,7 +320,11 @@
     "cloneToMyDecks": "保存到我的卡组",
     "learnersStudying": "{{count}} 位学习者正在学习",
     "whatYouGet": "你将获得",
-    "perk": { "edit": "按你的方式编辑卡片", "srs": "智能间隔重复", "progress": "跟踪你的进度" },
+    "perk": {
+      "edit": "按你的方式编辑卡片",
+      "srs": "智能间隔重复",
+      "progress": "跟踪你的进度"
+    },
     "meaningHidden": "你的语言的释义",
     "meaningHiddenHint": "以你选择的语言添加"
   },

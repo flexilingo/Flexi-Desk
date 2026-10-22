@@ -29,8 +29,16 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   steady_learner: CalendarCheck,
 };
 
-/** Where each achievement's button goes. */
+/**
+ * Where each achievement's button goes. Covers the desk's own seven groups and
+ * the website's twenty keys (the server catalogue), so a key from either side
+ * never lands on a blank `/`. The website's `dictation_master` points at
+ * `/dashboard/daily-study`, which is excluded on desk (it is backed by the
+ * admin-only learning path); dictation lives in the listening practice program
+ * inside the podcast player, so it opens the podcast library.
+ */
 export const ACTION_ROUTES: Record<string, string> = {
+  // desk's own catalogue
   streak_master: '/study',
   word_scholar: '/podcast',
   card_master: '/study',
@@ -38,6 +46,23 @@ export const ACTION_ROUTES: Record<string, string> = {
   episode_explorer: '/podcast',
   bookworm: '/reader',
   steady_learner: '/study',
+  // website keys
+  precision_expert: '/study',
+  goal_crusher: '/',
+  perfect_session: '/study',
+  flashcard_pro: '/review',
+  cloze_champion: '/vocabulary',
+  dictation_master: '/podcast',
+  quiz_conqueror: '/study',
+  video_explorer: '/videos',
+  xp_champion: '/account/xp',
+  level_legend: '/account/xp',
+  deck_creator: '/review/create',
+  knowledge_sharer: '/review/share-links',
+  early_bird: '/study',
+  night_owl: '/study',
+  weekend_warrior: '/study',
+  multi_mode: '/study',
 };
 
 export interface AchievementGroup {
@@ -123,7 +148,9 @@ export function AchievementsCard({ data }: { data: OverviewData }) {
                   {t('nextUnlock')}
                 </span>
                 <span className="block truncate text-sm font-bold text-foreground">
-                  {t(`groups.${nextUp.key}.name`)}
+                  {t(`groups.${nextUp.key}.name`, {
+                    defaultValue: nextUp.tiers[0]?.title ?? nextUp.key,
+                  })}
                 </span>
                 <span className="block text-xs text-muted-foreground">
                   {t('nextUnlockProgress', {
@@ -147,10 +174,15 @@ export function AchievementsCard({ data }: { data: OverviewData }) {
                   <GroupIcon g={g.key} locked={!g.current} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-bold text-foreground">
-                      {t(`groups.${g.key}.name`)}
+                      {t(`groups.${g.key}.name`, { defaultValue: g.tiers[0]?.title ?? g.key })}
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">
-                      {g.current ? t(`tier.${g.key}`, { n: g.current.threshold }) : t('locked')}
+                      {g.current
+                        ? t(`tier.${g.key}`, {
+                            n: g.current.threshold,
+                            defaultValue: '{{n, number}}',
+                          })
+                        : t('locked')}
                     </span>
                     <Bar ratio={g.ratio} />
                   </span>
@@ -224,10 +256,16 @@ export function AchievementDetailDialog({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3">
                 <GroupIcon g={group.key} locked={!group.current} />
-                <span>{t(`groups.${group.key}.name`)}</span>
+                <span>
+                  {t(`groups.${group.key}.name`, {
+                    defaultValue: group.tiers[0]?.title ?? group.key,
+                  })}
+                </span>
               </DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-muted-foreground">{t(`groups.${group.key}.hint`)}</p>
+            <p className="text-sm text-muted-foreground">
+              {t(`groups.${group.key}.hint`, { defaultValue: group.tiers[0]?.description ?? '' })}
+            </p>
             <div>
               <p className="mb-1 text-xs font-semibold text-muted-foreground">
                 {t('currentProgress')}
@@ -249,7 +287,7 @@ export function AchievementDetailDialog({
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     )}
                     <span className={tier.isUnlocked ? 'text-foreground' : 'text-muted-foreground'}>
-                      {t(`tier.${group.key}`, { n: tier.threshold })}
+                      {t(`tier.${group.key}`, { n: tier.threshold, defaultValue: '{{n, number}}' })}
                     </span>
                   </li>
                 ))}

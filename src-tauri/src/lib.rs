@@ -21,6 +21,7 @@ mod study;
 mod sync;
 mod tutor;
 mod writing;
+mod writing_practice;
 
 use std::sync::Mutex;
 
@@ -239,6 +240,14 @@ pub fn run() {
             commands::writing::writing_create_prompt,
             commands::writing::writing_delete_prompt,
             commands::writing::writing_get_stats,
+            commands::writing_practice::wp_generate_prompt,
+            commands::writing_practice::wp_create_session,
+            commands::writing_practice::wp_get_session,
+            commands::writing_practice::wp_get_active,
+            commands::writing_practice::wp_save_draft,
+            commands::writing_practice::wp_cancel_session,
+            commands::writing_practice::wp_history,
+            commands::writing_practice::wp_submit,
             commands::exam::exam_create_session,
             commands::exam::exam_list_sessions,
             commands::exam::exam_get_session,
@@ -384,8 +393,10 @@ pub fn run() {
             // AI
             commands::ai::ai_word_analysis,
             commands::ai::ai_translate_words,
+            commands::ai::ai_translate_texts,
             commands::ai::ai_sentence_chat,
             commands::ai::ai_sentence_chat_history,
+            commands::ai::ai_sentence_analysis,
             commands::ai::ai_sentence_chat_clear,
             commands::ai::ai_evaluate_writing,
             commands::ai::ai_test,

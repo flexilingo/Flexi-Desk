@@ -1,0 +1,195 @@
+{
+  "landing": {
+    "title": "المعلم الذكي",
+    "subtitle": "تدرّب على التحدث مع شريكك الذكي في المحادثة",
+    "newConversation": "محادثة جديدة",
+    "loading": "جارٍ تحميل المحادثات...",
+    "emptyTitle": "لا توجد محادثات بعد",
+    "emptyBody": "ابدأ أول محادثة ذكية لك لتتدرب على التحدث بأي لغة.",
+    "startFirst": "ابدأ أول محادثة",
+    "active": "نشطة",
+    "messages_zero": "{{count}} رسالة",
+    "messages_one": "رسالة واحدة",
+    "messages_two": "رسالتان",
+    "messages_few": "{{count}} رسائل",
+    "messages_many": "{{count}} رسالة",
+    "messages_other": "{{count}} رسالة",
+    "corrections_zero": "{{count}} تصحيح",
+    "corrections_one": "تصحيح واحد",
+    "corrections_two": "تصحيحان",
+    "corrections_few": "{{count}} تصحيحات",
+    "corrections_many": "{{count}} تصحيحًا",
+    "corrections_other": "{{count}} تصحيح"
+  },
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "منذ {{count}} د",
+    "hoursAgo": "منذ {{count}} س",
+    "daysAgo": "منذ {{count}} يوم"
+  },
+  "modes": {
+    "free": {
+      "name": "محادثة حرة",
+      "description": "تحدث عن أي شيء تحبه"
+    },
+    "role_play": {
+      "name": "لعب الأدوار",
+      "description": "مثّل مواقف من الحياة الواقعية"
+    },
+    "deck_practice": {
+      "name": "تدريب بالمجموعة",
+      "description": "استخدم كلمات من مجموعات البطاقات لديك"
+    },
+    "vocab_challenge": {
+      "name": "تحدي المفردات",
+      "description": "تدرّب على مفردات جديدة أثناء المحادثة"
+    },
+    "escape_room": {
+      "name": "غرفة الهروب",
+      "description": "احلّ قصة بالتحدث"
+    }
+  },
+  "categories": {
+    "daily_life": "الحياة اليومية",
+    "travel": "السفر",
+    "social": "اجتماعي",
+    "professional": "مهني",
+    "academic": "أكاديمي",
+    "health": "الصحة",
+    "emergency": "الطوارئ",
+    "creative": "إبداع ومرح"
+  },
+  "topics": {
+    "travel": "السفر والمغامرات",
+    "food": "الطعام والطبخ",
+    "movies": "الأفلام والمسلسلات",
+    "music": "الموسيقى والحفلات",
+    "sports": "الرياضة واللياقة",
+    "technology": "التكنولوجيا",
+    "books": "الكتب والقراءة",
+    "work": "العمل والمسار المهني",
+    "hobbies": "الهوايات والحرف",
+    "nature": "الطبيعة والبيئة",
+    "family": "الأسرة والعلاقات",
+    "health": "الصحة والعافية",
+    "fashion": "الموضة والأناقة",
+    "art": "الفن والثقافة",
+    "science": "العلوم والاكتشافات",
+    "history": "التاريخ والتقاليد",
+    "routines": "الروتين اليومي",
+    "holidays": "العطلات والاحتفالات",
+    "childhood": "ذكريات الطفولة",
+    "future": "خطط الغد وأحلامه"
+  },
+  "providers": {
+    "ollama": "أولاما (محلي)",
+    "openai": "OpenAI",
+    "anthropic": "Anthropic"
+  },
+  "wizard": {
+    "title": "محادثة جديدة",
+    "stepOf": "الخطوة {{step}} من {{total}}",
+    "back": "رجوع",
+    "next": "التالي",
+    "start": "ابدأ المحادثة",
+    "starting": "جارٍ البدء...",
+    "backAria": "رجوع",
+    "step1Title": "اختر وضع التدريب",
+    "step1Subtitle": "كيف تريد أن تتدرب؟",
+    "step2Title": "اللغة والمستوى",
+    "step2Subtitle": "اضبط إعدادات التدريب",
+    "practiceLanguage": "لغة التدريب",
+    "languageSearch": "ابحث عن لغة...",
+    "languageNoResults": "لم يتم العثور على لغة",
+    "cefrLevel": "مستوى CEFR",
+    "aiProvider": "مزوّد الذكاء الاصطناعي",
+    "model": "النموذج",
+    "ollamaOffline": "أولاما غير متصل. شغّل أولاما لعرض النماذج التي نزّلتها.",
+    "topicTitle": "اختر موضوعًا",
+    "scenarioTitle": "اختر سيناريو",
+    "deckTitle": "اختر مجموعة",
+    "extraTitle": "إعدادات إضافية",
+    "topicSubtitle": "اختر موضوعًا أو اكتب موضوعك",
+    "scenarioSubtitle": "ابحث عن سيناريو لعب أدوار واختره",
+    "deckSubtitle": "تدرّب على مفردات مجموعات البطاقات لديك",
+    "extraSubtitle": "أضف تعليمات مخصصة إن أردت",
+    "optional": "(اختياري)",
+    "ownTopic": "اكتب موضوعك الخاص",
+    "topicPlaceholder": "عمّ تريد أن تتحدث؟",
+    "suggestedTopic": "أو اختر موضوعًا مقترحًا",
+    "searchScenarios": "ابحث في السيناريوهات...",
+    "customGroup": "مخصص",
+    "customScenario": "اكتب سيناريوك الخاص",
+    "customScenarioHint": "صف أي موقف تريد التدرب عليه",
+    "customScenarioPlaceholder": "مثال: أنت في سوق للأشياء القديمة وتساوم بائعًا عنيدًا على سعر مصباح عتيق...",
+    "deck": "المجموعة",
+    "loadingDecks": "جارٍ تحميل المجموعات...",
+    "selectDeck": "اختر مجموعة...",
+    "deckCards": "{{name}} ({{count}} بطاقة)",
+    "noDecks": "لا توجد مجموعات. أنشئ مجموعة في قسم المراجعة أولًا.",
+    "customInstructions": "تعليمات مخصصة",
+    "customInstructionsPlaceholder": "مثال: ركّز على مفردات العمل، تكلّم ببطء، صحّح أخطائي بصرامة أكثر...",
+    "practiceTitle": "تدريب {{language}}"
+  },
+  "detail": {
+    "back": "العودة إلى المحادثات",
+    "resume": "استئناف",
+    "minutes": "{{count}} د",
+    "messages_zero": "{{count}} رسالة",
+    "messages_one": "رسالة واحدة",
+    "messages_two": "رسالتان",
+    "messages_few": "{{count}} رسائل",
+    "messages_many": "{{count}} رسالة",
+    "messages_other": "{{count}} رسالة",
+    "fixes_zero": "{{count}} تصحيح",
+    "fixes_one": "تصحيح واحد",
+    "fixes_two": "تصحيحان",
+    "fixes_few": "{{count}} تصحيحات",
+    "fixes_many": "{{count}} تصحيحًا",
+    "fixes_other": "{{count}} تصحيح",
+    "conversation": "المحادثة"
+  },
+  "scores": {
+    "grammar": "القواعد",
+    "vocabulary": "المفردات",
+    "fluency": "الطلاقة",
+    "overall": "الإجمالي"
+  },
+  "corrections": {
+    "title": "التصحيحات ({{count}})",
+    "wrong": "الأصل",
+    "right": "بعد التصحيح",
+    "why": "السبب"
+  },
+  "words": {
+    "title": "كلمات جديدة ({{count}})",
+    "saved": "تم الحفظ",
+    "saveToDeck": "حفظ في المجموعة",
+    "saveAll": "حفظ الكل في المجموعة"
+  },
+  "summary": {
+    "title": "انتهت الجلسة",
+    "startNew": "ابدأ محادثة جديدة"
+  },
+  "voice": {
+    "listening": "جارٍ الاستماع...",
+    "transcribing": "جارٍ تحويل الصوت إلى نص...",
+    "thinking": "جارٍ التفكير...",
+    "tapInterrupt": "المس للمقاطعة",
+    "tapSpeak": "المس للتحدث",
+    "hideSubtitles": "إخفاء الترجمة",
+    "showSubtitles": "إظهار الترجمة",
+    "end": "إنهاء",
+    "tutor": "المعلم",
+    "you": "أنت",
+    "micAria": "الميكروفون"
+  },
+  "errorDismiss": "إغلاق",
+  "errors": {
+    "AUTH_REQUIRED": "تحتاج إلى تسجيل الدخول لاستخدام هذه الميزة.",
+    "NETWORK_ERROR": "تعذّر الوصول إلى FlexiLingo. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
+    "MIC_UNAVAILABLE": "الميكروفون غير متاح. تأكد من توصيله ومن السماح بالوصول إليه ثم حاول مرة أخرى.",
+    "MODEL_MISSING": "نموذج الكلام غير موجود. نزّل نموذجًا من إعدادات Whisper وحاول مرة أخرى.",
+    "UNKNOWN_ERROR": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+  }
+}

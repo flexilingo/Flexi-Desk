@@ -349,3 +349,12 @@ export function formatTimestampMs(ms: number): string {
   const frac = Math.floor((ms % 1000) / 10);
   return `${m}:${String(s).padStart(2, '0')}.${String(frac).padStart(2, '0')}`;
 }
+
+/** Turns the backend's "~16x realtime" speed string into a translated label. */
+export function speedLabel(
+  t: (k: string, o?: Record<string, unknown>) => string,
+  raw: string,
+): string {
+  const m = raw.match(/^~?([\d.]+)x realtime$/);
+  return m ? t('model.speedRealtime', { x: m[1] }) : raw;
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Cập nhật",
+  "subtitle": "Luôn cập nhật FlexiDesk",
+  "currentVersion": "Phiên bản hiện tại {{version}}",
+  "check": "Kiểm tra bản cập nhật",
+  "checking": "Đang kiểm tra...",
+  "upToDate": "Bạn đang dùng phiên bản mới nhất.",
+  "available": "Đã có phiên bản {{version}}.",
+  "install": "Tải xuống và cài đặt",
+  "installing": "Đang tải xuống...",
+  "downloading": "Đang tải xuống... {{percent}}%",
+  "downloadingUnknown": "Đang tải xuống...",
+  "ready": "Bản cập nhật đã được cài đặt. Hãy khởi động lại để hoàn tất.",
+  "restart": "Khởi động lại ngay",
+  "dismiss": "Đóng",
+  "error": "Không thể cập nhật: {{message}}"
+}

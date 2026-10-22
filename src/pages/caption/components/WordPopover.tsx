@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Clock, BookOpen, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { formatTimestampMs } from '../types';
 
@@ -12,6 +13,7 @@ interface WordPopoverProps {
 }
 
 export function WordPopover({ word, startMs, endMs, anchorRect, onClose }: WordPopoverProps) {
+  const { t } = useTranslation('caption');
   const popoverRef = useRef<HTMLDivElement>(null);
 
   // Close on click outside
@@ -49,6 +51,7 @@ export function WordPopover({ word, startMs, endMs, anchorRect, onClose }: WordP
           <span className="text-sm font-semibold text-foreground">{word.trim()}</span>
           <button
             onClick={onClose}
+            aria-label={t('word.close')}
             className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-3.5 w-3.5" />
@@ -65,7 +68,7 @@ export function WordPopover({ word, startMs, endMs, anchorRect, onClose }: WordP
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="text-xs h-7">
             <BookOpen className="h-3 w-3" />
-            Look Up
+            {t('word.lookUp')}
           </Button>
         </div>
       </div>

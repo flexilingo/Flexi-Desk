@@ -1,0 +1,69 @@
+{
+  "steps": {
+    "languages": "Sprachen",
+    "ai": "KI",
+    "whisper": "Whisper",
+    "podcast": "Podcast"
+  },
+  "welcome": {
+    "title": "Willkommen bei FlexiDesk",
+    "subtitle": "Richten wir deine Lernumgebung ein",
+    "native": "Your native language",
+    "target": "Die Sprache, die du lernst"
+  },
+  "nav": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "start": "Loslegen"
+  },
+  "podcast": {
+    "title": "Füge deinen ersten Podcast hinzu",
+    "subtitle": "Lerne durch Zuhören mit echten Inhalten",
+    "loading": "Podcasts werden geladen...",
+    "by": "Von {{author}}",
+    "subscribe": "Abonnieren",
+    "adding": "Wird hinzugefügt...",
+    "byRss": "Per RSS-Link hinzufügen",
+    "rssPlaceholder": "https://example.com/feed.rss",
+    "add": "Hinzufügen",
+    "invalidUrl": "Bitte gib einen gültigen Link ein.",
+    "subscribeFailed": "Der Podcast konnte nicht hinzugefügt werden: {{message}}"
+  },
+  "whisper": {
+    "title": "Spracherkennung",
+    "subtitle": "Whisper wandelt Audio auf deinem Computer in Text um. Live-Untertitel und Podcast nutzen es.",
+    "detecting": "Whisper wird gesucht...",
+    "notFoundTitle": "Whisper wurde nicht gefunden",
+    "notFoundDesc": "Drücke die Schaltfläche, um es automatisch zu installieren.",
+    "install": "Whisper installieren",
+    "installing": "Whisper wird installiert...",
+    "settingUp": "Alles, was Whisper braucht, wird eingerichtet...",
+    "chooseTitle": "Whisper-Modell auswählen",
+    "chooseDesc": "Größere Modelle sind genauer, aber langsamer und brauchen mehr Arbeitsspeicher.",
+    "loadingModels": "Modelle werden geladen...",
+    "use": "Verwenden",
+    "download": "Download",
+    "downloadingModel": "Modell wird heruntergeladen...",
+    "readyTitle": "Whisper ist bereit",
+    "activeModel": "Aktives Modell: {{model}}",
+    "skip": "Skip for now",
+    "skippedNote": "Du kannst Whisper später in den Einstellungen einrichten.",
+    "realtime": "~{{n}}x Echtzeit",
+    "models": {
+      "tiny": "Schnellstes Modell. Gut zum Testen. Unterstützt alle Sprachen.",
+      "base": "Gute Balance aus Geschwindigkeit und Genauigkeit. Unterstützt alle Sprachen.",
+      "small": "Bessere Genauigkeit, mittlere Geschwindigkeit. Unterstützt alle Sprachen.",
+      "large_v3_turbo": "Beste Balance aus Geschwindigkeit und Genauigkeit. Für die meisten empfohlen.",
+      "large_v3_turbo_q5_0": "Kompaktes Turbo-Modell. Klein und schnell."
+    },
+    "avx": {
+      "title": "Dieser Computer ist mit diesem Build nicht kompatibel",
+      "desc": "Dein Prozessor unterstützt die AVX2-Befehle nicht, die das vorgefertigte Whisper benötigt. Das betrifft Prozessoren, die vor 2013 gebaut wurden (Intel der 3. Generation oder älter, frühe AMD).",
+      "howTo": "So behebst du es:",
+      "step1": "Lade einen kompatiblen Build von den <link>whisper.cpp-Releases</link> herunter. Suche nach einem <b>noavx</b>- oder <b>compat</b>-Build oder baue ihn selbst mit deaktiviertem AVX2.",
+      "step2": "Wenn es installiert ist, lege den Pfad unter <b>Einstellungen, Whisper, Eigener Programmpfad</b> fest.",
+      "skipHint": "Oder überspringe es vorerst und nutze den KI-Tutor und die anderen Funktionen. Die Transkription wird nur für Live-Untertitel und Podcast gebraucht."
+    }
+  }
+}

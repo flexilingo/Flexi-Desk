@@ -6,7 +6,6 @@ import { supabaseCall } from '@/lib/supabase';
 import type {
   PodcastFeed,
   PodcastEpisode,
-  PodcastBookmark,
   PodcastIndexFeed,
   PodcastTranscriptSegment,
   NlpAnalysis,
@@ -20,7 +19,7 @@ import type {
   RawNlpAnalysis,
   SearchResponse,
 } from '../types';
-import { mapFeed, mapEpisode, mapBookmark, mapTranscriptSegment, mapNlpAnalysis } from '../types';
+import { mapFeed, mapEpisode, mapTranscriptSegment, mapNlpAnalysis } from '../types';
 
 interface PodcastState {
   // Feeds
@@ -32,9 +31,6 @@ interface PodcastState {
   activeFeed: PodcastFeed | null;
   episodes: PodcastEpisode[];
   isLoadingEpisodes: boolean;
-
-  // Bookmarks
-  bookmarks: PodcastBookmark[];
 
   // Search
   searchResults: PodcastIndexFeed[];
@@ -78,14 +74,13 @@ interface PodcastState {
   fetchEpisodes: (feedId: string) => Promise<void>;
   updateProgress: (episodeId: string, position: number, isPlayed?: boolean) => Promise<void>;
 
+  /** A note at a moment (the selection bar's Note): kept on this computer, listed on the Notes page. */
   addBookmark: (
     episodeId: string,
     positionMs: number,
     label?: string,
     note?: string,
   ) => Promise<void>;
-  fetchBookmarks: (episodeId: string) => Promise<void>;
-  deleteBookmark: (id: string) => Promise<void>;
 
   searchPodcasts: (term: string) => Promise<void>;
   searchLoadMore: () => Promise<void>;
@@ -129,7 +124,6 @@ export const usePodcastStore = create<PodcastState>()(
     activeFeed: null,
     episodes: [],
     isLoadingEpisodes: false,
-    bookmarks: [],
     searchResults: [],
     isSearching: false,
     searchQuery: '',
@@ -284,38 +278,11 @@ export const usePodcastStore = create<PodcastState>()(
 
     addBookmark: async (episodeId, positionMs, label, note) => {
       try {
-        const raw = await invoke<RawPodcastBookmark>('podcast_add_bookmark', {
+        await invoke<RawPodcastBookmark>('podcast_add_bookmark', {
           episodeId,
           positionMs,
           label: label ?? null,
           note: note ?? null,
-        });
-        set((s) => {
-          s.bookmarks.push(mapBookmark(raw));
-        });
-      } catch (err) {
-        set((s) => {
-          s.error = String(err);
-        });
-      }
-    },
-
-    fetchBookmarks: async (episodeId) => {
-      try {
-        const raw = await invoke<RawPodcastBookmark[]>('podcast_list_bookmarks', { episodeId });
-        set((s) => {
-          s.bookmarks = raw.map(mapBookmark);
-        });
-      } catch {
-        /* best-effort */
-      }
-    },
-
-    deleteBookmark: async (id) => {
-      try {
-        await invoke('podcast_delete_bookmark', { id });
-        set((s) => {
-          s.bookmarks = s.bookmarks.filter((b) => b.id !== id);
         });
       } catch (err) {
         set((s) => {

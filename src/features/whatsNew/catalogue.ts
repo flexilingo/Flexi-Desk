@@ -38,7 +38,7 @@ export interface Labels {
 export const REGISTRY = registryJson as FeatureEntry[];
 
 const SITE = 'https://flexilingo.com';
-const SITE_LOCALES = ['en', 'fa', 'ar', 'fr', 'hi', 'zh'];
+const SITE_LOCALES = ['en', 'fa', 'ar', 'fr', 'hi', 'zh', 'de', 'vi'];
 
 /** Newest first. */
 export const byDate = (list: FeatureEntry[] = REGISTRY) =>

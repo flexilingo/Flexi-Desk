@@ -63,6 +63,7 @@
     "results_few": "{{count}} كتب",
     "results_many": "{{count}} كتابًا",
     "results_other": "{{count}} كتاب",
+    "results_zero": "{{count}} كتاب",
     "noResults": "لا يوجد كتاب يطابق هذه الفلاتر. جرّب مستوى آخر أو امسح الفلاتر.",
     "coverAlt": "غلاف {{title}}",
     "readHere": "اقرأ هنا — اضغط على أي كلمة لترى معناها",

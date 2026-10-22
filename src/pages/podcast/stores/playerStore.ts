@@ -55,7 +55,6 @@ export const isBookEpisode = (ep: PodcastEpisode | null | undefined): boolean =>
 // ── Timers ──────────────────────────────────────────────
 
 let progressSaveTimer: ReturnType<typeof setInterval> | null = null;
-let sleepCountdownTimer: ReturnType<typeof setInterval> | null = null;
 
 // ── State ───────────────────────────────────────────────
 
@@ -69,20 +68,15 @@ interface PlayerState {
   playbackRate: number;
   volume: number;
 
-  abRepeat: { a: number; b: number } | null;
-
-  sleepTimerRemaining: number | null;
-
   activeSegmentIndex: number;
 
   // UI settings
   subtitlesEnabled: boolean;
-  focusMode: boolean;
   fontSize: number;
-  subtitleBgOpacity: number;
+  /** Lines shown before and after the spoken one; null = as many as fit. */
+  contextLines: number | null;
   autoPauseOnBoundary: boolean;
   pauseOnHover: boolean;
-  subtitleAlignment: 'left' | 'center' | 'right';
 
   // Buffering
   isBuffering: boolean;
@@ -106,21 +100,15 @@ interface PlayerState {
   setVolume: (vol: number) => void;
   skipForward: (seconds?: number) => void;
   skipBack: (seconds?: number) => void;
-  setABRepeat: (a: number, b: number) => void;
-  clearABRepeat: () => void;
-  setSleepTimer: (minutes: number) => void;
-  clearSleepTimer: () => void;
   stop: () => void;
   setActiveSegmentIndex: (index: number) => void;
 
   // UI settings actions
   toggleSubtitles: () => void;
-  toggleFocusMode: () => void;
   setFontSize: (size: number) => void;
-  setSubtitleBgOpacity: (opacity: number) => void;
+  setContextLines: (lines: number | null) => void;
   toggleAutoPauseOnBoundary: () => void;
   togglePauseOnHover: () => void;
-  setSubtitleAlignment: (alignment: 'left' | 'center' | 'right') => void;
 
   // Session analytics actions
   recordWordClick: () => void;
@@ -248,7 +236,6 @@ export const usePlayerStore = create<PlayerState>()(
         s.currentFeed = feed ?? null;
         s.isPlaying = false;
         s.playError = null;
-        s.abRepeat = null;
         s.activeSegmentIndex = -1;
         s.currentTime = 0;
         s.duration = episode.durationSeconds > 0 ? episode.durationSeconds : 0;
@@ -270,16 +257,13 @@ export const usePlayerStore = create<PlayerState>()(
       duration: 0,
       playbackRate: 1.0,
       volume: 1.0,
-      abRepeat: null,
-      sleepTimerRemaining: null,
       activeSegmentIndex: -1,
       subtitlesEnabled: true,
-      focusMode: false,
-      fontSize: 24,
-      subtitleBgOpacity: 75,
+      // The website's now-playing default on a computer.
+      fontSize: 35,
+      contextLines: null,
       autoPauseOnBoundary: false,
       pauseOnHover: false,
-      subtitleAlignment: 'center' as const,
       isBuffering: false,
       playError: null,
       wordsClicked: 0,
@@ -327,7 +311,6 @@ export const usePlayerStore = create<PlayerState>()(
           s.currentFeed = feed ?? null;
           s.isPlaying = false;
           s.playError = null;
-          s.abRepeat = null;
           s.activeSegmentIndex = -1;
           s.currentTime = episode.playPosition > 0 ? episode.playPosition / 1000 : 0;
           s.wordsClicked = 0;
@@ -467,49 +450,6 @@ export const usePlayerStore = create<PlayerState>()(
         });
       },
 
-      setABRepeat: (a, b) => {
-        set((s) => {
-          s.abRepeat = { a, b };
-        });
-        const audio = getMedia();
-        audio.currentTime = a;
-      },
-
-      clearABRepeat: () => {
-        set((s) => {
-          s.abRepeat = null;
-        });
-      },
-
-      setSleepTimer: (minutes) => {
-        get().clearSleepTimer();
-        set((s) => {
-          s.sleepTimerRemaining = minutes * 60;
-        });
-        sleepCountdownTimer = setInterval(() => {
-          const remaining = get().sleepTimerRemaining;
-          if (remaining === null) return;
-          if (remaining <= 1) {
-            get().pause();
-            get().clearSleepTimer();
-          } else {
-            set((s) => {
-              s.sleepTimerRemaining = remaining - 1;
-            });
-          }
-        }, 1000);
-      },
-
-      clearSleepTimer: () => {
-        if (sleepCountdownTimer) {
-          clearInterval(sleepCountdownTimer);
-          sleepCountdownTimer = null;
-        }
-        set((s) => {
-          s.sleepTimerRemaining = null;
-        });
-      },
-
       stop: () => {
         const audio = getAudio();
         const state = get();
@@ -524,14 +464,12 @@ export const usePlayerStore = create<PlayerState>()(
           activeMedia = null;
         }
         stopProgressSaving();
-        get().clearSleepTimer();
         set((s) => {
           s.currentEpisode = null;
           s.currentFeed = null;
           s.isPlaying = false;
           s.currentTime = 0;
           s.duration = 0;
-          s.abRepeat = null;
           s.activeSegmentIndex = -1;
         });
       },
@@ -548,21 +486,15 @@ export const usePlayerStore = create<PlayerState>()(
         });
       },
 
-      toggleFocusMode: () => {
-        set((s) => {
-          s.focusMode = !s.focusMode;
-        });
-      },
-
       setFontSize: (size) => {
         set((s) => {
           s.fontSize = size;
         });
       },
 
-      setSubtitleBgOpacity: (opacity) => {
+      setContextLines: (lines) => {
         set((s) => {
-          s.subtitleBgOpacity = opacity;
+          s.contextLines = lines;
         });
       },
 
@@ -575,12 +507,6 @@ export const usePlayerStore = create<PlayerState>()(
       togglePauseOnHover: () => {
         set((s) => {
           s.pauseOnHover = !s.pauseOnHover;
-        });
-      },
-
-      setSubtitleAlignment: (alignment) => {
-        set((s) => {
-          s.subtitleAlignment = alignment;
         });
       },
 
@@ -606,15 +532,6 @@ export const usePlayerStore = create<PlayerState>()(
 
       _onTimeUpdate: (time) => {
         const state = get();
-        // A-B repeat logic
-        if (state.abRepeat && time >= state.abRepeat.b) {
-          const audio = getMedia();
-          audio.currentTime = state.abRepeat.a;
-          set((s) => {
-            s.currentTime = state.abRepeat!.a;
-          });
-          return;
-        }
         set((s) => {
           s.currentTime = time;
         });
@@ -653,10 +570,9 @@ function snapshotPrefs(s: PlayerState): PlayerPrefs {
     volume: s.volume,
     subtitlesEnabled: s.subtitlesEnabled,
     fontSize: s.fontSize,
-    subtitleBgOpacity: s.subtitleBgOpacity,
+    contextLines: s.contextLines,
     autoPauseOnBoundary: s.autoPauseOnBoundary,
     pauseOnHover: s.pauseOnHover,
-    subtitleAlignment: s.subtitleAlignment,
   };
 }
 
@@ -664,8 +580,7 @@ function prefsEqual(a: PlayerPrefs, b: PlayerPrefs): boolean {
   return (Object.keys(a) as (keyof PlayerPrefs)[]).every((k) => a[k] === b[k]);
 }
 
-// Hydrate from the local `settings` table, then keep it in sync. `focusMode` is
-// deliberately NOT persisted — it's a per-session view mode, not a preference.
+// Hydrate from the local `settings` table, then keep it in sync.
 void loadPlayerPrefs().then((prefs) => {
   if (Object.keys(prefs).length === 0) return;
   usePlayerStore.setState((s) => {

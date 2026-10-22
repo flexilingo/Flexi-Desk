@@ -98,7 +98,8 @@ describe('sidebar menu', () => {
   it('opens the subscription page in the learner language', () => {
     expect(subscriptionUrl('fa')).toBe('https://flexilingo.com/fa/dashboard/subscription');
     expect(subscriptionUrl('en-CA')).toBe('https://flexilingo.com/en/dashboard/subscription');
-    expect(subscriptionUrl('de')).toBe('https://flexilingo.com/en/dashboard/subscription');
+    expect(subscriptionUrl('de')).toBe('https://flexilingo.com/de/dashboard/subscription');
+    expect(subscriptionUrl('pt')).toBe('https://flexilingo.com/en/dashboard/subscription');
   });
 
   it('every label is translated in all six languages', () => {

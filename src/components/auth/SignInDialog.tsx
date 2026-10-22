@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mail, Check, ArrowLeft, AlertCircle, Loader2, LogIn } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,6 +27,7 @@ interface SignInDialogProps {
  * sending the user hunting through Settings. Two steps: email → 6-digit code.
  */
 export function SignInDialog({ open, onOpenChange, onSignedIn, description }: SignInDialogProps) {
+  const { t } = useTranslation('authDesk');
   const sendOtp = useAuthStore((s) => s.sendOtp);
   const verifyOtp = useAuthStore((s) => s.verifyOtp);
 
@@ -52,7 +54,7 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError('Enter a valid email address.');
+      setError(t('invalidEmail'));
       return;
     }
     setError(null);
@@ -71,7 +73,7 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      setError('Enter the 6-digit code from the email.');
+      setError(t('invalidCode'));
       return;
     }
     setError(null);
@@ -100,10 +102,10 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LogIn className="w-5 h-5 text-primary" />
-            Sign in to FlexiLingo
+            {t('title')}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
-            {description ?? 'Use your FlexiLingo account email. No password needed.'}
+            {description ?? t('description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -132,14 +134,14 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
                   htmlFor="signin-email"
                   className="block text-sm font-medium text-foreground mb-1.5"
                 >
-                  Email
+                  {t('email')}
                 </label>
                 <input
                   id="signin-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('emailPlaceholder')}
                   autoFocus
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 />
@@ -151,21 +153,26 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
                   ) : (
                     <Mail className="h-4 w-4" />
                   )}
-                  {sending ? 'Sending code...' : 'Send code'}
+                  {sending ? t('sending') : t('send')}
                 </Button>
               </div>
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Code sent to <span className="font-medium text-foreground">{email}</span>
+                <Trans
+                  t={t}
+                  i18nKey="codeSent"
+                  values={{ email }}
+                  components={{ b: <span className="font-medium text-foreground" /> }}
+                />
               </p>
               <div>
                 <label
                   htmlFor="signin-otp"
                   className="block text-sm font-medium text-foreground mb-1.5"
                 >
-                  Verification code
+                  {t('code')}
                 </label>
                 <input
                   id="signin-otp"
@@ -187,7 +194,7 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
                     className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <ArrowLeft className="h-3 w-3" />
-                    Use another email
+                    {t('anotherEmail')}
                   </button>
                   <button
                     type="button"
@@ -195,7 +202,7 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
                     disabled={sending}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                   >
-                    {sending ? 'Sending...' : 'Resend code'}
+                    {sending ? t('resending') : t('resend')}
                   </button>
                 </div>
                 <Button type="submit" disabled={verifying} className="gap-1.5">
@@ -204,7 +211,7 @@ export function SignInDialog({ open, onOpenChange, onSignedIn, description }: Si
                   ) : (
                     <Check className="h-4 w-4" />
                   )}
-                  {verifying ? 'Verifying...' : 'Verify'}
+                  {verifying ? t('verifying') : t('verify')}
                 </Button>
               </div>
             </form>

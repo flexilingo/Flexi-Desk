@@ -1,0 +1,201 @@
+{
+  "title": "लेखन अभ्यास",
+  "subtitle": "AI फीडबैक के साथ अपने लेखन कौशल में सुधार करें",
+  "selectExamType": "परीक्षा प्रकार चुनें",
+  "selectExamTypeDescription": "वह लेखन प्रकार चुनें जिसका आप अभ्यास करना चाहते हैं",
+  "generatePrompt": "नया प्रश्न बनाएं",
+  "generatingPrompt": "प्रश्न बना रहे हैं...",
+  "startWriting": "लेखन शुरू करें",
+  "startSession": "सत्र शुरू करें",
+  "submit": "मूल्यांकन के लिए भेजें",
+  "submitting": "आपके निबंध का मूल्यांकन हो रहा है...",
+  "retrySumbit": "मूल्यांकन पुनः प्रयास",
+  "backToList": "लेखन अभ्यास पर वापस",
+  "newSession": "नया अभ्यास सत्र",
+  "examTypes": {
+    "ielts_task1": "IELTS Task 1",
+    "ielts_task2": "IELTS Task 2",
+    "toefl_integrated": "TOEFL Integrated",
+    "toefl_independent": "TOEFL Independent",
+    "celpip": "CELPIP",
+    "cambridge_fce": "Cambridge B2 First",
+    "cambridge_cae": "Cambridge C1 Advanced",
+    "duolingo": "लघु उत्तर लेखन",
+    "pte": "PTE Academic",
+    "general_email": "ईमेल लेखन",
+    "general_essay": "निबंध लेखन",
+    "general_letter": "पत्र लेखन",
+    "general_report": "रिपोर्ट लेखन"
+  },
+  "examDescriptions": {
+    "ielts_task1": "150+ शब्दों में चार्ट और ग्राफ का वर्णन करें",
+    "ielts_task2": "250+ शब्दों में चर्चा निबंध लिखें",
+    "toefl_integrated": "150-225 शब्दों में पठन और व्याख्यान का सारांश",
+    "toefl_independent": "300+ शब्दों में उदाहरणों के साथ अपनी राय व्यक्त करें",
+    "celpip": "कनाडा आव्रजन के लिए व्यावहारिक लेखन कार्य",
+    "cambridge_fce": "B2 स्तर लेखन कार्य: निबंध, लेख, समीक्षा",
+    "cambridge_cae": "C1 स्तर लेखन: प्रस्ताव, रिपोर्ट, निबंध",
+    "duolingo": "50-100 शब्दों में छोटे लेखन उत्तर",
+    "pte": "PTE स्कोरिंग के लिए अकादमिक निबंध और सारांश",
+    "general_email": "औपचारिक और अनौपचारिक ईमेल लेखन का अभ्यास",
+    "general_essay": "विभिन्न विषयों पर संरचित निबंध लिखें",
+    "general_letter": "औपचारिक और अनौपचारिक पत्र लेखन का अभ्यास",
+    "general_report": "डेटा विश्लेषण के साथ पेशेवर रिपोर्ट लिखें"
+  },
+  "categories": {
+    "exams": "परीक्षा की तैयारी",
+    "general": "सामान्य अभ्यास"
+  },
+  "timer": {
+    "remaining": "शेष समय",
+    "disabled": "टाइमर बंद",
+    "enable": "टाइमर चालू करें",
+    "disable": "टाइमर बंद करें",
+    "timeUp": "समय समाप्त!",
+    "minutes": "{{count}} मिनट",
+    "stopMessage": "इससे आपका लेखन सत्र समाप्त हो जाएगा। आप इसे फिर से शुरू नहीं कर पाएंगे। क्या आप सुनिश्चित हैं?",
+    "stop": "सत्र समाप्त करें"
+  },
+  "editor": {
+    "placeholder": "यहाँ अपना उत्तर लिखना शुरू करें...",
+    "wordCount": "शब्द: {{count}}",
+    "wordTarget": "लक्ष्य: {{min}}-{{max}} शब्द",
+    "autoSaved": "ड्राफ्ट सहेजा गया",
+    "saving": "सहेज रहे हैं...",
+    "wordsToGo": "{{count}} शब्द और लिखने हैं"
+  },
+  "prompt": {
+    "title": "लेखन प्रश्न",
+    "supplementary": "पूरक सामग्री",
+    "readingPassage": "पठन अंश",
+    "lectureSummary": "व्याख्यान सारांश",
+    "chartDescription": "चार्ट/ग्राफ विवरण",
+    "collapse": "प्रश्न छिपाएं",
+    "expand": "प्रश्न दिखाएं"
+  },
+  "feedback": {
+    "title": "AI मूल्यांकन",
+    "overall": "कुल अंक",
+    "criteria": "मानदंड विवरण",
+    "strengths": "मजबूत पक्ष",
+    "weaknesses": "सुधार के क्षेत्र",
+    "errors": "त्रुटियाँ",
+    "errorTypes": {
+      "grammar": "व्याकरण",
+      "vocabulary": "शब्दावली",
+      "spelling": "वर्तनी",
+      "punctuation": "विराम चिह्न"
+    },
+    "suggestions": "सुधार के सुझाव",
+    "rewritten": "AI द्वारा सुधारित संस्करण",
+    "rewrittenDescription": "आपके विचारों को बनाए रखते हुए आपका निबंध कैसे सुधारा जा सकता है",
+    "showRewritten": "सुधारित संस्करण दिखाएं",
+    "hideRewritten": "सुधारित संस्करण छिपाएं",
+    "original": "आपका मूल निबंध",
+    "improved": "सुधारित",
+    "noFeedback": "AI मूल्यांकन प्राप्त करने के लिए अपना निबंध भेजें",
+    "noErrors": "कोई त्रुटि नहीं मिली - शानदार!",
+    "noSuggestions": "कोई अतिरिक्त सुझाव नहीं",
+    "loading": "सत्र लोड हो रहा है...",
+    "gradingDescription": "हमारा AI व्याकरण, शब्दावली, संरचना और अधिक के लिए आपके लेखन का विश्लेषण कर रहा है...",
+    "scoreDisclaimer": "AI अनुमान — अंक आधिकारिक परीक्षा परिणामों से भिन्न हो सकते हैं",
+    "vocabularyAnalysis": "शब्दावली विश्लेषण",
+    "lexicalDiversity": "शाब्दिक विविधता",
+    "estimatedCEFR": "CEFR स्तर",
+    "advancedWords": "उपयोग किए गए उन्नत शब्द",
+    "suggestedUpgrades": "शब्दावली उन्नयन",
+    "doubleChecked": "दोहरी जाँच",
+    "badge": {
+      "pro": "FlexiLingo Pro",
+      "mini": "FlexiLingo Mini",
+      "own": "आपका अपना AI"
+    },
+    "badgeTitle": {
+      "pro": "FlexiLingo Pro मूल्यांकन",
+      "mini": "FlexiLingo Mini मूल्यांकन",
+      "own": "आपके अपने AI से जाँचा गया"
+    },
+    "badgeBody": {
+      "pro": "आपके निबंध का मूल्यांकन हमारे सबसे उन्नत AI मॉडल से किया गया, अधिक सटीक और सुसंगत अंकों के लिए दोहरी जाँच के साथ।",
+      "mini": "आपके निबंध का मूल्यांकन हमारे मानक AI मॉडल से किया गया। अधिक सटीक मूल्यांकन, दोहरी-जाँच अंक और विस्तृत फीडबैक के लिए Pro में अपग्रेड करें।",
+      "own": "आपका निबंध उस AI ने जाँचा जो आपने सेट किया है ({{model}}), FlexiLingo के क्लाउड ने नहीं।"
+    }
+  },
+  "history": {
+    "title": "लेखन इतिहास",
+    "noHistory": "अभी तक कोई लेखन सत्र नहीं। अपना पहला अभ्यास शुरू करें!",
+    "viewDetails": "विवरण देखें",
+    "filterByExam": "परीक्षा प्रकार से फ़िल्टर",
+    "allTypes": "सभी प्रकार",
+    "score": "अंक",
+    "wordsWritten": "शब्द",
+    "timeSpent": "समय बिताया",
+    "gradedOn": "मूल्यांकन"
+  },
+  "stats": {
+    "title": "आपकी प्रगति",
+    "totalSessions": "कुल सत्र",
+    "gradedSessions": "मूल्यांकित",
+    "avgScore": "औसत अंक",
+    "scoreTrend": "अंक रुझान",
+    "bestCriteria": "सबसे अच्छा क्षेत्र",
+    "weakestCriteria": "सुधार की आवश्यकता",
+    "noStats": "अपनी प्रगति देखने के लिए कुछ सत्र पूरे करें"
+  },
+  "usage": {
+    "remaining": "इस महीने {{count}} सत्र शेष",
+    "unlimited": "असीमित सत्र",
+    "used": "{{limit}} में से {{used}} उपयोग किए",
+    "upgradePrompt": "अधिक लेखन अभ्यास सत्रों के लिए अपग्रेड करें",
+    "limitReached": "सीमा पूरी हो गई",
+    "dailyLimitReached": "दैनिक सीमा पूरी हो गई",
+    "monthlyLimitReached": "मासिक सीमा पूरी हो गई",
+    "limitUsedAllDaily": "मासिक सीमा ({{monthlyLimit}}) समाप्त। दैनिक भत्ता ({{dailyLimit}}/दिन) भी उपयोग हो चुका।",
+    "limitUsedAllMonthly": "मासिक सीमा पूरी हो गई। आपके पास अभी भी {{dailyLimit}} सत्र/दिन हैं।",
+    "limitUsedAllMonthlyNoDaily": "इस महीने के लिए आपके सभी लेखन अभ्यास सत्र उपयोग हो चुके हैं।",
+    "limitResetDaily": "कल रीसेट होगा!",
+    "limitResetMonthly": "अगले महीने की शुरुआत में रीसेट होगा।"
+  },
+  "status": {
+    "active": "प्रगति में",
+    "submitted": "भेजा गया",
+    "graded": "मूल्यांकित"
+  },
+  "activeSession": {
+    "title": "सक्रिय सत्र",
+    "resume": "जारी रखें",
+    "existsMessage": "आपका एक लेखन सत्र पहले से चल रहा है। नया शुरू करने से पहले उसे पूरा करें या जमा करें।"
+  },
+  "timerToggle": "काउंटडाउन टाइमर सक्षम करें",
+  "disclaimer": "FlexiLingo एक स्वतंत्र अभ्यास प्लेटफ़ॉर्म है जो किसी भी आधिकारिक परीक्षा संगठन से संबद्ध या अनुमोदित नहीं है। सभी परीक्षा नाम उनके संबंधित संगठनों के पंजीकृत ट्रेडमार्क हैं।",
+  "back": "वापस",
+  "cancel": "रद्द करें",
+  "origin": {
+    "local": "इस कंप्यूटर पर",
+    "cloud": "क्लाउड"
+  },
+  "cloudSessionOff": {
+    "title": "यह सत्र आपके FlexiLingo क्लाउड में है",
+    "body": "इसे खोलने के लिए सेटिंग में क्लाउड AI चालू करें।"
+  },
+  "dashboardChip": "लिखने का अभ्यास",
+  "errors": {
+    "UNKNOWN_ERROR": "एक अप्रत्याशित त्रुटि हुई। कृपया पुनः प्रयास करें।",
+    "WRITING_SESSION_NOT_FOUND": "लेखन सेशन नहीं मिला।",
+    "WRITING_GRADING_FAILED": "AI ग्रेडिंग विफल रही। कृपया पुनः जमा करें।",
+    "WRITING_ESSAY_TOO_SHORT": "आपका निबंध बहुत छोटा है। कृपया जमा करने से पहले और लिखें।",
+    "WRITING_ESSAY_TOO_LONG": "आपका निबंध बहुत लंबा है। कृपया जमा करने से पहले इसे छोटा करें।",
+    "WRITING_PROMPT_GENERATION_FAILED": "लेखन विषय बनाने में विफल। कृपया पुनः प्रयास करें।",
+    "DAILY_LIMIT_REACHED": "दैनिक सीमा पूरी हो गई। कल फिर आएं!",
+    "MONTHLY_LIMIT_REACHED": "मासिक सीमा पूरी हो गई। अगले महीने पुनः प्रयास करें या अपना प्लान अपग्रेड करें।",
+    "WRITING_SESSION_ALREADY_SUBMITTED": "यह निबंध पहले ही ग्रेडिंग के लिए जमा किया जा चुका है।",
+    "SESSION_CREATION_FAILED": "वॉइस सेशन बनाने में विफल। कृपया पुनः प्रयास करें।",
+    "INVALID_EXAM_TYPE": "चयनित परीक्षा प्रकार अमान्य है।",
+    "MISSING_REQUIRED_FIELDS": "कृपया सभी आवश्यक फ़ील्ड भरें।",
+    "AUTH_REQUIRED": "इस सुविधा का उपयोग करने के लिए कृपया साइन इन करें।",
+    "WRITING_SESSION_CANCELLED": "यह लेखन सत्र समाप्त कर दिया गया।",
+    "SAVE_DRAFT_FAILED": "ड्राफ़्ट सहेजा नहीं जा सका। फिर कोशिश करें।",
+    "CANCEL_SESSION_FAILED": "सत्र समाप्त नहीं हो सका। फिर कोशिश करें।",
+    "WRITING_PROMPT_NOT_FOUND": "लेखन विषय नहीं मिला।"
+  }
+}

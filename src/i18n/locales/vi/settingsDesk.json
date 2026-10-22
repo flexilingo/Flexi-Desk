@@ -1,0 +1,151 @@
+{
+  "page": {
+    "title": "Cài Đặt",
+    "subtitle": "Cấu hình trải nghiệm học của bạn"
+  },
+  "tabs": {
+    "general": "Chung",
+    "ai": "AI của tôi",
+    "whisper": "Whisper",
+    "data": "Xuất / Nhập"
+  },
+  "auth": {
+    "title": "Tài khoản FlexiLingo",
+    "loggedIn": "Đã đăng nhập. Các tính năng đám mây như Bài đố, Ask Lena và Phản hồi đều khả dụng.",
+    "logout": "Đăng xuất",
+    "signInHint": "Hãy đăng nhập để dùng các tính năng đám mây: Bài đố, Ask Lena, Phản hồi và hơn thế nữa.",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sending": "Đang gửi mã...",
+    "sendCode": "Gửi mã",
+    "codeSentTo": "Mã đã gửi đến",
+    "verificationCode": "Mã Xác Minh",
+    "verifying": "Đang xác minh...",
+    "verify": "Xác Minh",
+    "useAnotherEmail": "Dùng email khác",
+    "sendingShort": "Đang gửi...",
+    "resend": "Gửi lại mã"
+  },
+  "languages": {
+    "title": "Ngôn ngữ",
+    "subtitle": "Đặt ngôn ngữ mẹ đẻ và ngôn ngữ đang học của bạn",
+    "native": "Ngôn Ngữ Mẹ Đẻ",
+    "learning": "Ngôn ngữ tôi đang học",
+    "saved": "Đã Lưu",
+    "save": "Lưu ngôn ngữ",
+    "appLanguage": "Ngôn ngữ ứng dụng"
+  },
+  "appearance": {
+    "title": "Giao diện",
+    "subtitle": "Tùy chỉnh diện mạo và cảm nhận",
+    "theme": "Giao Diện",
+    "light": "Nhẹ",
+    "dark": "Tối",
+    "system": "Hệ thống"
+  },
+  "data": {
+    "title": "Xuất & nhập",
+    "subtitle": "Chuyển từ vựng của bạn vào và ra khỏi máy này",
+    "export": "Xuất từ vựng",
+    "import": "Nhập từ vựng"
+  },
+  "common": {
+    "close": "Đóng",
+    "back": "Quay Lại",
+    "next": "Tiếp",
+    "done": "Xong"
+  },
+  "export": {
+    "title": "Xuất từ vựng",
+    "hint": "Lưu các từ của bạn vào một tệp để giữ lại hoặc mở trong ứng dụng khác.",
+    "format": "Định dạng",
+    "csv": "CSV",
+    "anki": "Anki (.apkg)",
+    "csvFiles": "Tệp CSV",
+    "ankiPackage": "Gói Anki",
+    "languageOptional": "Ngôn ngữ (tùy chọn)",
+    "allLanguages": "Tất cả ngôn ngữ",
+    "allLanguagesNote": "Chưa chọn ngôn ngữ: mọi ngôn ngữ sẽ được xuất.",
+    "cefrOptional": "Trình độ CEFR (tùy chọn)",
+    "allLevels": "Tất Cả Cấp Độ",
+    "done": "Đã xuất {{count}} mục dưới dạng {{format}}",
+    "exporting": "Đang xuất...",
+    "action": "Xuất"
+  },
+  "import": {
+    "title": "Nhập từ vựng",
+    "hint": "Đưa các từ vào từ tệp CSV, Quizlet hoặc Anki.",
+    "fileFilter": "Nhập tệp",
+    "chooseSource": "Chọn nơi nhập dữ liệu:",
+    "sourceCsv": "Tệp CSV",
+    "sourceTsv": "Quizlet (TSV)",
+    "sourceAnki": "Anki (.apkg)",
+    "ankiNote": "Thẻ Anki được nhập với mặt trước là từ và mặt sau là bản dịch.",
+    "targetLanguage": "Ngôn ngữ của các từ",
+    "skipDuplicates": "Bỏ qua mục trùng lặp",
+    "importing": "Đang nhập...",
+    "action": "Nhập",
+    "complete": "Nhập hoàn tất",
+    "totalRows": "Tổng số dòng: {{count}}",
+    "imported": "Đã nhập: {{count}}",
+    "skipped": "Đã bỏ qua (trùng lặp): {{count}}",
+    "errorsCount": "Lỗi: {{count}}",
+    "showErrors": "Hiện lỗi ({{count}})",
+    "rowError": "Dòng {{row}}: {{message}}"
+  },
+  "mapper": {
+    "title": "Ánh xạ cột",
+    "hint": "Ghép các cột trong tệp của bạn với các trường của FlexiLingo.",
+    "skip": "Bỏ qua",
+    "column": "{{name}} (cột {{n}})",
+    "fields": {
+      "word": "Từ",
+      "translation": "bản dịch",
+      "definition": "Định Nghĩa",
+      "pos": "Loại từ",
+      "cefr": "Cấp Độ CEFR",
+      "phonetic": "Phát âm (IPA)",
+      "examples": "Ví Dụ",
+      "context": "Câu ngữ cảnh"
+    }
+  },
+  "preview": {
+    "title": "Xem Trước",
+    "total": "Tổng cộng {{count}} dòng",
+    "word": "Từ",
+    "translation": "bản dịch",
+    "cefr": "CEFR",
+    "pos": "Loại từ",
+    "missing": "thiếu",
+    "showing": "Đang hiện {{shown}} trên {{total}} dòng xem trước"
+  },
+  "sync": {
+    "title": "Đồng Bộ Đám Mây",
+    "pending": "({{count}} đang chờ)",
+    "hint": "Chọn dữ liệu cần đồng bộ với tài khoản FlexiLingo của bạn. Các thay đổi khi ngoại tuyến được xếp hàng và đồng bộ khi bạn có kết nối.",
+    "loading": "Đang tải...",
+    "lastSynced": "Đồng bộ lần cuối: {{date}}",
+    "never": "Chưa từng đồng bộ",
+    "both": "Hai chiều",
+    "push": "Chỉ tải lên",
+    "pull": "Chỉ tải xuống",
+    "conflicts": "{{count}} xung đột chưa giải quyết. Hãy mở Cài đặt, rồi Xung đột, để giải quyết.",
+    "status": {
+      "Synced": "Đã đồng bộ",
+      "Error": "Lỗi",
+      "Conflict": "Xung đột",
+      "Idle": "Nhàn rỗi",
+      "Syncing": "Đang đồng bộ"
+    },
+    "tables": {
+      "vocabulary": "Từ vựng",
+      "decks": "Bộ thẻ",
+      "deck_cards": "Thẻ trong bộ thẻ",
+      "srs_progress": "Tiến độ ôn tập",
+      "goals": "Mục tiêu",
+      "daily_stats": "Thống kê hằng ngày",
+      "streaks": "Chuỗi Ngày",
+      "settings": "Cài Đặt"
+    }
+  }
+}

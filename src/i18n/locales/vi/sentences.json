@@ -1,0 +1,459 @@
+{
+  "title": "Luyện câu",
+  "tagline": "Nhìn câu và nói nghĩa, hoặc nhìn nghĩa và viết câu. Sau khi trả lời, cả câu được mở ra: vai trò của từng từ, động từ đến từ đâu và những quy tắc nào tạo nên nó.",
+  "empty": "Không có câu nào để luyện.",
+  "direction": {
+    "recognize": "Câu → nghĩa",
+    "produce": "Nghĩa → câu",
+    "listen": "Chỉ nghe"
+  },
+  "prompt": {
+    "recognize": "Câu này nghĩa là gì?",
+    "produce": "Viết câu này bằng tiếng Pháp:",
+    "listen": "Nghe — bạn có biết nghĩa không?"
+  },
+  "progress": "Thẻ {{index}} / {{total}}",
+  "next": "Tiếp",
+  "nextRound": "Lượt tiếp theo",
+  "knewIt": "I knew it",
+  "showMeaning": "Hiện nghĩa của từ",
+  "literal": "Từng chữ",
+  "typeHere": "Gõ câu vào đây…",
+  "check": "Kiểm tra",
+  "hint": "Gợi ý",
+  "chunk": "một cụm",
+  "readMore": "Trang đầy đủ của quy tắc này trong sổ tay",
+  "verdict": {
+    "exact": "Đúng",
+    "accents": "Đúng — nhưng hãy xem lại chính tả",
+    "variant": "Đây cũng là tiếng Pháp đúng",
+    "wrong": "Đây không phải câu của thẻ này",
+    "alternative": "Đúng — tiếng Pháp mà thẻ chưa liệt kê"
+  },
+  "verdictVariantDetail": "Câu bạn viết đúng, nhưng thuộc sắc thái «{{register}}». Thẻ này muốn một dạng khác — hãy biết cả hai, vì chúng dùng trong những tình huống khác nhau.",
+  "sections": {
+    "verb": "Động từ — đến từ đâu",
+    "agreement": "Vì sao có dạng này",
+    "mechanics": "Thay đổi chính tả và âm",
+    "notes": "Ghi chú cho câu này",
+    "rules": "Các quy tắc trong câu này",
+    "rulesHint": "Chạm vào một quy tắc để mở phần giải thích đầy đủ ngay tại đây.",
+    "registers": "Cùng một câu ở ba sắc thái",
+    "registersHint": "Một nghĩa, ba tình huống giao tiếp. Không thay thế cho nhau được.",
+    "breakdown": "Câu, từng từ một",
+    "pattern": "Cấu trúc"
+  },
+  "verb": {
+    "noStem": "Động từ này bất quy tắc — không được tạo ra từ gì cả và phải học thuộc. Bảng đầy đủ nằm bên dưới, trong phần giải thích quy tắc.",
+    "mood": "Thức",
+    "tense": "Thì",
+    "person": "Ngôi",
+    "agreesWith": "Theo",
+    "auxiliary": "Trợ động từ",
+    "conjugationTable": "Chia đầy đủ «{{verb}}»"
+  },
+  "families": {
+    "group-1-er": "Nhóm 1 · động từ -er",
+    "group-2-ir": "Nhóm 2 · động từ -ir",
+    "group-3-irregular": "Nhóm 3 · bất quy tắc"
+  },
+  "moods": {
+    "indicatif": "Trần thuật",
+    "conditionnel": "Điều kiện",
+    "infinitif": "Nguyên mẫu",
+    "imperatif": "Câu mệnh lệnh",
+    "subjonctif": "Giả định (subjonctif)"
+  },
+  "tenses": {
+    "present": "Hiện tại",
+    "passe-compose": "Quá khứ (passé composé)",
+    "imperatif": "—",
+    "imparfait": "Quá khứ tiếp diễn (imparfait)",
+    "futur-simple": "Tương lai (futur simple)"
+  },
+  "persons": {
+    "1sg": "Ngôi thứ nhất số ít (je)",
+    "2sg": "Ngôi thứ hai số ít (tu)",
+    "3sg": "Ngôi thứ ba số ít (il/elle/on)",
+    "1pl": "Ngôi thứ nhất số nhiều (nous)",
+    "2pl": "Ngôi thứ hai số nhiều (vous)",
+    "3pl": "Ngôi thứ ba số nhiều (ils/elles)"
+  },
+  "verbNotes": {
+    "doubled-l": "Ở dạng này chữ l được gấp đôi. Quy tắc: chỗ nào đuôi không được đọc, l gấp đôi để giữ âm è — j'appelle nhưng nous appelons.",
+    "memorised": "Bất quy tắc. Không có gốc và đuôi; cả bảng phải học thuộc.",
+    "silent-ending": "Đuôi không được đọc. -e, -es và -ent cùng một âm, nên khi nói chỉ có đại từ cho biết ai làm việc đó.",
+    "fixed-expression": "Là một phần của cụm cố định và không chia riêng. il y a chỉ có một dạng cho cả số ít và số nhiều.",
+    "politeness-form": "Đây là thức điều kiện, dùng để làm lời yêu cầu nhẹ nhàng hơn. je veux đúng nhưng cộc; je voudrais cùng nghĩa mà lịch sự.",
+    "stays-infinitive": "Đây là động từ thứ hai nên giữ nguyên dạng. Khi hai động từ đi liền nhau, chỉ động từ đầu được chia.",
+    "on-takes-3sg": "on có nghĩa «chúng ta» nhưng động từ chia ở ngôi thứ ba số ít, như il. «on allons» là sai.",
+    "impersonal-subject": "Chủ ngữ không chỉ ai cả; nó chỉ có mặt vì tiếng Pháp không đặt câu thiếu chủ ngữ.",
+    "noun-subject-is-3sg": "Chủ ngữ là danh từ, không phải đại từ — nhưng động từ vẫn chia ngôi thứ ba số ít.",
+    "participle-irregular": "Phân từ quá khứ bất quy tắc và phải học thuộc — không tạo từ nguyên mẫu.",
+    "etre-verb": "Động từ này đi với être, không phải avoir. Nghĩa là phân từ hợp với chủ ngữ giống như tính từ.",
+    "agreement-with-etre": "Vì trợ động từ là être nên phân từ hợp với chủ ngữ. Nghe không thấy, nhưng khi viết là bắt buộc.",
+    "imperative-drops-s": "Ở ngôi tu, động từ -er mất chữ s: tu parles nhưng «Parle !».",
+    "imperative-no-subject": "Ở thức mệnh lệnh, đại từ chủ ngữ bị bỏ — trường hợp duy nhất tiếng Pháp cho phép.",
+    "impersonal-invariable": "Không bao giờ chia. Chỉ một dạng, và chủ ngữ không chỉ ai cả.",
+    "imparfait-from-nous": "Gốc lấy từ nous ở hiện tại (nous parl-ons → parl-) và đuôi giống nhau cho mọi động từ: ais · ais · ait · ions · iez · aient. Ngoại lệ duy nhất: être, ét-.",
+    "futur-from-infinitive": "Gốc chính là nguyên mẫu (động từ -re bỏ e) và đuôi là cách chia của avoir: ai · as · a · ons · ez · ont.",
+    "futur-stem-irregular": "Gốc tương lai bất quy tắc và phải học thuộc; đuôi vẫn như thường: ai · as · a · ons · ez · ont.",
+    "subjonctif-from-ils": "Gốc lấy từ ils ở hiện tại (ils partent → part-) và đuôi là: e · es · e · ions · iez · ent.",
+    "pronominal-etre": "Động từ phản thân ở quá khứ luôn chia với être, và phân từ hợp với chủ ngữ.",
+    "advice-form": "Thức điều kiện để khuyên: tu dois = phải (bắt buộc), tu devrais = nên (lời khuyên). Gốc giống thì tương lai (devr-), đuôi giống imparfait.",
+    "recent-past": "venir ở hiện tại nhưng nghĩa là quá khứ gần: venir de + nguyên mẫu = vừa mới … xong."
+  },
+  "genders": {
+    "m": "giống đực số ít",
+    "f": "giống cái số ít",
+    "m_pl": "giống đực số nhiều",
+    "f_pl": "giống cái số nhiều"
+  },
+  "agreementBecause": "Thành {{form}} vì nó chỉ «{{because}}»",
+  "agreementAudible": "nghe được",
+  "agreementSilent": "chỉ khi viết",
+  "roles": {
+    "subject": "Chủ Đề",
+    "subject_dummy": "chủ ngữ hình thức — không chỉ ai",
+    "subject_existential": "điều được nói là tồn tại",
+    "predicate": "động từ",
+    "copula": "hệ từ (là)",
+    "object": "tân ngữ",
+    "object_interrogative": "tân ngữ nghi vấn",
+    "attribute": "vị ngữ bổ sung — điều nói về chủ ngữ",
+    "modifier": "trạng từ — bổ nghĩa cho động từ",
+    "determiner": "hạn định từ — mạo từ, số hoặc sở hữu",
+    "reflexive": "đại từ phản thân — quay về chủ ngữ",
+    "negation": "phủ định",
+    "question-marker": "dấu hiệu câu hỏi — không có nghĩa riêng",
+    "existential": "«có»",
+    "existential_negative": "«không có»",
+    "presentative": "từ giới thiệu — «đây là»",
+    "future-marker": "dấu hiệu tương lai",
+    "politeness": "cụm lịch sự",
+    "quantity": "số lượng",
+    "unit": "đơn vị",
+    "complement": "bổ ngữ",
+    "complement_place": "nơi chốn — ở đâu",
+    "complement_time": "thời gian — khi nào",
+    "complement_manner": "cách thức — thế nào",
+    "complement_frequency": "tần suất — bao lâu một lần",
+    "complement_language": "Ngôn Ngữ",
+    "complement_origin": "nguồn gốc — từ đâu",
+    "preposition_place": "giới từ chỉ nơi chốn",
+    "preposition_origin": "giới từ chỉ nguồn gốc",
+    "predicate_subject": "động từ + chủ ngữ đảo",
+    "interjection": "thán từ"
+  },
+  "mechanics": {
+    "elision": "élision — lược nguyên âm",
+    "contraction": "dạng rút gọn",
+    "liaison": "liaison — nối âm"
+  },
+  "kinds": {
+    "structure": "Cấu Trúc",
+    "question": "câu hỏi",
+    "word-order": "trật tự từ",
+    "verb": "động từ",
+    "article": "bài viết",
+    "negation": "phủ định",
+    "pronoun": "đại từ",
+    "agreement": "Hợp",
+    "preposition": "giới từ",
+    "spelling": "chính tả và âm",
+    "vocabulary": "cách dùng từ"
+  },
+  "registers": {
+    "familiar": "thân mật",
+    "standard": "thông thường",
+    "formal": "trang trọng"
+  },
+  "channels": {
+    "spoken": "nói",
+    "written": "viết"
+  },
+  "errors": {
+    "QUOTA_USER": "Bạn đã đạt giới hạn luyện tập hôm nay. Mai tiếp tục nhé.",
+    "QUOTA_IP": "Mạng này đã luyện tập quá nhiều hôm nay. Thử lại sau.",
+    "TOO_FAST": "Chậm lại một chút — hãy trả lời từng thẻ trước.",
+    "NOT_DEALT": "Thẻ này không còn hiệu lực; hãy bắt đầu lượt mới.",
+    "AUTH_REQUIRED": "Đăng nhập để tiếp tục.",
+    "RATE_LIMITED": "Bạn đang đi hơi nhanh — chờ một chút.",
+    "UNKNOWN_ERROR": "Lượt tiếp theo chưa tải được. Thử lại nhé.",
+    "AUDIO_UNAVAILABLE": "Không thể tải âm thanh. Hãy thử lại.",
+    "NOT_REVEALED": "Hãy mở thẻ trước khi trả lời.",
+    "ANSWER_FIRST": "Hãy viết câu trả lời của bạn trước.",
+    "PENDING_LOCALE": "Phần giải thích cho ngôn ngữ này chưa sẵn sàng.",
+    "NETWORK": "Không thể kết nối với FlexiLingo. Hãy kiểm tra kết nối của bạn."
+  },
+  "facts": {
+    "subject-masculine": "Chủ ngữ: giống đực (il)",
+    "subject-feminine": "Chủ ngữ: giống cái (elle)",
+    "subject-on": "Chủ ngữ: on (văn nói)",
+    "subject-nous": "Chủ ngữ: nous",
+    "address-tu": "Xưng hô: tu",
+    "address-vous": "Xưng hô: vous",
+    "register-familiar": "Sắc thái: thân mật",
+    "register-standard": "Sắc thái: thông thường",
+    "register-formal": "Sắc thái: trang trọng"
+  },
+  "verdictWrongDetail": "Đây không phải câu mà thẻ này cần. Nếu câu bạn viết là tiếng Pháp đúng thì không sai — thẻ chỉ đang tìm dạng bên dưới. Xem các điểm khác nhau:",
+  "toolbar": {
+    "language": "Ngôn Ngữ",
+    "level": "Cấp Độ",
+    "direction": "Hướng",
+    "topic": "Chủ Đề",
+    "order": "Thứ tự",
+    "unit": "đơn vị",
+    "path": "Lộ trình",
+    "task": "Phần thi"
+  },
+  "langs": {
+    "fr": "Tiếng Pháp",
+    "en": "Tiếng Anh"
+  },
+  "finished": {
+    "title": "Hoàn thành cấp độ {{level}}",
+    "body": "Bạn đã xem hết các câu của cấp độ này. Làm thêm một vòng — không có gì bị xóa, chỉ bắt đầu lại từ đầu.",
+    "unitTitle": "Đã xong bài {{unit}}",
+    "unitBody": "Bạn đã xem hết câu của bài này. Cấp độ vẫn còn — khoá học tiếp tục ở bài kế tiếp.",
+    "nextUnit": "Đến bài {{unit}}",
+    "againUnit": "Học lại bài {{unit}}",
+    "topicTitle": "Đã xong chủ đề này",
+    "topicBody": "Bạn đã xem hết câu của chủ đề này ở cấp độ này. Bỏ bộ lọc là phần còn lại của cấp độ vẫn ở đó.",
+    "again": "Lượt nữa"
+  },
+  "orders": {
+    "course": "Theo giáo trình",
+    "random": "Ngẫu nhiên",
+    "easy": "Dễ đến khó",
+    "hard": "Chỉ câu khó",
+    "review": "Ôn Lại Lỗi"
+  },
+  "unitLabel": "Bài {{unit}}",
+  "allUnits": "Tất cả các bài",
+  "allTopics": "Tất cả chủ đề",
+  "topics": {
+    "identity": "Bản thân và giới thiệu",
+    "place": "Nơi chốn",
+    "time": "Thời gian",
+    "food": "Ẩm thực",
+    "politeness": "Phép lịch sự",
+    "routine": "Sinh hoạt hằng ngày",
+    "shopping": "Mua sắm",
+    "opinion": "Ý kiến",
+    "work": "Công việc",
+    "leisure": "Giải trí",
+    "class": "Trong lớp",
+    "language": "Ngôn ngữ",
+    "family": "Gia đình",
+    "greeting": "Chào hỏi",
+    "money": "Tiền bạc",
+    "directions": "Chỉ đường",
+    "health": "Sức khỏe",
+    "transport": "Giao thông",
+    "weather": "Thời tiết",
+    "description": "Mô Tả",
+    "travel": "Du lịch",
+    "clothes": "Quần áo",
+    "phone": "Điện thoại",
+    "home": "Trang Chủ",
+    "restaurant": "Nhà hàng",
+    "rules": "Quy định và biển báo",
+    "school": "Trường học",
+    "technology": "Công Nghệ"
+  },
+  "listen": {
+    "play": "Phát câu",
+    "again": "Lại",
+    "slow": "Chậm hơn",
+    "count": "Đã nghe {{count}} lần",
+    "reveal": "Xem nghĩa",
+    "seeText": "Xem chữ",
+    "textStep": "Giờ hãy đọc — câu này nghĩa là gì?",
+    "askHeard": "Trước khi thấy chữ, bạn đã nghe ra các từ chưa?",
+    "heardIt": "Rồi, tôi nghe ra",
+    "missedIt": "Chưa, nhờ chữ mới hiểu",
+    "earAgain": "Bạn chưa nghe ra — câu này sẽ sớm quay lại để luyện nghe.",
+    "askHeardHint": "Hiểu ra khi đã thấy chữ thì không tính; điều quan trọng là lúc nghe."
+  },
+  "settings": {
+    "title": "Cài Đặt",
+    "autoPlay": "Tự động phát âm thanh",
+    "autoPlayHint": "Câu được đọc ngay khi hiện ra; ở chế độ viết thì sau khi xem đáp án.",
+    "autoPlayShort": "tự phát",
+    "mix": "Tự động ôn",
+    "mixHint": "Cứ vài thẻ, một câu đến hạn ôn sẽ thay chỗ một câu mới. Khi tắt, lượt luyện chạy đúng như bạn cài đặt.",
+    "mixShort": "Tự ôn"
+  },
+  "stats": {
+    "line": "{{practiced}} đã luyện · {{learned}} đã thuộc",
+    "streak": "{{days}} ngày liên tiếp"
+  },
+  "review": {
+    "link": "Ôn ({{count}})",
+    "start": "Ôn {{count}} câu",
+    "empty": "Hiện chưa có gì để ôn. Câu nào bạn làm sai sẽ quay lại đây sau vài phút.",
+    "back": "Luyện mới"
+  },
+  "schedule": {
+    "again": "Câu này quay lại sau vài phút, và sẽ còn quay lại cho đến khi bạn làm đúng.",
+    "later_other": "Đúng rồi — bạn sẽ gặp lại sau {{days}} ngày.",
+    "later": "Đúng rồi — bạn sẽ gặp lại sau {{days}} ngày.",
+    "learned_other": "Bạn đã biết từ này rồi. Chúng tôi sẽ hỏi lại sau {{days}} ngày để bạn nhớ lâu.",
+    "learned": "Bạn đã biết từ này rồi. Chúng tôi sẽ hỏi lại sau {{days}} ngày để bạn nhớ lâu."
+  },
+  "history": {
+    "link": "Record",
+    "title": "Kết quả luyện câu",
+    "subtitle": "Những câu bạn đã trả lời — câu nào đã thuộc và câu nào sẽ quay lại.",
+    "tabs": {
+      "weak": "Lỗi sai",
+      "learned": "Đã thuộc",
+      "all": "Tất cả",
+      "misheard": "Nghe sót"
+    },
+    "empty": {
+      "weak": "Hiện không còn lỗi nào.",
+      "learned": "Bạn chưa trả lời đúng câu nào hai lần liên tiếp — lần đúng thứ hai sẽ đánh dấu câu là «đã thuộc».",
+      "all": "Bạn chưa trả lời câu nào.",
+      "misheard": "Không có câu nào bạn nghe sót."
+    },
+    "counts": "{{correct}} đúng · {{wrong}} sai",
+    "yourAnswer": "Câu trả lời của bạn",
+    "status": {
+      "learned": "Đã thuộc",
+      "weak": "Sẽ quay lại",
+      "seen": "Đang Thực Hiện"
+    },
+    "dueNow": "Đến lúc ôn",
+    "dueMinutes": "Ôn: sau vài phút",
+    "dueDays": "Ôn: sau {{days}} ngày",
+    "reviewAll": "Ôn {{count}} câu",
+    "back": "Quay lại luyện tập",
+    "prev": "Trước",
+    "next": "Tiếp",
+    "heard": "Bằng tai",
+    "heardTimes": "Bằng tai, {{count}} lần",
+    "misheard": "Không nghe ra"
+  },
+  "revealMeaning": "Xem nghĩa",
+  "didntKnow": "Tôi không biết",
+  "askKnew": "Bạn có biết không?",
+  "askKnewHint": "Tự đánh giá: trước khi xem nghĩa, bạn đã nghĩ ra nó chưa?",
+  "liaisonHint": "Nghĩa là hai từ này nối với nhau và đọc liền một hơi (liaison).",
+  "paths": {
+    "general": "Chung"
+  },
+  "allTasks": "Tất cả các phần",
+  "ui": {
+    "playOnce": "Phát câu",
+    "playSlow": "Chậm hơn",
+    "repeat3": "3 lần liên tiếp",
+    "repeat5": "5 lần liên tiếp",
+    "repeatLoop": "Lặp lại đến khi tôi dừng",
+    "stop": "Dừng âm thanh",
+    "playOptions": "Tùy chọn phát"
+  },
+  "qa": {
+    "prompt": "Nghe — bạn trả lời thế nào?",
+    "step": "Đọc câu hỏi và viết câu trả lời",
+    "heard": "Bạn đã nghe ra câu hỏi chưa?",
+    "write": "Viết câu trả lời bằng tiếng Pháp",
+    "placeholder": "Câu trả lời của bạn…",
+    "slotsHint": "Dùng tên, con số và thành phố của bạn.",
+    "answers": "Các câu trả lời có thể",
+    "yours": "của bạn",
+    "yourAnswer": "Câu trả lời của bạn",
+    "grade": {
+      "exact": "Đúng",
+      "accents": "Đúng — xem lại dấu",
+      "unmatched": "Không khớp với câu mẫu — hãy so sánh và tự đánh giá"
+    },
+    "askRight": "Câu trả lời của bạn có đúng không?",
+    "askRightHint": "So sánh với các câu ở trên. Nếu nghĩa đúng và tiếng Pháp chuẩn thì là đúng — dù không giống từng chữ.",
+    "kinds": {
+      "affirmative": "Có",
+      "negative": "Không",
+      "short": "Ngắn"
+    },
+    "details": "Chi tiết",
+    "matchedModel": "Khớp với:",
+    "wasRight": "Đúng",
+    "wasWrong": "Sai",
+    "questionAnalysis": "Ngữ pháp của câu hỏi",
+    "open": "Mở"
+  },
+  "scorecard": {
+    "title": "Kiểm tra bằng AI",
+    "criteria": {
+      "meaning": "Nghĩa",
+      "grammar": "Ngữ pháp",
+      "spelling": "Chính Tả",
+      "elision": "Nuốt âm"
+    },
+    "why": {
+      "meaning": {
+        "pass": "Đúng ý thẻ yêu cầu.",
+        "fail": "Chưa đúng ý thẻ yêu cầu."
+      },
+      "grammar": {
+        "pass": "Ngữ pháp đúng.",
+        "fail": "Có một lỗi ngữ pháp."
+      },
+      "spelling": {
+        "pass": "Viết đúng chính tả.",
+        "near": "Đúng từ — kiểm tra dấu.",
+        "fail": "Có một lỗi chính tả."
+      },
+      "elision": {
+        "pass": "Nuốt âm đúng.",
+        "fail": "Thiếu một chỗ nuốt âm — một từ lẽ ra phải rút gọn lại được viết đầy đủ (ví dụ me aider thay vì m'aider)."
+      }
+    },
+    "register": {
+      "formal": "Văn phong trang trọng — hợp với thư hoặc người lạ.",
+      "neutral": "Văn phong trung tính — hợp hầu hết mọi nơi.",
+      "informal": "Văn phong thân mật — hợp để nhắn tin cho bạn."
+    },
+    "natural": {
+      "yes": "Tự nhiên — người bản xứ sẽ nói như vậy.",
+      "no": "Đúng, nhưng người bản xứ sẽ nói khác."
+    },
+    "error": {
+      "gender_agreement": "Có vẻ sai hợp giống hoặc số.",
+      "verb_conjugation": "Kiểm tra dạng hoặc thì của động từ.",
+      "word_order": "Kiểm tra trật tự từ.",
+      "preposition_or_article": "Kiểm tra giới từ hoặc mạo từ.",
+      "spelling_or_accent": "Kiểm tra chính tả.",
+      "negation": "Kiểm tra câu phủ định.",
+      "wrong_word": "Có một từ không hợp nghĩa.",
+      "avoir_expression": "Tiếng Pháp dùng avoir ở đây, không phải être: j'ai faim, quel âge avez-vous ?"
+    }
+  },
+  "retry": {
+    "title": "Bạn đã viết sai câu này — hãy viết lại",
+    "hint": "Câu này quay lại vì bạn viết sai. Viết đúng một lần để đi tiếp. Bạn có thể bỏ qua lúc này — nhưng lần sau sẽ không bỏ qua được nữa.",
+    "skip": "Skip for now",
+    "lockedTitle": "Bạn đã viết sai câu này {{count}} lần",
+    "lockedHint": "Lần trước bạn đã bỏ qua. Lần này hãy viết đúng để đi tiếp."
+  },
+  "desk": {
+    "comingTitle": "Sẽ có trong bản cập nhật máy chủ tiếp theo",
+    "comingBody": "Phần luyện câu trên máy này cần một bản cập nhật nhỏ trên máy chủ FlexiLingo. Nó sẽ mở ở đây ngay khi bản cập nhật hoạt động. Không có gì bị mất và bạn không cần làm gì.",
+    "checkAgain": "Kiểm tra lại",
+    "signInTitle": "Đăng nhập để luyện câu",
+    "signInBody": "Lịch sử các câu của bạn được lưu trong tài khoản, nên đi theo bạn trên mọi thiết bị.",
+    "loadingRound": "Đang tải…",
+    "tryAgain": "Thử lại",
+    "aiChecking": "AI của bạn đang kiểm tra câu của bạn…",
+    "aiSetup": "Hãy thiết lập AI của riêng bạn để các câu đã viết được kiểm tra về nghĩa, ngữ pháp và chính tả. Cho đến lúc đó, chỉ câu của chính thẻ được tính.",
+    "aiFallback": "AI của bạn không kiểm tra được câu này, nên phần kiểm tra riêng của thẻ đã quyết định.",
+    "notSaved": "Không thể lưu câu trả lời này vào lịch sử của bạn.",
+    "pendingBody": "Phần giải thích cho ngôn ngữ này chưa sẵn sàng.",
+    "historyBack": "Quay lại luyện tập",
+    "close": "Đóng",
+    "signIn": "Đăng nhập",
+    "loadMore": "Đang tải danh sách…"
+  }
+}

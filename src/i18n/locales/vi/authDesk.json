@@ -1,0 +1,24 @@
+{
+  "title": "Đăng nhập vào FlexiLingo",
+  "description": "Dùng email của tài khoản FlexiLingo. Không cần mật khẩu.",
+  "email": "Email",
+  "emailPlaceholder": "you@example.com",
+  "send": "Gửi mã",
+  "sending": "Đang gửi mã...",
+  "code": "Mã Xác Minh",
+  "verify": "Xác Minh",
+  "verifying": "Đang xác minh...",
+  "resend": "Gửi lại mã",
+  "resending": "Đang gửi...",
+  "anotherEmail": "Dùng email khác",
+  "codeSent": "Đã gửi mã đến <b>{{email}}</b>",
+  "invalidEmail": "Hãy nhập địa chỉ email hợp lệ.",
+  "invalidCode": "Hãy nhập mã 6 chữ số trong email.",
+  "errors": {
+    "SEND_OTP_FAILED": "Không thể gửi mã. Hãy kiểm tra địa chỉ email và thử lại.",
+    "VERIFY_OTP_FAILED": "Mã đó không hợp lệ. Hãy kiểm tra và thử lại.",
+    "INVALID_OTP": "Mã đó không hợp lệ. Hãy kiểm tra và thử lại.",
+    "OTP_EXPIRED": "Mã đó đã hết hạn. Hãy yêu cầu mã mới.",
+    "RATE_LIMITED": "Quá nhiều lần thử. Hãy chờ một phút rồi thử lại."
+  }
+}

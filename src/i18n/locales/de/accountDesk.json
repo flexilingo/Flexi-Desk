@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "account": "Mein Konto",
+    "community": "Community",
+    "pro": "Pro",
+    "whatsNew": "Neuigkeiten"
+  },
+  "signedOut": {
+    "title": "Melde dich an, um dein Konto hier zu sehen",
+    "body": "Diese Seite zeigt dein FlexiLingo-Konto. Melde dich mit deiner E-Mail oder Google an, um es zu sehen.",
+    "button": "Anmelden"
+  },
+  "source": {
+    "account": "Kontozahlen",
+    "local": "Auf diesem Computer",
+    "localNote": "Du bist abgemeldet, daher stammen diese Zahlen nur von diesem Computer. Melde dich an, um die Zahlen deines Kontos zu sehen."
+  },
+  "learning": {
+    "search": "Sprache suchen",
+    "noResults": "Keine Sprache gefunden",
+    "mirrored": "In deinem Konto gespeichert und zusätzlich auf diesem Computer behalten.",
+    "signedOutNote": "Du bist abgemeldet: Diese Einstellungen werden nur auf diesem Computer gespeichert.",
+    "notAppLanguage": "Hier legst du fest, was du lernst und in welcher Sprache Übersetzungen erscheinen. Die Sprache der App selbst wählst du unter Einstellungen, Allgemein.",
+    "conflictTitle": "Dieser Computer verwendet ein anderes Sprachpaar",
+    "conflictBody": "Dieser Computer: {{local}}. Dein Konto: {{account}}. Es wurde nichts geändert.",
+    "useAccount": "Sprachen meines Kontos verwenden",
+    "keepLocal": "Sprachen dieses Computers in meinem Konto speichern",
+    "offerPush": "Dein Konto hat noch keine Sprachen. Dieser Computer verwendet {{local}}.",
+    "pushLocal": "In meinem Konto speichern"
+  },
+  "voice": {
+    "deskNote": "Auf diesem Computer werden die natürliche Stimme, Google und FlexiLingo-Stimmen als eine Online-Stimme abgespielt (wenn du angemeldet bist); die Stimme deines Geräts funktioniert offline. Deine Auswahl wird für die Website und die Erweiterung in deinem Konto gespeichert."
+  },
+  "profile": {
+    "tooBig": "Dieses Bild ist größer als 5 MB. Wähle ein kleineres."
+  },
+  "subscription": {
+    "openedInBrowser": "Die Zahlung wurde in deinem Browser geöffnet. Komm danach hierher zurück; diese Seite aktualisiert sich von selbst.",
+    "checkAgain": "Erneut prüfen",
+    "updated": "Dein Tarif ist jetzt {{plan}}.",
+    "notYet": "Noch keine Änderung. Wenn du gerade bezahlt hast, kann es eine Minute dauern.",
+    "daysLeft": "Noch {{count}} Tage"
+  },
+  "redeem": {
+    "title": "Hast du einen Geschenkcode?",
+    "hint": "Füge den Code oder den ganzen Link aus deiner E-Mail ein.",
+    "placeholder": "Code oder Link",
+    "invalid": "Das sieht nicht nach einem Geschenkcode oder Link aus.",
+    "until": "aktiv bis {{date}}"
+  },
+  "shared": {
+    "title": "Mit dir geteilte Decks",
+    "body": "Wenn ein Freund eine Wiederholung mit dir teilt, erscheint sie bei deinen Decks. Folgt euch zuerst gegenseitig und teile dann aus einem Deck."
+  },
+  "links": {
+    "title": "Freigabelinks",
+    "body": "Erstelle auf der Seite eines deiner Decks einen Link und verwalte ihn dort."
+  },
+  "openDecks": "Meine Decks öffnen",
+  "oauth": {
+    "google": "Mit Google fortfahren",
+    "waiting": "Schließe die Anmeldung in deinem Browser ab...",
+    "hint": "Ein Browserfenster wurde geöffnet. Wähle dort dein Google-Konto aus; dieses Fenster macht von selbst weiter.",
+    "or": "oder unten deine E-Mail verwenden",
+    "errors": {
+      "GOOGLE_TIMEOUT": "Die Anmeldung hat zu lange gedauert und wurde abgebrochen. Versuche es erneut.",
+      "GOOGLE_STATE_MISMATCH": "Die Antwort des Browsers passte nicht zu dieser Anmeldung. Versuche es erneut.",
+      "GOOGLE_NOT_CONFIGURED": "Die Google-Anmeldung ist in dieser Version nicht eingerichtet. Verwende deine E-Mail.",
+      "GOOGLE_OPEN_FAILED": "Dein Browser konnte nicht geöffnet werden. Verwende stattdessen deine E-Mail.",
+      "GOOGLE_LISTEN_FAILED": "Auf diesem Computer konnte nicht auf den Browser gewartet werden. Verwende stattdessen deine E-Mail.",
+      "GOOGLE_TOKEN_FAILED": "Google hat die Anmeldung nicht akzeptiert. Versuche es erneut.",
+      "GOOGLE_SIGN_IN_FAILED": "Die Google-Anmeldung hat nicht funktioniert. Versuche es erneut oder verwende deine E-Mail.",
+      "GOOGLE_CANCELLED": "Die Anmeldung wurde abgebrochen."
+    }
+  },
+  "whatsNew": {
+    "title": "Neuigkeiten",
+    "subtitle": "Alles, was FlexiLingo kann, die neuesten Funktionen zuerst.",
+    "all": "Alle",
+    "openOnWeb": "Auf der Website öffnen"
+  }
+}

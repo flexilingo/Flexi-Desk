@@ -11,6 +11,7 @@
   "matchCountNone": "هیچ ویدیویی با این فیلترها نیست",
   "matchCount_other": "{{count}} ویدیو با این فیلترها",
   "matchCount": "{{count}} ویدیو با این فیلترها",
+  "matchCount_one": "{{count}} ویدیو مطابقت دارد",
   "removeFilter": "حذف فیلتر: {{name}}",
   "minutes": "{{count}} دقیقه",
   "backToCatalogue": "بازگشت به ویدیوها",
@@ -106,11 +107,8 @@
     "page": "صفحهٔ {{page}} از {{total}}"
   },
   "watch": {
-    "startHint": "برای شروع، دکمهٔ پخش روی خود ویدیو را بزنید. پس از آن، کنترل‌های پایین هم کار می‌کنند.",
     "preparing": "در حال باز کردن ویدیو…",
-    "importFailed": "این ویدیو باز نشد. دوباره تلاش کنید.",
-    "noTranscript": "این ویدیو هنوز زیرنویس تعاملی ندارد.",
-    "replay": "دوباره تماشا کن"
+    "importFailed": "این ویدیو باز نشد. دوباره تلاش کنید."
   },
   "watchWithSubtitles": "تماشا با زیرنویس"
 }

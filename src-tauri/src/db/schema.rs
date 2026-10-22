@@ -70,6 +70,7 @@ fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(
         ("V037", V037_OVERVIEW),
         ("V038", V038_DECK_PAIR),
         ("V039", V039_CHEATSHEET_CACHE),
+        ("V040", crate::writing_practice::store::MIGRATION_SQL),
     ];
 
     for (version, sql) in migrations {

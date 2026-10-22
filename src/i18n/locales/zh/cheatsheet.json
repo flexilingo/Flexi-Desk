@@ -62,11 +62,11 @@
         "UNKNOWN_ERROR": "出了点问题，请重试。"
       }
     },
-    "searchPlaceholder": "Type a verb or its meaning…",
+    "searchPlaceholder": "输入动词或其含义…",
     "count": "{{count}} verbs",
     "moreTenses": "{{count}} more tenses",
     "fewerTenses": "Present only",
-    "predicted": "This conjugation was guessed by a model and may be inaccurate.",
+    "predicted": "此变位由模型推测，可能不准确。",
     "family": "Family",
     "complement": "Takes",
     "examples": "Examples",

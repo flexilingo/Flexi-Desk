@@ -1,0 +1,24 @@
+{
+  "title": "Bei FlexiLingo anmelden",
+  "description": "Verwende die E-Mail-Adresse deines FlexiLingo-Kontos. Kein Passwort nötig.",
+  "email": "E-Mail",
+  "emailPlaceholder": "you@example.com",
+  "send": "Code senden",
+  "sending": "Code wird gesendet...",
+  "code": "Bestätigungscode",
+  "verify": "Bestätigen",
+  "verifying": "Wird überprüft...",
+  "resend": "Code erneut senden",
+  "resending": "Wird gesendet...",
+  "anotherEmail": "Andere E-Mail verwenden",
+  "codeSent": "Code gesendet an <b>{{email}}</b>",
+  "invalidEmail": "Gib eine gültige E-Mail-Adresse ein.",
+  "invalidCode": "Gib den 6-stelligen Code aus der E-Mail ein.",
+  "errors": {
+    "SEND_OTP_FAILED": "Der Code konnte nicht gesendet werden. Prüfe die E-Mail-Adresse und versuche es erneut.",
+    "VERIFY_OTP_FAILED": "Dieser Code hat nicht funktioniert. Prüfe ihn und versuche es erneut.",
+    "INVALID_OTP": "Dieser Code ist ungültig. Prüfe ihn und versuche es erneut.",
+    "OTP_EXPIRED": "Dieser Code ist abgelaufen. Fordere einen neuen an.",
+    "RATE_LIMITED": "Zu viele Versuche. Warte eine Minute und versuche es erneut."
+  }
+}

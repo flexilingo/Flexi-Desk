@@ -1,0 +1,69 @@
+{
+  "steps": {
+    "languages": "Langues",
+    "ai": "IA",
+    "whisper": "Whisper",
+    "podcast": "Podcast"
+  },
+  "welcome": {
+    "title": "Bienvenue dans FlexiDesk",
+    "subtitle": "Préparons votre environnement d'apprentissage",
+    "native": "Votre langue maternelle",
+    "target": "La langue que vous apprenez"
+  },
+  "nav": {
+    "back": "Retour",
+    "next": "Suivant",
+    "skip": "Passer",
+    "start": "Commencer"
+  },
+  "podcast": {
+    "title": "Ajoutez votre premier podcast",
+    "subtitle": "Apprenez en écoutant du contenu réel",
+    "loading": "Chargement des podcasts...",
+    "by": "par {{author}}",
+    "subscribe": "S'abonner",
+    "adding": "Ajout en cours...",
+    "byRss": "Ajouter avec un lien RSS",
+    "rssPlaceholder": "https://example.com/feed.rss",
+    "add": "Ajouter",
+    "invalidUrl": "Veuillez saisir un lien valide.",
+    "subscribeFailed": "Impossible d'ajouter le podcast : {{message}}"
+  },
+  "whisper": {
+    "title": "Reconnaissance vocale",
+    "subtitle": "Whisper transforme l'audio en texte sur votre ordinateur. Les sous-titres en direct et les podcasts l'utilisent.",
+    "detecting": "Recherche de Whisper...",
+    "notFoundTitle": "Whisper est introuvable",
+    "notFoundDesc": "Appuyez sur le bouton pour l'installer automatiquement.",
+    "install": "Installer Whisper",
+    "installing": "Installation de Whisper...",
+    "settingUp": "Préparation de ce dont Whisper a besoin...",
+    "chooseTitle": "Choisissez un modèle Whisper",
+    "chooseDesc": "Les modèles plus grands sont plus précis mais plus lents et demandent plus de mémoire.",
+    "loadingModels": "Chargement des modèles...",
+    "use": "Utiliser",
+    "download": "Télécharger",
+    "downloadingModel": "Téléchargement du modèle...",
+    "readyTitle": "Whisper est prêt",
+    "activeModel": "Modèle actif : {{model}}",
+    "skip": "Passer pour l'instant",
+    "skippedNote": "Vous pourrez configurer Whisper plus tard dans les réglages.",
+    "realtime": "~{{n}}x le temps réel",
+    "models": {
+      "tiny": "Modèle le plus rapide. Idéal pour tester. Prend en charge toutes les langues.",
+      "base": "Bon équilibre entre vitesse et précision. Prend en charge toutes les langues.",
+      "small": "Meilleure précision, vitesse moyenne. Prend en charge toutes les langues.",
+      "large_v3_turbo": "Meilleur équilibre vitesse et précision. Recommandé pour la plupart des gens.",
+      "large_v3_turbo_q5_0": "Modèle turbo compact. Léger et rapide."
+    },
+    "avx": {
+      "title": "Cet ordinateur n'est pas compatible avec cette version",
+      "desc": "Votre processeur ne prend pas en charge les instructions AVX2 requises par le Whisper précompilé. Cela concerne les processeurs d'avant 2013 (Intel 3e génération ou plus ancien, premiers AMD).",
+      "howTo": "Comment corriger :",
+      "step1": "Téléchargez une version compatible sur <link>whisper.cpp releases</link>. Cherchez une version <b>noavx</b> ou <b>compat</b>, ou compilez-la vous-même sans AVX2.",
+      "step2": "Une fois installée, indiquez son chemin dans <b>Réglages, Whisper, Chemin du binaire personnalisé</b>.",
+      "skipHint": "Ou passez pour l'instant et utilisez le tuteur IA et les autres fonctions. La transcription n'est nécessaire que pour les sous-titres en direct et les podcasts."
+    }
+  }
+}

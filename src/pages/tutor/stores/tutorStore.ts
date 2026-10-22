@@ -1,3 +1,4 @@
+import { localErrorText } from '@/lib/localError';
 import { create } from 'zustand';
 import { speak, stop as stopSpeech } from '@/lib/speech';
 import { immer } from 'zustand/middleware/immer';
@@ -144,7 +145,7 @@ export const useTutorStore = create<TutorState>()(
         });
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
           s.isLoadingConversations = false;
         });
       }
@@ -174,7 +175,7 @@ export const useTutorStore = create<TutorState>()(
         await get().openConversation(conv.id);
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       }
     },
@@ -199,7 +200,7 @@ export const useTutorStore = create<TutorState>()(
         });
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
           s.isLoadingMessages = false;
         });
       }
@@ -225,7 +226,7 @@ export const useTutorStore = create<TutorState>()(
         });
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
           s.isLoadingMessages = false;
         });
       }
@@ -325,7 +326,7 @@ export const useTutorStore = create<TutorState>()(
           s.streamingContent = '';
           s.isStreaming = false;
           s.isSending = false;
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       } finally {
         // Always clean up listener
@@ -342,7 +343,7 @@ export const useTutorStore = create<TutorState>()(
       } catch (e) {
         set((s) => {
           s.isRecording = false;
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       }
     },
@@ -362,7 +363,7 @@ export const useTutorStore = create<TutorState>()(
       } catch (e) {
         set((s) => {
           s.isTranscribing = false;
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
         return null;
       }
@@ -403,7 +404,7 @@ export const useTutorStore = create<TutorState>()(
         await get().fetchConversations();
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       }
     },
@@ -420,7 +421,7 @@ export const useTutorStore = create<TutorState>()(
         await get().fetchConversations();
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       }
     },
@@ -433,7 +434,7 @@ export const useTutorStore = create<TutorState>()(
         });
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       }
     },
@@ -446,7 +447,7 @@ export const useTutorStore = create<TutorState>()(
         });
       } catch (e) {
         set((s) => {
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       }
     },
@@ -469,7 +470,7 @@ export const useTutorStore = create<TutorState>()(
       } catch (e) {
         set((s) => {
           s.isLoadingDecks = false;
-          s.error = String(e);
+          s.error = localErrorText(e, 'tutor');
         });
       }
     },

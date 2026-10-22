@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { CaptionSegment } from '../types';
 import { formatTimestampMs } from '../types';
 import { WordPopover } from './WordPopover';
@@ -8,6 +9,7 @@ interface SegmentTimelineProps {
 }
 
 export function SegmentTimeline({ segments }: SegmentTimelineProps) {
+  const { t } = useTranslation('caption');
   const [selectedWord, setSelectedWord] = useState<{
     word: string;
     startMs: number;
@@ -29,7 +31,7 @@ export function SegmentTimeline({ segments }: SegmentTimelineProps) {
 
   return (
     <div className="space-y-1">
-      <h3 className="text-sm font-medium text-muted-foreground mb-3">Transcript</h3>
+      <h3 className="text-sm font-medium text-muted-foreground mb-3">{t('detail.transcript')}</h3>
 
       <div className="space-y-3">
         {segments.map((segment) => (

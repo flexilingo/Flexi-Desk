@@ -1,0 +1,118 @@
+{
+  "subscribe": "Abonnieren",
+  "title": "Videos",
+  "searchPlaceholder": "Videos suchen…",
+  "pinned": "Angeheftet",
+  "empty": {
+    "title": "Keine Videos gefunden",
+    "subtitle": "Entferne einen Filter oder suche nach etwas anderem."
+  },
+  "resultCount": "{{count}} Videos",
+  "matchCountNone": "Keine passenden Videos",
+  "matchCount_one": "{{count}} Video passt",
+  "matchCount_other": "{{count}} Videos passen",
+  "matchCount": "{{count}} Videos passen",
+  "removeFilter": "Filter entfernen: {{name}}",
+  "minutes": "{{count}} Min.",
+  "backToCatalogue": "Zurück zu den Videos",
+  "notFound": {
+    "title": "Video nicht gefunden",
+    "subtitle": "Es wurde möglicherweise aus dem Katalog entfernt."
+  },
+  "subtitle": "Echte Videos mit interaktiven Untertiteln. Tippe ein Wort an, sieh die Bedeutung und schick es direkt in ein Deck.",
+  "views": {
+    "newest": "Neueste",
+    "newestHint": "Die zuletzt hinzugefügten Videos.",
+    "shortest": "Kurze",
+    "shortestHint": "Kurze Videos — gut, wenn du ein paar Minuten hast.",
+    "longest": "Lange",
+    "longestHint": "Längere Videos, für die du dir Zeit nimmst."
+  },
+  "browseByTopic": "Nach Thema stöbern",
+  "channels": {
+    "heading": "Kanäle",
+    "videoCount_one": "{{count}} Video",
+    "videoCount_other": "{{count}} Videos",
+    "videoCount": "{{count}} Videos",
+    "totalCount": "{{count}} Kanäle",
+    "searchPlaceholder": "Kanäle suchen…",
+    "allLanguages": "Alle",
+    "clear": "Löschen",
+    "empty": "Keine passenden Kanäle."
+  },
+  "channel": {
+    "videoCount_one": "{{count}} Video",
+    "videoCount_other": "{{count}} Videos",
+    "videoCount": "{{count}} Videos",
+    "openOnYoutube": "Auf YouTube öffnen"
+  },
+  "categories": {
+    "learning": "Lernen",
+    "stories": "Geschichten",
+    "podcast": "Podcasts",
+    "news": "Nachrichten",
+    "culture": "Kultur",
+    "music": "Musik",
+    "other": "Sonstiges"
+  },
+  "filters": {
+    "category": "Kategorie",
+    "allCategories": "Alle Kategorien"
+  },
+  "music": {
+    "signInTitle": "Musik gibt es für angemeldete Lernende",
+    "signInBody": "Lerne mit echten Songs und verfolge den Text Wort für Wort. Melde dich an oder erstelle ein kostenloses Konto, um den Musikbereich zu öffnen.",
+    "signIn": "Anmelden"
+  },
+  "player": {
+    "openOnYoutube": "Auf YouTube ansehen",
+    "openChannel": "Kanal öffnen",
+    "openChannelNamed": "{{channel}} öffnen"
+  },
+  "upNext": {
+    "heading": "Als Nächstes",
+    "sub": "Mehr von diesem Kanal und auf deinem Niveau",
+    "empty": "Noch keine weiteren Videos zum Vorschlagen."
+  },
+  "podcasts": {
+    "filterAllLevels": "Alle Niveaus",
+    "cefrBeginner": "Anfänger",
+    "cefrElementary": "Grundstufe",
+    "cefrIntermediate": "Mittelstufe",
+    "cefrUpperIntermediate": "Obere Mittelstufe",
+    "cefrAdvanced": "Fortgeschritten",
+    "cefrProficiency": "Kompetenz",
+    "filterByLanguage": "Sprache",
+    "filterAllLanguages": "Alle Sprachen",
+    "clearFilters": "Löschen",
+    "filterView": "Ansehen",
+    "filterTopic": "Thema",
+    "filterAllTopics": "Alle Themen",
+    "filterDuration": "Länge",
+    "filterAnyDuration": "Beliebige Länge",
+    "filterDurationUnder": "Unter {{minutes}} Min.",
+    "clearAllFilters": "Alles zurücksetzen",
+    "seeAll": "Alle anzeigen",
+    "videoUnavailableTitle": "Dieses Video lädt hier nicht",
+    "videoUnavailableBody": "YouTube ist über deine Verbindung gerade nicht erreichbar. Versuch es noch einmal oder sieh es dir auf YouTube an — das Transkript und seine Wörter kannst du hier trotzdem nutzen.",
+    "videoUnavailableRetry": "Erneut versuchen",
+    "videoUnavailableOpen": "Auf YouTube ansehen",
+    "expandPlayer": "Erweitern",
+    "closePlayer": "Schließen",
+    "play": "Abspielen",
+    "pause": "Pause"
+  },
+  "loading": "Wird geladen…",
+  "retry": "Erneut versuchen",
+  "loadError": "Die Videos konnten nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+  "pagination": {
+    "previous": "Zurück",
+    "next": "Weiter",
+    "page": "Seite {{page}} von {{total}}"
+  },
+  "watch": {
+    "preparing": "Video wird geöffnet…",
+    "importFailed": "Dieses Video konnte nicht geöffnet werden. Versuche es erneut."
+  },
+  "watchWithSubtitles": "Mit Untertiteln ansehen"
+}

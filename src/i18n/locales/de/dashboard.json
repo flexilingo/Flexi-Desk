@@ -1,0 +1,424 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "Guten Morgen, {{name}}",
+      "afternoon": "Guten Tag, {{name}}",
+      "evening": "Guten Abend, {{name}}"
+    },
+    "greetingNoName": {
+      "morning": "Guten Morgen",
+      "afternoon": "Guten Tag",
+      "evening": "Guten Abend"
+    },
+    "streak_one": "{{count, number}} Tag in Folge",
+    "streak_other": "{{count, number}} Tage in Folge",
+    "streakNone": "Beginnen Sie heute eine Serie",
+    "level": "Stufe {{level, number}}",
+    "achievements_exact0": "Noch keine Erfolge",
+    "achievements_one": "{{count, number}} Erfolg",
+    "achievements_other": "{{count, number}} Erfolge",
+    "loadError": "Einige Ihrer Zahlen konnten nicht geladen werden. Laden Sie die Seite neu.",
+    "duration": {
+      "hours": "{{h, number}} Std. {{m, number}} Min.",
+      "minutes": "{{m, number}} Min."
+    },
+    "next": {
+      "eyebrowExam": "Nächster Schritt · {{exam}}",
+      "eyebrowMinutes_one": "Nächster Schritt · etwa {{count, number}} Minute",
+      "eyebrowMinutes_other": "Nächster Schritt · etwa {{count, number}} Minuten",
+      "eyebrowMinutesLeft_one": "Nächster Schritt · noch {{count, number}} Minute",
+      "eyebrowMinutesLeft_other": "Nächster Schritt · noch {{count, number}} Minuten",
+      "eyebrowReading": "Nächster Schritt · weiterlesen",
+      "eyebrowFirst": "Erster Schritt · 5 Minuten",
+      "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+      "practice": {
+        "title": "Eine kurze Übung: {{skill}}",
+        "whyLowest": "Ihr schwächster Teil in den letzten Übungen — ein kurzer Ausschnitt, sofort bewertet.",
+        "whyUntried": "Diesen Teil haben Sie noch nicht probiert — ein kurzer Ausschnitt, sofort bewertet.",
+        "cta": "Übung starten"
+      },
+      "review": {
+        "title_one": "{{count, number}} Karte wartet auf Wiederholung",
+        "title_other": "{{count, number}} Karten warten auf Wiederholung",
+        "why": "Wörter, die Sie schon gesammelt haben — kurz bevor Sie sie vergessen würden.",
+        "cta": "Wiederholung starten"
+      },
+      "episode": {
+        "title": "{{title}} zu Ende hören",
+        "why": "Machen Sie dort weiter, wo Sie aufgehört haben. Tippen Sie unbekannte Wörter an, um die Bedeutung zu sehen und sie zu behalten.",
+        "cta": "Weiterhören"
+      },
+      "book": {
+        "title": "{{title}} weiterlesen",
+        "page": "Du bist auf Seite {{page, number}} von {{total, number}}.",
+        "pageOnly": "Du bist auf Seite {{page, number}}.",
+        "cta": "Weiterlesen"
+      },
+      "start": {
+        "title": "Hören Sie eine kurze Folge und tippen Sie jedes unbekannte Wort an",
+        "why": "Sie sehen die Bedeutung sofort, und das Wort bleibt in „Mein Wortschatz“. FlexiLingo macht daraus dann eine Lernkarte.",
+        "cta": "Folge auswählen"
+      },
+      "after": "Danach:",
+      "chip": {
+        "practice": "Kurze Übung: {{skill}}",
+        "review_one": "{{count, number}} Karte zur Wiederholung",
+        "review_other": "{{count, number}} Karten zur Wiederholung",
+        "episode": "{{title}} · noch {{count, number}} Min.",
+        "book": "{{title}} weiterlesen",
+        "library": "Oder ein leichtes Buch lesen",
+        "exam": "Bereiten Sie sich auf eine Prüfung vor?"
+      }
+    },
+    "week": {
+      "title": "Letzte 7 Tage",
+      "year": "Ganzes Jahr",
+      "caption": "Wiederholungs- und Lernzeit",
+      "emptyBody": "Jede Minute, die Sie wiederholen oder von Hand eintragen, wird hier zu einem Balken. Zehn Minuten am Tag reichen, um den Unterschied in einer Woche zu spüren.",
+      "goal": "Tagesziel {{count, number}} Min.",
+      "today": "Heute",
+      "activeDays": "An {{count, number}} der letzten 7 Tage aktiv",
+      "best_one": "Beste Serie: {{count, number}} Tag",
+      "best_other": "Beste Serie: {{count, number}} Tage"
+    },
+    "path": {
+      "title": "Ihr Lernweg",
+      "lead": "Was Sie hören und lesen, wird zu Wörtern; Wiederholung hält diese Wörter im Kopf; und am Ende zeigt es sich in Ihrer Prüfung.",
+      "here": "Ihr nächster Schritt ist hier",
+      "listen": {
+        "title": "Hören und lesen",
+        "emptyTitle": "Noch nichts",
+        "emptyBody": "Podcasts und fertige Bücher auf Ihrem Niveau, alle mit vollständigem Text. Tippen Sie unbekannte Wörter an.",
+        "unitHours": "Stunden gehört, letzte 30 Tage",
+        "unitMinutes": "Minuten gehört, letzte 30 Tage",
+        "episodes": "Begonnene Folgen",
+        "followed": "Abonnierte Podcasts",
+        "books": "Bücher und Dateien",
+        "link": "Podcasts"
+      },
+      "words": {
+        "title": "Wörter sammeln",
+        "emptyTitle": "Noch keine Wörter",
+        "emptyBody": "Wo immer Sie auf ein unbekanntes Wort stoßen, tippen Sie es an. Sie sehen Bedeutung, Aussprache und ein Beispiel, und das Wort wird hier aufbewahrt.",
+        "unit": "Wörter gesammelt",
+        "thisWeek": "+{{count, number}} diese Woche",
+        "suggested": "Oft gesehen, noch keine Karte",
+        "notes": "Notizen",
+        "link": "Mein Wortschatz"
+      },
+      "review": {
+        "title": "Wiederholen",
+        "emptyTitle": "Noch keine Karten",
+        "emptyBody": "Die Wörter, die Sie sammeln, werden zu Karten, und jede Karte kommt zurück, kurz bevor Sie sie vergessen würden.",
+        "emptyLink": "Fertige Decks",
+        "unit": "Karten gelernt",
+        "due_one": "{{count, number}} Karte heute fällig",
+        "due_other": "{{count, number}} Karten heute fällig",
+        "noneDue": "Heute nichts fällig",
+        "learned": "Gelernt",
+        "reviewing": "In Wiederholung",
+        "unseen": "Noch nicht gesehen",
+        "decks": "Decks",
+        "accuracy": "Richtige Antworten",
+        "link": "Decks"
+      },
+      "exam": {
+        "title": "Testen Sie sich",
+        "emptyTitle": "Noch keine Prüfung gewählt",
+        "emptyBody": "Bereiten Sie sich auf CELPIP oder TCF vor? Eine 10-minütige Übung zeigt, wo Sie stehen.",
+        "emptyBodyNone": "Keine Prüfung geplant — kein Problem. Falls doch, zeigt eine 10-minütige Übung, wo Sie stehen.",
+        "emptyLink": "Prüfungen ansehen",
+        "daysUnit_one": "Tag bis {{exam}}",
+        "daysUnit_other": "Tage bis {{exam}}",
+        "takenUnit": "{{exam}}-Übungen absolviert",
+        "weekProgress": "{{done, number}} von {{target, number}} Übungen diese Woche",
+        "weakest": "Ihr schwächster Teil",
+        "scale": "Durchschnitt Ihrer letzten Übungen, in {{label}}",
+        "noScores": "Noch keine Ergebnisse. Machen Sie eine kurze Übung, um zu sehen, wo Sie stehen.",
+        "taken": "Absolvierte Übungen",
+        "addDate": "Prüfungsdatum hinzufügen"
+      }
+    },
+    "shelf": {
+      "title": "Dort weitermachen, wo Sie aufgehört haben",
+      "starterTitle": "Bücher für den Anfang, auf Ihrem Niveau",
+      "library": "Bibliothek",
+      "allPodcasts": "Podcasts",
+      "minLeft": "noch {{count, number}} Min.",
+      "page": "Seite {{page, number}} von {{total, number}}",
+      "pageOnly": "Seite {{page, number}}",
+      "examTitle": "{{exam}}-Übung",
+      "examMeta": "Noch nicht fertig",
+      "due_one": "{{count, number}} Karte heute fällig",
+      "due_other": "{{count, number}} Karten heute fällig",
+      "level": "Niveau {{level}}",
+      "kind": {
+        "podcast": "Podcast",
+        "book": "Buch",
+        "file": "Datei",
+        "exam": "Prüfung",
+        "deck": "Deck"
+      }
+    }
+  },
+  "examGoal": {
+    "title": "Auf welche Prüfung bereiten Sie sich vor?",
+    "subtitle": "Wählen Sie eine aus und starten Sie jetzt eine kurze Übung. Sie können das später in den Einstellungen ändern.",
+    "celpip": "CELPIP",
+    "celpipHint": "Englisch · Kanada",
+    "tcf": "TCF Canada",
+    "tcfHint": "Französisch · Kanada",
+    "tcfQuebec": "TCF Québec",
+    "tcfQuebecHint": "Französisch · Québec",
+    "none": "Keine Prüfung",
+    "noneHint": "Ich möchte mich einfach verbessern",
+    "dateLabel": "Wann ist Ihre Prüfung? (optional)",
+    "ctaCelpip": "10 Minuten Reading üben",
+    "ctaTcf": "10 Fragen Hörverstehen starten",
+    "ctaNone": "Podcasts entdecken",
+    "celpipNote": "Reading Teil 1 · etwa 10 Minuten · CLB-Schätzung",
+    "tcfNote": "Compréhension orale, Fragen 1–10 · etwa 10 Minuten · ohne Mikrofon",
+    "notNow": "Später",
+    "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "nudgeTitle": "Bereiten Sie sich auf CELPIP oder TCF vor?",
+    "nudgeBody": "Wählen Sie Ihre Prüfung und starten Sie eine kurze Übung.",
+    "nudgeCta": "Prüfung wählen",
+    "nudgeClose": "Schließen",
+    "ctaSave": "Meine Prüfung speichern",
+    "webOnlyNote": "Das Üben für diese Prüfung öffnet sich vorerst auf der Website. Deine Auswahl wird in deinem Konto gespeichert."
+  },
+  "examResult": {
+    "title": "Wie lief Ihr {{exam}}?",
+    "subtitle": "Tragen Sie Ihre offiziellen Ergebnisse ein — schon eine Fertigkeit hilft. Wir vergleichen sie mit unseren Schätzungen, damit Sie wissen, wie sehr Sie ihnen trauen können.",
+    "notOutYet": "Ergebnisse noch nicht da",
+    "notTakenYet": "Noch nicht abgelegt",
+    "newDate": "Neues Prüfungsdatum",
+    "saveDate": "Datum speichern",
+    "save": "Ergebnisse speichern",
+    "enterOne": "Bitte mindestens ein Ergebnis eintragen.",
+    "outOfRange": "{{skill}} muss zwischen {{min}} und {{max}} liegen.",
+    "thanks": "Danke, Ihre Ergebnisse sind gespeichert. Sie helfen allen hier zu sehen, wie genau unsere Schätzungen sind.",
+    "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "skills": {
+      "listening": "Hören",
+      "reading": "Lesen",
+      "writing": "Schreiben",
+      "speaking": "Sprechen"
+    }
+  },
+  "examWeek": {
+    "title": "Ihr {{exam}} diese Woche",
+    "daysLeft_one": "{{count, number}} Tag bis zu deiner Prüfung",
+    "daysLeft_other": "{{count, number}} Tage bis zu deiner Prüfung",
+    "today": "Ihre Prüfung ist heute — viel Erfolg!",
+    "addDate": "Prüfungsdatum hinzufügen",
+    "progress": "{{done}} von {{target}} Übungen diese Woche",
+    "practiceTitle": "{{skill}} üben",
+    "practiceWhyUntried": "Diesen Teil haben Sie noch nicht probiert — ein kurzer Ausschnitt, sofort bewertet.",
+    "practiceWhyLowest": "Ihr schwächster Teil zuletzt — ein kurzer Ausschnitt, sofort bewertet.",
+    "practiceCta": "Starten",
+    "listenTitleEn": "Einen englischen Podcast hören",
+    "listenTitleFr": "Einen französischen Podcast hören",
+    "listenWhy": "15 Minuten mit Transkript — genau das zahlt sich im Hörteil aus.",
+    "listenCta": "Folge wählen",
+    "readTitle": "Ein paar Seiten lesen",
+    "readWhy": "Ihr eigenes Buch oder eines aus der Bibliothek — tippen Sie unbekannte Wörter an.",
+    "readCta": "Reader öffnen",
+    "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "skills": {
+      "celpip": {
+        "listening": "Hören",
+        "reading": "Lesen",
+        "writing": "Schreiben",
+        "speaking": "Sprechen"
+      },
+      "tcf": {
+        "listening": "Compréhension orale",
+        "reading": "Compréhension écrite",
+        "writing": "Expression écrite",
+        "speaking": "Expression orale"
+      }
+    }
+  },
+  "pendingReviews": {
+    "title": "Ausstehende Wiederholungen",
+    "totalDue": "{{count}} fällige Karten",
+    "dueOf": "{{due}} fällig von {{total}} Karten",
+    "moreDecks": "+{{count}} weitere Decks",
+    "startReview": "Wiederholen",
+    "allCaughtUp": "Alles erledigt!",
+    "allCaughtUpDesc": "Derzeit sind keine Karten zur Wiederholung fällig. Gut gemacht!"
+  },
+  "statusBar": {
+    "streakDays": "Tage-Serie",
+    "bestStreak": "Beste: {{count}}",
+    "levelShort": "Lv.{{level}}",
+    "today": "Heute",
+    "minutesToday": "{{minutes}} Min.",
+    "xpToday": "{{xp}} XP"
+  },
+  "goalSuggestion": {
+    "increaseTitle": "Gut gemacht! Zeit, dein Ziel zu steigern",
+    "decreaseTitle": "Vorschlag zur Zielanpassung",
+    "increaseDescription": "Du hast dein Ziel {{days}} Tage in Folge erreicht! Aktuell: {{current}} Wörter. Vorschlag: {{suggested}} Wörter",
+    "decreaseDescription": "Dein aktuelles Ziel scheint herausfordernd. Du hast es nur {{days}} von 7 Tagen erreicht. Vorschlag: {{suggested}} Wörter",
+    "accept": "Übernehmen ({{goal}} Wörter)",
+    "dismiss": "Vielleicht später"
+  },
+  "xp": {
+    "toNextLevel": "{{xp}} XP bis zum nächsten Level",
+    "maxLevel": "Maximales Level erreicht!"
+  },
+  "heatmap": {
+    "title": "Lern-Streak-Kalender",
+    "consecutiveDays": "aufeinanderfolgende Tage",
+    "clickToEdit": "Klicke auf einen Tag, um manuelle Lernzeit zu erfassen oder zu bearbeiten",
+    "loading": "Wird geladen...",
+    "days": {
+      "sat": "S",
+      "sun": "S",
+      "mon": "M",
+      "tue": "D",
+      "wed": "M",
+      "thu": "D",
+      "fri": "F"
+    },
+    "less": "Less",
+    "more": "Mehr",
+    "manualTime": "Manuelle Zeit erfasst",
+    "futureDate": "Zukünftiges Datum",
+    "cardsReviewed": "Karten wiederholt:",
+    "autoTime": "Automatische Zeit:",
+    "manualTimeLabel": "Manuelle Zeit:",
+    "total": "Gesamt:",
+    "minutes": "Minuten",
+    "activeDays": "Aktive Tage:",
+    "addManualTime": "Zeit manuell hinzufügen",
+    "ringLegend": "Ring = manuell erfasste Lernzeit",
+    "studyLabel": "Lernen:",
+    "listenLabel": "Hören:",
+    "readLabel": "Lesen:"
+  },
+  "manualStudy": {
+    "title": "Manuelle Lernzeit erfassen",
+    "description": "Erfasse deine Lernzeit manuell, um deinen Fortschritt zu verfolgen",
+    "date": "Datum",
+    "studyTime": "Lernzeit (Minuten)",
+    "placeholder": "z. B. 90 für eineinhalb Stunden",
+    "equivalent": "Entspricht:",
+    "error": "Fehler",
+    "invalidMinutes": "Minuten müssen zwischen 0 und 600 liegen",
+    "invalidDate": "Ungültiges Datum",
+    "futureDate": "Lernzeit für zukünftige Daten kann nicht erfasst werden",
+    "errorSaving": "Fehler beim Speichern der Lernzeit",
+    "errorDeleting": "Fehler beim Löschen der Lernzeit",
+    "delete": "Löschen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Wird gespeichert...",
+    "close": "Schließen",
+    "hours": "Stunde",
+    "minutes": "Minuten",
+    "and": "und",
+    "zeroMinutes": "0 Minuten",
+    "dayTotal": "Tagesübersicht",
+    "activityTime": "Aktivität",
+    "manualTime": "Manuell",
+    "total": "Gesamt",
+    "cloudError": "Auf diesem Computer gespeichert, aber nicht in deinem Konto. Versuche es erneut."
+  },
+  "achievements": {
+    "title": "Erfolge",
+    "unlocked": "Freigeschaltet",
+    "noAchievements": "Noch keine Erfolge",
+    "startLearning": "Fang an zu lernen, um deinen ersten Erfolg freizuschalten!",
+    "showAll": "Alle anzeigen ({{count}})",
+    "showLess": "Weniger anzeigen",
+    "levelUp": "Level aufgestiegen",
+    "levelUnlocked": "Niveau {{level}}",
+    "maxed": "Maximal erreicht",
+    "locked": "Gesperrt",
+    "levels": "Level",
+    "classic": "Klassisch",
+    "nextLevel": "Nächstes:",
+    "progress": "Fortschritt",
+    "detailTitle": "Erfolgsdetails",
+    "currentProgress": "Aktueller Fortschritt",
+    "levelsList": "Level",
+    "goAction": "Los geht's!",
+    "pointsLabel": "{{points}} XP",
+    "thresholdLabel": "{{threshold}}",
+    "nextUnlock": "Nächste Freischaltung",
+    "nextUnlockProgress": "{{current}} / {{total}} · {{pct}}% abgeschlossen",
+    "tier": {
+      "streak_master": "{{n, number}}-Tage-Serie",
+      "word_scholar": "{{n, number}} Wörter",
+      "card_master": "{{n, number}} Wiederholungen",
+      "time_investor": "{{n, number}} Minuten",
+      "episode_explorer": "{{n, number}} Folgen",
+      "bookworm": "{{n, number}} Dokumente",
+      "steady_learner": "{{n, number}} aktive Tage"
+    },
+    "groups": {
+      "streak_master": {
+        "name": "Serienmeister",
+        "hint": "Lerne an aufeinanderfolgenden Tagen. Jeder Tag in Folge zählt.",
+        "action": "Heute lernen"
+      },
+      "word_scholar": {
+        "name": "Wortgelehrter",
+        "hint": "Speichere die Wörter, die dir beim Hören und Lesen begegnen.",
+        "action": "Neue Wörter finden"
+      },
+      "card_master": {
+        "name": "Kartenmeister",
+        "hint": "Wiederhole deine Karten, wenn sie fällig werden.",
+        "action": "Wiederholung starten"
+      },
+      "time_investor": {
+        "name": "Zeitinvestor",
+        "hint": "Minuten des Lernens, Hörens und Lesens summieren sich.",
+        "action": "Weiter so"
+      },
+      "episode_explorer": {
+        "name": "Folgen-Entdecker",
+        "hint": "Starte Podcast-Folgen und höre zu.",
+        "action": "Folge auswählen"
+      },
+      "bookworm": {
+        "name": "Bücherwurm",
+        "hint": "Öffne Bücher und eigene Dateien im Reader.",
+        "action": "Reader öffnen"
+      },
+      "steady_learner": {
+        "name": "Beständiger Lerner",
+        "hint": "Sei an verschiedenen Tagen aktiv. Sie müssen nicht aufeinanderfolgen.",
+        "action": "Heute lernen"
+      }
+    }
+  },
+  "desk": {
+    "signIn": "Anmelden",
+    "retry": "Erneut versuchen",
+    "cardError": "Dieser Teil konnte nicht geladen werden.",
+    "close": "Schließen",
+    "loadErrorSome": "Einige deiner Zahlen konnten nicht geladen werden.",
+    "examSignedOutTitle": "Bereiten Sie sich auf CELPIP oder TCF vor?",
+    "examSignedOutBody": "Melde dich an, um deine Prüfung und dein Datum zu wählen, deinen Übungsfortschritt zu sehen und beides auf der Website identisch zu halten.",
+    "streakMilestone": "{{n, number}}-Tage-Serie!",
+    "streakMilestoneBody": "Weiter so. Bis morgen.",
+    "unlockedToast": "Erfolg freigeschaltet",
+    "dismiss": "Schließen",
+    "pendingSignedOut": "Deine Karten liegen auf diesem Computer."
+  },
+  "goal": {
+    "set": "Tagesziel festlegen",
+    "title": "Tägliches Lernziel",
+    "body": "Minuten pro Tag, die du lernen möchtest. Es zeichnet die gestrichelte Linie in deiner Woche.",
+    "minutes": "Minuten pro Tag",
+    "save": "Speichern",
+    "remove": "Ziel entfernen",
+    "error": "Das Ziel konnte nicht gespeichert werden.",
+    "invalid": "Gib eine Zahl von 5 bis 600 ein."
+  }
+}

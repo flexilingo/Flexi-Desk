@@ -293,11 +293,28 @@ export function findNavItem(pathname: string): { group: NavGroup; item: NavItem 
  */
 export function routeTitle(pathname: string, t: (key: string) => string): string | null {
   const hit = findNavItem(pathname);
-  return hit ? t(hit.item.labelKey) : null;
+  if (hit) return t(hit.item.labelKey);
+  const extra = EXTRA_TITLES.find(([prefix]) => under(pathname, prefix));
+  return extra ? t(extra[1]) : null;
 }
 
+/** Pages reached from inside other pages, so no sidebar entry names them. Longest prefix first. */
+const EXTRA_TITLES: ReadonlyArray<readonly [string, string]> = [
+  ['/writing-practice', 'writingPractice:title'],
+  ['/account/profile', 'account:profile.title'],
+  ['/account/friends', 'account:friends.title'],
+  ['/account/analytics', 'account:analytics.title'],
+  ['/account/xp-history', 'account:xpHistory.title'],
+  ['/account', 'accountDesk:nav.account'],
+  ['/friends', 'account:friends.title'],
+  ['/analytics', 'account:analytics.title'],
+  ['/xp-history', 'account:xpHistory.title'],
+  ['/community', 'accountDesk:nav.community'],
+  ['/pro', 'accountDesk:nav.pro'],
+];
+
 const SITE = 'https://flexilingo.com';
-const SITE_LOCALES = ['en', 'fa', 'ar', 'fr', 'hi', 'zh'];
+const SITE_LOCALES = ['en', 'fa', 'ar', 'fr', 'hi', 'zh', 'de', 'vi'];
 
 /** The website's subscription page in the learner's language (opened in the system browser). */
 export function subscriptionUrl(language: string | undefined): string {

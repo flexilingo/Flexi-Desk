@@ -1,0 +1,125 @@
+{
+  "home": {
+    "openPdf": "PDF öffnen",
+    "signInHint": "Melde dich an, um die fertige Bibliothek und dein Bücherregal hier zu sehen. Deine eigenen Dokumente sind immer hier, auf diesem Computer.",
+    "signIn": "Anmelden",
+    "retry": "Erneut versuchen",
+    "libraryFailed": "Die Bibliothek konnte gerade nicht geladen werden. Deine Dokumente sind nicht betroffen.",
+    "cancel": "Abbrechen",
+    "kindText": "Text"
+  },
+  "errors": {
+    "PDF_PASSWORD_PROTECTED": "Dieses PDF ist passwortgeschützt.",
+    "PDF_COULD_NOT_OPEN": "Dieses PDF konnte nicht geöffnet werden. Möglicherweise ist es beschädigt.",
+    "UNKNOWN_ERROR": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "DOCUMENT_NOT_FOUND": "Dieses Dokument wurde nicht gefunden.",
+    "FILE_MISSING": "Die Datei dieses Dokuments fehlt auf diesem Computer.",
+    "FILE_NOT_FOUND": "Die Datei dieses Dokuments fehlt auf diesem Computer.",
+    "NOT_A_PDF": "Diese Datei ist keine PDF.",
+    "UNSUPPORTED_FILE_TYPE": "Dieser Dateityp wird nicht unterstützt. Verwende eine PDF, JPG, PNG oder WebP.",
+    "EMPTY_FILE": "Diese Datei ist leer.",
+    "FILE_READ_FAILED": "Die Datei konnte nicht gelesen werden.",
+    "FILE_WRITE_FAILED": "Die Datei konnte auf diesem Computer nicht gespeichert werden.",
+    "INVALID_FILE_PATH": "Die Datei konnte nicht gelesen werden.",
+    "OCR_FAILED": "Das Lesen dieser Seite ist fehlgeschlagen.",
+    "OCR_PAGE_FAILED": "Das Lesen dieser Seite ist fehlgeschlagen.",
+    "POSITION_SAVE_FAILED": "Deine Stelle im Buch konnte nicht gespeichert werden.",
+    "WORD_LOG_FAILED": "Dieses Wort konnte nicht in deiner Liste gespeichert werden.",
+    "DOCUMENTS_FETCH_FAILED": "Deine Dokumente konnten nicht geladen werden.",
+    "DOCUMENT_FETCH_FAILED": "Dieses Dokument wurde nicht gefunden.",
+    "DOCUMENT_CREATE_FAILED": "Die Datei konnte auf diesem Computer nicht gespeichert werden.",
+    "INVALID_FILE": "Dieses Foto konnte nicht gelesen werden.",
+    "OCR_ENGINE_FAILED": "Die Leseengine konnte auf diesem Computer nicht gestartet werden.",
+    "OCR_LANGUAGE_DOWNLOAD_FAILED": "Die Lesedaten für diese Sprache konnten nicht heruntergeladen werden. Prüfe die Verbindung und versuche es erneut.",
+    "BOOK_NOT_FOUND": "Dieses Buch wurde nicht gefunden.",
+    "PAGE_NOT_FOUND": "Diese Seite wurde nicht gefunden.",
+    "PAGE_FETCH_FAILED": "Diese Seite konnte nicht geladen werden.",
+    "EMPTY_TEXT": "Es gibt keinen Text zum Hinzufügen.",
+    "TEXT_TOO_LONG": "Dieser Text ist zu lang zum Hinzufügen. Teile ihn in Abschnitte auf.",
+    "INVALID_URL": "Das ist keine Webadresse. Sie sollte mit https:// beginnen",
+    "URL_FETCH_FAILED": "Die Seite konnte nicht abgerufen werden. Prüfe die Adresse und deine Verbindung.",
+    "URL_NOT_TEXT": "Diese Adresse ist keine Webseite mit Text.",
+    "URL_TOO_LARGE": "Diese Seite ist zu groß zum Hinzufügen.",
+    "URL_NO_TEXT": "Auf dieser Seite wurde kein lesbarer Text gefunden."
+  },
+  "upload": {
+    "hint": {
+      "file": "PDF, JPG, PNG oder WebP. Keine Größenbegrenzung.",
+      "text": "Füge einen beliebigen Text ein, den du lesen möchtest. Er wird in Seiten aufgeteilt und bleibt auf diesem Computer.",
+      "url": "Füge die Adresse einer Webseite ein. Ihr Text wird abgerufen und auf diesem Computer gespeichert."
+    },
+    "filterName": "PDFs und Fotos",
+    "privacy": "Bleibt auf diesem Computer. Es wird nichts hochgeladen.",
+    "submitting": "Wird hinzugefügt...",
+    "clear": "Andere Datei wählen",
+    "dropHere": "Zum Hinzufügen zu deiner Lektüre ablegen",
+    "duplicate": {
+      "again": "Neue Kopie hinzufügen"
+    },
+    "mode": {
+      "file": "Datei",
+      "text": "Text einfügen",
+      "url": "Von einer Webseite"
+    },
+    "text": {
+      "label": "Text",
+      "placeholder": "Text hier einfügen oder eingeben",
+      "title": "Titel (optional)",
+      "titlePlaceholder": "Wird aus der ersten Zeile übernommen, wenn leer"
+    },
+    "url": {
+      "label": "Adresse der Webseite",
+      "autoLanguage": "Von der Seite erkennen"
+    },
+    "privacyUrl": "Die Seite wird von diesem Computer abgerufen und hier gespeichert."
+  },
+  "ocr": {
+    "downloading": "Lesedaten für {{language}} werden heruntergeladen… {{percent}}%",
+    "languageFallback": "Dieses Dokument wird als Englisch gelesen"
+  },
+  "notes": {
+    "saveFailed": "Die Notiz konnte nicht gespeichert werden. Dein Text ist noch da – versuche es erneut.",
+    "deleteFailed": "Die Notiz konnte nicht gelöscht werden. Versuche es erneut.",
+    "bold": "Fett",
+    "italic": "Kursiv",
+    "list": "Aufzählung",
+    "preview": "Vorschau",
+    "write": "Bearbeiten"
+  },
+  "library": {
+    "level": "Niveau",
+    "levelName": {
+      "A1": "Anfänger",
+      "A2": "Grundstufe",
+      "B1": "Mittelstufe",
+      "B2": "Obere Mittelstufe",
+      "C1": "Fortgeschritten",
+      "C2": "Kompetenz"
+    },
+    "clearAll": "Alles zurücksetzen",
+    "pages": "Seiten",
+    "prevPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite",
+    "pageN": "Seite {{n}}"
+  },
+  "language": {
+    "set": "Sprache auf {{language}} gesetzt",
+    "change": "Ändern",
+    "dismiss": "Schließen",
+    "detected": "Aus dem Text erkannt: {{language}}"
+  },
+  "audio": {
+    "hostedNeedsAccount": "Die Aufnahmen dieses Buchs werden in deinem Konto aufbewahrt und nur für eine Kopie in deiner Online-Bibliothek freigegeben. Diese Kopie liegt auf diesem Computer, deshalb können sie hier noch nicht abgespielt werden.",
+    "hostedFailed": "Die Aufnahmen konnten gerade nicht geladen werden. Prüfe deine Verbindung und deine Anmeldung und öffne dieses Fenster dann erneut.",
+    "signInForEditions": "Melde dich an, um dem Reader mitzuteilen, welches veröffentlichte Buch das ist. Aufnahmen, Videos und Untertitel kommen dann dazu."
+  },
+  "book": {
+    "backToBook": "Zurück zum Buch",
+    "playFailed": "Diese Aufnahme konnte nicht abgespielt werden.",
+    "lockedTitle": "Untertitel: {{n}} von {{required}} vollständigen Durchgängen",
+    "lockedHeading": "Erst hören, dann lesen",
+    "lockedRule_one": "Die Untertitel öffnen sich, wenn du diesen Track einmal vollständig gehört hast: von Anfang bis Ende, ohne vorzuspulen. Zurückspulen ist erlaubt. Schneller als 1× zählt nicht.",
+    "lockedRule_other": "Die Untertitel öffnen sich, wenn du diesen Track {{required}}-mal vollständig gehört hast: von Anfang bis Ende, ohne vorzuspulen. Zurückspulen ist erlaubt. Schneller als 1× zählt nicht.",
+    "lockedProgress": "Vollständig gehört: {{n}} von {{required}}"
+  }
+}

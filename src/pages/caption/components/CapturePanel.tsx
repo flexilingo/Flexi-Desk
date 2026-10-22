@@ -1,11 +1,13 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Square, Mic, Loader2, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useCaptionStore } from '../stores/captionStore';
 import { formatDuration } from '../types';
 
 export function CapturePanel() {
+  const { t } = useTranslation('caption');
   const {
     captionStatus,
     captureElapsed,
@@ -58,11 +60,21 @@ export function CapturePanel() {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={goBack} disabled={isCapturing}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={goBack}
+            disabled={isCapturing}
+            aria-label={t('common.back')}
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <CardTitle>
-            {isCapturing ? 'Recording in Progress' : isTranscribing ? 'Transcribing…' : 'Recording'}
+            {isCapturing
+              ? t('capture.recordingInProgress')
+              : isTranscribing
+                ? t('capture.transcribing')
+                : t('capture.recording')}
           </CardTitle>
         </div>
       </CardHeader>
@@ -99,16 +111,21 @@ export function CapturePanel() {
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {isCapturing
-                ? `Recording • ${captionStatus?.deviceName ?? 'Microphone'}`
+                ? t('capture.recordingWith', {
+                    device: captionStatus?.deviceName ?? t('common.microphone'),
+                  })
                 : isTranscribing
-                  ? 'Processing audio with Whisper…'
-                  : 'Stopped'}
+                  ? t('capture.processing')
+                  : t('capture.stopped')}
             </p>
           </div>
 
           {/* Language indicator */}
           <div className="rounded-md bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-            Language: {captureLanguage === 'auto' ? 'Auto-detect' : captureLanguage.toUpperCase()}
+            {t('common.languageLine', {
+              value:
+                captureLanguage === 'auto' ? t('common.autoDetect') : captureLanguage.toUpperCase(),
+            })}
           </div>
         </div>
       </CardContent>
@@ -117,13 +134,13 @@ export function CapturePanel() {
         {isCapturing && (
           <Button variant="destructive" size="lg" onClick={handleStop}>
             <Square className="h-4 w-4" />
-            Stop Recording
+            {t('capture.stop')}
           </Button>
         )}
 
         {!isCapturing && !isTranscribing && (
           <Button variant="outline" onClick={goBack}>
-            Back to Sessions
+            {t('capture.backToSessions')}
           </Button>
         )}
       </CardFooter>

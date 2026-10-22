@@ -1,0 +1,115 @@
+{
+  "subscribe": "Đăng ký",
+  "title": "Video",
+  "searchPlaceholder": "Tìm video…",
+  "pinned": "Đã ghim",
+  "empty": {
+    "title": "Không tìm thấy video",
+    "subtitle": "Hãy bỏ bớt bộ lọc hoặc tìm nội dung khác."
+  },
+  "resultCount": "{{count}} video",
+  "matchCountNone": "Không có video nào phù hợp",
+  "matchCount_other": "{{count}} video phù hợp",
+  "matchCount": "{{count}} video phù hợp",
+  "removeFilter": "Bỏ bộ lọc: {{name}}",
+  "minutes": "{{count}} phút",
+  "backToCatalogue": "Quay lại video",
+  "notFound": {
+    "title": "Không tìm thấy video",
+    "subtitle": "Có thể nó đã bị gỡ khỏi danh mục."
+  },
+  "subtitle": "Video thật với phụ đề tương tác. Chạm vào bất kỳ từ nào để xem nghĩa rồi thêm thẳng vào bộ thẻ.",
+  "views": {
+    "newest": "Mới nhất",
+    "newestHint": "Những video được thêm gần đây nhất.",
+    "shortest": "Video ngắn",
+    "shortestHint": "Video ngắn — hợp khi bạn chỉ có vài phút.",
+    "longest": "Video dài",
+    "longestHint": "Video dài hơn để xem thong thả."
+  },
+  "browseByTopic": "Duyệt theo chủ đề",
+  "channels": {
+    "heading": "Kênh",
+    "videoCount_other": "{{count}} video",
+    "videoCount": "{{count}} video",
+    "totalCount": "{{count}} kênh",
+    "searchPlaceholder": "Tìm kênh…",
+    "allLanguages": "Tất cả",
+    "clear": "Xóa",
+    "empty": "Không có kênh phù hợp."
+  },
+  "channel": {
+    "videoCount_other": "{{count}} video",
+    "videoCount": "{{count}} video",
+    "openOnYoutube": "Mở trên YouTube"
+  },
+  "categories": {
+    "learning": "Học tập",
+    "stories": "Truyện",
+    "podcast": "Podcast",
+    "news": "Tin Tức",
+    "culture": "Văn Hóa",
+    "music": "Âm Nhạc",
+    "other": "Khác"
+  },
+  "filters": {
+    "category": "Danh Mục",
+    "allCategories": "Tất Cả Danh Mục"
+  },
+  "music": {
+    "signInTitle": "Mục âm nhạc dành cho người đã đăng nhập",
+    "signInBody": "Học với những bài hát thật và theo dõi lời bài hát từng từ. Đăng nhập hoặc tạo tài khoản miễn phí để mở mục âm nhạc.",
+    "signIn": "Đăng nhập"
+  },
+  "player": {
+    "openOnYoutube": "Xem trên YouTube",
+    "openChannel": "Mở kênh",
+    "openChannelNamed": "Mở {{channel}}"
+  },
+  "upNext": {
+    "heading": "Tiếp theo",
+    "sub": "Thêm từ kênh này và đúng trình độ của bạn",
+    "empty": "Chưa có video nào khác để gợi ý."
+  },
+  "podcasts": {
+    "filterAllLevels": "Tất Cả Cấp Độ",
+    "cefrBeginner": "Sơ Cấp",
+    "cefrElementary": "Tiểu Học",
+    "cefrIntermediate": "Trung Cấp",
+    "cefrUpperIntermediate": "Trung cấp cao",
+    "cefrAdvanced": "Nâng Cao",
+    "cefrProficiency": "Thành Thạo",
+    "filterByLanguage": "Ngôn Ngữ",
+    "filterAllLanguages": "Tất cả ngôn ngữ",
+    "clearFilters": "Xóa",
+    "filterView": "Xem",
+    "filterTopic": "Chủ Đề",
+    "filterAllTopics": "Tất cả chủ đề",
+    "filterDuration": "Thời lượng",
+    "filterAnyDuration": "Mọi thời lượng",
+    "filterDurationUnder": "Dưới {{minutes}} phút",
+    "clearAllFilters": "Xóa tất cả",
+    "seeAll": "Xem tất cả",
+    "videoUnavailableTitle": "Không thể tải video này tại đây",
+    "videoUnavailableBody": "Hiện không thể truy cập YouTube từ kết nối của bạn. Hãy thử lại, hoặc xem trên YouTube — bạn vẫn có thể đọc bản chép lời và học từ vựng tại đây.",
+    "videoUnavailableRetry": "Thử lại",
+    "videoUnavailableOpen": "Xem trên YouTube",
+    "expandPlayer": "Mở Rộng",
+    "closePlayer": "Đóng",
+    "play": "Phát",
+    "pause": "Tạm dừng"
+  },
+  "loading": "Đang tải…",
+  "retry": "Thử lại",
+  "loadError": "Không thể tải video. Hãy kiểm tra kết nối và thử lại.",
+  "pagination": {
+    "previous": "Trước",
+    "next": "Tiếp",
+    "page": "Trang {{page}} trên {{total}}"
+  },
+  "watch": {
+    "preparing": "Đang mở video…",
+    "importFailed": "Không thể mở video này. Hãy thử lại."
+  },
+  "watchWithSubtitles": "Xem kèm phụ đề"
+}

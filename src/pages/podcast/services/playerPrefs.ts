@@ -13,15 +13,14 @@ export interface PlayerPrefs {
   volume: number;
   subtitlesEnabled: boolean;
   fontSize: number;
-  subtitleBgOpacity: number;
+  contextLines: number | null;
   autoPauseOnBoundary: boolean;
   pauseOnHover: boolean;
-  subtitleAlignment: 'left' | 'center' | 'right';
 }
 
 const KEY = 'podcast_player_prefs';
 
-const ALIGNMENTS = ['left', 'center', 'right'] as const;
+const CONTEXT_LINES = [0, 1, 2, 3] as const;
 
 function clamp(n: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n));
@@ -42,12 +41,13 @@ function coerce(raw: unknown): Partial<PlayerPrefs> {
   if (typeof r.subtitlesEnabled === 'boolean') out.subtitlesEnabled = r.subtitlesEnabled;
   if (typeof r.fontSize === 'number' && Number.isFinite(r.fontSize))
     out.fontSize = clamp(r.fontSize, 12, 72);
-  if (typeof r.subtitleBgOpacity === 'number' && Number.isFinite(r.subtitleBgOpacity))
-    out.subtitleBgOpacity = clamp(r.subtitleBgOpacity, 0, 100);
+  if (
+    r.contextLines === null ||
+    CONTEXT_LINES.includes(r.contextLines as (typeof CONTEXT_LINES)[number])
+  )
+    out.contextLines = r.contextLines as number | null;
   if (typeof r.autoPauseOnBoundary === 'boolean') out.autoPauseOnBoundary = r.autoPauseOnBoundary;
   if (typeof r.pauseOnHover === 'boolean') out.pauseOnHover = r.pauseOnHover;
-  if (ALIGNMENTS.includes(r.subtitleAlignment as (typeof ALIGNMENTS)[number]))
-    out.subtitleAlignment = r.subtitleAlignment as PlayerPrefs['subtitleAlignment'];
 
   return out;
 }

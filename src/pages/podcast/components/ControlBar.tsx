@@ -1,38 +1,30 @@
-import { useRef, useState, useEffect, type ReactNode } from 'react';
+import { useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  AlignCenter,
-  AlignLeft,
-  AlignRight,
-  BookOpen,
-  Bookmark,
-  Layers,
-  PictureInPicture2,
   Captions,
   CaptionsOff,
-  Focus,
-  Gauge,
-  HelpCircle,
   Languages,
   Library,
   Loader2,
-  LogOut,
+  Maximize,
   MessageCircle,
-  Microscope,
-  MoreHorizontal,
-  NotebookPen,
+  Minimize,
   Pause,
+  PictureInPicture2,
   Play,
   SkipBack,
   SkipForward,
-  SlidersHorizontal,
   Timer,
   Volume1,
   Volume2,
   VolumeX,
+  Waypoints,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
-function formatTime(seconds: number): string {
+export function formatTime(seconds: number): string {
+  if (!isFinite(seconds) || seconds < 0) seconds = 0;
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
@@ -40,545 +32,829 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+const SPEED_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+/** Lines shown before and after the spoken one; null = as many as fit (website: CONTEXT_LINE_CHOICES). */
+export const CONTEXT_LINE_CHOICES: (number | null)[] = [0, 1, 2, 3, null];
+// A tool's cell in the balanced tools rows, by tools per row (literal classes).
+const TOOL_CELL: Record<number, string> = { 1: 'w-full', 2: 'w-1/2', 3: 'w-1/3', 4: 'w-1/4' };
+
 interface ControlBarProps {
   isPlaying: boolean;
-  isBuffering?: boolean;
+  /** Play was asked for and the sound is not there yet: a spinner on the play button. */
+  isLoading?: boolean;
   currentTime: number;
   duration: number;
+  /** Length to show until the media reports its own. */
+  fallbackDuration?: number;
   volume: number;
-  isMuted: boolean;
   playbackRate: number;
   onPlayPause: () => void;
   onSeek: (seconds: number) => void;
   onSeekTo: (time: number) => void;
+  /** A line back / forward; absent, the buttons move 5 seconds. */
+  onPrevLine?: () => void;
+  onNextLine?: () => void;
   onToggleMute: () => void;
   onSpeedChange: (rate: number) => void;
   onVolumeChange: (volume: number) => void;
-  focusMode?: boolean;
-  subtitlesEnabled?: boolean;
-  onToggleFocusMode?: () => void;
-  onToggleSubtitles?: () => void;
-  onNote?: () => void;
-  onExit?: () => void;
-  /** Open the insights drawer on a given tab (the collapsed rail was removed). */
-  onOpenVocab?: () => void;
-  onOpenAnalysis?: () => void;
+  /**
+   * "card": the now-playing card — scrubber, transport, the tools in at most two balanced rows.
+   * "strip": a video in full screen — one slim row under the picture.
+   */
+  layout?: 'card' | 'strip';
+  hasCurrentSegment?: boolean;
+  onVocab?: () => void;
+  onTranslateSentence?: () => void;
+  onAnalyzeSentence?: () => void;
+  onSyncClick?: () => void;
+  onPictureInPicture?: () => void;
+  pipActive?: boolean;
+  /** A video's full screen (F). */
+  onToggleFullscreen?: () => void;
+  fullscreen?: boolean;
+  /** Opens the Listening Program picker. */
+  onOpenProgram?: () => void;
   // Subtitle settings
+  subtitlesEnabled?: boolean;
+  onToggleSubtitles?: () => void;
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
-  subtitleBgOpacity?: number;
-  onSubtitleBgOpacityChange?: (opacity: number) => void;
-  // Cloud features
-  hasCurrentSegment?: boolean;
-  onAnalyzeSentence?: () => void;
-  onTranslateSentence?: () => void;
-  onGrammarSentence?: () => void;
-  onHelp?: () => void;
-  // Sync
-  onSyncClick?: () => void;
-  // Auto-pause / hover pause / alignment
+  contextLines?: number | null;
+  onContextLinesChange?: (lines: number | null) => void;
   autoPauseOnSubtitle?: boolean;
   onToggleAutoPause?: () => void;
   pauseOnWordHover?: boolean;
-  onTogglePauseOnHover?: () => void;
-  translationAlignment?: 'left' | 'center' | 'right';
-  onTranslationAlignmentChange?: (alignment: 'left' | 'center' | 'right') => void;
-  /** Previous/next LINE (the website's behavior); without them the buttons move 5 s. */
-  onPrevLine?: () => void;
-  onNextLine?: () => void;
-  /** Bookmark the moment (B). */
-  onBookmark?: () => void;
-  bookmarked?: boolean;
-  /** Picture-in-Picture (P); undefined where the webview cannot float anything. */
-  onTogglePip?: () => void;
-  pipActive?: boolean;
-  /** Opens the Listening Program launcher ("Practice"). */
-  onPractice?: () => void;
+  onTogglePauseOnWordHover?: () => void;
+  /** Where these subtitles come from, and this computer's copy (desk only), under the settings. */
+  subtitleSourceSlot?: ReactNode;
 }
 
-const SPEED_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
-
+/** The now-playing transport and tools (website: `ControlBar`, layouts "card" and "strip"). */
 export function ControlBar({
   isPlaying,
-  isBuffering = false,
+  isLoading = false,
   currentTime,
   duration,
+  fallbackDuration = 0,
   volume,
-  isMuted,
   playbackRate,
   onPlayPause,
   onSeek,
   onSeekTo,
+  onPrevLine,
+  onNextLine,
   onToggleMute,
   onSpeedChange,
   onVolumeChange,
-  focusMode = false,
-  subtitlesEnabled = true,
-  onToggleFocusMode,
-  onToggleSubtitles,
-  onNote,
-  onExit,
-  onOpenVocab,
-  onOpenAnalysis,
-  hasCurrentSegment,
-  onAnalyzeSentence,
+  layout = 'card',
+  hasCurrentSegment = false,
+  onVocab,
   onTranslateSentence,
-  onGrammarSentence,
-  onHelp,
-  fontSize,
-  onFontSizeChange,
-  subtitleBgOpacity,
-  onSubtitleBgOpacityChange,
+  onAnalyzeSentence,
   onSyncClick,
-  autoPauseOnSubtitle,
+  onPictureInPicture,
+  pipActive = false,
+  onToggleFullscreen,
+  fullscreen = false,
+  onOpenProgram,
+  subtitlesEnabled = true,
+  onToggleSubtitles,
+  fontSize = 35,
+  onFontSizeChange,
+  contextLines = null,
+  onContextLinesChange,
+  autoPauseOnSubtitle = false,
   onToggleAutoPause,
-  pauseOnWordHover,
-  onTogglePauseOnHover,
-  translationAlignment,
-  onTranslationAlignmentChange,
-  onPrevLine,
-  onNextLine,
-  onBookmark,
-  bookmarked,
-  onTogglePip,
-  pipActive,
-  onPractice,
+  pauseOnWordHover = false,
+  onTogglePauseOnWordHover,
+  subtitleSourceSlot,
 }: ControlBarProps) {
-  const { t } = useTranslation();
-  const { t: tp } = useTranslation('podcastUi');
+  const { t } = useTranslation('podcastUi');
   const { t: tl } = useTranslation('listening');
-  const [showSpeedPopover, setShowSpeedPopover] = useState(false);
-  const [showVolumePopover, setShowVolumePopover] = useState(false);
-  const [showSubtitlePopover, setShowSubtitlePopover] = useState(false);
-  const [showMorePopover, setShowMorePopover] = useState(false);
-  const speedRef = useRef<HTMLDivElement>(null);
-  const volumeRef = useRef<HTMLDivElement>(null);
-  const subtitleRef = useRef<HTMLDivElement>(null);
-  const moreRef = useRef<HTMLDivElement>(null);
+  const [speedOpen, setSpeedOpen] = useState(false);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const [subtitleOpen, setSubtitleOpen] = useState(false);
 
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const displayVolume = isMuted ? 0 : volume;
+  const back = onPrevLine
+    ? { label: t('np.prevLine'), hint: t('np.prevLineHint'), onClick: onPrevLine }
+    : { label: '-5s', hint: undefined, onClick: () => onSeek(-5) };
+  const forward = onNextLine
+    ? { label: t('np.nextLine'), hint: t('np.nextLineHint'), onClick: onNextLine }
+    : { label: '+5s', hint: undefined, onClick: () => onSeek(5) };
+  const isMuted = volume === 0;
+  const shownDuration = duration > 0 ? duration : fallbackDuration;
+  const timeLeft = Math.max(0, shownDuration - currentTime);
+  const playLabel = isPlaying || isLoading ? t('np.pause') : t('np.play');
+  const fullscreenLabel = fullscreen ? t('np.npExitFullscreen') : t('np.npFullscreen');
+  const volumeIcon = (cls: string) =>
+    isMuted ? (
+      <VolumeX className={cls} />
+    ) : volume < 0.5 ? (
+      <Volume1 className={cls} />
+    ) : (
+      <Volume2 className={cls} />
+    );
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (speedRef.current && !speedRef.current.contains(e.target as Node))
-        setShowSpeedPopover(false);
-      if (volumeRef.current && !volumeRef.current.contains(e.target as Node))
-        setShowVolumePopover(false);
-      if (subtitleRef.current && !subtitleRef.current.contains(e.target as Node))
-        setShowSubtitlePopover(false);
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMorePopover(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    onSeekTo(percent * duration);
+  // ── Scrubber: pointer events, so it can be dragged; the knob follows the pointer ──
+  const [dragPercent, setDragPercent] = useState<number | null>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const percentFrom = (clientX: number) => {
+    const rect = barRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return 0;
+    return Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
   };
-
-  const hasCenter = !!(
-    onOpenVocab ||
-    onOpenAnalysis ||
-    onToggleSubtitles ||
-    onNote ||
-    onAnalyzeSentence ||
-    onTranslateSentence ||
-    onGrammarSentence
-  );
-  const hasRight = !!(onSyncClick || onFontSizeChange || onToggleFocusMode || onHelp || onExit);
-
-  return (
-    <div className="flex flex-col shrink-0 py-1.5 px-2 md:py-2 md:px-4 border-t border-border bg-card">
-      {/* Progress bar + time */}
-      <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+  const shownPercent =
+    dragPercent !== null
+      ? dragPercent * 100
+      : shownDuration > 0
+        ? (currentTime / shownDuration) * 100
+        : 0;
+  const scrubberBar = (
+    <div
+      className="group -my-1.5 cursor-pointer touch-none py-2.5"
+      onPointerDown={(e) => {
+        if (!duration) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        const pct = percentFrom(e.clientX);
+        setDragPercent(pct);
+        onSeekTo(pct * duration);
+      }}
+      onPointerMove={(e) => {
+        if (dragPercent === null || !duration) return;
+        setDragPercent(percentFrom(e.clientX));
+      }}
+      onPointerUp={(e) => {
+        if (dragPercent === null) return;
+        const pct = percentFrom(e.clientX);
+        setDragPercent(null);
+        if (duration) onSeekTo(pct * duration);
+      }}
+      onPointerCancel={() => setDragPercent(null)}
+    >
+      <div ref={barRef} dir="ltr" className="relative h-1.5 rounded-full bg-input">
         <div
-          className="flex-1 h-1.5 bg-border rounded-sm cursor-pointer relative min-w-0"
-          onClick={handleProgressClick}
-        >
-          <div
-            className="h-full bg-primary rounded-sm transition-[width] duration-100 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
-          <div
-            className="absolute top-1/2 w-3 h-3 bg-primary rounded-full -translate-x-1/2 -translate-y-1/2 shadow-md transition-[left] duration-100 border-2 border-background"
-            style={{ left: `${progressPercent}%` }}
-          />
-        </div>
-        <div className="flex gap-1 text-[10px] md:text-xs font-mono text-muted-foreground whitespace-nowrap flex-shrink-0">
-          <span>{formatTime(currentTime)}</span>
-          <span className="opacity-50">/</span>
-          <span>{formatTime(duration)}</span>
-        </div>
+          className={cn(
+            'h-full rounded-full bg-primary-light',
+            dragPercent === null && 'transition-[width] duration-100 ease-out',
+          )}
+          style={{ width: `${shownPercent}%` }}
+        />
+        <div
+          className={cn(
+            'absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-card bg-primary shadow-md group-hover:scale-110',
+            dragPercent === null ? 'transition-[left,transform] duration-100' : 'scale-125',
+          )}
+          style={{ left: `${shownPercent}%` }}
+        />
       </div>
+    </div>
+  );
 
-      {/* Controls row — 3 groups: LEFT | CENTER | RIGHT */}
-      <div className="flex items-center justify-between gap-1 md:gap-2 flex-wrap min-h-[40px]">
-        {/* LEFT: Playback controls */}
-        <div className="flex items-center gap-0.5 md:gap-1">
-          <ControlButton
-            icon={<SkipBack className="w-full h-full" />}
-            label={onPrevLine ? tp('prevLine') : '-5s'}
-            shortcut={onPrevLine ? '\u2190' : undefined}
-            onClick={() => (onPrevLine ? onPrevLine() : onSeek(-5))}
+  const dialogs = (
+    <>
+      <Dialog open={volumeOpen} onOpenChange={setVolumeOpen}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>{t('np.volume')}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-3 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onToggleMute}
+                title={isMuted ? t('np.unmute') : t('np.mute')}
+                aria-label={isMuted ? t('np.unmute') : t('np.mute')}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-input bg-card text-primary transition-colors hover:bg-muted"
+              >
+                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              </button>
+              <RangeSlider
+                min={0}
+                max={100}
+                step={5}
+                value={Math.round(volume * 100)}
+                onChange={(v) => onVolumeChange(v / 100)}
+                label={t('np.volume')}
+                className="flex-1"
+              />
+              <span className="w-11 text-end text-sm font-semibold tabular-nums text-foreground">
+                {Math.round(volume * 100)}%
+              </span>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {[0, 0.25, 0.5, 0.75, 1].map((v) => {
+                const on = Math.abs(volume - v) < 0.05;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => onVolumeChange(v)}
+                    className={cn(
+                      'inline-flex h-10 items-center justify-center rounded-md border text-xs font-semibold tabular-nums transition-colors',
+                      on
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-input bg-card text-foreground hover:bg-muted',
+                    )}
+                  >
+                    {v * 100}%
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={speedOpen} onOpenChange={setSpeedOpen}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>{t('np.speed')}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {SPEED_RATES.map((rate) => {
+              const on = Math.abs(playbackRate - rate) < 0.01;
+              return (
+                <button
+                  key={rate}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => {
+                    onSpeedChange(rate);
+                    setSpeedOpen(false);
+                  }}
+                  className={cn(
+                    'inline-flex h-12 items-center justify-center rounded-md border text-[15px] font-semibold tabular-nums transition-colors',
+                    on
+                      ? 'border-accent bg-accent text-accent-foreground'
+                      : 'border-input bg-card text-foreground hover:bg-muted',
+                  )}
+                >
+                  {rate}x
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {onFontSizeChange && (
+        <Dialog open={subtitleOpen} onOpenChange={setSubtitleOpen}>
+          <DialogContent className="max-h-[85vh] max-w-sm overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{t('np.subtitleSettings')}</DialogTitle>
+            </DialogHeader>
+            <div className="mt-3 flex flex-col gap-5">
+              {onToggleSubtitles && (
+                <div className="border-b border-border pb-4">
+                  <PopoverToggle
+                    label={t('np.npShowSubtitles')}
+                    checked={subtitlesEnabled}
+                    onChange={onToggleSubtitles}
+                  />
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">{t('np.fontSize')}</span>
+                  <span className="text-sm font-semibold tabular-nums text-foreground">
+                    {Math.min(fontSize, 48)}px
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span aria-hidden className="text-xs font-semibold text-muted-foreground">
+                    A
+                  </span>
+                  <RangeSlider
+                    min={12}
+                    max={48}
+                    step={1}
+                    value={Math.min(fontSize, 48)}
+                    onChange={onFontSizeChange}
+                    label={t('np.fontSize')}
+                    className="flex-1"
+                  />
+                  <span
+                    aria-hidden
+                    className="text-lg font-semibold leading-none text-muted-foreground"
+                  >
+                    A
+                  </span>
+                </div>
+              </div>
+              {onContextLinesChange && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium text-foreground">
+                    {t('np.npContextLines')}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CONTEXT_LINE_CHOICES.map((choice) => {
+                      const on = contextLines === choice;
+                      return (
+                        <button
+                          key={choice ?? 'auto'}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() => onContextLinesChange(choice)}
+                          className={cn(
+                            'inline-flex h-9 min-w-[44px] items-center justify-center rounded-md border px-3 text-sm tabular-nums transition-colors',
+                            on
+                              ? 'border-primary-light/40 bg-primary-light/15 font-semibold text-primary'
+                              : 'border-input bg-card text-muted-foreground hover:bg-muted hover:text-foreground',
+                          )}
+                        >
+                          {choice ?? t('np.npContextAuto')}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-caption">{t('np.npContextHint')}</p>
+                </div>
+              )}
+              {(onToggleAutoPause || onTogglePauseOnWordHover) && (
+                <div className="flex flex-col gap-3.5 border-t border-border pt-4">
+                  {onToggleAutoPause && (
+                    <PopoverToggle
+                      label={t('np.autoPauseLabel')}
+                      checked={autoPauseOnSubtitle}
+                      onChange={onToggleAutoPause}
+                    />
+                  )}
+                  {onTogglePauseOnWordHover && (
+                    <PopoverToggle
+                      label={t('np.pauseOnWordHover')}
+                      checked={pauseOnWordHover}
+                      onChange={onTogglePauseOnWordHover}
+                    />
+                  )}
+                </div>
+              )}
+              {subtitleSourceSlot && (
+                <div className="flex flex-col gap-2 border-t border-border pt-4">
+                  {subtitleSourceSlot}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+
+  // The tools that act on the lines.
+  const tools = [
+    onVocab && (
+      <DockTool
+        key="vocab"
+        icon={<Library className="h-5 w-5" />}
+        label={t('np.vocabLabel')}
+        onClick={onVocab}
+      />
+    ),
+    onTranslateSentence && (
+      <DockTool
+        key="translate"
+        icon={<Languages className="h-5 w-5" />}
+        label={t('np.translateLabel')}
+        hint={`${t('np.translateLabel')} (T)`}
+        disabled={!hasCurrentSegment}
+        onClick={onTranslateSentence}
+      />
+    ),
+    onAnalyzeSentence && (
+      <DockTool
+        key="lena"
+        icon={<MessageCircle className="h-5 w-5" />}
+        label={t('np.askLena')}
+        hint={`${t('np.askLena')} (A)`}
+        disabled={!hasCurrentSegment}
+        onClick={onAnalyzeSentence}
+      />
+    ),
+    onSyncClick && (
+      <DockTool
+        key="sync"
+        icon={<Timer className="h-5 w-5" />}
+        label={t('np.syncLabel')}
+        hint={`${t('np.syncLabel')} (S)`}
+        onClick={onSyncClick}
+      />
+    ),
+    onFontSizeChange && (
+      <DockTool
+        key="subtitle"
+        icon={
+          subtitlesEnabled ? <Captions className="h-5 w-5" /> : <CaptionsOff className="h-5 w-5" />
+        }
+        label={t('np.subtitleLabel')}
+        hint={`${t('np.subtitleSettings')} (C)`}
+        active={subtitleOpen}
+        onClick={() => setSubtitleOpen(true)}
+      />
+    ),
+    onToggleFullscreen && (
+      <DockTool
+        key="fullscreen"
+        icon={<Maximize className="h-5 w-5" />}
+        label={fullscreenLabel}
+        hint={`${fullscreenLabel} (F)`}
+        onClick={onToggleFullscreen}
+      />
+    ),
+    onPictureInPicture && (
+      <DockTool
+        key="pip"
+        icon={<PictureInPicture2 className="h-5 w-5" />}
+        label={t('np.npPip')}
+        hint={`${pipActive ? t('np.npPipClose') : t('np.npPipHint')} (P)`}
+        active={pipActive}
+        onClick={onPictureInPicture}
+      />
+    ),
+    onOpenProgram && (
+      <DockTool
+        key="program"
+        icon={<Waypoints className="h-5 w-5" />}
+        label={tl('launcher.label')}
+        onClick={onOpenProgram}
+      />
+    ),
+  ].filter((tool): tool is ReactElement => !!tool);
+
+  if (layout === 'strip') {
+    return (
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border bg-card px-6 py-2">
+        <div className="order-1 flex items-center justify-center gap-1">
+          <IconTool
+            icon={<SkipBack className="h-5 w-5" />}
+            label={back.hint ?? back.label}
+            onClick={back.onClick}
           />
-          <ControlButton
-            icon={
-              isBuffering ? (
-                <Loader2 className="w-full h-full animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="w-full h-full" />
-              ) : (
-                <Play className="w-full h-full" />
-              )
-            }
-            label={
-              isBuffering
-                ? tp('shared.loading')
-                : isPlaying
-                  ? t('podcast.pause')
-                  : t('podcast.play')
-            }
+          <BigPlayButton
+            size={44}
+            isPlaying={isPlaying}
+            isLoading={isLoading}
+            label={playLabel}
             onClick={onPlayPause}
-            primary
           />
-          <ControlButton
-            icon={<SkipForward className="w-full h-full" />}
-            label={onNextLine ? tp('nextLine') : '+5s'}
-            shortcut={onNextLine ? '\u2192' : undefined}
-            onClick={() => (onNextLine ? onNextLine() : onSeek(5))}
+          <IconTool
+            icon={<SkipForward className="h-5 w-5" />}
+            label={forward.hint ?? forward.label}
+            onClick={forward.onClick}
           />
-
-          {/* Volume */}
-          <div className="relative" ref={volumeRef}>
-            <ControlButton
+        </div>
+        <div className="order-2 flex min-w-0 flex-1 basis-0 items-center gap-3 text-xs tabular-nums text-muted-foreground">
+          <span className="font-semibold text-foreground">{formatTime(currentTime)}</span>
+          <div className="min-w-0 flex-1">{scrubberBar}</div>
+          <span>-{formatTime(timeLeft)}</span>
+        </div>
+        <div className="order-3 flex flex-wrap items-center justify-center gap-0.5">
+          <button
+            type="button"
+            title={t('np.speed')}
+            aria-label={t('np.speed')}
+            onClick={() => setSpeedOpen(true)}
+            className={cn(
+              'inline-flex h-10 w-[52px] items-center justify-center rounded-md text-[13px] font-semibold tabular-nums transition-colors',
+              speedOpen ? 'bg-primary-light/15 text-primary' : 'text-primary hover:bg-muted',
+            )}
+          >
+            {playbackRate}x
+          </button>
+          <IconTool
+            icon={volumeIcon('h-5 w-5')}
+            label={t('np.volume')}
+            active={volumeOpen}
+            onClick={() => setVolumeOpen(true)}
+          />
+          {onVocab && (
+            <IconTool
+              icon={<Library className="h-5 w-5" />}
+              label={t('np.vocabLabel')}
+              onClick={onVocab}
+            />
+          )}
+          {onTranslateSentence && (
+            <IconTool
+              icon={<Languages className="h-5 w-5" />}
+              label={`${t('np.translateLabel')} (T)`}
+              disabled={!hasCurrentSegment}
+              onClick={onTranslateSentence}
+            />
+          )}
+          {onSyncClick && (
+            <IconTool
+              icon={<Timer className="h-5 w-5" />}
+              label={`${t('np.syncLabel')} (S)`}
+              onClick={onSyncClick}
+            />
+          )}
+          {onFontSizeChange && (
+            <IconTool
               icon={
-                isMuted || displayVolume === 0 ? (
-                  <VolumeX className="w-full h-full" />
-                ) : displayVolume < 0.5 ? (
-                  <Volume1 className="w-full h-full" />
+                subtitlesEnabled ? (
+                  <Captions className="h-5 w-5" />
                 ) : (
-                  <Volume2 className="w-full h-full" />
+                  <CaptionsOff className="h-5 w-5" />
                 )
               }
-              label={`${Math.round(displayVolume * 100)}%`}
-              onClick={() => setShowVolumePopover((v) => !v)}
-              active={showVolumePopover}
+              label={`${t('np.subtitleSettings')} (C)`}
+              active={subtitleOpen}
+              onClick={() => setSubtitleOpen(true)}
             />
-            {showVolumePopover && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 p-3 rounded-xl bg-popover border border-border shadow-xl flex flex-col items-center gap-2 min-w-[80px] z-[1000]">
-                <button
-                  type="button"
-                  className="w-full py-1.5 px-3 rounded-md bg-muted text-foreground text-xs border border-border cursor-pointer hover:bg-muted/80"
-                  onClick={onToggleMute}
-                >
-                  {isMuted ? t('podcast.unmute') : t('podcast.mute')}
-                </button>
-                <div
-                  className="w-2 h-24 bg-muted rounded cursor-pointer relative"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const percent = 1 - (e.clientY - rect.top) / rect.height;
-                    onVolumeChange(Math.max(0, Math.min(1, percent)));
-                  }}
-                >
-                  <div
-                    className="absolute bottom-0 left-0 right-0 bg-primary rounded transition-[height] duration-100"
-                    style={{ height: `${displayVolume * 100}%` }}
-                  />
-                </div>
-                <div className="text-sm font-semibold text-foreground">
-                  {Math.round(displayVolume * 100)}%
-                </div>
-                <div className="flex flex-col gap-1 w-full">
-                  {[0, 0.25, 0.5, 0.75, 1].map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      className={`py-1 px-2 rounded text-xs border cursor-pointer transition-colors ${
-                        Math.abs(volume - v) < 0.05
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-transparent text-muted-foreground hover:bg-muted border-border'
-                      }`}
-                      onClick={() => onVolumeChange(v)}
-                    >
-                      {v * 100}%
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Speed */}
-          <div className="relative" ref={speedRef}>
-            <ControlButton
-              icon={<Gauge className="w-full h-full" />}
-              label={`${playbackRate}x`}
-              onClick={() => setShowSpeedPopover((v) => !v)}
-              active={showSpeedPopover}
+          )}
+          {onPictureInPicture && (
+            <IconTool
+              icon={<PictureInPicture2 className="h-5 w-5" />}
+              label={`${pipActive ? t('np.npPipClose') : t('np.npPipHint')} (P)`}
+              active={pipActive}
+              onClick={onPictureInPicture}
             />
-            {showSpeedPopover && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 p-2 rounded-xl bg-popover border border-border shadow-xl flex flex-col gap-1 min-w-[80px] z-[1000]">
-                {SPEED_RATES.map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    className={`py-1.5 px-3 rounded-md text-xs border cursor-pointer transition-colors text-center ${
-                      Math.abs(playbackRate - rate) < 0.01
-                        ? 'bg-primary text-primary-foreground border-primary font-semibold'
-                        : 'bg-transparent text-foreground hover:bg-muted border-border'
-                    }`}
-                    onClick={() => {
-                      onSpeedChange(rate);
-                      setShowSpeedPopover(false);
-                    }}
-                  >
-                    {rate}x
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          )}
+          {onToggleFullscreen && (
+            <IconTool
+              icon={
+                fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />
+              }
+              label={`${fullscreenLabel} (F)`}
+              onClick={onToggleFullscreen}
+            />
+          )}
         </div>
-
-        {/* Separator */}
-        {hasCenter && <div className="w-px h-8 bg-border/50 hidden md:block" />}
-
-        {/* CENTER: Vocab, Analysis, CC, Note, Ask Lena, Translate, Grammar */}
-        {hasCenter && (
-          <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
-            {onOpenVocab && (
-              <ControlButton
-                icon={<Library className="w-full h-full" />}
-                label={t('podcast.vocabLabel')}
-                onClick={onOpenVocab}
-              />
-            )}
-            {onOpenAnalysis && (
-              <ControlButton
-                icon={<Microscope className="w-full h-full" />}
-                label={t('podcast.analysisLabel')}
-                onClick={onOpenAnalysis}
-              />
-            )}
-            {onToggleSubtitles && (
-              <ControlButton
-                icon={
-                  subtitlesEnabled ? (
-                    <Captions className="w-full h-full" />
-                  ) : (
-                    <CaptionsOff className="w-full h-full" />
-                  )
-                }
-                label={t('podcast.ccLabel')}
-                primary={subtitlesEnabled}
-                onClick={onToggleSubtitles}
-              />
-            )}
-            {onNote && (
-              <ControlButton
-                icon={<NotebookPen className="w-full h-full" />}
-                label={t('podcast.noteLabel')}
-                onClick={onNote}
-              />
-            )}
-            {onAnalyzeSentence && (
-              <ControlButton
-                icon={<MessageCircle className="w-full h-full" />}
-                label={t('podcast.askLena')}
-                onClick={onAnalyzeSentence}
-                disabled={!hasCurrentSegment}
-              />
-            )}
-            {onTranslateSentence && (
-              <ControlButton
-                icon={<Languages className="w-full h-full" />}
-                label={t('podcast.translateLabel')}
-                onClick={onTranslateSentence}
-                disabled={!hasCurrentSegment}
-              />
-            )}
-            {onGrammarSentence && (
-              <ControlButton
-                icon={<BookOpen className="w-full h-full" />}
-                label={t('podcast.grammarLabel')}
-                onClick={onGrammarSentence}
-                disabled={!hasCurrentSegment}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Separator */}
-        {hasRight && <div className="w-px h-8 bg-border/50 hidden md:block" />}
-
-        {/* RIGHT: Sync, Subtitle Settings, Focus, Help, Exit */}
-        {hasRight && (
-          <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
-            {onPractice && (
-              <ControlButton
-                icon={<Layers className="w-full h-full" />}
-                label={tl('launcher.label')}
-                onClick={onPractice}
-              />
-            )}
-            {onBookmark && (
-              <ControlButton
-                icon={<Bookmark className={`w-full h-full ${bookmarked ? 'fill-current' : ''}`} />}
-                label={tp('bookmark')}
-                shortcut="B"
-                active={bookmarked}
-                onClick={onBookmark}
-              />
-            )}
-            {onTogglePip && (
-              <ControlButton
-                icon={<PictureInPicture2 className="w-full h-full" />}
-                label={tp('pip')}
-                shortcut="P"
-                active={pipActive}
-                onClick={onTogglePip}
-              />
-            )}
-            {onSyncClick && (
-              <ControlButton
-                icon={<Timer className="w-full h-full" />}
-                label={t('podcast.syncLabel')}
-                onClick={onSyncClick}
-              />
-            )}
-
-            {/* Subtitle settings popover */}
-            {onFontSizeChange && (
-              <div className="relative" ref={subtitleRef}>
-                <ControlButton
-                  icon={<SlidersHorizontal className="w-full h-full" />}
-                  label={t('podcast.subtitleLabel')}
-                  onClick={() => setShowSubtitlePopover((v) => !v)}
-                  active={showSubtitlePopover}
-                />
-                {showSubtitlePopover && (
-                  <SubtitleSettingsPopover
-                    fontSize={fontSize ?? 24}
-                    onFontSizeChange={onFontSizeChange}
-                    bgOpacity={subtitleBgOpacity ?? 75}
-                    onBgOpacityChange={onSubtitleBgOpacityChange}
-                    autoPause={autoPauseOnSubtitle}
-                    onToggleAutoPause={onToggleAutoPause}
-                    pauseOnWordHover={pauseOnWordHover}
-                    onTogglePauseOnHover={onTogglePauseOnHover}
-                    alignment={translationAlignment}
-                    onAlignmentChange={onTranslationAlignmentChange}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Everything else lives behind "More", as on the web player. */}
-            {(onToggleFocusMode || onHelp || onExit) && (
-              <div className="relative" ref={moreRef}>
-                <ControlButton
-                  icon={<MoreHorizontal className="w-full h-full" />}
-                  label={t('podcast.moreLabel')}
-                  onClick={() => setShowMorePopover((v) => !v)}
-                  active={showMorePopover}
-                />
-                {showMorePopover && (
-                  <div className="absolute bottom-full right-0 mb-3 min-w-44 rounded-xl border border-border bg-popover p-1.5 shadow-xl z-[1000]">
-                    {onToggleFocusMode && (
-                      <MoreItem
-                        icon={<Focus className="h-4 w-4" />}
-                        label={t('podcast.focusLabel')}
-                        active={focusMode}
-                        onClick={() => {
-                          setShowMorePopover(false);
-                          onToggleFocusMode();
-                        }}
-                      />
-                    )}
-                    {onHelp && (
-                      <MoreItem
-                        icon={<HelpCircle className="h-4 w-4" />}
-                        label={t('podcast.helpLabel')}
-                        onClick={() => {
-                          setShowMorePopover(false);
-                          onHelp();
-                        }}
-                      />
-                    )}
-                    {onExit && (
-                      <MoreItem
-                        icon={<LogOut className="h-4 w-4" />}
-                        label={t('podcast.exitLabel')}
-                        danger
-                        onClick={() => {
-                          setShowMorePopover(false);
-                          onExit();
-                        }}
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {dialogs}
       </div>
+    );
+  }
+
+  // layout === 'card'
+  const perRow = tools.length <= 4 ? tools.length : Math.ceil(tools.length / 2);
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        {scrubberBar}
+        {/* Time played and time LEFT, the way a podcast app reads. */}
+        <div className="mt-1.5 flex items-center justify-between text-xs tabular-nums text-muted-foreground">
+          <span className="font-semibold text-foreground">{formatTime(currentTime)}</span>
+          <span>-{formatTime(timeLeft)}</span>
+        </div>
+      </div>
+      <div className="flex w-full max-w-[480px] items-center justify-between gap-1 self-center">
+        <TransportButton
+          wide
+          top={
+            <span className="text-[17px] font-semibold leading-none tabular-nums">
+              {playbackRate}x
+            </span>
+          }
+          label={t('np.npSpeed')}
+          hint={t('np.speed')}
+          active={speedOpen}
+          onClick={() => setSpeedOpen(true)}
+        />
+        <TransportButton
+          icon={<SkipBack className="h-6 w-6" />}
+          label={back.label}
+          labelSizer={['-5s', t('np.prevLine')]}
+          hint={back.hint}
+          onClick={back.onClick}
+        />
+        <BigPlayButton
+          size={64}
+          isPlaying={isPlaying}
+          isLoading={isLoading}
+          label={playLabel}
+          onClick={onPlayPause}
+        />
+        <TransportButton
+          icon={<SkipForward className="h-6 w-6" />}
+          label={forward.label}
+          labelSizer={['+5s', t('np.nextLine')]}
+          hint={forward.hint}
+          onClick={forward.onClick}
+        />
+        <TransportButton
+          icon={volumeIcon('h-6 w-6')}
+          label={`${Math.round(volume * 100)}%`}
+          hint={t('np.volume')}
+          active={volumeOpen}
+          onClick={() => setVolumeOpen(true)}
+        />
+      </div>
+      {/* Never more than two rows, balanced: up to four in one row, then the longer half on top. */}
+      {tools.length > 0 && (
+        <div className="mt-2 flex flex-wrap justify-center gap-y-2 border-t border-border pt-4">
+          {tools.map((tool) => (
+            <div key={tool.key} className={cn(TOOL_CELL[perRow], 'flex justify-center')}>
+              {tool}
+            </div>
+          ))}
+        </div>
+      )}
+      {dialogs}
     </div>
   );
 }
 
-// ── ControlButton ────────────────────────────────────
-
-function ControlButton({
+function TransportButton({
   icon,
+  top,
   label,
-  shortcut,
-  primary,
-  danger,
-  disabled,
+  labelSizer,
+  hint,
   active,
+  wide,
   onClick,
 }: {
-  icon: ReactNode;
+  icon?: ReactNode;
+  top?: ReactNode;
   label: string;
-  shortcut?: string;
-  primary?: boolean;
-  danger?: boolean;
-  disabled?: boolean;
+  /** The widest label sets the width, so a change never shifts the row. */
+  labelSizer?: string[];
+  hint?: string;
   active?: boolean;
+  wide?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      title={shortcut ? `${label} (${shortcut})` : label}
-      disabled={disabled}
+      title={hint ?? label}
+      aria-label={hint ?? label}
       onClick={onClick}
-      className={`flex flex-col items-center justify-center py-1.5 px-2 md:py-2 md:px-3 rounded-lg border cursor-pointer gap-0.5 transition-colors ${
-        primary ? 'min-w-[52px] md:min-w-[60px]' : 'min-w-[40px] md:min-w-[50px]'
-      } ${
-        disabled
-          ? 'opacity-50 cursor-not-allowed bg-muted/50 text-muted-foreground border-border'
-          : danger
-            ? 'bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/30'
-            : active || primary
-              ? 'bg-primary/20 text-primary hover:bg-primary/30 border-primary/40'
-              : 'bg-muted text-foreground hover:bg-muted/80 border-border'
-      }`}
+      className={cn(
+        'inline-flex h-14 flex-col items-center justify-center gap-1 rounded-md px-1.5 transition-colors',
+        wide ? 'w-[64px]' : 'min-w-[52px]',
+        active ? 'bg-primary-light/15 text-primary' : 'text-primary hover:bg-muted',
+      )}
     >
-      <span className="flex items-center justify-center w-4 h-4 md:w-[18px] md:h-[18px]">
-        {icon}
-      </span>
-      <span className="text-[7px] md:text-[8px] opacity-70 leading-none">{label}</span>
+      <span className="flex h-6 items-center justify-center">{top ?? icon}</span>
+      {labelSizer ? (
+        <span className="grid justify-items-center text-[10.5px] font-medium leading-none text-muted-foreground">
+          {labelSizer.map((l) => (
+            <span key={l} aria-hidden className="invisible [grid-area:1/1]">
+              {l}
+            </span>
+          ))}
+          <span className="[grid-area:1/1]">{label}</span>
+        </span>
+      ) : (
+        <span className="text-[10.5px] font-medium leading-none text-muted-foreground">
+          {label}
+        </span>
+      )}
     </button>
   );
 }
 
-// ── PopoverToggle ────────────────────────────────────
+/** The one orange control on the screen. */
+function BigPlayButton({
+  size,
+  isPlaying,
+  isLoading,
+  label,
+  onClick,
+}: {
+  size: 44 | 64;
+  isPlaying: boolean;
+  isLoading: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={`${label} (Space)`}
+      aria-label={label}
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-md transition-[background-color,transform] hover:bg-accent/90 active:scale-95',
+        size === 64 ? 'h-16 w-16' : 'h-11 w-11',
+      )}
+    >
+      {isLoading ? (
+        <Loader2 className="h-7 w-7 animate-spin" />
+      ) : isPlaying ? (
+        <Pause className="h-7 w-7 fill-current" />
+      ) : (
+        <Play className="h-7 w-7 translate-x-0.5 fill-current" />
+      )}
+    </button>
+  );
+}
+
+/** A tool in the row under the transport. */
+function DockTool({
+  icon,
+  label,
+  hint,
+  active,
+  disabled,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  hint?: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={hint ?? label}
+      aria-label={hint ?? label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'relative inline-flex min-h-[48px] min-w-[52px] flex-col items-center justify-center gap-1 rounded-md px-1.5 py-1 transition-colors',
+        disabled
+          ? 'cursor-not-allowed text-caption opacity-50'
+          : active
+            ? 'bg-primary-light/15 text-primary'
+            : 'text-primary hover:bg-muted',
+      )}
+    >
+      {icon}
+      <span className="text-[11px] font-medium leading-none text-muted-foreground">{label}</span>
+    </button>
+  );
+}
+
+/** An icon button in the full-screen strip; its label is the tooltip. */
+function IconTool({
+  icon,
+  label,
+  active,
+  disabled,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors',
+        disabled
+          ? 'cursor-not-allowed text-caption opacity-50'
+          : active
+            ? 'bg-primary-light/15 text-primary'
+            : 'text-primary hover:bg-muted',
+      )}
+    >
+      {icon}
+    </button>
+  );
+}
+
+/** A slider you can see: a rail, the filled part up to the value, a knob. */
+function RangeSlider({
+  min,
+  max,
+  step,
+  value,
+  onChange,
+  label,
+  className,
+}: {
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (value: number) => void;
+  label: string;
+  className?: string;
+}) {
+  const ratio = max > min ? Math.min(1, Math.max(0, (value - min) / (max - min))) : 0;
+  return (
+    <div className={cn('relative flex h-6 items-center', className)}>
+      <div aria-hidden className="absolute inset-x-0 h-1.5 rounded-full bg-input" />
+      <div
+        aria-hidden
+        className="absolute start-0 h-1.5 rounded-full bg-primary-light"
+        style={{ width: `calc(8px + (100% - 16px) * ${ratio})` }}
+      />
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        aria-label={label}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="relative m-0 h-6 w-full cursor-pointer appearance-none bg-transparent focus-visible:outline-none [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-card [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
+      />
+    </div>
+  );
+}
 
 function PopoverToggle({
   label,
@@ -587,179 +863,30 @@ function PopoverToggle({
 }: {
   label: string;
   checked: boolean;
-  onChange: (v: boolean) => void;
+  onChange: () => void;
 }) {
   return (
     <button
       type="button"
-      className="flex items-center justify-between gap-3 cursor-pointer bg-transparent border-none p-0 w-full"
-      onClick={() => onChange(!checked)}
+      role="switch"
+      aria-checked={checked}
+      className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent p-0"
+      onClick={onChange}
     >
-      <span className="text-xs text-foreground">{label}</span>
-      <div
-        className={`relative w-8 h-[18px] rounded-full transition-colors flex-shrink-0 ${checked ? 'bg-primary' : 'bg-muted'}`}
+      <span className="text-start text-sm text-foreground">{label}</span>
+      <span
+        className={cn(
+          'relative h-[18px] w-8 shrink-0 rounded-full transition-colors',
+          checked ? 'bg-primary-light' : 'bg-input',
+        )}
       >
-        <div
-          className="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-all"
-          style={{ left: checked ? '14px' : '2px' }}
+        <span
+          className={cn(
+            'absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow-xs transition-all',
+            checked ? 'start-[14px]' : 'start-[2px]',
+          )}
         />
-      </div>
-    </button>
-  );
-}
-
-// ── SubtitleSettingsPopover ───────────────────────────
-
-function SubtitleSettingsPopover({
-  fontSize,
-  onFontSizeChange,
-  bgOpacity,
-  onBgOpacityChange,
-  autoPause,
-  onToggleAutoPause,
-  pauseOnWordHover,
-  onTogglePauseOnHover,
-  alignment,
-  onAlignmentChange,
-}: {
-  fontSize: number;
-  onFontSizeChange: (size: number) => void;
-  bgOpacity: number;
-  onBgOpacityChange?: (opacity: number) => void;
-  autoPause?: boolean;
-  onToggleAutoPause?: () => void;
-  pauseOnWordHover?: boolean;
-  onTogglePauseOnHover?: () => void;
-  alignment?: 'left' | 'center' | 'right';
-  onAlignmentChange?: (alignment: 'left' | 'center' | 'right') => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <div
-      className="absolute bottom-full right-0 mb-3 p-4 rounded-xl bg-popover border border-border shadow-xl flex flex-col gap-4 min-w-[240px] z-[1000]"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-foreground">
-          {t('podcast.subtitleSettings')}
-        </span>
-      </div>
-
-      {/* Font size */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{t('podcast.fontSize')}</span>
-          <span className="text-xs font-medium text-foreground">{fontSize}px</span>
-        </div>
-        <input
-          type="range"
-          min={12}
-          max={50}
-          step={1}
-          value={fontSize}
-          onChange={(e) => onFontSizeChange(parseInt(e.target.value))}
-          className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-primary"
-        />
-      </div>
-
-      {/* Background opacity */}
-      {onBgOpacityChange && (
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{t('podcast.backgroundOpacity')}</span>
-            <span className="text-xs font-medium text-foreground">{bgOpacity}%</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={5}
-            value={bgOpacity}
-            onChange={(e) => onBgOpacityChange(parseInt(e.target.value))}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-primary"
-          />
-        </div>
-      )}
-
-      {/* Text Alignment */}
-      {onAlignmentChange && (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted-foreground">{t('podcast.translationAlignment')}</span>
-          <div className="flex gap-1">
-            {(
-              [
-                ['left', AlignLeft],
-                ['center', AlignCenter],
-                ['right', AlignRight],
-              ] as const
-            ).map(([value, Icon]) => (
-              <button
-                key={value}
-                type="button"
-                className={`flex-1 py-1.5 rounded-md border cursor-pointer transition-colors flex items-center justify-center ${
-                  alignment === value
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-transparent text-muted-foreground hover:bg-muted border-border'
-                }`}
-                onClick={() => onAlignmentChange(value)}
-              >
-                <Icon className="w-3.5 h-3.5" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Auto-pause on subtitle boundary */}
-      {onToggleAutoPause && (
-        <PopoverToggle
-          label={t('podcast.autoPauseLabel')}
-          checked={!!autoPause}
-          onChange={() => onToggleAutoPause()}
-        />
-      )}
-
-      {/* Pause on word hover */}
-      {onTogglePauseOnHover && (
-        <PopoverToggle
-          label={t('podcast.pauseOnWordHover')}
-          checked={!!pauseOnWordHover}
-          onChange={() => onTogglePauseOnHover()}
-        />
-      )}
-    </div>
-  );
-}
-
-/** A row inside the control bar's "More" popover. */
-function MoreItem({
-  icon,
-  label,
-  active,
-  danger,
-  onClick,
-}: {
-  icon: ReactNode;
-  label: string;
-  active?: boolean;
-  danger?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors ${
-        danger
-          ? 'text-error hover:bg-error/10'
-          : active
-            ? 'bg-primary/10 text-primary'
-            : 'text-foreground hover:bg-muted'
-      }`}
-    >
-      {icon}
-      {label}
+      </span>
     </button>
   );
 }

@@ -139,6 +139,43 @@ import frAccount from './locales/fr/account.json';
 import hiAccount from './locales/hi/account.json';
 import zhAccount from './locales/zh/account.json';
 
+import enTutor from './locales/en/tutor.json';
+import faTutor from './locales/fa/tutor.json';
+import arTutor from './locales/ar/tutor.json';
+import frTutor from './locales/fr/tutor.json';
+import hiTutor from './locales/hi/tutor.json';
+import zhTutor from './locales/zh/tutor.json';
+import enCaption from './locales/en/caption.json';
+import faCaption from './locales/fa/caption.json';
+import arCaption from './locales/ar/caption.json';
+import frCaption from './locales/fr/caption.json';
+import hiCaption from './locales/hi/caption.json';
+import zhCaption from './locales/zh/caption.json';
+import enSettingsDesk from './locales/en/settingsDesk.json';
+import faSettingsDesk from './locales/fa/settingsDesk.json';
+import arSettingsDesk from './locales/ar/settingsDesk.json';
+import frSettingsDesk from './locales/fr/settingsDesk.json';
+import hiSettingsDesk from './locales/hi/settingsDesk.json';
+import zhSettingsDesk from './locales/zh/settingsDesk.json';
+import enOnboarding from './locales/en/onboarding.json';
+import faOnboarding from './locales/fa/onboarding.json';
+import arOnboarding from './locales/ar/onboarding.json';
+import frOnboarding from './locales/fr/onboarding.json';
+import hiOnboarding from './locales/hi/onboarding.json';
+import zhOnboarding from './locales/zh/onboarding.json';
+import enAuthDesk from './locales/en/authDesk.json';
+import faAuthDesk from './locales/fa/authDesk.json';
+import arAuthDesk from './locales/ar/authDesk.json';
+import frAuthDesk from './locales/fr/authDesk.json';
+import hiAuthDesk from './locales/hi/authDesk.json';
+import zhAuthDesk from './locales/zh/authDesk.json';
+import enWritingPractice from './locales/en/writingPractice.json';
+import faWritingPractice from './locales/fa/writingPractice.json';
+import arWritingPractice from './locales/ar/writingPractice.json';
+import frWritingPractice from './locales/fr/writingPractice.json';
+import hiWritingPractice from './locales/hi/writingPractice.json';
+import zhWritingPractice from './locales/zh/writingPractice.json';
+
 const resources = {
   en: {
     common: enCommon,
@@ -162,6 +199,12 @@ const resources = {
     readerDesk: enReaderDesk,
     podcastUi: enPodcastUi,
     listening: enListening,
+    tutor: enTutor,
+    caption: enCaption,
+    settingsDesk: enSettingsDesk,
+    onboarding: enOnboarding,
+    authDesk: enAuthDesk,
+    writingPractice: enWritingPractice,
   },
   fa: {
     common: faCommon,
@@ -185,6 +228,12 @@ const resources = {
     readerDesk: faReaderDesk,
     podcastUi: faPodcastUi,
     listening: faListening,
+    tutor: faTutor,
+    caption: faCaption,
+    settingsDesk: faSettingsDesk,
+    onboarding: faOnboarding,
+    authDesk: faAuthDesk,
+    writingPractice: faWritingPractice,
   },
   ar: {
     common: arCommon,
@@ -208,6 +257,12 @@ const resources = {
     readerDesk: arReaderDesk,
     podcastUi: arPodcastUi,
     listening: arListening,
+    tutor: arTutor,
+    caption: arCaption,
+    settingsDesk: arSettingsDesk,
+    onboarding: arOnboarding,
+    authDesk: arAuthDesk,
+    writingPractice: arWritingPractice,
   },
   fr: {
     common: frCommon,
@@ -231,6 +286,12 @@ const resources = {
     readerDesk: frReaderDesk,
     podcastUi: frPodcastUi,
     listening: frListening,
+    tutor: frTutor,
+    caption: frCaption,
+    settingsDesk: frSettingsDesk,
+    onboarding: frOnboarding,
+    authDesk: frAuthDesk,
+    writingPractice: frWritingPractice,
   },
   hi: {
     common: hiCommon,
@@ -254,6 +315,12 @@ const resources = {
     readerDesk: hiReaderDesk,
     podcastUi: hiPodcastUi,
     listening: hiListening,
+    tutor: hiTutor,
+    caption: hiCaption,
+    settingsDesk: hiSettingsDesk,
+    onboarding: hiOnboarding,
+    authDesk: hiAuthDesk,
+    writingPractice: hiWritingPractice,
   },
   zh: {
     common: zhCommon,
@@ -277,14 +344,32 @@ const resources = {
     readerDesk: zhReaderDesk,
     podcastUi: zhPodcastUi,
     listening: zhListening,
+    tutor: zhTutor,
+    caption: zhCaption,
+    settingsDesk: zhSettingsDesk,
+    onboarding: zhOnboarding,
+    authDesk: zhAuthDesk,
+    writingPractice: zhWritingPractice,
   },
 };
+
+// German and Vietnamese load every namespace file found on disk, so a new
+// namespace needs no extra import line here.
+const allResources: Record<string, Record<string, unknown>> = { ...resources };
+const globbed = import.meta.glob('./locales/{de,vi}/*.json', {
+  eager: true,
+  import: 'default',
+}) as Record<string, Record<string, unknown>>;
+for (const [file, json] of Object.entries(globbed)) {
+  const m = /\/locales\/(\w+)\/(\w+)\.json$/.exec(file);
+  if (m) allResources[m[1]] = { ...allResources[m[1]], [m[2]]: json };
+}
 
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources,
+    resources: allResources,
     fallbackLng: 'en',
     defaultNS: 'common',
     interpolation: { escapeValue: false },

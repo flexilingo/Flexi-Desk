@@ -48,3 +48,47 @@ pub fn build_action_message(action: &str, sentence: &str, target_lang: &str) -> 
         ),
     }
 }
+
+/// Messages for Lena's structured analysis of one sentence (the website's `analyze-sentence`):
+/// grammar, key patterns, vocabulary with CEFR levels, tips, difficulty and a translation, as JSON.
+pub fn build_analysis_messages(
+    sentence: &str,
+    prev_sentence: Option<&str>,
+    next_sentence: Option<&str>,
+    target_lang: &str,
+) -> (String, String) {
+    let lang = lang_name(target_lang);
+    let system = format!(
+        r#"You are Lena, a language teacher. Analyse one sentence for a learner and answer ONLY with a JSON object, no prose.
+
+Shape:
+{{
+  "sentence": "<the sentence, unchanged>",
+  "grammar": {{
+    "structure": "<sentence structure, short>",
+    "tense": "<main verb tense>",
+    "voice": "<active or passive>",
+    "mood": "<indicative, imperative, conditional, subjunctive...>",
+    "patterns": [{{ "pattern": "<a grammar pattern used>", "explanation": "<why/how, one sentence>", "example": "<a new example sentence>" }}]
+  }},
+  "vocabulary": [{{ "word": "<word or phrase from the sentence>", "cefr": "<A1..C2>", "definition": "<meaning in this context>" }}],
+  "tips": ["<a short learning tip>"],
+  "difficulty": "<A1..C2 for the whole sentence>",
+  "translation": "<the sentence translated>"
+}}
+
+Rules:
+- "structure", "tense", "voice", "mood", "explanation", "definition", "tips" and "translation" are written in {lang}.
+- "sentence", "pattern", "example" and "word" stay in the sentence's own language.
+- 1 to 3 patterns, 2 to 6 vocabulary items, 1 to 3 tips."#,
+    );
+    let mut user = String::new();
+    if let Some(prev) = prev_sentence.filter(|s| !s.trim().is_empty()) {
+        user.push_str(&format!("Previous sentence (context only): \"{prev}\"\n"));
+    }
+    if let Some(next) = next_sentence.filter(|s| !s.trim().is_empty()) {
+        user.push_str(&format!("Next sentence (context only): \"{next}\"\n"));
+    }
+    user.push_str(&format!("Sentence to analyse: \"{sentence}\""));
+    (system, user)
+}
