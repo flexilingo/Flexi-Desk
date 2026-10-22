@@ -30,7 +30,9 @@ describe.each(NAMESPACES)('%s namespace', (ns) => {
   const en = flatten(load('en', ns));
 
   it('has the website key counts', () => {
-    expect(en.size).toBe(ns === 'reader' ? 241 : 87); // readingLibrary: 58 + series (19 + 6 progress) + pagination (3) + book.readAloud
+    // readingLibrary: 58 + series (19 + 6 progress) + pagination (3) + book.readAloud
+    // + the redesign (fit cards 15 incl. 6 level hints, series tiles/fit 6)
+    expect(en.size).toBe(ns === 'reader' ? 241 : 108);
   });
 
   it.each(LOCALES.filter((l) => l !== 'en'))('%s has the same keys and placeholders as en', (l) => {

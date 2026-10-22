@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { BookMarked, Check, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { BookMarked, Check, ChevronLeft, ChevronRight, Globe, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LocaleBadge } from '@/components/WordDialog/LocaleBadge';
@@ -11,8 +10,9 @@ import type {
   LibraryFacets,
   LibrarySeriesCard,
 } from '../services/libraryService';
-import { BookCover } from './BookCover';
 import { coverFor, readingMinutes, seriesReadPath } from './format';
+import { BOOK_GRID, BookCard, SeriesTile } from './LibraryCards';
+import { seriesTile } from './series-fit';
 import {
   FilterClearAll,
   FilterBox,
@@ -35,15 +35,20 @@ import {
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-/** The language's own name for itself — "Français", "English". */
+/** The language's own name for itself — "Français", "English". Kept: every card asks. */
+const NATIVE_NAMES = new Map<string, string>();
 function nativeName(code: string): string {
+  const known = NATIVE_NAMES.get(code);
+  if (known) return known;
+  let name = code.toUpperCase();
   try {
-    const name = new Intl.DisplayNames([code], { type: 'language' }).of(code);
-    if (name) return name.charAt(0).toLocaleUpperCase(code) + name.slice(1);
+    const own = new Intl.DisplayNames([code], { type: 'language' }).of(code);
+    if (own) name = own.charAt(0).toLocaleUpperCase(code) + own.slice(1);
   } catch {
     /* unknown code */
   }
-  return code.toUpperCase();
+  NATIVE_NAMES.set(code, name);
+  return name;
 }
 
 // The level pills of the podcast and video bars: the code on every pill, the word only on the
@@ -66,39 +71,37 @@ const LEVEL_DOT: Record<CefrLevel, string> = {
 };
 
 /**
- * The library for one language: the filter bar on top, the shelf below.
+ * The library for one language, as the website's redesign lays it out: the filter bar on top,
+ * the shelf of book cards below, and the series as picture tiles under the shelf.
  *
- * Every filter works in place on the books already loaded. The filters live in the
- * parent (so the URL can hold them); this component only draws them and turns the search
- * box into a debounced `query`. Language is the exception: another language is another
- * request, so the parent handles `onLanguageChange`.
+ * Every language's books are on one shelf; the language is one more filter (All by default)
+ * and every card and tile names its language. Every filter works in place on the books
+ * already loaded. The filters live in the parent (so the URL can hold them); this component
+ * only draws them and turns the search box into a debounced `query`.
  */
 export function LibraryBrowser({
   books,
   facets,
-  lang,
   filters,
   onFiltersChange,
   bookHref,
-  onLanguageChange,
   onShelf,
   seriesCards = [],
 }: {
+  /** Every language's books. */
   books: LibraryBook[];
   facets: LibraryFacets;
-  lang: string;
   filters: LibraryFilters;
   onFiltersChange: (next: LibraryFilters) => void;
   bookHref: (book: LibraryBook) => string;
-  onLanguageChange: (code: string) => void;
   onShelf: Set<string>;
   /** Series with a page of their own; empty unless the backend serves series. */
   seriesCards?: LibrarySeriesCard[];
 }) {
-  const { t } = useTranslation('readingLibrary');
+  const { t, i18n } = useTranslation('readingLibrary');
   const { t: tDesk } = useTranslation('readerDesk');
   const { t: tv } = useTranslation('videos');
-  const gridTop = useRef<HTMLParagraphElement>(null);
+  const gridTop = useRef<HTMLDivElement>(null);
 
   // The box shows what is typed; the filter only follows after a pause.
   const [search, setSearch] = useState(filters.query);
@@ -121,9 +124,15 @@ export function LibraryBrowser({
     setSearch(filters.query);
   }, [filters.query]);
 
-  const here = availableFacets(books, facets, lang);
+  const here = availableFacets(books, facets, filters.language);
   const shown = filterBooks(books, filters);
   const { current, totalPages, items } = pageOf(shown, filters.page);
+  // A series tile needs a picture: the series' own cover, else its first episode's.
+  const tiles = seriesCards
+    .filter((card) => !filters.language || card.language === filters.language)
+    .map((card) => ({ card, ...seriesTile(card, books) }))
+    .filter((x): x is typeof x & { cover: string } => !!x.cover)
+    .sort((a, b) => b.card.episode_count - a.card.episode_count);
   const set = (patch: Partial<LibraryFilters>) =>
     onFiltersChange({ ...filters, page: 1, ...patch });
 
@@ -152,65 +161,6 @@ export function LibraryBrowser({
 
   return (
     <div className="space-y-5">
-      {seriesCards.length > 0 && (
-        <section data-testid="library-series">
-          <h2 className="mb-3 text-base font-bold text-foreground">{t('series.listHeading')}</h2>
-          <ul className="grid gap-4 md:grid-cols-2">
-            {seriesCards.map((s) => (
-              <li key={`${s.language}/${s.slug}`}>
-                <Link
-                  to={seriesReadPath(s.language, s.slug)}
-                  className="group flex h-full gap-4 rounded-xl border border-border bg-card p-4 transition-all duration-150 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md"
-                >
-                  <div className="w-20 shrink-0">
-                    <BookCover
-                      slug={s.slug}
-                      title={s.title}
-                      level={s.levels[0] ?? 'B1'}
-                      series={null}
-                      coverPath={s.cover_path}
-                      size="sm"
-                      showLevel={false}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className="text-base font-bold leading-snug text-foreground group-hover:text-primary"
-                      lang={s.language}
-                      dir="auto"
-                    >
-                      {s.title}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-primary">
-                      {s.levels.length > 1
-                        ? `${s.levels[0]}–${s.levels[s.levels.length - 1]}`
-                        : s.levels[0]}{' '}
-                      · {t('series.episodes', { count: s.episode_count })}
-                      {s.season_count > 1 ? (
-                        <> · {t('series.seasons', { count: s.season_count })}</>
-                      ) : null}
-                    </p>
-                    {s.summary && (
-                      <p
-                        className="mt-1.5 line-clamp-3 text-[13px] leading-snug text-muted-foreground"
-                        lang={s.language}
-                        dir="auto"
-                      >
-                        {s.summary}
-                      </p>
-                    )}
-                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                      {t('series.open')}
-                      <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       <div className="flex flex-wrap items-center gap-2">
         <FilterSearch
           value={search}
@@ -227,19 +177,19 @@ export function LibraryBrowser({
         <FilterBox>
           {facets.languages.length > 1 && (
             <FilterMenu
-              label={nativeName(lang)}
-              value=""
-              allLabel={nativeName(lang)}
+              label={t('catalog.allLanguages')}
+              value={filters.language}
+              allLabel={t('catalog.allLanguages')}
               clearLabel={clearLabel}
-              icon={<LocaleBadge code={lang} size={18} />}
-              options={facets.languages
-                .filter(({ code }) => code !== lang)
-                .map(({ code }) => ({
-                  id: code,
-                  label: nativeName(code),
-                  icon: <LocaleBadge code={code} size={18} />,
-                }))}
-              onChange={(code) => code && code !== lang && onLanguageChange(code)}
+              icon={<Globe className="h-3.5 w-3.5 opacity-70" />}
+              options={facets.languages.map(({ code, count }) => ({
+                id: code,
+                label: nativeName(code),
+                count,
+                icon: <LocaleBadge code={code} size={18} />,
+              }))}
+              // A series belongs to one language; the level carries over.
+              onChange={(code) => set({ language: code, series: '' })}
             />
           )}
           {here.kinds.length > 1 && (
@@ -270,63 +220,62 @@ export function LibraryBrowser({
         )}
       </div>
 
-      <p ref={gridTop} className="scroll-mt-4 text-[13px] text-muted-foreground">
-        {t('public.results', { count: shown.length })}
-      </p>
+      {/* The count the podcast catalogue opens its grid with: the number large, the word small. */}
+      <div
+        ref={gridTop}
+        className="flex scroll-mt-4 items-baseline gap-2 border-b border-border pb-2.5"
+      >
+        <span className="text-[22px] font-extrabold leading-none tracking-tight text-foreground tabular-nums">
+          {new Intl.NumberFormat(i18n.language).format(shown.length)}
+        </span>
+        <span className="text-[12.5px] font-medium text-muted-foreground">
+          {t('public.booksLabel', { count: shown.length })}
+        </span>
+      </div>
 
       {shown.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card px-6 py-14 text-center">
+        <div className="rounded-[9px] border border-border bg-card px-6 py-14 text-center">
           <p className="text-[15px] font-semibold text-foreground">{t('catalog.empty')}</p>
           <p className="mt-1 text-[13.5px] text-muted-foreground">{t('public.noResults')}</p>
         </div>
       ) : (
-        <ul
-          data-testid="library-grid"
-          className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-7 md:grid-cols-4 xl:grid-cols-6"
-        >
+        <ul data-testid="library-grid" className={BOOK_GRID}>
           {items.map((book) => (
-            <li key={book.id}>
-              <Link to={bookHref(book)} className="group block">
-                <div className="relative transition-transform duration-200 group-hover:-translate-y-1">
-                  <BookCover
-                    slug={book.slug}
-                    title={book.title}
-                    level={book.level}
-                    series={book.series_title}
-                    coverPath={coverFor(book)}
-                  />
-                  {onShelf.has(book.id) && (
-                    <span
-                      title={t('catalog.added')}
-                      className="absolute start-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-card/95 text-primary shadow-sm"
-                    >
-                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                      <span className="sr-only">{t('catalog.added')}</span>
-                    </span>
-                  )}
-                </div>
-                <p
-                  className="mt-2.5 line-clamp-2 text-[14px] font-bold leading-snug text-foreground group-hover:text-primary"
-                  dir="auto"
-                  lang={book.language}
-                >
-                  {book.title}
-                </p>
-                <p className="mt-0.5 truncate text-[12px] text-muted-foreground" dir="auto">
-                  {book.series_title && book.series_order
-                    ? `${book.series_title} · ${
-                        book.series_season != null
-                          ? t('series.seasonEpisode', { season: book.series_season, n: book.series_episode ?? book.series_order })
-                          : t('catalog.episode', { n: book.series_order })
-                      }`
-                    : book.author}
-                </p>
-                <p className="mt-1 text-[11.5px] font-semibold text-primary">
-                  {t(`catalog.kind.${book.kind}`)} ·{' '}
-                  {t('catalog.minutes', { n: readingMinutes(book.word_count) })}
-                </p>
-              </Link>
-            </li>
+            <BookCard
+              key={book.id}
+              to={bookHref(book)}
+              slug={book.slug}
+              title={book.title}
+              level={book.level}
+              language={book.language}
+              series={book.series_title}
+              coverPath={coverFor(book)}
+              subtitle={
+                book.series_title && book.series_order
+                  ? `${book.series_title} · ${
+                      book.series_season != null
+                        ? t('series.seasonEpisode', {
+                            season: book.series_season,
+                            n: book.series_episode ?? book.series_order,
+                          })
+                        : t('catalog.episode', { n: book.series_order })
+                    }`
+                  : book.author
+              }
+              minutes={t('catalog.minutes', { n: readingMinutes(book.word_count) })}
+              languageLabel={nativeName(book.language)}
+              corner={
+                onShelf.has(book.id) ? (
+                  <span
+                    title={t('catalog.added')}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-card/95 text-primary shadow-sm"
+                  >
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    <span className="sr-only">{t('catalog.added')}</span>
+                  </span>
+                ) : null
+              }
+            />
           ))}
         </ul>
       )}
@@ -395,6 +344,41 @@ export function LibraryBrowser({
             </Button>
           </div>
         </nav>
+      )}
+
+      {/* Series with a page of their own, biggest first, as picture tiles under the shelf —
+          the video page's "Channels". */}
+      {tiles.length > 0 && (
+        <section
+          data-testid="library-series"
+          className="space-y-4 pt-3"
+          aria-labelledby="library-series"
+        >
+          <h2
+            id="library-series"
+            className="flex items-center gap-2 text-base font-bold text-foreground"
+          >
+            <Layers className="h-4 w-4 text-primary" />
+            {t('series.tilesHeading')}
+            <span className="text-xs font-normal tabular-nums text-caption">
+              {new Intl.NumberFormat(i18n.language).format(tiles.length)}
+            </span>
+          </h2>
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {tiles.map(({ card, cover, level }) => (
+              <SeriesTile
+                key={`${card.language}/${card.slug}`}
+                to={seriesReadPath(card.language, card.slug)}
+                title={card.title}
+                language={card.language}
+                cover={cover}
+                level={level}
+                languageLabel={nativeName(card.language)}
+                episodes={t('series.episodes', { count: card.episode_count })}
+              />
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

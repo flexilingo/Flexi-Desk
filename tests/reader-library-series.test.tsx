@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const call = vi.hoisted(() => vi.fn());
@@ -79,37 +79,72 @@ describe('series capability detection', () => {
 });
 
 describe('the library shelf', () => {
-  const view = (cards: LibrarySeriesCard[]) =>
+  const view = (cards: LibrarySeriesCard[], books: LibraryBook[] = [book()], language = '') =>
     render(
       <MemoryRouter>
         <LibraryBrowser
-          books={[book()]}
-          facets={facets}
-          lang="en"
-          filters={EMPTY_FILTERS}
+          books={books}
+          facets={{ ...facets, languages: [{ code: 'en', count: 1 }, { code: 'fr', count: 1 }] }}
+          filters={{ ...EMPTY_FILTERS, language }}
           onFiltersChange={() => {}}
           bookHref={(b) => `/reader/book/${b.id}`}
-          onLanguageChange={() => {}}
           onShelf={new Set()}
           seriesCards={cards}
         />
       </MemoryRouter>,
     );
 
-  it('looks like the plain library when there are no series cards (old API): no shell, no heading', () => {
+  it('looks like the plain library when there are no series cards (old API): no tiles, no heading', () => {
     view([]);
     expect(screen.queryByTestId('library-series')).toBeNull();
-    expect(screen.queryByText('series.listHeading')).toBeNull();
+    expect(screen.queryByText('series.tilesHeading')).toBeNull();
     expect(screen.getByTestId('library-grid')).toBeInTheDocument();
   });
 
-  it('shows series cards that open the series page when the new API gave them', () => {
-    view([card]);
-    expect(screen.getByTestId('library-series')).toBeInTheDocument();
+  it('draws the series as picture tiles under the shelf, opening the series page', () => {
+    view([{ ...card, cover_path: '/library/covers/en/tuesday.jpg' }]);
+    const tiles = screen.getByTestId('library-series');
+    const grid = screen.getByTestId('library-grid');
+    // Under the shelf, not above it.
+    expect(grid.compareDocumentPosition(tiles) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByRole('link', { name: /The Tuesday Class/ })).toHaveAttribute(
       'href',
       '/reader/library/series/en/tuesday',
     );
+    expect(tiles.querySelector('img')).toHaveAttribute(
+      'src',
+      'https://flexilingo.com/library/covers/en/tuesday.jpg',
+    );
+  });
+
+  it("a series without a cover takes its first episode's; with neither it gets no tile", () => {
+    const episode = book({ id: 'e1', slug: 'tuesday-01', series_slug: 'tuesday', series_title: 'The Tuesday Class', series_order: 1, cover_path: '/c/e1.jpg' });
+    view([card], [episode]);
+    expect(screen.getByTestId('library-series').querySelector('img')).toHaveAttribute(
+      'src',
+      'https://flexilingo.com/c/e1.jpg',
+    );
+    cleanup();
+    view([card]);
+    expect(screen.queryByTestId('library-series')).toBeNull();
+  });
+
+  it('every language together: each card and tile names its language', () => {
+    const fr = book({ id: 'f1', slug: 'f1', language: 'fr', title: 'Matin' });
+    view([{ ...card, cover_path: '/c/s.jpg' }], [book(), fr]);
+    const grid = screen.getByTestId('library-grid');
+    expect(grid.querySelectorAll('li')).toHaveLength(2);
+    expect(within(grid).getByText('English')).toHaveAttribute('lang', 'en');
+    expect(within(grid).getByText('Français')).toHaveAttribute('lang', 'fr');
+    expect(within(screen.getByTestId('library-series')).getByText('English')).toBeInTheDocument();
+  });
+
+  it('a picked language narrows the shelf and the tiles to it', () => {
+    const fr = book({ id: 'f1', slug: 'f1', language: 'fr', title: 'Matin' });
+    view([{ ...card, cover_path: '/c/s.jpg' }], [book(), fr], 'fr');
+    expect(screen.getByTestId('library-grid').querySelectorAll('li')).toHaveLength(1);
+    expect(screen.getByText('Matin')).toBeInTheDocument();
+    expect(screen.queryByTestId('library-series')).toBeNull();
   });
 });
 

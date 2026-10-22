@@ -15,12 +15,13 @@ const LEVEL_BG: Record<string, string> = {
   C1: 'bg-cefr-c1',
   C2: 'bg-cefr-c2',
 };
-function LevelBadge({ level }: { level: string }) {
+export function LevelBadge({ level, className }: { level: string; className?: string }) {
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold text-white',
         LEVEL_BG[level] ?? 'bg-muted-foreground',
+        className,
       )}
     >
       {level}
@@ -39,7 +40,8 @@ function toneFor(slug: string): string {
  * A book's cover, 3:4. The real artwork when the book has one (served by the
  * website); until then — or when it fails to load — a typographic cover: title,
  * level and a large faint first letter, so a shelf never shows an empty box.
- * `xs` is a list thumbnail: the tone and the first letter only.
+ * `xs` is a list thumbnail: the tone and the first letter only. `flush` drops the rounding
+ * and shadow for a cover that is the top of a card.
  */
 export function BookCover({
   slug,
@@ -50,6 +52,7 @@ export function BookCover({
   size = 'md',
   alt = '',
   showLevel = true,
+  flush = false,
 }: {
   slug: string;
   title: string;
@@ -59,12 +62,18 @@ export function BookCover({
   size?: 'xs' | 'sm' | 'md';
   alt?: string;
   showLevel?: boolean;
+  flush?: boolean;
 }) {
   const [failed, setFailed] = useState<string | null>(null);
 
   if (coverPath && failed !== coverPath) {
     return (
-      <div className="relative aspect-[3/4] overflow-hidden rounded-[7px] bg-muted shadow-sm">
+      <div
+        className={cn(
+          'relative aspect-[3/4] overflow-hidden bg-muted',
+          flush ? 'rounded-none' : 'rounded-[7px] shadow-sm',
+        )}
+      >
         <img
           src={coverUrl(coverPath)}
           alt={alt}
@@ -99,7 +108,8 @@ export function BookCover({
   return (
     <div
       className={cn(
-        'relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-[7px] text-primary-foreground shadow-sm',
+        'relative flex aspect-[3/4] flex-col justify-between overflow-hidden text-primary-foreground',
+        flush ? 'rounded-none' : 'rounded-[7px] shadow-sm',
         toneFor(slug),
         small ? 'p-2' : 'p-3.5',
       )}

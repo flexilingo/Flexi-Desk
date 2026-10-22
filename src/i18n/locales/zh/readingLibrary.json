@@ -68,7 +68,24 @@
     "readerCtaTitle": "保存你点过的单词",
     "filters": "筛选",
     "all": "全部",
-    "showResults": "查看 {{count}} 本书"
+    "showResults": "查看 {{count}} 本书",
+    "breadcrumb": "页面路径",
+    "booksLabel": "本书",
+    "fitTitleBook": "这本书适合你吗？",
+    "fitTitleEpisode": "这一集适合你吗？",
+    "fitLength": "<b>{{count}} 页</b>，大约 <b>{{minutes}} 分钟</b>读完。",
+    "fitFree": "<b>在这里免费阅读</b>，每一页都可以。",
+    "fitLogin": "<b>第 1 页免费阅读。</b>其余内容注册账号后免费阅读。",
+    "fitEpisodeOf": "本系列<b>第 {{n}} 集，共 {{total}} 集</b>。",
+    "fitEpisodeOfSeason": "第 {{season}} 季<b>第 {{n}} 集，共 {{total}} 集</b>。",
+    "levelHint": {
+      "A1": "短句和日常词汇",
+      "A2": "关于日常生活的简单句子",
+      "B1": "能读懂简单的新闻就合适",
+      "B2": "已经能读新闻文章就会很轻松",
+      "C1": "长句、丰富的词汇和习语",
+      "C2": "为母语读者而写"
+    }
   },
   "series": {
     "season": "第 {{n}} 季",
@@ -95,7 +112,13 @@
     "readMark": "已读",
     "orderNote": "这是{{label}}。故事从第 1 集开始。",
     "orderNoteLink": "从第 1 集开始",
-    "close": "关闭"
+    "close": "关闭",
+    "tilesHeading": "系列",
+    "fitTitle": "这个系列适合你吗？",
+    "fitMostly": "<b>{{percent}}% 的剧集</b>为 {{level}} 水平。",
+    "fitMinutes": "每集<b>大约 {{minutes}} 分钟</b>读完。",
+    "fitAccess": "<b>第 {{list}} 季免费阅读。</b>其他季的第 1 页免费，其余内容需要免费账号。",
+    "fitAllFree": "<b>每一集都免费阅读</b>，就在这里。"
   },
   "pagination": {
     "showing": "显示第 {{start}} 到 {{end}} 项，共 {{total}} 项",

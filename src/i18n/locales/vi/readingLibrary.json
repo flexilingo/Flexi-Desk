@@ -68,7 +68,24 @@
     "readerCtaTitle": "Lưu lại những từ bạn chạm",
     "filters": "Bộ lọc",
     "all": "Tất cả",
-    "showResults_other": "Hiện {{count}} cuốn sách"
+    "showResults_other": "Hiện {{count}} cuốn sách",
+    "breadcrumb": "Đường dẫn trang",
+    "booksLabel_other": "cuốn sách",
+    "fitTitleBook": "Cuốn sách này có hợp với bạn không?",
+    "fitTitleEpisode": "Tập này có hợp với bạn không?",
+    "fitLength_other": "<b>{{count}} trang</b>, khoảng <b>{{minutes}} phút</b> đọc.",
+    "fitFree": "<b>Đọc miễn phí ngay tại đây</b>, mọi trang.",
+    "fitLogin": "<b>Trang 1 miễn phí.</b> Phần còn lại miễn phí khi có tài khoản.",
+    "fitEpisodeOf": "<b>Tập {{n}}/{{total}}</b> của loạt truyện này.",
+    "fitEpisodeOfSeason": "<b>Tập {{n}}/{{total}}</b> của phần {{season}}.",
+    "levelHint": {
+      "A1": "Câu ngắn và từ ngữ hằng ngày",
+      "A2": "Câu đơn giản về cuộc sống hằng ngày",
+      "B1": "Phù hợp nếu bạn đọc được một bản tin đơn giản",
+      "B2": "Thoải mái nếu bạn đã quen đọc báo",
+      "C1": "Câu dài, từ vựng phong phú và thành ngữ",
+      "C2": "Viết cho người đọc bản ngữ"
+    }
   },
   "series": {
     "season": "Phần {{n}}",
@@ -95,7 +112,13 @@
     "readMark": "Đã đọc",
     "orderNote": "Đây là {{label}}. Câu chuyện bắt đầu từ tập 1.",
     "orderNoteLink": "Bắt đầu từ tập 1",
-    "close": "Đóng"
+    "close": "Đóng",
+    "tilesHeading": "Loạt truyện",
+    "fitTitle": "Loạt truyện này có hợp với bạn không?",
+    "fitMostly": "<b>{{percent}}% số tập</b> ở mức {{level}}.",
+    "fitMinutes": "<b>Khoảng {{minutes}} phút</b> đọc mỗi tập.",
+    "fitAccess_other": "<b>Phần {{list}} đọc miễn phí.</b> Ở các phần khác, trang 1 miễn phí và phần còn lại cần tài khoản miễn phí.",
+    "fitAllFree": "<b>Mọi tập đều đọc miễn phí</b>, ngay tại đây."
   },
   "pagination": {
     "showing": "Hiển thị {{start}} đến {{end}} trong số {{total}}",

@@ -70,7 +70,26 @@
     "filters": "Filtres",
     "all": "Tous",
     "showResults_one": "Voir {{count}} livre",
-    "showResults_other": "Voir {{count}} livres"
+    "showResults_other": "Voir {{count}} livres",
+    "breadcrumb": "Fil d’Ariane",
+    "booksLabel_one": "livre",
+    "booksLabel_other": "livres",
+    "fitTitleBook": "Ce livre est-il pour vous ?",
+    "fitTitleEpisode": "Cet épisode est-il pour vous ?",
+    "fitLength_one": "<b>{{count}} page</b>, environ <b>{{minutes}} min</b> de lecture.",
+    "fitLength_other": "<b>{{count}} pages</b>, environ <b>{{minutes}} min</b> de lecture.",
+    "fitFree": "<b>Gratuit à lire ici</b>, toutes les pages.",
+    "fitLogin": "<b>La page 1 est gratuite.</b> La suite est gratuite avec un compte.",
+    "fitEpisodeOf": "<b>Épisode {{n}} sur {{total}}</b> de cette série.",
+    "fitEpisodeOfSeason": "<b>Épisode {{n}} sur {{total}}</b> de la saison {{season}}.",
+    "levelHint": {
+      "A1": "Phrases courtes et mots du quotidien",
+      "A2": "Phrases simples sur la vie de tous les jours",
+      "B1": "Accessible si vous lisez un article de presse simple",
+      "B2": "À l’aise si vous lisez déjà la presse",
+      "C1": "Phrases longues, vocabulaire riche et expressions",
+      "C2": "Écrit pour des lecteurs natifs"
+    }
   },
   "series": {
     "season": "Saison {{n}}",
@@ -99,7 +118,14 @@
     "readMark": "Lu",
     "orderNote": "Vous êtes à : {{label}}. L'histoire commence à l'épisode 1.",
     "orderNoteLink": "Commencer à l'épisode 1",
-    "close": "Fermer"
+    "close": "Fermer",
+    "tilesHeading": "Séries",
+    "fitTitle": "Cette série est-elle pour vous ?",
+    "fitMostly": "<b>{{percent}} % des épisodes</b> sont de niveau {{level}}.",
+    "fitMinutes": "<b>Environ {{minutes}} min</b> de lecture par épisode.",
+    "fitAccess_one": "<b>La saison {{list}} est gratuite.</b> Dans les autres saisons, la page 1 est gratuite et la suite demande un compte gratuit.",
+    "fitAccess_other": "<b>Les saisons {{list}} sont gratuites.</b> Dans les autres saisons, la page 1 est gratuite et la suite demande un compte gratuit.",
+    "fitAllFree": "<b>Tous les épisodes sont gratuits</b>, ici même."
   },
   "pagination": {
     "showing": "Affichage de {{start}} à {{end}} sur {{total}}",

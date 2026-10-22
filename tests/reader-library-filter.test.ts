@@ -6,8 +6,8 @@ import {
   filterBooks,
   fromSearchParams,
   pageOf,
+  knownLanguage,
   pageWindow,
-  pickLanguage,
   sortBooks,
   toSearchParams,
 } from '@/pages/reader/library/library-filter';
@@ -56,6 +56,13 @@ describe('library filtering and sort', () => {
     expect(filterBooks(BOOKS, { ...EMPTY_FILTERS, query: 'vancouver days' }).map((b) => b.id)).toEqual(['a', 'b']);
   });
 
+  it('shows every language together until one is picked', () => {
+    const mixed = [...BOOKS, book('f', { language: 'fr', title: 'Matin à Montréal', level: 'A2' })];
+    expect(filterBooks(mixed, EMPTY_FILTERS).map((b) => b.id)).toEqual(['d', 'f', 'a', 'b', 'c']);
+    expect(filterBooks(mixed, { ...EMPTY_FILTERS, language: 'fr' }).map((b) => b.id)).toEqual(['f']);
+    expect(filterBooks(mixed, { ...EMPTY_FILTERS, language: 'en', level: 'A2' }).map((b) => b.id)).toEqual(['a', 'b']);
+  });
+
   it('combines level, type and series', () => {
     expect(filterBooks(BOOKS, { ...EMPTY_FILTERS, level: 'A2' }).map((b) => b.id)).toEqual(['a', 'b']);
     expect(filterBooks(BOOKS, { ...EMPTY_FILTERS, kind: 'classic' }).map((b) => b.id)).toEqual(['d']);
@@ -72,9 +79,12 @@ describe('library filtering and sort', () => {
       ],
     };
     const f = availableFacets(BOOKS, facets, 'en');
-    expect(f.levels).toEqual(['A1', 'B1']);
+    expect(f.levels).toEqual(['A1', 'A2', 'B1']);
     expect(f.kinds).toEqual(['original', 'classic']);
     expect(f.series.map((s) => s.slug)).toEqual(['van']);
+    // All languages: every series; a language with no books offers nothing.
+    expect(availableFacets(BOOKS, facets, '').series.map((s) => s.slug)).toEqual(['van', 'fr']);
+    expect(availableFacets(BOOKS, facets, 'fr')).toMatchObject({ levels: [], kinds: [] });
   });
 });
 
@@ -97,28 +107,37 @@ describe('paging', () => {
 });
 
 describe('URL state', () => {
-  it('round-trips language and every filter', () => {
-    const filters = { level: 'B2' as const, kind: 'adapted' as const, series: 'van', query: 'Étoile', page: 3 };
-    const q = toSearchParams(filters, 'fr');
+  it('round-trips the language and every filter', () => {
+    const filters = {
+      language: 'fr',
+      level: 'B2' as const,
+      kind: 'adapted' as const,
+      series: 'van',
+      query: 'Étoile',
+      page: 3,
+    };
+    const q = toSearchParams(filters);
     expect(q.toString()).toBe('lang=fr&level=B2&type=adapted&series=van&q=%C3%89toile&page=3');
-    expect(fromSearchParams(new URLSearchParams(q.toString()))).toEqual({ lang: 'fr', filters });
+    expect(fromSearchParams(new URLSearchParams(q.toString()))).toEqual(filters);
   });
-  it('is empty when nothing is set, and ignores junk', () => {
-    expect(toSearchParams(EMPTY_FILTERS, null).toString()).toBe('');
+  it('is empty when nothing is set (all languages), and ignores junk', () => {
+    expect(toSearchParams(EMPTY_FILTERS).toString()).toBe('');
+    expect(fromSearchParams(new URLSearchParams(''))).toEqual(EMPTY_FILTERS);
     const parsed = fromSearchParams(new URLSearchParams('level=Z9&type=novel&page=-4'));
-    expect(parsed).toEqual({ lang: null, filters: EMPTY_FILTERS });
-    expect(fromSearchParams(new URLSearchParams('page=abc')).filters.page).toBe(1);
+    expect(parsed).toEqual(EMPTY_FILTERS);
+    expect(fromSearchParams(new URLSearchParams('page=abc')).page).toBe(1);
+  });
+  it('an old ?lang= link opens with that language picked', () => {
+    expect(fromSearchParams(new URLSearchParams('lang=fr')).language).toBe('fr');
   });
 });
 
-describe('language choice', () => {
-  const langs = [{ code: 'fr' }, { code: 'en' }, { code: 'es' }];
-  it('prefers the URL, then the learning language, then English, then the first', () => {
-    expect(pickLanguage(langs, 'es', 'fr')).toBe('es');
-    expect(pickLanguage(langs, 'zz', 'fr')).toBe('fr');
-    expect(pickLanguage(langs, null, 'de')).toBe('en');
-    expect(pickLanguage([{ code: 'es' }], null, 'de')).toBe('es');
-    expect(pickLanguage([], null, 'en')).toBeUndefined();
+describe('language filter', () => {
+  const langs = [{ code: 'fr' }, { code: 'en' }];
+  it('keeps a language the library has, and drops one it does not', () => {
+    expect(knownLanguage('fr', langs)).toBe('fr');
+    expect(knownLanguage('zz', langs)).toBe('');
+    expect(knownLanguage('', langs)).toBe('');
   });
 });
 

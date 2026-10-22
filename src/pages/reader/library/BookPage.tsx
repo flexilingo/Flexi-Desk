@@ -8,15 +8,28 @@ import {
   type ReactNode,
 } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Lock, X } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookMarked,
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Layers,
+  Lock,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import {
   addToLibraryShelf,
   getLibraryBook,
   getLibraryPage,
+  getLibrarySeries,
   getLibraryShelf,
   getPublicLibraryPage,
   setLibraryPosition,
@@ -27,8 +40,19 @@ import { errorCodeOf, useReaderErrorText } from '../lib/use-error-text';
 import { ReaderFrame } from '../text/ReaderFrame';
 import { ReaderTextScreen } from '../text/ReaderTextScreen';
 import { useReaderPager } from '../text/useReaderPager';
-import { bookReadPath, languageName, seriesReadPath } from './format';
-import { EMPTY_PROGRESS, orderNoteSettingKey, progressFromShelf, showOrderNote, type SeriesProgress } from './series-progress';
+import { bookReadPath, coverFor, languageName, readingMinutes, seriesReadPath } from './format';
+import { BookCover, LevelBadge } from './BookCover';
+import { ClampedSummary } from './ClampedSummary';
+import { ReadMark } from './LibraryCards';
+import { LibraryFitCard } from './LibraryFitCard';
+import { episodePlace } from './series-fit';
+import {
+  EMPTY_PROGRESS,
+  orderNoteSettingKey,
+  progressFromShelf,
+  showOrderNote,
+  type SeriesProgress,
+} from './series-progress';
 import type { LibraryShelfItem } from '../services/libraryService';
 import { seriesSupported, subscribeSeriesSupport } from './library-capability';
 import {
@@ -41,6 +65,9 @@ import {
   seasonTitle,
 } from './series';
 import { bookPageSettingKey, parseBookmark } from './bookmark';
+
+/** The bold part of a fit line (the translations' `<b>`). */
+const bold = <b className="font-semibold text-foreground" />;
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
@@ -57,6 +84,11 @@ function Placeholder({ children }: { children: ReactNode }) {
  * full-height page a PDF gets. Only the source of the pages and the bookmark differ, plus
  * what a book has and a file does not: a chapter heading, the next episode and a licence.
  *
+ * Laid out like the website's episode page: on a wide reading area this season's episodes
+ * on the left, the book in the middle under a compact header (and the gentle order note),
+ * "is this right for you?" with the previous / next episode on the right. A narrower area
+ * folds the columns under the book.
+ *
  * Signed in: pages come from `page`, the book goes on the shelf once (quietly) and the
  * bookmark is the shelf's. Signed out: the book is public, so pages come from `public-page`
  * and the reader's place is kept in the local settings instead.
@@ -65,6 +97,7 @@ export function BookPage() {
   const { bookId = '' } = useParams<{ bookId: string }>();
   const { t } = useTranslation('reader');
   const { t: tl, i18n } = useTranslation('readingLibrary');
+  const { t: tDesk } = useTranslation('readerDesk');
   const errorText = useReaderErrorText();
   const session = useAuthStore((s) => s.session);
   const authLoading = useAuthStore((s) => s.isLoading);
@@ -121,18 +154,46 @@ export function BookPage() {
   }, [bookId, signedIn, authLoading]);
 
   // The note stays closed for the whole series once the reader closes it.
-  const seriesKey = detail?.book.series_slug ? orderNoteSettingKey(detail.book.language, detail.book.series_slug) : null;
+  const orderNoteKey = detail?.book.series_slug
+    ? orderNoteSettingKey(detail.book.language, detail.book.series_slug)
+    : null;
   useEffect(() => {
-    if (!seriesKey) return;
+    if (!orderNoteKey) return;
     let cancelled = false;
     setNoteClosed(null);
-    getSetting(seriesKey)
+    getSetting(orderNoteKey)
       .then((raw) => !cancelled && setNoteClosed(raw === '1'))
       .catch(() => !cancelled && setNoteClosed(false));
     return () => {
       cancelled = true;
     };
-  }, [seriesKey]);
+  }, [orderNoteKey]);
+
+  // Each episode's length for the season list — the series answer has it, the book answer
+  // does not. Once per series, not per episode; without it the list simply has no minutes.
+  const seriesLanguage = detail?.book.language ?? null;
+  const seriesSlug = withSeries ? (detail?.book.series_slug ?? null) : null;
+  const seriesKey = seriesLanguage && seriesSlug ? `${seriesLanguage}/${seriesSlug}` : null;
+  const [episodeWords, setEpisodeWords] = useState<{
+    key: string;
+    byId: Map<string, number>;
+  } | null>(null);
+  const wordsAskedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!seriesKey || !seriesLanguage || !seriesSlug || wordsAskedFor.current === seriesKey) return;
+    wordsAskedFor.current = seriesKey;
+    getLibrarySeries(seriesLanguage, seriesSlug)
+      .then((d) =>
+        setEpisodeWords({
+          key: seriesKey,
+          byId: new Map(d.seasons.flatMap((s) => s.episodes).map((e) => [e.id, e.word_count])),
+        }),
+      )
+      .catch(() => {
+        // A courtesy: the list works without minutes, and the next visit asks again.
+        wordsAskedFor.current = null;
+      });
+  }, [seriesKey, seriesLanguage, seriesSlug]);
 
   // Opening a book is starting it: it goes on the shelf once, quietly, so it is waiting under
   // "My reading" next time.
@@ -218,6 +279,7 @@ export function BookPage() {
           })
         : tl('catalog.episode', { n: book.series_order })
       : null;
+  const isEpisode = !!(book.series_title && episodeLabel);
   const seriesList = detail?.series ?? [];
   // An episode opened out of order gets a quiet note: the story starts at episode 1. Never a
   // lock — someone practising one exam task opens that episode directly. Signed in only: the
@@ -237,6 +299,358 @@ export function BookPage() {
     firstEpisode.id !== book.id &&
     showOrderNote(book.series_order, progress);
   const sameSeason = readingOrder(seriesList).filter((e) => seasonOf(e) === seasonOf(book));
+  const num = new Intl.NumberFormat(i18n.language);
+  const minutesOf = (words: number) => tl('catalog.minutes', { n: readingMinutes(words) });
+  const words = episodeWords?.key === seriesKey ? episodeWords.byId : null;
+  const seriesHref =
+    withSeries && book.series_slug ? seriesReadPath(book.language, book.series_slug) : null;
+
+  // ── The compact header over the reader: cover, where it sits, title, the facts, summary ──
+  const header = (
+    <header>
+      <div className="flex items-start gap-4">
+        <div className="w-[72px] shrink-0">
+          <BookCover
+            slug={book.slug}
+            title={book.title}
+            level={book.level}
+            series={book.series_title}
+            coverPath={coverFor(book)}
+            size="sm"
+            alt={tl('public.coverAlt', { title: book.title })}
+            showLevel={false}
+          />
+        </div>
+        <div className="min-w-0">
+          <nav
+            aria-label={tl('public.breadcrumb')}
+            className="flex flex-wrap items-center gap-1.5 text-[12px] text-muted-foreground"
+          >
+            <Link to={`/reader/library?lang=${book.language}`} className="hover:text-primary">
+              {tl('book.backToLibrary')}
+            </Link>
+            {isEpisode && (
+              <>
+                <span aria-hidden>/</span>
+                {seriesHref ? (
+                  <Link to={seriesHref} className="font-semibold text-primary hover:underline">
+                    <bdi lang={book.language}>{book.series_title}</bdi>
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-primary">
+                    <bdi lang={book.language}>{book.series_title}</bdi>
+                  </span>
+                )}
+              </>
+            )}
+          </nav>
+          <h1 className="mt-1 text-[22px] font-bold leading-[1.2] tracking-[-0.015em] text-foreground @3xl:text-[26px]">
+            <bdi lang={book.language} dir="auto">
+              {book.title}
+            </bdi>
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[13px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <LevelBadge level={book.level} />
+              {tDesk(`library.levelName.${book.level}`)}
+            </span>
+            {isEpisode ? (
+              <span className="inline-flex items-center gap-1">
+                <Layers className="h-3.5 w-3.5 text-caption" />
+                {episodeLabel}
+              </span>
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <BookMarked className="h-3.5 w-3.5 text-caption" />
+                  {tl(`catalog.kind.${book.kind}`)}
+                </span>
+                <span>
+                  <bdi>{tl('book.by', { author: book.author })}</bdi>
+                </span>
+              </>
+            )}
+            <span className="inline-flex items-center gap-1 tabular-nums">
+              <FileText className="h-3.5 w-3.5 text-caption" />
+              {tl('catalog.pages', { n: book.page_count })}
+            </span>
+            <span className="inline-flex items-center gap-1 tabular-nums">
+              <Clock className="h-3.5 w-3.5 text-caption" />
+              {minutesOf(book.word_count)}
+            </span>
+          </div>
+        </div>
+      </div>
+      {book.summary && <ClampedSummary text={book.summary} lang={book.language} className="mt-4" />}
+    </header>
+  );
+
+  const orderNoteBlock =
+    orderNote && episodeLabel ? (
+      <div className="flex items-start gap-3 rounded-[9px] border border-primary/30 bg-primary/[0.08] px-4 py-3">
+        <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
+          {tl('series.orderNote', { label: episodeLabel })}{' '}
+          <Link
+            to={bookReadPath(firstEpisode!.id)}
+            className="font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            {tl('series.orderNoteLink')}
+          </Link>
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setNoteClosed(true);
+            if (orderNoteKey) setSetting(orderNoteKey, '1').catch(() => {});
+          }}
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label={tl('series.close')}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    ) : null;
+
+  // ── "Is this episode (book) right for you?" from what the page knows ──
+  const place = isEpisode ? episodePlace(seriesList, book.id) : null;
+  const points: ReactNode[] = [
+    <Trans
+      t={tl}
+      i18nKey="public.fitLength"
+      count={book.page_count}
+      values={{ minutes: num.format(readingMinutes(book.word_count)) }}
+      components={{ b: bold }}
+    />,
+  ];
+  if (place) {
+    points.push(
+      place.season != null ? (
+        <Trans
+          t={tl}
+          i18nKey="public.fitEpisodeOfSeason"
+          values={{
+            n: num.format(place.n),
+            total: num.format(place.total),
+            season: num.format(place.season),
+          }}
+          components={{ b: bold }}
+        />
+      ) : (
+        <Trans
+          t={tl}
+          i18nKey="public.fitEpisodeOf"
+          values={{ n: num.format(place.n), total: num.format(place.total) }}
+          components={{ b: bold }}
+        />
+      ),
+    );
+  }
+  // Signed in, every page is open; signed out, a later season keeps page 1 open.
+  points.push(
+    book.requires_login && !signedIn ? (
+      <Trans t={tl} i18nKey="public.fitLogin" components={{ b: bold }} />
+    ) : (
+      <Trans t={tl} i18nKey="public.fitFree" components={{ b: bold }} />
+    ),
+  );
+  const fitCard = (
+    <LibraryFitCard
+      title={isEpisode ? tl('public.fitTitleEpisode') : tl('public.fitTitleBook')}
+      level={book.level}
+      levelName={tDesk(`library.levelName.${book.level}`)}
+      levelHint={tl(`public.levelHint.${book.level}`)}
+      shares={null}
+      points={points}
+      compact
+    />
+  );
+
+  // ── Previous / next episode, across season borders ──
+  const nextLabel = (e: { series_season?: number | null }) =>
+    seasonOf(e) !== seasonOf(book)
+      ? (seasonTitle(detail!, seasonOf(e)) ?? tl('series.season', { n: seasonOf(e) }))
+      : tl('series.nextEpisode');
+  const episodeNav =
+    withSeries && (nav.prev || nav.next) ? (
+      <nav
+        aria-label={tl('series.episodeNav')}
+        className="divide-y divide-border overflow-hidden rounded-[9px] border border-border bg-card shadow-xs"
+      >
+        {nav.prev && (
+          <Link
+            to={bookReadPath(nav.prev.id)}
+            className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted"
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0 text-caption rtl:rotate-180" />
+            <span className="min-w-0">
+              <span className="block text-[11px] font-semibold uppercase tracking-wide text-caption">
+                {tl('series.prevEpisode')}
+              </span>
+              <span
+                className="line-clamp-1 text-[13.5px] font-bold text-foreground group-hover:text-primary"
+                lang={book.language}
+                dir="auto"
+              >
+                {nav.prev.title}
+              </span>
+            </span>
+          </Link>
+        )}
+        {nav.next && (
+          <Link
+            to={bookReadPath(nav.next.id)}
+            className="group flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted"
+          >
+            <span className="min-w-0">
+              <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary">
+                {nextLabel(nav.next)}
+              </span>
+              <span
+                className="line-clamp-1 text-[13.5px] font-bold text-foreground group-hover:text-primary"
+                lang={book.language}
+                dir="auto"
+              >
+                {nav.next.title}
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-primary rtl:rotate-180" />
+          </Link>
+        )}
+      </nav>
+    ) : null;
+
+  // ── This season's episodes, a table of contents (the series page has all of them) ──
+  const hasSeasonList = isEpisode && !!seriesHref && sameSeason.length > 1;
+  const seasonList = (sticky: boolean) =>
+    hasSeasonList ? (
+      <section
+        className={cn(
+          'flex flex-col overflow-hidden rounded-[9px] border border-border bg-card shadow-xs',
+          sticky && 'max-h-[calc(100vh-10rem)]',
+        )}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <h2 className="text-[14px] font-bold text-foreground">
+            {seasonal
+              ? `${tl('series.season', { n: seasonOf(book) })} · ${tl('series.episodeNav')}`
+              : tl('series.episodeNav')}
+          </h2>
+          <Link
+            to={seriesHref!}
+            className="shrink-0 text-[12px] font-semibold text-primary hover:underline"
+          >
+            {tl('series.allEpisodes')}
+          </Link>
+        </div>
+        <ol className={cn('py-1', sticky && 'overflow-y-auto')}>
+          {sameSeason.map((e) => {
+            const current = e.id === book.id;
+            const count = words?.get(e.id);
+            const row = (
+              <>
+                <span className="w-6 shrink-0 text-end text-[12px] font-semibold tabular-nums text-caption">
+                  {num.format(e.series_episode ?? e.series_order)}
+                </span>
+                <span
+                  className={cn(
+                    'min-w-0 flex-1 truncate text-[13px]',
+                    current ? 'font-bold text-primary' : 'text-foreground group-hover:text-primary',
+                  )}
+                  lang={book.language}
+                  dir="auto"
+                  title={e.title}
+                >
+                  {e.title}
+                </span>
+                {count != null && (
+                  <span className="shrink-0 text-[11px] tabular-nums text-caption">
+                    {minutesOf(count)}
+                  </span>
+                )}
+                {progress.finished.has(e.series_order) && (
+                  <ReadMark label={tl('series.readMark')} />
+                )}
+              </>
+            );
+            return (
+              <li key={e.id}>
+                {current ? (
+                  <div
+                    aria-current="page"
+                    className="flex items-center gap-2.5 border-s-[3px] border-primary bg-primary/[0.08] py-2 pe-4 ps-[13px]"
+                  >
+                    {row}
+                  </div>
+                ) : (
+                  <Link
+                    to={bookReadPath(e.id)}
+                    className="group flex items-center gap-2.5 px-4 py-2 transition-colors hover:bg-muted"
+                  >
+                    {row}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    ) : null;
+
+  const licence =
+    book.license !== 'own' ? (
+      <p className="px-1 pb-2 text-xs text-muted-foreground" dir="auto">
+        {tl(`book.license.${book.license}`)}
+        {book.attribution ? ` · ${book.attribution}` : ''}
+        {book.source_url && (
+          <>
+            {' · '}
+            <a
+              href={book.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              {tl('book.source')}
+            </a>
+          </>
+        )}
+      </p>
+    ) : null;
+
+  // Three columns when the reader has the room (this season | the book | fit and next), two
+  // below that (the season list moves under the book), one in a narrow window. The widths
+  // are the reading area's own, not the window's: the app's sidebar and the grammar panel
+  // take their share.
+  const around = (card: ReactNode) => (
+    <div
+      className={cn(
+        'mx-auto grid items-start gap-6 @3xl:grid-cols-[minmax(0,1fr)_264px]',
+        hasSeasonList
+          ? 'max-w-[78rem] @5xl:grid-cols-[232px_minmax(0,1fr)_264px]'
+          : 'max-w-[64rem]',
+      )}
+    >
+      {hasSeasonList && (
+        <aside className="hidden @5xl:sticky @5xl:top-0 @5xl:block">{seasonList(true)}</aside>
+      )}
+      <div className="min-w-0">
+        {/* The book at a reading measure: prose is unreadable at full width. */}
+        <div className="mx-auto w-full max-w-[68ch] space-y-5">
+          {header}
+          {orderNoteBlock}
+          {card}
+          {episodeNav && <div className="@3xl:hidden">{episodeNav}</div>}
+          {hasSeasonList && <div className="@5xl:hidden">{seasonList(false)}</div>}
+          {licence}
+        </div>
+      </div>
+      <aside className="space-y-5 @3xl:sticky @3xl:top-0">
+        {fitCard}
+        {episodeNav && <div className="hidden @3xl:block">{episodeNav}</div>}
+      </aside>
+    </div>
+  );
 
   return (
     <ReaderFrame>
@@ -247,6 +661,7 @@ export function BookPage() {
         language={book.language}
         pager={pager}
         errorText={errorText(pager.error)}
+        around={around}
         gate={
           gated ? (
             <div className="rounded-xl border border-primary/30 bg-primary/[0.08] p-5">
@@ -270,38 +685,11 @@ export function BookPage() {
           ) : undefined
         }
         pageAbove={
-          <>
-            {orderNote && pager.page === 1 && episodeLabel ? (
-              <div className="mb-5 flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/[0.08] px-4 py-3">
-                <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
-                  {tl('series.orderNote', { label: episodeLabel })}{' '}
-                  <Link
-                    to={bookReadPath(firstEpisode!.id)}
-                    className="font-semibold text-primary underline-offset-2 hover:underline"
-                  >
-                    {tl('series.orderNoteLink')}
-                  </Link>
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNoteClosed(true);
-                    if (seriesKey) setSetting(seriesKey, '1').catch(() => {});
-                  }}
-                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  aria-label={tl('series.close')}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
-            {pager.chapterTitle ? (
-              <h2 className="mb-4 text-lg font-bold text-foreground" dir="auto" lang={book.language}>
-                {pager.chapterTitle}
-              </h2>
-            ) : null}
-          </>
+          pager.chapterTitle ? (
+            <h2 className="mb-4 text-lg font-bold text-foreground" dir="auto" lang={book.language}>
+              {pager.chapterTitle}
+            </h2>
+          ) : null
         }
         // The end of a book is a moment, not one more page: it says so, names what comes next,
         // and the dead Next button gives its place to it.
@@ -320,12 +708,12 @@ export function BookPage() {
         }
         pageEnd={
           gated ? undefined : nextEpisode ? (
-            <Button asChild>
+            // The website's primary «Next episode: title» in place of a dead Next.
+            <Button asChild variant="accent" className="min-w-0 max-w-[65%]">
               <Link to={bookReadPath(nextEpisode.id)}>
-                {withSeries && seasonOf(nextEpisode) !== seasonOf(book)
-                  ? (seasonTitle(detail!, seasonOf(nextEpisode)) ??
-                    tl('series.season', { n: seasonOf(nextEpisode) }))
-                  : tl('book.nextEpisode')}
+                <span className="truncate">
+                  {tl('series.nextEpisode')}: <bdi lang={book.language}>{nextEpisode.title}</bdi>
+                </span>
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
@@ -334,109 +722,6 @@ export function BookPage() {
               <Link to="/reader">{t('read.backToReading')}</Link>
             </Button>
           )
-        }
-        footer={
-          <>
-            {withSeries && (nav.prev || nav.next) && (
-              <nav className="grid gap-3 px-1 sm:grid-cols-2" aria-label={tl('series.episodeNav')}>
-                {nav.prev ? (
-                  <Link
-                    to={bookReadPath(nav.prev.id)}
-                    className="group rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted"
-                  >
-                    <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-                      {tl('series.prevEpisode')}
-                    </span>
-                    <span
-                      className="mt-1 block text-sm font-bold text-foreground group-hover:text-primary"
-                      lang={book.language}
-                      dir="auto"
-                    >
-                      {nav.prev.title}
-                    </span>
-                  </Link>
-                ) : (
-                  <span className="hidden sm:block" />
-                )}
-                {nav.next && (
-                  <Link
-                    to={bookReadPath(nav.next.id)}
-                    className="group rounded-xl border border-primary/30 bg-primary/[0.08] p-4 text-end transition-colors hover:bg-primary/[0.14]"
-                  >
-                    <span className="flex items-center justify-end gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
-                      {seasonOf(nav.next) !== seasonOf(book)
-                        ? (seasonTitle(detail!, seasonOf(nav.next)) ??
-                          tl('series.season', { n: seasonOf(nav.next) }))
-                        : tl('series.nextEpisode')}
-                      <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                    </span>
-                    <span
-                      className="mt-1 block text-sm font-bold text-foreground group-hover:text-primary"
-                      lang={book.language}
-                      dir="auto"
-                    >
-                      {nav.next.title}
-                    </span>
-                  </Link>
-                )}
-              </nav>
-            )}
-            {withSeries && book.series_slug && sameSeason.length > 1 && (
-              <section className="px-1">
-                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-sm font-bold text-foreground">
-                    {seasonal
-                      ? (seasonTitle(detail!, seasonOf(book)) ??
-                        tl('series.season', { n: seasonOf(book) }))
-                      : tl('public.moreInSeries')}
-                  </h2>
-                  <Link
-                    to={seriesReadPath(book.language, book.series_slug)}
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
-                  >
-                    {tl('series.allEpisodes')}
-                    <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                  </Link>
-                </div>
-                <ol className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-                  {sameSeason.map((e) => (
-                    <li key={e.id}>
-                      <Link
-                        to={bookReadPath(e.id)}
-                        aria-current={e.id === book.id ? 'page' : undefined}
-                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted ${e.id === book.id ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}
-                      >
-                        <span className="w-6 shrink-0">{e.series_episode ?? e.series_order}</span>
-                        <span className="min-w-0 flex-1 truncate" lang={book.language} dir="auto">
-                          {e.title}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            )}
-            {book.license !== 'own' ? (
-              <p className="px-1 pb-2 text-xs text-muted-foreground" dir="auto">
-                {tl(`book.license.${book.license}`)}
-                {book.attribution ? ` · ${book.attribution}` : ''}
-                {book.source_url && (
-                  <>
-                    {' · '}
-                    <a
-                      href={book.source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-foreground"
-                    >
-                      {tl('book.source')}
-                    </a>
-                  </>
-                )}
-              </p>
-            ) : null}
-          </>
         }
       />
     </ReaderFrame>

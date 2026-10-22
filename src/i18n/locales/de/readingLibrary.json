@@ -70,7 +70,26 @@
     "filters": "Filter",
     "all": "Alle",
     "showResults_one": "{{count}} Buch anzeigen",
-    "showResults_other": "{{count}} Bücher anzeigen"
+    "showResults_other": "{{count}} Bücher anzeigen",
+    "breadcrumb": "Brotkrümelnavigation",
+    "booksLabel_one": "Buch",
+    "booksLabel_other": "Bücher",
+    "fitTitleBook": "Passt dieses Buch zu dir?",
+    "fitTitleEpisode": "Passt diese Folge zu dir?",
+    "fitLength_one": "<b>{{count}} Seite</b>, etwa <b>{{minutes}} Min.</b> Lesezeit.",
+    "fitLength_other": "<b>{{count}} Seiten</b>, etwa <b>{{minutes}} Min.</b> Lesezeit.",
+    "fitFree": "<b>Hier kostenlos lesbar</b>, jede Seite.",
+    "fitLogin": "<b>Seite 1 ist kostenlos.</b> Der Rest ist mit Konto kostenlos.",
+    "fitEpisodeOf": "<b>Folge {{n}} von {{total}}</b> dieser Reihe.",
+    "fitEpisodeOfSeason": "<b>Folge {{n}} von {{total}}</b> in Staffel {{season}}.",
+    "levelHint": {
+      "A1": "Kurze Sätze und Wörter aus dem Alltag",
+      "A2": "Einfache Sätze über den Alltag",
+      "B1": "Passt, wenn du eine einfache Nachricht lesen kannst",
+      "B2": "Bequem, wenn du schon Zeitungsartikel liest",
+      "C1": "Lange Sätze, reicher Wortschatz und Redewendungen",
+      "C2": "Für Muttersprachler geschrieben"
+    }
   },
   "series": {
     "season": "Staffel {{n}}",
@@ -99,7 +118,14 @@
     "readMark": "Gelesen",
     "orderNote": "Das ist {{label}}. Die Geschichte beginnt mit Folge 1.",
     "orderNoteLink": "Mit Folge 1 beginnen",
-    "close": "Schließen"
+    "close": "Schließen",
+    "tilesHeading": "Reihen",
+    "fitTitle": "Passt diese Reihe zu dir?",
+    "fitMostly": "<b>{{percent}} % der Folgen</b> sind {{level}}.",
+    "fitMinutes": "<b>Etwa {{minutes}} Min.</b> Lesezeit pro Folge.",
+    "fitAccess_one": "<b>Staffel {{list}} ist kostenlos lesbar.</b> In den anderen Staffeln ist Seite 1 kostenlos, für den Rest braucht es ein kostenloses Konto.",
+    "fitAccess_other": "<b>Die Staffeln {{list}} sind kostenlos lesbar.</b> In den anderen Staffeln ist Seite 1 kostenlos, für den Rest braucht es ein kostenloses Konto.",
+    "fitAllFree": "<b>Alle Folgen sind kostenlos lesbar</b>, direkt hier."
   },
   "pagination": {
     "showing": "{{start}} bis {{end}} von {{total}}",

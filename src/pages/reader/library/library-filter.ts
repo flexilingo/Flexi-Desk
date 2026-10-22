@@ -3,7 +3,7 @@ import type { CefrLevel, LibraryBook, LibraryFacets } from '../services/libraryS
 /**
  * The Library's filtering, sorting, paging and URL state, as pure functions.
  *
- * The whole catalogue for one language is already in memory, so every filter works on it in
+ * The whole catalogue (every language) is already in memory, so every filter works on it in
  * place with no request per click. Ported from the website's `LibraryBrowser`, which kept
  * all of this inline.
  */
@@ -15,6 +15,8 @@ export type BookKind = (typeof KINDS)[number];
 export const PAGE_SIZE = 12;
 
 export interface LibraryFilters {
+  /** One language's books, or '' for every language together (the default). */
+  language: string;
   level: CefrLevel | '';
   kind: BookKind | '';
   series: string;
@@ -24,6 +26,7 @@ export interface LibraryFilters {
 }
 
 export const EMPTY_FILTERS: LibraryFilters = {
+  language: '',
   level: '',
   kind: '',
   series: '',
@@ -49,6 +52,7 @@ export function filterBooks(books: LibraryBook[], f: LibraryFilters): LibraryBoo
   const q = fold(f.query.trim());
   return sortBooks(
     books
+      .filter((b) => !f.language || b.language === f.language)
       .filter((b) => !f.level || b.level === f.level)
       .filter((b) => !f.kind || b.kind === f.kind)
       .filter((b) => !f.series || b.series_slug === f.series)
@@ -64,34 +68,32 @@ export function pageOf<T>(items: T[], page: number, size = PAGE_SIZE) {
 }
 
 export const hasActiveFilters = (f: LibraryFilters, searchText = f.query) =>
-  Boolean(searchText || f.level || f.kind || f.series);
+  Boolean(searchText || f.language || f.level || f.kind || f.series);
 
-/** The kinds, levels and series that actually exist for this shelf — nothing is offered that matches nothing. */
-export function availableFacets(books: LibraryBook[], facets: LibraryFacets, lang: string) {
+/**
+ * The levels, kinds and series that actually exist in the chosen language (or in all of
+ * them) — nothing is offered that matches nothing.
+ */
+export function availableFacets(books: LibraryBook[], facets: LibraryFacets, language: string) {
+  const pool = language ? books.filter((b) => b.language === language) : books;
   return {
-    levels: LEVEL_ORDER.filter((l) => facets.levels.some((x) => x.code === l)),
-    kinds: KINDS.filter((k) => books.some((b) => b.kind === k)),
-    series: facets.series.filter((s) => s.language === lang),
+    levels: LEVEL_ORDER.filter((l) => pool.some((b) => b.level === l)),
+    kinds: KINDS.filter((k) => pool.some((b) => b.kind === k)),
+    series: language ? facets.series.filter((s) => s.language === language) : facets.series,
   };
 }
 
-/** The language to open on: the one asked for, else the learner's, else English, else the first. */
-export function pickLanguage(
-  languages: { code: string }[],
-  picked: string | null | undefined,
-  learning: string | null | undefined,
-): string | undefined {
-  const has = (code: string | null | undefined) => !!code && languages.some((l) => l.code === code);
-  if (has(picked)) return picked as string;
-  if (has(learning)) return learning as string;
-  if (has('en')) return 'en';
-  return languages[0]?.code;
-}
+/** A language from the URL that the library does not have is no filter at all. */
+export const knownLanguage = (language: string, languages: { code: string }[]) =>
+  language && languages.some((l) => l.code === language) ? language : '';
 
-/** Filters and language to a query string (`level`, `type`, `series`, `q`, `page`, `lang`). */
-export function toSearchParams(f: LibraryFilters, lang?: string | null): URLSearchParams {
+/**
+ * Filters to a query string (`lang`, `level`, `type`, `series`, `q`, `page`). `lang` is the
+ * language filter, so an old `?lang=fr` link opens the library with French picked.
+ */
+export function toSearchParams(f: LibraryFilters): URLSearchParams {
   const q = new URLSearchParams();
-  if (lang) q.set('lang', lang);
+  if (f.language) q.set('lang', f.language);
   if (f.level) q.set('level', f.level);
   if (f.kind) q.set('type', f.kind);
   if (f.series) q.set('series', f.series);
@@ -101,22 +103,17 @@ export function toSearchParams(f: LibraryFilters, lang?: string | null): URLSear
 }
 
 /** The inverse; anything unknown or malformed is ignored rather than trusted. */
-export function fromSearchParams(q: URLSearchParams): {
-  filters: LibraryFilters;
-  lang: string | null;
-} {
+export function fromSearchParams(q: URLSearchParams): LibraryFilters {
   const level = q.get('level') as CefrLevel | null;
   const kind = q.get('type');
   const page = parseInt(q.get('page') ?? '1', 10);
   return {
-    lang: q.get('lang') || null,
-    filters: {
-      level: level && LEVEL_ORDER.includes(level) ? level : '',
-      kind: kind && (KINDS as readonly string[]).includes(kind) ? (kind as BookKind) : '',
-      series: q.get('series') ?? '',
-      query: q.get('q') ?? '',
-      page: Number.isFinite(page) && page > 1 ? page : 1,
-    },
+    language: q.get('lang') ?? '',
+    level: level && LEVEL_ORDER.includes(level) ? level : '',
+    kind: kind && (KINDS as readonly string[]).includes(kind) ? (kind as BookKind) : '',
+    series: q.get('series') ?? '',
+    query: q.get('q') ?? '',
+    page: Number.isFinite(page) && page > 1 ? page : 1,
   };
 }
 

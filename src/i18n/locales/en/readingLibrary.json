@@ -70,7 +70,26 @@
     "filters": "Filters",
     "all": "All",
     "showResults_one": "Show {{count}} book",
-    "showResults_other": "Show {{count}} books"
+    "showResults_other": "Show {{count}} books",
+    "breadcrumb": "Breadcrumb",
+    "booksLabel_one": "book",
+    "booksLabel_other": "books",
+    "fitTitleBook": "Is this book right for you?",
+    "fitTitleEpisode": "Is this episode right for you?",
+    "fitLength_one": "<b>{{count}} page</b>, about <b>{{minutes}} min</b> of reading.",
+    "fitLength_other": "<b>{{count}} pages</b>, about <b>{{minutes}} min</b> of reading.",
+    "fitFree": "<b>Free to read here</b>, every page of it.",
+    "fitLogin": "<b>Page 1 is free to read.</b> The rest is free with an account.",
+    "fitEpisodeOf": "<b>Episode {{n}} of {{total}}</b> in this series.",
+    "fitEpisodeOfSeason": "<b>Episode {{n}} of {{total}}</b> in season {{season}}.",
+    "levelHint": {
+      "A1": "Short sentences and everyday words",
+      "A2": "Simple sentences about everyday life",
+      "B1": "Fine if you can read a simple news story",
+      "B2": "Comfortable if you already read news articles",
+      "C1": "Long sentences, rich vocabulary and idioms",
+      "C2": "Written for native readers"
+    }
   },
   "series": {
     "season": "Season {{n}}",
@@ -99,7 +118,14 @@
     "readMark": "Read",
     "orderNote": "This is {{label}}. The story starts with episode 1.",
     "orderNoteLink": "Start from episode 1",
-    "close": "Close"
+    "close": "Close",
+    "tilesHeading": "Series",
+    "fitTitle": "Is this series right for you?",
+    "fitMostly": "<b>{{percent}}% of the episodes</b> are {{level}}.",
+    "fitMinutes": "<b>About {{minutes}} min</b> of reading per episode.",
+    "fitAccess_one": "<b>Season {{list}} is free to read.</b> In the other seasons, page 1 is free and the rest needs a free account.",
+    "fitAccess_other": "<b>Seasons {{list}} are free to read.</b> In the other seasons, page 1 is free and the rest needs a free account.",
+    "fitAllFree": "<b>Every episode is free to read</b>, right here."
   },
   "pagination": {
     "showing": "Showing {{start}} to {{end}} of {{total}}",
