@@ -276,6 +276,7 @@ pub async fn deck_hub_install_tesseract() -> Result<String, String> {
 /// CLI is not installed, e.g. on Windows). Only image files are read.
 #[tauri::command]
 pub fn deck_hub_read_image(image_path: String) -> Result<tauri::ipc::Response, String> {
+    crate::commands::path_grants::require(&image_path)?;
     if !is_image_path(&image_path) {
         return Err("NOT_AN_IMAGE".to_string());
     }
@@ -311,6 +312,7 @@ pub fn deck_hub_ocr_image(
     image_path: String,
     language: Option<String>,
 ) -> Result<OcrResult, String> {
+    crate::commands::path_grants::require(&image_path)?;
     let tess_lang = language
         .as_deref()
         .map(ocr::lang_to_tesseract)
@@ -328,6 +330,7 @@ pub fn deck_hub_export_quizlet(
     file_path: String,
     deck_id: String,
 ) -> Result<ExportResult, String> {
+    crate::commands::path_grants::require(&file_path)?;
     let conn = lock_db(&state)?;
 
     let mut stmt = conn

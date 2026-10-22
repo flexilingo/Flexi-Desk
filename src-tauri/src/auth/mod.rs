@@ -144,36 +144,122 @@ async fn refresh_session(
         }
     }
 
-    let resp = reqwest::Client::new()
+    if let Some(wait) = backoff_remaining(base_url) {
+        return Err(format!("REFRESH_RETRY_LATER: retry in {}s", wait.as_secs().max(1)));
+    }
+
+    let resp = match reqwest::Client::new()
         .post(format!("{base_url}/auth/v1/token?grant_type=refresh_token"))
         .header("apikey", SUPABASE_ANON_KEY)
         .header("Content-Type", "application/json")
         .json(&serde_json::json!({ "refresh_token": current.refresh_token }))
         .send()
         .await
-        .map_err(|e| format!("Refresh request failed: {e}"))?;
+    {
+        Ok(r) => r,
+        Err(e) => {
+            // Offline / DNS / timeout: the session is fine, try again later.
+            note_refresh_failure(base_url, None);
+            return Err(format!("Refresh request failed: {e}"));
+        }
+    };
 
     let status = resp.status();
     if !status.is_success() {
-        // Only a rejected token ends the session; a 5xx / outage must not sign the user out.
-        if status.is_client_error() {
+        let retry_after = resp
+            .headers()
+            .get("retry-after")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.trim().parse::<u64>().ok());
+        let text = resp.text().await.unwrap_or_default();
+        // Only a definitive "this refresh token is not valid" ends the session. A 429
+        // (shared IP, burst), 408, 5xx or any other failure keeps it and retries later.
+        if refresh_token_rejected(status.as_u16(), &text) {
+            reset_backoff(base_url);
             if let Ok(conn) = db.lock() {
                 let _ = conn.execute("DELETE FROM auth_tokens WHERE key = 'session'", []);
             }
             return Err("Session expired. Please log in again.".to_string());
         }
+        note_refresh_failure(base_url, retry_after);
         return Err(format!("Refresh failed ({})", status.as_u16()));
     }
+    reset_backoff(base_url);
 
     let body: serde_json::Value = resp.json().await
         .map_err(|e| format!("Failed to parse refresh response: {e}"))?;
     let session = parse_supabase_auth_response(&body)?;
 
     let conn = db.lock().map_err(|e| format!("DB lock error: {e}"))?;
+    // Compare-and-swap: only store if the session is still the one whose refresh token was
+    // spent. If the user signed out (or signed in as someone else) while the request was in
+    // flight, the response must not bring the old session back.
+    match get_token(&conn, "session").and_then(|j| serde_json::from_str::<AuthSession>(&j).ok()) {
+        None => return Err("Session expired. Please log in again.".to_string()),
+        Some(stored) if stored.refresh_token != current.refresh_token => return Ok(stored),
+        Some(_) => {}
+    }
     let session_json = serde_json::to_string(&session)
         .map_err(|e| format!("Serialize error: {e}"))?;
     store_token(&conn, "session", &session_json)?;
     Ok(session)
+}
+
+// ── Refresh failure handling ───────────────────────────
+
+/// Does this refresh response mean the refresh token itself is dead (400/401 with an
+/// `invalid_grant`-like code), as opposed to "try again later"?
+fn refresh_token_rejected(status: u16, body: &str) -> bool {
+    if status != 400 && status != 401 {
+        return false;
+    }
+    let body = body.to_lowercase();
+    [
+        "invalid_grant",
+        "refresh_token_not_found",
+        "refresh_token_already_used",
+        "session_not_found",
+        "session_expired",
+        "invalid refresh token",
+        "refresh token not found",
+        "refresh token is not valid",
+        "already used",
+    ]
+    .iter()
+    .any(|code| body.contains(code))
+}
+
+/// Wait before the n-th consecutive retry (n starts at 1): 5 s, 10 s, 20 s ... capped at 5 min.
+fn backoff_delay(failures: u32) -> std::time::Duration {
+    let secs = 5u64.saturating_mul(1u64 << failures.saturating_sub(1).min(6));
+    std::time::Duration::from_secs(secs.min(300))
+}
+
+/// Per auth server: (consecutive failures, no new request before this instant).
+static REFRESH_BACKOFF: std::sync::LazyLock<
+    std::sync::Mutex<std::collections::HashMap<String, (u32, std::time::Instant)>>,
+> = std::sync::LazyLock::new(Default::default);
+
+fn backoff_remaining(key: &str) -> Option<std::time::Duration> {
+    let g = REFRESH_BACKOFF.lock().ok()?;
+    g.get(key)?.1.checked_duration_since(std::time::Instant::now())
+}
+
+fn note_refresh_failure(key: &str, retry_after_secs: Option<u64>) {
+    if let Ok(mut g) = REFRESH_BACKOFF.lock() {
+        let failures = g.get(key).map_or(0, |e| e.0).saturating_add(1);
+        let own = backoff_delay(failures);
+        let wait = retry_after_secs
+            .map(|s| std::time::Duration::from_secs(s.min(300)).max(own))
+            .unwrap_or(own);
+        g.insert(key.to_string(), (failures, std::time::Instant::now() + wait));
+    }
+}
+
+fn reset_backoff(key: &str) {
+    if let Ok(mut g) = REFRESH_BACKOFF.lock() {
+        g.remove(key);
+    }
 }
 
 #[tauri::command]
@@ -676,5 +762,72 @@ mod tests {
         let db = db_with(None);
         let err = fetch_bytes_with_refresh(&db, &base, "/x").await.unwrap_err();
         assert_eq!(err, "HTTP_404");
+    }
+
+    #[test]
+    fn only_a_dead_refresh_token_counts_as_rejected() {
+        assert!(refresh_token_rejected(400, r#"{"error":"invalid_grant","error_description":"Invalid Refresh Token: Already Used"}"#));
+        assert!(refresh_token_rejected(400, r#"{"code":400,"error_code":"refresh_token_not_found"}"#));
+        assert!(refresh_token_rejected(401, r#"{"error_code":"refresh_token_already_used"}"#));
+        assert!(!refresh_token_rejected(429, r#"{"error_code":"over_request_rate_limit"}"#));
+        assert!(!refresh_token_rejected(429, r#"{"error":"invalid_grant"}"#), "429 never signs out");
+        assert!(!refresh_token_rejected(400, r#"{"error":"validation_failed"}"#));
+        assert!(!refresh_token_rejected(500, "{}"));
+        assert!(!refresh_token_rejected(408, ""));
+    }
+
+    #[test]
+    fn backoff_grows_and_is_capped() {
+        let secs: Vec<u64> = (1..=9).map(|n| backoff_delay(n).as_secs()).collect();
+        assert_eq!(secs, vec![5, 10, 20, 40, 80, 160, 300, 300, 300]);
+    }
+
+    #[tokio::test]
+    async fn rate_limited_refresh_keeps_the_session_and_backs_off() {
+        let (base, log) = serve(|line, _| {
+            if line.contains("/auth/v1/token") { (429, r#"{"error_code":"over_request_rate_limit"}"#.into()) }
+            else { (401, r#"{"error":"expired"}"#.into()) }
+        }).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let _ = call_with_refresh(&db, &base, "GET", "/x", None).await;
+        assert!(read_session(&db).unwrap().is_some(), "429 must not sign the user out");
+        // A second 401 right away does not hit the auth server again.
+        let _ = call_with_refresh(&db, &base, "GET", "/x", None).await;
+        let refreshes = log.lock().unwrap().iter().filter(|l| l.contains("/auth/v1/token")).count();
+        assert_eq!(refreshes, 1, "retry waits for the backoff");
+        assert!(read_session(&db).unwrap().is_some());
+    }
+
+    #[tokio::test]
+    async fn network_failure_on_refresh_keeps_the_session() {
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let err = refresh_session(&db, "http://127.0.0.1:1", None).await.err().expect("must fail");
+        assert!(err.contains("Refresh request failed"));
+        assert!(read_session(&db).unwrap().is_some());
+    }
+
+    #[tokio::test]
+    async fn expired_token_response_signs_out_on_401_too() {
+        let (base, _log) = serve(|line, _| {
+            if line.contains("/auth/v1/token") { (401, r#"{"error_code":"refresh_token_not_found"}"#.into()) }
+            else { (401, r#"{"error":"expired"}"#.into()) }
+        }).await;
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let _ = call_with_refresh(&db, &base, "GET", "/x", None).await;
+        assert!(read_session(&db).unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn a_sign_out_during_a_refresh_is_not_undone() {
+        let db = db_with(Some(("old-access", "old-refresh")));
+        let db2 = db.clone();
+        let (base, _log) = serve(move |_, _| {
+            // The user clicks "Sign out" while the refresh request is in flight.
+            db2.lock().unwrap().execute("DELETE FROM auth_tokens WHERE key = 'session'", []).unwrap();
+            (200, REFRESH_OK.into())
+        }).await;
+        let res = refresh_session(&db, &base, None).await;
+        assert!(res.is_err());
+        assert!(read_session(&db).unwrap().is_none(), "the old session must not come back");
     }
 }

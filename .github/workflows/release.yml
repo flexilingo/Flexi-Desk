@@ -1,5 +1,18 @@
 name: Release
 
+# A pushed `v*` tag builds the installers and creates a DRAFT release. Nothing reaches users
+# until the owner opens the draft on GitHub, tests the CI-built installers and presses
+# "Publish" (that is the moment `releases/latest/download/latest.json` starts pointing at it,
+# which is what the in-app updater reads).
+#
+# Repository settings this workflow reads (Settings > Secrets and variables > Actions):
+#   secrets.TAURI_SIGNING_PRIVATE_KEY / TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+#       updater signing key; the build fails without them (updater artifacts are signed)
+#   vars.FLEXI_DESK_GOOGLE_CLIENT_ID  (or secrets.FLEXI_DESK_GOOGLE_CLIENT_ID)
+#   secrets.FLEXI_DESK_GOOGLE_CLIENT_SECRET
+#       the Google OAuth "Desktop app" client, compiled in at build time. Without the client
+#       id the "Continue with Google" button is hidden in the released installers.
+
 on:
   push:
     tags:
@@ -69,11 +82,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          FLEXI_DESK_GOOGLE_CLIENT_ID: ${{ vars.FLEXI_DESK_GOOGLE_CLIENT_ID || secrets.FLEXI_DESK_GOOGLE_CLIENT_ID }}
+          FLEXI_DESK_GOOGLE_CLIENT_SECRET: ${{ secrets.FLEXI_DESK_GOOGLE_CLIENT_SECRET }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'FlexiDesk ${{ github.ref_name }}'
           releaseBody: 'See the assets below for platform-specific installers.'
-          releaseDraft: false
+          releaseDraft: true
           prerelease: false
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true

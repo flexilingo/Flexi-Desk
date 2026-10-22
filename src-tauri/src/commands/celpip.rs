@@ -88,7 +88,16 @@ pub struct CelpipRecording {
     pub duration_sec: i64,
 }
 
+/// A session id or task key used as a path segment: letters, digits, `_` and `-` only, so it
+/// can never be `..`, hold a separator, or be an absolute path that replaces the base.
+fn is_safe_segment(s: &str) -> bool {
+    !s.is_empty() && s.len() <= 64 && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+}
+
 fn recordings_dir(session_id: &str) -> Result<std::path::PathBuf, String> {
+    if !is_safe_segment(session_id) {
+        return Err("INVALID_SESSION".to_string());
+    }
     let dir = dirs::data_dir()
         .ok_or("Cannot determine data directory")?
         .join("com.flexilingo.desk")
@@ -115,6 +124,9 @@ pub fn celpip_record_start(
         return Err("RECORDING_ALREADY_ACTIVE".to_string());
     }
 
+    if !is_safe_segment(&task_key) {
+        return Err("INVALID_TASK".to_string());
+    }
     let path = recordings_dir(&session_id)?.join(format!("{task_key}.wav"));
     let handle = audio::start_recording(device_id.as_deref(), path.clone())?;
 
@@ -606,5 +618,20 @@ mod tests {
         assert!(!is_own_recording_path("u1", "u1//x.wav"));
         assert!(!is_own_recording_path("", "/x.wav"));
         assert!(!is_own_recording_path("u1", "u10/x.wav"));
+    }
+}
+
+#[cfg(test)]
+mod segment_tests {
+    use super::*;
+
+    #[test]
+    fn only_plain_ids_are_path_segments() {
+        assert!(is_safe_segment("3f2a-91bc_7"));
+        assert!(is_safe_segment("writing_task_1"));
+        for bad in ["", "..", "../../x", "a/b", "a\\b", "/abs", "C:\\x", "a b", ".hidden", &"x".repeat(65)] {
+            assert!(!is_safe_segment(bad), "{bad}");
+        }
+        assert!(recordings_dir("../x").is_err());
     }
 }

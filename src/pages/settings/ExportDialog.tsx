@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
-import { save } from '@tauri-apps/plugin-dialog';
+import { save } from '@/lib/nativeDialog';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,

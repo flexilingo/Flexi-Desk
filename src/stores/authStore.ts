@@ -39,7 +39,13 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ session: refreshed, isLoading: false });
             return;
           } catch {
-            set({ session: null, isLoading: false });
+            // Rust already signed the user out (and deleted the session) if the refresh token
+            // was rejected. After any other failure (offline, rate limit, server error) the
+            // stored session is still valid: keep it and let the next request refresh it.
+            const stillStored = await invoke<AuthSession | null>('auth_get_session').catch(
+              () => null,
+            );
+            set({ session: stillStored, isLoading: false });
             return;
           }
         }

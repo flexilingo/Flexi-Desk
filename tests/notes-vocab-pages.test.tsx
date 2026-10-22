@@ -26,7 +26,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   convertFileSrc: (p: string) => p,
 }));
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => () => {}) }));
-vi.mock('@tauri-apps/plugin-dialog', () => ({ save: vi.fn(async () => '/tmp/out.csv'), open: vi.fn() }));
+vi.mock('@/lib/nativeDialog', () => ({ save: vi.fn(async () => '/tmp/out.csv'), open: vi.fn() }));
 const openUrl = vi.fn(async () => {});
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: (u: string) => openUrl(u) }));
 vi.mock('@/lib/supabase', () => ({

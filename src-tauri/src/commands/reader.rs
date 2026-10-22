@@ -32,6 +32,7 @@ pub struct InspectedPath {
 /// Size and duplicate check for a file the user chose, before importing it.
 #[tauri::command]
 pub fn reader_inspect_path(state: State<'_, AppState>, path: String) -> Result<InspectedPath, String> {
+    crate::commands::path_grants::require(&path)?;
     let p = std::path::Path::new(&path);
     let meta = std::fs::metadata(p).map_err(|_| "FILE_NOT_FOUND".to_string())?;
     if !meta.is_file() || meta.len() == 0 {
@@ -62,6 +63,7 @@ pub struct ImportPath {
 /// Copy a PDF the user chose into `$APPDATA/reader/<uuid>.pdf` and register it.
 #[tauri::command]
 pub async fn reader_import_path(state: State<'_, AppState>, input: ImportPath) -> Result<ReaderDocument, String> {
+    crate::commands::path_grants::require(&input.path)?;
     let dir = files::default_reader_dir()?;
     let id = uuid::Uuid::new_v4().to_string();
     let src = std::path::PathBuf::from(&input.path);
@@ -229,10 +231,24 @@ async fn fetch_page(url: &reqwest::Url) -> Result<String, String> {
         return Err("URL_TOO_LARGE".to_string());
     }
     let plain = kind.starts_with("text/plain");
-    let body = resp.text_with_charset("utf-8").await.map_err(|_| "URL_FETCH_FAILED".to_string())?;
-    if body.len() as u64 > MAX_PAGE_BYTES {
-        return Err("URL_TOO_LARGE".to_string());
+    // Read in chunks and stop at the cap: a chunked response has no Content-Length to check.
+    let mut resp = resp;
+    let mut bytes: Vec<u8> = Vec::new();
+    while let Some(chunk) = resp.chunk().await.map_err(|_| "URL_FETCH_FAILED".to_string())? {
+        if bytes.len() as u64 + chunk.len() as u64 > MAX_PAGE_BYTES {
+            return Err("URL_TOO_LARGE".to_string());
+        }
+        bytes.extend_from_slice(&chunk);
     }
+    // Decode with the charset the server declared (Latin-1 pages are common), UTF-8 otherwise.
+    let label = kind
+        .split("charset=")
+        .nth(1)
+        .map(|c| c.split(';').next().unwrap_or("").trim().trim_matches('"').to_string())
+        .unwrap_or_default();
+    let encoding = encoding_rs::Encoding::for_label(label.as_bytes()).unwrap_or(encoding_rs::UTF_8);
+    let (body, _, _) = encoding.decode(&bytes);
+    let body = body.into_owned();
     // A plain-text address is already the text: wrap it so the extractor keeps its lines.
     Ok(if plain { format!("<body><pre>{}</pre></body>", body.replace('&', "&amp;").replace('<', "&lt;")) } else { body })
 }

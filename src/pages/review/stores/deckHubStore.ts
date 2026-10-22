@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { invoke } from '@tauri-apps/api/core';
-import { save } from '@tauri-apps/plugin-dialog';
+import { save } from '@/lib/nativeDialog';
 import type { AnalyzedItem, RawAnalyzedItem, DeckWithStats, RawDeckWithStats } from '../types';
 import { mapAnalyzedItem, mapDeck } from '../types';
 import { ocrImageLocally } from '../lib/localOcr';

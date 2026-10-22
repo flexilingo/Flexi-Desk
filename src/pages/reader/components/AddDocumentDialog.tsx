@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } fro
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
-import { open as pickFile } from '@tauri-apps/plugin-dialog';
+import { open as pickFile } from '@/lib/nativeDialog';
 import {
   AlignLeft,
   BookOpen,

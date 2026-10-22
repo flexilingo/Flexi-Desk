@@ -1,5 +1,7 @@
 use rusqlite::Connection;
 
+use super::legacy_content::run_v041_legacy_content;
+
 /// Run all database migrations in order.
 /// Each migration is idempotent (uses IF NOT EXISTS).
 pub fn run_migrations(conn: &Connection) -> Result<(), String> {
@@ -16,18 +18,10 @@ pub fn run_migrations_through(conn: &Connection, last: &str) -> Result<(), Strin
     run_migrations_inner(conn, Some(last))
 }
 
-fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(), String> {
-    // Create migrations tracking table
-    conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS _migrations (
-            version TEXT PRIMARY KEY,
-            applied_at TEXT NOT NULL DEFAULT (datetime('now'))
-        );"
-    )
-    .map_err(|e| format!("Failed to create migrations table: {e}"))?;
-
-    // Run each migration only if not already applied
-    let migrations: Vec<(&str, &str)> = vec![
+/// The ordered migration list. A migration whose SQL is empty is a Rust step, dispatched by
+/// version in `run_list`.
+fn migration_list() -> Vec<(&'static str, &'static str)> {
+    vec![
         ("V001", V001_INITIAL_SCHEMA),
         ("V002", V002_SRS_TABLES),
         ("V003", V003_READING_TABLES),
@@ -59,45 +53,113 @@ fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(
         ("V029", V029_TRANSCRIPT_SOURCES),
         ("V030", V030_EPISODE_IMAGE),
         ("V031", V031_CELPIP),
-        // Special-handled below: rebuilding `deck_cards` requires toggling the
+        // Special-handled in `run_list`: rebuilding `deck_cards` requires toggling the
         // foreign_keys pragma, which cannot be done from inside execute_batch.
         ("V032", ""),
         ("V033", V033_TRANSCRIPT_LANG),
         ("V034", V034_BACKFILL_TRANSCRIPT_LANG),
         ("V035", V035_READER),
-        // Special-handled below: widening a CHECK means rebuilding `reader_documents`.
+        // Special-handled: widening a CHECK means rebuilding `reader_documents`.
         ("V036", ""),
         ("V037", V037_OVERVIEW),
         ("V038", V038_DECK_PAIR),
         ("V039", V039_CHEATSHEET_CACHE),
         ("V040", crate::writing_practice::store::MIGRATION_SQL),
-    ];
+        // Special-handled: copies the removed Reading / Writing modules' content into the
+        // new Reader and Writing practice (needs the Reader's page splitting).
+        ("V041", ""),
+    ]
+}
+
+fn ensure_migrations_table(conn: &Connection) -> Result<(), String> {
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS _migrations (
+            version TEXT PRIMARY KEY,
+            applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );",
+    )
+    .map_err(|e| format!("Failed to create migrations table: {e}"))
+}
+
+fn is_applied(conn: &Connection, version: &str) -> Result<bool, String> {
+    conn.prepare("SELECT COUNT(*) FROM _migrations WHERE version = ?1")
+        .and_then(|mut stmt| stmt.query_row(rusqlite::params![version], |row| row.get(0)))
+        .map(|count: i64| count > 0)
+        .map_err(|e| format!("Failed to check migration {version}: {e}"))
+}
+
+fn record_migration(conn: &Connection, version: &str) -> Result<(), String> {
+    conn.execute(
+        "INSERT OR IGNORE INTO _migrations (version) VALUES (?1)",
+        rusqlite::params![version],
+    )
+    .map(|_| ())
+    .map_err(|e| format!("Failed to record migration {version}: {e}"))
+}
+
+/// For an EXISTING database with migrations still to run: the last version it has applied.
+/// `None` for a brand-new database (nothing worth backing up) or one that is up to date.
+pub fn pending_from_version(conn: &Connection) -> Option<String> {
+    let has_table: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '_migrations'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap_or(0);
+    if has_table == 0 {
+        return None;
+    }
+    let last: Option<String> = conn
+        .query_row("SELECT MAX(version) FROM _migrations", [], |r| r.get(0))
+        .ok()
+        .flatten();
+    let last = last?;
+    let pending = migration_list()
+        .iter()
+        .any(|(v, _)| !is_applied(conn, v).unwrap_or(true));
+    pending.then_some(last)
+}
+
+fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(), String> {
+    run_list(conn, &migration_list(), stop_after)
+}
+
+/// Run every unapplied migration of `migrations`, each one ALL-OR-NOTHING: its statements and
+/// its `_migrations` row commit together, so a failure or a crash halfway leaves the database
+/// at the previous version and the migration re-runnable. (SQLite DDL is transactional.)
+/// The foreign-key rebuilds (V032, V036) keep their pragma dance outside and the rebuild plus
+/// the `_migrations` row inside one transaction.
+fn run_list(
+    conn: &Connection,
+    migrations: &[(&str, &str)],
+    stop_after: Option<&str>,
+) -> Result<(), String> {
+    ensure_migrations_table(conn)?;
 
     for (version, sql) in migrations {
-        let already_applied: bool = conn
-            .prepare("SELECT COUNT(*) FROM _migrations WHERE version = ?1")
-            .and_then(|mut stmt| stmt.query_row(rusqlite::params![version], |row| row.get(0)))
-            .map(|count: i64| count > 0)
-            .map_err(|e| format!("Failed to check migration {version}: {e}"))?;
-
-        if !already_applied {
-            // V014 needs special handling for SQLite table recreation
-            if version == "V014" {
-                run_v014_caption_live_status(conn)?;
-            } else if version == "V032" {
-                run_v032_decks_notes(conn)?;
-            } else if version == "V036" {
-                run_v036_reader_text(conn)?;
-            } else if !sql.is_empty() {
-                conn.execute_batch(sql)
-                    .map_err(|e| format!("Failed to run migration {version}: {e}"))?;
+        let version = *version;
+        if !is_applied(conn, version)? {
+            match version {
+                "V032" => run_v032_decks_notes(conn)?,
+                "V036" => run_v036_reader_text(conn)?,
+                _ => {
+                    let tx = conn
+                        .unchecked_transaction()
+                        .map_err(|e| format!("Failed to start migration {version}: {e}"))?;
+                    match version {
+                        "V014" => run_v014_caption_live_status(&tx)?,
+                        "V041" => run_v041_legacy_content(&tx)?,
+                        _ if !sql.is_empty() => tx
+                            .execute_batch(sql)
+                            .map_err(|e| format!("Failed to run migration {version}: {e}"))?,
+                        _ => {}
+                    }
+                    record_migration(&tx, version)?;
+                    tx.commit()
+                        .map_err(|e| format!("Failed to commit migration {version}: {e}"))?;
+                }
             }
-
-            conn.execute(
-                "INSERT INTO _migrations (version) VALUES (?1)",
-                rusqlite::params![version],
-            )
-            .map_err(|e| format!("Failed to record migration {version}: {e}"))?;
         }
 
         if stop_after == Some(version) {
@@ -106,6 +168,20 @@ fn run_migrations_inner(conn: &Connection, stop_after: Option<&str>) -> Result<(
     }
 
     Ok(())
+}
+
+/// Foreign-key violations in the given tables only. A pre-existing orphan elsewhere in the
+/// database must not abort a rebuild that cannot have caused it.
+fn fk_violations(conn: &Connection, tables: &[&str]) -> Result<i64, rusqlite::Error> {
+    let mut n = 0i64;
+    for t in tables {
+        let mut stmt = conn.prepare(&format!("PRAGMA foreign_key_check({t})"))?;
+        let mut rows = stmt.query([])?;
+        while rows.next()?.is_some() {
+            n += 1;
+        }
+    }
+    Ok(n)
 }
 
 /// Does `table` have a column named `column`?
@@ -187,23 +263,18 @@ fn run_v032_decks_notes(conn: &Connection) -> Result<(), String> {
 
         // A dangling row here would mean the rebuild lost a card that something still
         // points at. Refuse to commit rather than ship a corrupt DB.
-        let violations: i64 = {
-            let mut stmt = tx
-                .prepare("PRAGMA foreign_key_check")
-                .map_err(|e| format!("V032: foreign_key_check: {e}"))?;
-            let mut rows = stmt.query([]).map_err(|e| format!("V032: fk rows: {e}"))?;
-            let mut n = 0i64;
-            while rows.next().map_err(|e| format!("V032: fk row: {e}"))?.is_some() {
-                n += 1;
-            }
-            n
-        };
+        let violations = fk_violations(
+            &tx,
+            &["deck_cards", "srs_progress", "review_logs", "pr_card_proficiency", "pr_activity_template", "pr_card_encounter", "notes"],
+        )
+        .map_err(|e| format!("V032: foreign_key_check: {e}"))?;
         if violations > 0 {
             return Err(format!(
                 "V032: {violations} foreign-key violations after rebuild; refusing to commit"
             ));
         }
 
+        record_migration(&tx, "V032")?;
         tx.commit().map_err(|e| format!("V032: commit: {e}"))
     })();
 
@@ -2118,20 +2189,15 @@ fn run_v036_reader_text(conn: &Connection) -> Result<(), String> {
         }
         tx.execute_batch(V036_TEXT_PAGES).map_err(|e| format!("V036: pages: {e}"))?;
 
-        let violations: i64 = {
-            let mut stmt = tx
-                .prepare("PRAGMA foreign_key_check")
-                .map_err(|e| format!("V036: foreign_key_check: {e}"))?;
-            let mut rows = stmt.query([]).map_err(|e| format!("V036: fk rows: {e}"))?;
-            let mut n = 0i64;
-            while rows.next().map_err(|e| format!("V036: fk row: {e}"))?.is_some() {
-                n += 1;
-            }
-            n
-        };
+        let violations = fk_violations(
+            &tx,
+            &["reader_documents", "reader_ocr_pages", "reader_sessions", "reader_word_log", "reader_notes", "reader_text_boxes", "reader_marks", "reader_text_pages"],
+        )
+        .map_err(|e| format!("V036: foreign_key_check: {e}"))?;
         if violations > 0 {
             return Err(format!("V036: {violations} foreign-key violations after rebuild; refusing to commit"));
         }
+        record_migration(&tx, "V036")?;
         tx.commit().map_err(|e| format!("V036: commit: {e}"))
     })();
 
@@ -2348,5 +2414,67 @@ mod v035_reader_migration_tests {
         assert!(conn
             .execute("INSERT INTO reader_ocr_pages (document_id, page, status) VALUES ('d1', 1, 'weird')", [])
             .is_err());
+    }
+}
+
+#[cfg(test)]
+mod atomic_migration_tests {
+    use super::*;
+
+    #[test]
+    fn a_failing_migration_rolls_back_completely_and_can_be_re_run() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations_through(&conn, "V025").unwrap();
+
+        // The first statement succeeds, the second fails: nothing may stay behind.
+        let broken = [("V026", "ALTER TABLE decks ADD COLUMN zz_probe TEXT; INSERT INTO no_such_table VALUES (1);")];
+        let err = run_list(&conn, &broken, None).unwrap_err();
+        assert!(err.contains("V026"), "{err}");
+        assert!(!column_exists(&conn, "decks", "zz_probe"), "the ALTER must be rolled back");
+        assert!(!is_applied(&conn, "V026").unwrap());
+        let max: String = conn.query_row("SELECT MAX(version) FROM _migrations", [], |r| r.get(0)).unwrap();
+        assert_eq!(max, "V025", "database stays at the previous version");
+
+        // Re-runnable: the same migration, fixed, now applies once.
+        let fixed = [("V026", "ALTER TABLE decks ADD COLUMN zz_probe TEXT;")];
+        run_list(&conn, &fixed, None).unwrap();
+        assert!(column_exists(&conn, "decks", "zz_probe"));
+        assert!(is_applied(&conn, "V026").unwrap());
+    }
+
+    #[test]
+    fn a_failure_midway_leaves_the_last_good_version_and_the_real_list_then_runs() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations_through(&conn, "V027").unwrap();
+        let list = [("V028", "ALTER TABLE podcast_episodes ADD COLUMN zz_x TEXT; SELECT bogus_function();")];
+        assert!(run_list(&conn, &list, None).is_err());
+        assert!(!column_exists(&conn, "podcast_episodes", "zz_x"));
+        run_migrations(&conn).expect("re-run after the failure");
+        assert!(is_applied(&conn, "V041").unwrap());
+        assert_eq!(conn.query_row::<i64, _, _>("PRAGMA foreign_keys", [], |r| r.get(0)).unwrap(), 1);
+    }
+
+    #[test]
+    fn an_orphan_outside_the_rebuilt_tables_does_not_block_v032() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations_through(&conn, "V031").unwrap();
+        conn.pragma_update(None, "foreign_keys", "OFF").unwrap();
+        conn.execute("INSERT INTO reading_documents (id, title, content, language) VALUES ('d', 't', 'c', 'en')", []).unwrap();
+        conn.execute("INSERT INTO reading_highlights (id, document_id, word, vocabulary_id) VALUES ('h', 'd', 'w', 999)", []).unwrap();
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        run_migrations(&conn).expect("an unrelated orphan must not abort the upgrade");
+    }
+
+    #[test]
+    fn pending_from_version_reports_only_existing_databases_with_work_to_do() {
+        let conn = Connection::open_in_memory().unwrap();
+        assert_eq!(pending_from_version(&conn), None, "brand-new database");
+        run_migrations_through(&conn, "V025").unwrap();
+        assert_eq!(pending_from_version(&conn).as_deref(), Some("V025"));
+        run_migrations(&conn).unwrap();
+        assert_eq!(pending_from_version(&conn), None, "up to date");
     }
 }

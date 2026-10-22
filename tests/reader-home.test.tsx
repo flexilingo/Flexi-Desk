@@ -68,7 +68,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: (...a: unknown[]) => invoke(...(a as [string, Record<string, unknown>?])),
   convertFileSrc: (p: string) => p,
 }));
-vi.mock('@tauri-apps/plugin-dialog', () => ({ open: vi.fn() }));
+vi.mock('@/lib/nativeDialog', () => ({ open: vi.fn() }));
 
 let catalog: unknown[] = [];
 let shelf: unknown[] = [];

@@ -6,7 +6,6 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "dialog:default",
     "fs:default",
     "core:tray:default",
     "updater:default",

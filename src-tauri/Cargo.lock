@@ -1302,6 +1302,7 @@ dependencies = [
  "cpal",
  "csv",
  "dirs 5.0.1",
+ "encoding_rs",
  "flate2",
  "futures-util",
  "hound",

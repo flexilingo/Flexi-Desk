@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Image, Upload, Loader2, Sparkles } from 'lucide-react';
 import { AiErrorOrSetup } from '@/components/ai/AiErrorOrSetup';
 import { useTranslation } from 'react-i18next';
-import { open as openFile } from '@tauri-apps/plugin-dialog';
+import { open as openFile } from '@/lib/nativeDialog';
 import { Button } from '@/components/ui/button';
 import { InlineError } from '@/components/common/InlineError';
 import { LanguagePicker } from '../parts/LanguagePicker';

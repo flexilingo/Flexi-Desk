@@ -47,7 +47,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   convertFileSrc: (p: string) => `asset://localhost/${encodeURIComponent(p)}`,
 }));
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => () => {}) }));
-vi.mock('@tauri-apps/plugin-dialog', () => ({ open: vi.fn() }));
+vi.mock('@/lib/nativeDialog', () => ({ open: vi.fn() }));
 vi.mock('@/lib/supabase', () => ({ supabaseCall: vi.fn(async () => ({})) }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

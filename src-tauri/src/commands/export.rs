@@ -15,6 +15,7 @@ pub fn export_vocabulary_csv(
     file_path: String,
     options: ExportOptions,
 ) -> Result<ExportResult, String> {
+    crate::commands::path_grants::require(&file_path)?;
     let conn = lock_db(&state)?;
     crate::export::csv_handler::export_csv(&conn, &file_path, &options)
 }
@@ -25,6 +26,7 @@ pub fn export_vocabulary_anki(
     file_path: String,
     options: ExportOptions,
 ) -> Result<ExportResult, String> {
+    crate::commands::path_grants::require(&file_path)?;
     let conn = lock_db(&state)?;
     crate::export::anki::export_anki(&conn, &file_path, &options)
 }
@@ -34,6 +36,7 @@ pub fn import_preview_csv(
     file_path: String,
     delimiter: Option<String>,
 ) -> Result<ImportPreview, String> {
+    crate::commands::path_grants::require(&file_path)?;
     crate::export::csv_handler::preview_csv(&file_path, delimiter.as_deref())
 }
 
@@ -43,6 +46,7 @@ pub fn export_deck_anki(
     file_path: String,
     deck_id: String,
 ) -> Result<ExportResult, String> {
+    crate::commands::path_grants::require(&file_path)?;
     let conn = lock_db(&state)?;
     crate::export::anki::export_deck_anki(&conn, &file_path, &deck_id)
 }
@@ -53,6 +57,7 @@ pub fn import_execute(
     file_path: String,
     options: ImportOptions,
 ) -> Result<ImportResult, String> {
+    crate::commands::path_grants::require(&file_path)?;
     let conn = lock_db(&state)?;
     match options.format {
         ImportFormat::Csv | ImportFormat::Tsv => {

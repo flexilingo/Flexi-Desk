@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FileAudio, FolderOpen, Loader2 } from 'lucide-react';
-import { open } from '@tauri-apps/plugin-dialog';
+import { open } from '@/lib/nativeDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {

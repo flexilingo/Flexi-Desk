@@ -55,16 +55,23 @@ pub fn run() {
                 format!("Failed to create app data directory: {e}")
             })?;
 
-            let conn = init_database(&data_dir).map_err(|e| {
-                format!("Failed to initialize database: {e}")
-            })?;
+            commands::path_grants::set_app_dir(&data_dir);
+            let conn = match init_database(&data_dir) {
+                Ok(conn) => conn,
+                Err(e) => {
+                    // No window can open without a database: say why, then leave cleanly
+                    // instead of panicking silently on every launch.
+                    db::report::report_db_failure(app.handle(), &e);
+                    std::process::exit(1);
+                }
+            };
 
             // Seed keyboard shortcut defaults
             shortcuts::seed_defaults(&conn).ok();
 
             // Reset stale 'processing' transcript status from previous crashed runs
             conn.execute(
-                "UPDATE podcast_episodes SET transcript_status = 'pending' WHERE transcript_status = 'processing'",
+                "UPDATE podcast_episodes SET transcript_status = 'none' WHERE transcript_status = 'processing'",
                 [],
             ).ok();
 
@@ -277,6 +284,8 @@ pub fn run() {
             commands::notes::local_notes_delete,
             commands::notes::local_note_prepare_open,
             commands::notes::export_save_text,
+            commands::path_grants::dialog_pick_file,
+            commands::path_grants::dialog_pick_save,
             commands::notes::export_open_printable,
             commands::sidecar::sidecar_start_spacy,
             commands::sidecar::sidecar_stop_spacy,

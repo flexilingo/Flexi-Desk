@@ -380,6 +380,7 @@ pub async fn caption_transcribe_file(
     file_path: String,
     language: Option<String>,
 ) -> Result<TranscriptionResult, String> {
+    crate::commands::path_grants::require(&file_path)?;
     let lang = language.unwrap_or_else(|| "auto".to_string());
 
     if !std::path::Path::new(&file_path).exists() {
@@ -546,7 +547,9 @@ pub fn caption_configure_whisper(
     model_path: String,
     model_name: Option<String>,
 ) -> Result<WhisperInfo, String> {
-    // Validate paths
+    // Validate paths. The binary is later EXECUTED, so it must be one the user picked.
+    crate::commands::path_grants::require(&binary_path)?;
+    crate::commands::path_grants::require(&model_path)?;
     if !whisper::check_binary(&binary_path) {
         return Err(format!("Whisper binary not found or not executable: {binary_path}"));
     }

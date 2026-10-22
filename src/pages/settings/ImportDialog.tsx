@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { LanguageSearchSelect } from '@/pages/account/components/LanguageSearchSelect';
 import { invoke } from '@tauri-apps/api/core';
-import { open } from '@tauri-apps/plugin-dialog';
+import { open } from '@/lib/nativeDialog';
 import { ColumnMapper } from './components/ColumnMapper';
 import { ImportPreview } from './components/ImportPreview';
 

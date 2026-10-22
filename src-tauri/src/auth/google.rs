@@ -88,7 +88,7 @@ pub(crate) fn build_auth_url(client_id: &str, redirect_uri: &str, state: &str, c
 pub(crate) enum Callback {
     Code { code: String, state: String },
     /// The user pressed "Cancel" (or Google refused): `error=access_denied` and the like.
-    Denied(String),
+    Denied { error: String, state: String },
     /// Anything else (a favicon request, a probe): keep listening.
     Other,
 }
@@ -117,7 +117,7 @@ pub(crate) fn parse_callback(request: &str) -> Callback {
         }
     }
     if let Some(e) = error {
-        return Callback::Denied(e);
+        return Callback::Denied { error: e, state: state.unwrap_or_default() };
     }
     match (code, state) {
         (Some(code), Some(state)) if !code.is_empty() => Callback::Code { code, state },
@@ -158,13 +158,19 @@ fn wait_for_callback(listener: TcpListener, expected_state: &str) -> Result<Stri
                 match parse_callback(&String::from_utf8_lossy(&buf[..n])) {
                     Callback::Code { code, state } => {
                         if state != expected_state {
-                            reply(&mut stream, false);
-                            return Err("GOOGLE_STATE_MISMATCH".to_string());
+                            // Not our redirect (another page probing the port): ignore it and
+                            // keep waiting, so it cannot cancel the user's sign-in.
+                            let _ = stream.write_all(b"HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n");
+                            continue;
                         }
                         reply(&mut stream, true);
                         return Ok(code);
                     }
-                    Callback::Denied(_) => {
+                    Callback::Denied { state, .. } => {
+                        if state != expected_state {
+                            let _ = stream.write_all(b"HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n");
+                            continue;
+                        }
                         reply(&mut stream, false);
                         return Err("GOOGLE_CANCELLED".to_string());
                     }
@@ -304,7 +310,7 @@ mod tests {
     fn a_denied_consent_is_reported_as_denied() {
         assert_eq!(
             parse_callback("GET /?error=access_denied&state=xyz HTTP/1.1\r\n\r\n"),
-            Callback::Denied("access_denied".into())
+            Callback::Denied { error: "access_denied".into(), state: "xyz".into() }
         );
     }
 

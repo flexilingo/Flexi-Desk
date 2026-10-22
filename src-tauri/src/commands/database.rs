@@ -48,6 +48,11 @@ pub fn set_setting(
     key: String,
     value: String,
 ) -> Result<(), String> {
+    // These settings name programs / models the app later runs or loads; the webview may not
+    // point them at an arbitrary path (use the dedicated command, which checks the dialog).
+    if (key == "whisper_binary_path" || key == "whisper_model_path") && !value.trim().is_empty() {
+        crate::commands::path_grants::require(&value)?;
+    }
     let conn = state
         .db
         .lock()

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { save } from '@tauri-apps/plugin-dialog';
+import { save } from './nativeDialog';
 
 /** Ask where to save, then write the file. Resolves false when the user cancelled. */
 export async function saveTextFile(

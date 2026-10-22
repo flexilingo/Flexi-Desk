@@ -351,19 +351,23 @@ pub fn open_printable(html: &str) -> Result<(), String> {
     let path = std::env::temp_dir().join("flexilingo-notes-print.html");
     std::fs::write(&path, html).map_err(|e| format!("EXPORT_WRITE_FAILED: {e}"))?;
     #[cfg(target_os = "macos")]
-    let status = std::process::Command::new("open").arg(&path).status();
+    let ok = std::process::Command::new("open").arg(&path).status().map(|s| s.success());
+    // `explorer` opens the file with its default program and, unlike `cmd /C start`, does not
+    // re-parse the path (a user name with `&` or `^` would split a cmd command line). It exits
+    // with 1 even on success, so only a failure to start it counts.
     #[cfg(target_os = "windows")]
-    let status = std::process::Command::new("cmd").args(["/C", "start", ""]).arg(&path).status();
+    let ok = std::process::Command::new("explorer.exe").arg(&path).spawn().map(|_| true);
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
-    let status = std::process::Command::new("xdg-open").arg(&path).status();
-    match status {
-        Ok(s) if s.success() => Ok(()),
+    let ok = std::process::Command::new("xdg-open").arg(&path).status().map(|s| s.success());
+    match ok {
+        Ok(true) => Ok(()),
         _ => Err("EXPORT_OPEN_FAILED".into()),
     }
 }
 
 #[tauri::command]
 pub fn export_save_text(path: String, content: String) -> Result<(), String> {
+    crate::commands::path_grants::require(&path)?;
     write_text_file(&path, &content)
 }
 

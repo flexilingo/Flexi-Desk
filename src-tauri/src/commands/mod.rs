@@ -22,4 +22,5 @@ pub mod sync;
 pub mod overview;
 pub mod cheatsheet;
 pub mod notes;
+pub mod path_grants;
 pub mod writing_practice;
