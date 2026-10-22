@@ -109,6 +109,22 @@ function settleWaiters(ok: boolean) {
 async function attemptSubmit(payload: SubmitSectionPayload): Promise<SubmitOutcome> {
   try {
     const res = await submitSection(payload);
+    // The server sends a section's content only once it is the current one, so
+    // the merge below would leave the next section empty. Re-read the session
+    // first (the web does the same through its ExamSession tag) and only then
+    // let the engine advance. If the re-read fails the engine's content gate
+    // keeps loading and fetches again.
+    try {
+      const fresh = await getSession(payload.session_id);
+      if (fresh?.session && fresh.exam_set && useCelpipStore.getState().detail) {
+        useCelpipStore.setState((st) => {
+          st.detail = fresh;
+        });
+        return { kind: 'sent' };
+      }
+    } catch {
+      /* fall through to the local merge */
+    }
     useCelpipStore.setState((st) => {
       if (st.detail) {
         // Keep the local copy in step so the engine advances immediately.

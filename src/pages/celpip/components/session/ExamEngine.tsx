@@ -88,6 +88,29 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
   const currentSectionType: SectionType | undefined = SECTION_TYPES[currentSectionIndex];
   const isCompleted = session?.status === 'completed';
 
+  // The server sends a section's content only once it is current. A section
+  // without content must neither show its intro nor run a clock: load it first.
+  const contentMissing = (() => {
+    const set = detail?.exam_set;
+    if (!detail || !currentSectionType || session?.status === 'completed') return false;
+    if (currentSectionIndex >= SECTION_TYPES.length) return false;
+    const n =
+      currentSectionType === 'listening'
+        ? set?.listening_content?.parts?.length
+        : currentSectionType === 'reading'
+          ? set?.reading_content?.parts?.length
+          : currentSectionType === 'writing'
+            ? set?.writing_prompts?.tasks?.length
+            : set?.speaking_prompts?.tasks?.length;
+    return !n;
+  })();
+  useEffect(() => {
+    if (!contentMissing || !sessionId) return;
+    void fetchDetail(sessionId);
+    const timer = setInterval(() => void fetchDetail(sessionId), 3000);
+    return () => clearInterval(timer);
+  }, [contentMissing, currentSectionIndex, sessionId, fetchDetail]);
+
   // Does the current section have a resumable draft? (drives `sectionStarted`)
   useEffect(() => {
     if (!currentSectionType) {
@@ -151,6 +174,18 @@ export function ExamEngine({ sessionId: sessionIdProp }: { sessionId?: string })
   if (isCompleted || currentSectionIndex >= SECTION_TYPES.length) {
     return (
       <div className="flex items-center justify-center min-h-[400px] bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (contentMissing) {
+    return (
+      <div
+        role="status"
+        data-testid="section-loading"
+        className="flex items-center justify-center min-h-[400px] bg-background"
+      >
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );

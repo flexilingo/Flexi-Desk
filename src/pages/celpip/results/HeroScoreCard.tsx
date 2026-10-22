@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Clock, Sparkles, ArrowUp, ArrowDown, Minus, Info, Loader2 } from 'lucide-react';
 import { clbTextColor, formatTime, CLB_SCALE, type ScoreScale } from './shared';
 
@@ -10,6 +11,8 @@ interface HeroScoreCardProps {
   mScoreLabel: string;
   /** The "AI analyzed" micro badge; omitted for exams that do not show it. */
   aiAnalyzedLabel?: string;
+  /** Where the analysis came from; shown in the badge next to the label. */
+  aiOrigin?: 'device' | 'own_key' | 'cloud';
   levelLabel: string | null;
   vsAvgPositive: (delta: string) => string;
   vsAvgNegative: (delta: string) => string;
@@ -31,6 +34,7 @@ export function HeroScoreCard({
   totalTimeSec,
   mScoreLabel,
   aiAnalyzedLabel,
+  aiOrigin,
   levelLabel,
   vsAvgPositive,
   vsAvgNegative,
@@ -41,6 +45,7 @@ export function HeroScoreCard({
   onInfo,
   infoLabel,
 }: HeroScoreCardProps) {
+  const { t: tAi } = useTranslation('ai');
   const isLevel = scale.bandKind === 'level';
   const showCount = score == null && count != null && count.total > 0;
   const pct = showCount
@@ -75,6 +80,7 @@ export function HeroScoreCard({
         <span className="absolute top-3 end-3 inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/30">
           <Sparkles className="w-2.5 h-2.5" />
           {aiAnalyzedLabel}
+          {aiOrigin ? ` · ${tAi(`origin.${aiOrigin === 'own_key' ? 'ownKey' : aiOrigin}`)}` : ''}
         </span>
       )}
 

@@ -6,7 +6,8 @@ import type { ExamInsight, InsightSkillState, InsightOrigin } from '../types';
 import { CLB_SCALE, clbTextColor, clbBarColor, SECTION_META, type ScoreScale } from './shared';
 import { HeroScoreCard, VsAvgBadge } from './HeroScoreCard';
 import { SummaryCard, ImprovementPlanCard } from './InsightSections';
-import { InsightOriginBadge } from './SkillInsightPanel';
+import { InsightOriginBadge, LocalModelGate } from './SkillInsightPanel';
+import { useAiSource } from '@/stores/aiSourceStore';
 
 interface OverviewTabProps {
   mScore: number | null;
@@ -92,6 +93,14 @@ export function OverviewTab({
   scoringInfoLabel,
 }: OverviewTabProps) {
   const { t } = useTranslation('celpip');
+  const { own: ownAi } = useAiSource();
+  // Only a finished analysis earns the "AI analysed" badge.
+  const hasAnalysis =
+    Boolean(insight?.summary) ||
+    takenSections.some((k) => {
+      const v = (insight as Record<string, unknown> | undefined)?.[k];
+      return Array.isArray(v) ? v.length > 0 : Boolean(v);
+    });
   // A practice slice of items only (no band anywhere): the ring shows the count.
   const countEntries = Object.entries(correctCounts ?? {}).filter(([, c]) => c && c.total > 0);
   const overallCount = countEntries.length
@@ -111,7 +120,8 @@ export function OverviewTab({
           avg={mScoreAvg}
           totalTimeSec={totalTimeSec}
           mScoreLabel={overallLabel ?? t('mScoreLabel')}
-          aiAnalyzedLabel={insightEnabled ? t('aiAnalyzed') : undefined}
+          aiAnalyzedLabel={insightEnabled && hasAnalysis ? t('aiAnalyzed') : undefined}
+          aiOrigin={insightEnabled && hasAnalysis ? insightOrigin : undefined}
           scale={scale}
           count={overallCount}
           pendingLabel={pendingSkills.length > 0 ? t('scoringInProgress') : undefined}
@@ -217,6 +227,14 @@ export function OverviewTab({
           <SummaryCard summary={insight.summary} />
           <ImprovementPlanCard plan={insight.improvement_plan ?? []} />
         </>
+      ) : ownAi.kind === 'unconfigured' &&
+        (summaryState === 'error' || (erroredSkills && erroredSkills.length > 0)) ? (
+        <LocalModelGate
+          onRetry={() => {
+            onRetryFailed?.();
+            onRetrySummary?.();
+          }}
+        />
       ) : summaryState === 'error' ? (
         <div className="bg-error/[0.06] border border-error/30 rounded-[14px] p-5 flex flex-col gap-3">
           <p className="text-[13px] text-error font-medium">{t('insightSummaryFailed')}</p>
