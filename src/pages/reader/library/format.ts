@@ -37,3 +37,7 @@ export const coverFor = (book: { language: string; slug: string; cover_path: str
 export const COVER_ORIGIN = 'https://flexilingo.com';
 export const coverUrl = (path: string) =>
   /^https?:\/\//.test(path) ? path : `${COVER_ORIGIN}${path}`;
+
+/** The in-app page of a series (only linked once the backend is known to serve series). */
+export const seriesReadPath = (language: string, slug: string) =>
+  `/reader/library/series/${language}/${slug}`;

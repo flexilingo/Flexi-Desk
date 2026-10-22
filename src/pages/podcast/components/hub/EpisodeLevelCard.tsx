@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { relativeDays } from '../../utils/relativeDate';
-import { Headphones, Play, Clock, Globe, Loader2 } from 'lucide-react';
+import { Headphones, Play, Clock, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CefrBadge } from '@/components/common/CefrBadge';
+import { CefrBadge } from './CefrBadge';
+import { PodcastLanguage } from './PodcastLanguage';
 import type { CefrLevel, EpisodeByLevel } from '../../types';
 
 interface Props {
@@ -20,14 +21,14 @@ interface Props {
  * green/amber/red tokens, which would clash with the badge beside it.
  */
 const SCORE_RING: Record<CefrLevel, string> = {
-  A1: 'border-success/60 text-success',
-  A2: 'border-success/60 text-success',
-  B1: 'border-accent/60 text-accent',
-  B2: 'border-accent/60 text-accent',
-  C1: 'border-primary-dark/60 text-primary-dark',
-  C2: 'border-primary-dark/60 text-primary-dark',
+  A1: 'border-success/70 text-success',
+  A2: 'border-success/70 text-success',
+  B1: 'border-warning/70 text-warning',
+  B2: 'border-warning/70 text-warning',
+  C1: 'border-accent/70 text-accent',
+  C2: 'border-accent/70 text-accent',
 };
-const SCORE_RING_FALLBACK = 'border-border text-muted-foreground';
+const SCORE_RING_FALLBACK = 'border-accent/70 text-accent';
 
 function daysSince(iso: string | null): number | null {
   if (!iso) return null;
@@ -79,7 +80,7 @@ export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
+    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_28px_rgba(14,36,10,0.12)]">
       {/* Artwork */}
       <button type="button" onClick={play} className="block w-full text-left" disabled={busy}>
         <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-muted">
@@ -97,21 +98,19 @@ export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
 
           <div
             aria-hidden
-            className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/55 to-transparent opacity-90"
+            className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-ink/55 to-transparent opacity-90"
           />
 
           {episode.difficulty_band && (
-            <CefrBadge
-              level={episode.difficulty_band}
-              label={bandLabel}
-              className="absolute right-2 top-2 bg-card/90 shadow-sm backdrop-blur"
-            />
+            <div className="absolute right-2 top-2 drop-shadow-[0_2px_6px_rgba(14,36,10,0.28)]">
+              <CefrBadge level={episode.difficulty_band} size="md" label={bandLabel} />
+            </div>
           )}
 
           {episode.difficulty_score != null && (
             <div
               className={cn(
-                'absolute left-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border-2 bg-card/90 text-[12px] font-extrabold tabular-nums backdrop-blur',
+                'absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border-2 bg-card/90 text-[10.5px] shadow-[0_2px_8px_rgba(14,36,10,0.20)] sm:h-9 sm:w-9 sm:text-[12px] font-extrabold tabular-nums backdrop-blur',
                 scoreRing,
               )}
               title={tp('levelCard.difficultyTitle', { score: episode.difficulty_score })}
@@ -121,10 +120,16 @@ export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
           )}
 
           {dur && (
-            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-black/75 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white backdrop-blur-sm">
+            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-ink/75 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-cream-50 backdrop-blur-sm">
               <Clock className="h-2.5 w-2.5" /> {dur}
             </span>
           )}
+
+          <PodcastLanguage
+            code={episode.difficulty_lang}
+            variant="overlay"
+            className="absolute bottom-2 left-2"
+          />
         </div>
       </button>
 
@@ -158,17 +163,11 @@ export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
             </p>
           ))}
 
-        <div className="flex items-center gap-1.5 text-[11px] tabular-nums text-muted-foreground">
-          {date && <span className={isNew ? 'font-semibold text-success' : undefined}>{date}</span>}
-          {date && episode.difficulty_lang && (
-            <span aria-hidden className="h-0.75 w-0.75 rounded-full bg-muted-foreground/50" />
-          )}
-          {episode.difficulty_lang && (
-            <span className="inline-flex items-center gap-1">
-              <Globe className="h-3 w-3" /> {episode.difficulty_lang.toUpperCase()}
-            </span>
-          )}
-        </div>
+        {date && (
+          <div className="flex items-center gap-1.5 text-[11px] tabular-nums text-caption">
+            <span className={isNew ? 'font-semibold text-success' : undefined}>{date}</span>
+          </div>
+        )}
       </div>
 
       {/* Play button — overlaid on artwork only */}
@@ -181,7 +180,7 @@ export function EpisodeLevelCard({ episode, onPlay, onOpenPodcast }: Props) {
           aria-label={tp('levelCard.playEpisode')}
           onClick={play}
           disabled={busy}
-          className="pointer-events-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-card/90 text-primary opacity-90 shadow-md backdrop-blur transition-all hover:scale-105 hover:bg-card group-hover:opacity-100 disabled:opacity-60"
+          className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full bg-card/90 text-accent opacity-90 shadow-md sm:h-12 sm:w-12 backdrop-blur transition-all hover:scale-105 hover:bg-card group-hover:opacity-100 disabled:opacity-60"
         >
           {busy ? (
             <Loader2 className="h-5 w-5 animate-spin" />

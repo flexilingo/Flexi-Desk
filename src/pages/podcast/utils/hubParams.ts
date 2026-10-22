@@ -14,20 +14,10 @@ export const VALID_TOPICS: TopicCategory[] = [
 /** Episode-length ceilings in minutes: "how much time do I have right now?". */
 export const DURATION_CEILINGS = [10, 20, 30, 60] as const;
 
-/**
- * The five views of the website's hub plus the desk overview (subscriptions, trending, categories),
- * which stays the default so the extras desk has are still one click away.
- */
-export const HUB_VIEWS = [
-  'overview',
-  'analyzed',
-  'newPodcasts',
-  'latest',
-  'popular',
-  'podcasts',
-] as const;
+/** The website's five hub views, in its order; "Just analyzed" is the default. */
+export const HUB_VIEWS = ['analyzed', 'newPodcasts', 'latest', 'popular', 'podcasts'] as const;
 export type HubView = (typeof HUB_VIEWS)[number];
-export const DEFAULT_HUB_VIEW: HubView = 'overview';
+export const DEFAULT_HUB_VIEW: HubView = 'analyzed';
 
 /** Views whose cards are episodes: the only ones a length filter applies to. */
 export const EPISODE_VIEWS: HubView[] = ['analyzed', 'latest', 'popular'];
@@ -93,12 +83,6 @@ export function hasActiveFilter(p: HubParams, view: HubView = p.view): boolean {
   return !!(p.cefr || p.topic || p.language || (p.duration && EPISODE_VIEWS.includes(view)));
 }
 
-/** With a filter on, the overview has nothing to narrow: the filtered list is "Just analyzed". */
-export function effectiveView(p: HubParams): HubView {
-  if (p.view === 'overview' && (p.cefr || p.topic || p.language)) return 'analyzed';
-  return p.view;
-}
-
 export interface EffectiveSearch {
   level?: CefrLevel;
   topic?: TopicCategory;
@@ -160,9 +144,8 @@ export const PODCAST_LANGUAGES: { code: string; label: string }[] = [
   { code: 'de', label: 'Deutsch' },
 ];
 
-/** The name of a view in the filter bar's view switcher (website labels; `overview` is desk's own). */
+/** The name of a view in the filter bar's view switcher (podcastUi keys, the website's labels). */
 export const VIEW_LABEL_KEY: Record<HubView, string> = {
-  overview: 'viewOverview',
   analyzed: 'justAnalyzed',
   newPodcasts: 'newPodcasts',
   latest: 'latestEpisodes',

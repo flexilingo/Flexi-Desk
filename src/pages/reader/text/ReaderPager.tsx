@@ -39,7 +39,8 @@ export function ReaderPager({
       </Button>
 
       <span className="text-xs tabular-nums text-muted-foreground">
-        {t('read.pageOf', { n: page, total })}
+        {/* Total unknown (a gated page before the book is fetched) reads as 1: show only where you are. */}
+        {total >= page ? t('read.pageOf', { n: page, total }) : page}
       </span>
 
       {!hasNext && end ? (

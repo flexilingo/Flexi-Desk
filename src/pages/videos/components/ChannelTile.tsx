@@ -12,7 +12,7 @@ export function ChannelTile({ channel }: { channel: VideoChannel }) {
       to={`/videos/channel/${encodeURIComponent(channel.id)}`}
       className="group relative isolate block aspect-[3/2] overflow-hidden rounded-xl text-start transition-shadow duration-200 hover:shadow-md"
     >
-      <div className="absolute inset-0 bg-primary">
+      <div className="absolute inset-0 bg-olive-600">
         {channel.cover && (
           <img
             src={channel.cover}
@@ -23,11 +23,12 @@ export function ChannelTile({ channel }: { channel: VideoChannel }) {
         )}
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/25" />
+      <div className="absolute inset-0 bg-olive-700/15" />
       <div className="relative z-10 flex h-full flex-col justify-between p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1">
             {channel.pinned && (
-              <span className="inline-flex items-center gap-1 rounded bg-accent/90 px-1.5 py-0.5 text-[11px] font-semibold text-accent-foreground backdrop-blur-md">
+              <span className="inline-flex items-center gap-1 rounded bg-olive-450/90 px-1.5 py-0.5 text-[11px] font-semibold text-white backdrop-blur-md">
                 <Pin className="h-3 w-3" aria-hidden />
                 {t('pinned')}
               </span>

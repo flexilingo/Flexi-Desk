@@ -70,5 +70,33 @@
     "all": "Tous",
     "showResults_one": "Voir {{count}} livre",
     "showResults_other": "Voir {{count}} livres"
+  },
+  "series": {
+    "season": "Saison {{n}}",
+    "seasonEpisode": "Saison {{season}} · Épisode {{n}}",
+    "episodeNav": "Épisodes",
+    "prevEpisode": "Épisode précédent",
+    "nextEpisode": "Épisode suivant",
+    "allEpisodes": "Tous les épisodes",
+    "gateTitle": "La suite est gratuite avec un compte",
+    "gateBody": "La première page de chaque épisode de cette saison est ouverte à tous. Connectez-vous ou créez un compte gratuit pour lire la suite. Votre page et les mots touchés sont enregistrés.",
+    "gateCta": "Se connecter pour continuer",
+    "metaTitle": "{{title}} — feuilleton en {{language}} | FlexiLingo",
+    "metaDescription": "{{title}} : un feuilleton en {{language}} en {{count}} épisodes pour les apprenants. Touchez un mot pour voir son sens.",
+    "kicker": "Feuilleton en {{language}}",
+    "episodes_one": "{{count}} épisode",
+    "episodes_other": "{{count}} épisodes",
+    "seasons_one": "{{count}} saison",
+    "seasons_other": "{{count}} saisons",
+    "start": "Commencer par l'épisode 1",
+    "seasonNav": "Saisons",
+    "loginNote": "La première page de chaque épisode est gratuite. La suite est gratuite avec un compte.",
+    "listHeading": "Histoires en épisodes",
+    "open": "Voir tous les épisodes"
+  },
+  "pagination": {
+    "showing": "Affichage de {{start}} à {{end}} sur {{total}}",
+    "previous": "Précédent",
+    "next": "Suivant"
   }
 }

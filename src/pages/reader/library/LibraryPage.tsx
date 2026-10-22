@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   getLibraryShelf,
   type LibraryBook,
   type LibraryFacets,
+  type LibrarySeriesCard,
 } from '../services/libraryService';
 import { buildReadingQueue } from '../lib/queue';
 import { useReaderErrorText } from '../lib/use-error-text';
@@ -17,6 +18,7 @@ import type { ReaderDocument } from '../types';
 import { ReaderShell } from '../components/ReaderShell';
 import { ReaderQueueRow } from '../components/ReaderQueueRow';
 import { bookReadPath } from './format';
+import { seriesSupported, subscribeSeriesSupport } from './library-capability';
 import { LibraryBrowser } from './LibraryBrowser';
 import {
   fromSearchParams,
@@ -49,6 +51,9 @@ export function LibraryPage() {
   const session = useAuthStore((s) => s.session);
   const authLoading = useAuthStore((s) => s.isLoading);
   const signedIn = !!session;
+  // Series cards exist only once the backend has proved it serves series; until then (and
+  // against an older backend) this is the website's current library, nothing more.
+  const withSeries = useSyncExternalStore(subscribeSeriesSupport, seriesSupported);
 
   const [params, setParams] = useSearchParams();
   const { filters, lang: urlLang } = useMemo(() => fromSearchParams(params), [params]);
@@ -58,6 +63,7 @@ export function LibraryPage() {
     lang: string;
     books: LibraryBook[];
     facets: LibraryFacets;
+    series: LibrarySeriesCard[];
   } | null>(null);
   const [shelf, setShelf] = useState<Map<string, number>>(new Map());
   const [documents, setDocuments] = useState<ReaderDocument[]>([]);
@@ -83,7 +89,11 @@ export function LibraryPage() {
     if (!lang) return;
     let cancelled = false;
     getLibraryCatalog({ language: lang })
-      .then((r) => !cancelled && setCatalog({ lang, books: r.books, facets: r.facets }))
+      .then(
+        (r) =>
+          !cancelled &&
+          setCatalog({ lang, books: r.books, facets: r.facets, series: r.series_list ?? [] }),
+      )
       .catch((cause) => !cancelled && setError(errorText(cause)));
     return () => {
       cancelled = true;
@@ -177,6 +187,11 @@ export function LibraryPage() {
             // A series belongs to one language; the level carries over.
             onLanguageChange={(code) => setUrl({ ...filters, series: '', page: 1 }, code)}
             onShelf={onShelf}
+            seriesCards={
+              withSeries
+                ? catalog.series.filter((s) => s.language === lang && s.episode_count >= 2)
+                : []
+            }
           />
         </div>
       )}

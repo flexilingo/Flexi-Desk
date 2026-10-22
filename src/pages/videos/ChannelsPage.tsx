@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, MonitorPlay, X } from 'lucide-react';
+import { ArrowLeft, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InlineError } from '@/components/common/InlineError';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { CHANNEL_GRID } from './components/ChannelShelf';
 import { ChannelTile } from './components/ChannelTile';
-import { SearchBox } from './components/FilterControls';
+import { FilterClearAll, FilterPills, SearchBox } from './components/FilterControls';
 import { matchChannels } from './lib/videoFilters';
 import { getVideoChannels } from './lib/videosApi';
 import { useCloudQuery } from './lib/useCloudQuery';
@@ -35,14 +33,9 @@ export function ChannelsPage() {
     return query.trim() ? matchChannels(inLanguage, query) : inLanguage;
   }, [all, language, query]);
   const hasFilters = Boolean(query || language);
-  const pill = (active: boolean) =>
-    cn(
-      'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors',
-      active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
-    );
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-4 sm:gap-5">
       <Link
         to="/videos"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
@@ -54,7 +47,7 @@ export function ChannelsPage() {
       <div className="flex items-center gap-2.5">
         <MonitorPlay className="h-6 w-6 shrink-0 text-accent" />
         <div>
-          <h1 className="text-2xl font-bold">{t('channels.heading')}</h1>
+          <h1 className="text-xl font-black tracking-tight sm:text-2xl">{t('channels.heading')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {t('channels.totalCount', { count: all.length })}
           </p>
@@ -66,45 +59,28 @@ export function ChannelsPage() {
           value={query}
           onCommit={setQuery}
           placeholder={t('channels.searchPlaceholder')}
-          className="w-full sm:w-60 lg:w-72"
+          className="w-full sm:w-56 lg:w-72"
         />
-        <div
-          role="group"
-          className="inline-flex flex-wrap items-center gap-0.5 rounded-lg border border-border bg-card p-1"
-        >
-          <button
-            type="button"
-            aria-pressed={!language}
-            onClick={() => setLanguage('')}
-            className={pill(!language)}
-          >
-            {t('channels.allLanguages')}
-          </button>
-          {languageOptions.map(([code, n]) => (
-            <button
-              key={code}
-              type="button"
-              aria-pressed={language === code}
-              onClick={() => setLanguage(code)}
-              className={pill(language === code)}
-            >
-              {code.toUpperCase()} <span className="tabular-nums opacity-70">{n}</span>
-            </button>
-          ))}
-        </div>
-        {hasFilters && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setQuery('');
-              setLanguage('');
-            }}
-          >
-            <X className="h-4 w-4" />
-            {t('channels.clear')}
-          </Button>
-        )}
+        <FilterPills
+          value={language}
+          options={[
+            { id: '', label: t('channels.allLanguages') },
+            ...languageOptions.map(([code, n]) => ({
+              id: code,
+              label: code.toUpperCase(),
+              sublabel: String(n),
+            })),
+          ]}
+          onChange={setLanguage}
+        />
+        <FilterClearAll
+          show={hasFilters}
+          onClear={() => {
+            setQuery('');
+            setLanguage('');
+          }}
+          label={t('channels.clear')}
+        />
       </div>
 
       {channelsQ.error !== undefined && (
@@ -119,7 +95,7 @@ export function ChannelsPage() {
       {channelsQ.loading && !channelsQ.data ? (
         <div className={CHANNEL_GRID}>
           {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[3/2] rounded-xl" />
+            <div key={i} className="aspect-[3/2] animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
       ) : shown.length === 0 ? (

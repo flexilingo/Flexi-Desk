@@ -69,5 +69,33 @@
     "filters": "फ़िल्टर",
     "all": "सभी",
     "showResults": "{{count}} किताबें दिखाएँ"
+  },
+  "series": {
+    "season": "सीज़न {{n}}",
+    "seasonEpisode": "सीज़न {{season}} · एपिसोड {{n}}",
+    "episodeNav": "एपिसोड",
+    "prevEpisode": "पिछला एपिसोड",
+    "nextEpisode": "अगला एपिसोड",
+    "allEpisodes": "सभी एपिसोड",
+    "gateTitle": "आगे पढ़ें — खाते के साथ मुफ़्त",
+    "gateBody": "इस सीज़न के हर एपिसोड का पहला पेज सबके लिए खुला है। बाकी पढ़ने के लिए साइन इन करें या मुफ़्त खाता बनाएँ। आपकी जगह और टैप किए गए शब्द सहेजे जाते हैं।",
+    "gateCta": "साइन इन करके आगे पढ़ें",
+    "metaTitle": "{{title}} — {{language}} में एपिसोड वाली कहानी | FlexiLingo",
+    "metaDescription": "{{title}}: सीखने वालों के लिए {{language}} में {{count}} एपिसोड की कहानी। किसी भी शब्द पर टैप करके उसका अर्थ देखें।",
+    "kicker": "{{language}} में एपिसोड वाली कहानी",
+    "episodes_one": "{{count}} एपिसोड",
+    "episodes_other": "{{count}} एपिसोड",
+    "seasons_one": "{{count}} सीज़न",
+    "seasons_other": "{{count}} सीज़न",
+    "start": "एपिसोड 1 से शुरू करें",
+    "seasonNav": "सीज़न",
+    "loginNote": "हर एपिसोड का पहला पेज मुफ़्त है। बाकी खाते के साथ मुफ़्त।",
+    "listHeading": "एपिसोड वाली कहानियाँ",
+    "open": "सभी एपिसोड देखें"
+  },
+  "pagination": {
+    "showing": "{{total}} में से {{start}} से {{end}} दिखा रहा है",
+    "previous": "पिछला",
+    "next": "अगला"
   }
 }

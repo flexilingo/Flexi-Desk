@@ -6,7 +6,7 @@ import { ArrowLeft, ExternalLink, MonitorPlay, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InlineError } from '@/components/common/InlineError';
 import { Pager } from './components/Pager';
-import { LevelPills } from './components/FilterControls';
+import { FilterPills, levelPillOptions } from './components/FilterControls';
 import { VideoGrid } from './components/VideoGrid';
 import {
   VIDEO_PAGE_SIZE,
@@ -63,7 +63,7 @@ export function ChannelPage() {
   const subscribeId = channel?.youtube_channel_id;
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-4 sm:gap-5">
       <Link
         to="/videos"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
@@ -76,7 +76,7 @@ export function ChannelPage() {
         <div className="flex items-center gap-2.5">
           <MonitorPlay className="h-6 w-6 shrink-0 text-accent" />
           <div>
-            <h1 dir="auto" className="text-xl font-bold tracking-tight sm:text-2xl">
+            <h1 dir="auto" className="text-xl font-black tracking-tight sm:text-2xl">
               {name}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -110,7 +110,17 @@ export function ChannelPage() {
       </div>
 
       {(levelsPresent > 1 || cefr) && (
-        <LevelPills value={cefr} counts={levelCounts} onChange={setCefr} />
+        <FilterPills
+          className="self-start"
+          value={cefr ?? ''}
+          options={levelPillOptions(t, {
+            counts: levelCounts,
+            total: channel?.videos,
+            selected: cefr,
+          })}
+          onChange={(id) => setCefr(parseCefr(id))}
+          sublabelMode="active"
+        />
       )}
 
       {listQ.error !== undefined && (

@@ -70,5 +70,33 @@
     "all": "All",
     "showResults_one": "Show {{count}} book",
     "showResults_other": "Show {{count}} books"
+  },
+  "series": {
+    "season": "Season {{n}}",
+    "seasonEpisode": "Season {{season}} · Episode {{n}}",
+    "episodeNav": "Episodes",
+    "prevEpisode": "Previous episode",
+    "nextEpisode": "Next episode",
+    "allEpisodes": "All episodes",
+    "gateTitle": "Keep reading — it's free with an account",
+    "gateBody": "The first page of every episode in this season is open to everyone. Sign in or create a free account to read the rest. Your place and the words you tap are saved.",
+    "gateCta": "Sign in to keep reading",
+    "metaTitle": "{{title}} — {{language}} story in episodes | FlexiLingo",
+    "metaDescription": "{{title}}: a {{language}} story in {{count}} episodes for learners. Tap any word for its meaning.",
+    "kicker": "{{language}} story in episodes",
+    "episodes_one": "{{count}} episode",
+    "episodes_other": "{{count}} episodes",
+    "seasons_one": "{{count}} season",
+    "seasons_other": "{{count}} seasons",
+    "start": "Start with episode 1",
+    "seasonNav": "Seasons",
+    "loginNote": "Page 1 of every episode is free. The rest is free with an account.",
+    "listHeading": "Stories in episodes",
+    "open": "See all episodes"
+  },
+  "pagination": {
+    "showing": "Showing {{start}} to {{end}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

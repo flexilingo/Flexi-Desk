@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import type { VideoChannel } from '../lib/videosApi';
 import { ChannelTile } from './ChannelTile';
 
@@ -42,7 +41,7 @@ export function ChannelShelf({
       <div className={CHANNEL_GRID}>
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-[3/2] rounded-xl" />
+              <div key={i} className="aspect-[3/2] animate-pulse rounded-xl bg-muted" />
             ))
           : shown.map((c) => <ChannelTile key={c.id} channel={c} />)}
       </div>

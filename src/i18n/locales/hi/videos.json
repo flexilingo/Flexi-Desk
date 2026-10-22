@@ -104,7 +104,8 @@
   "pagination": {
     "previous": "पिछला",
     "next": "अगला",
-    "page": "पृष्ठ {{page}} / {{total}}"
+    "page": "पृष्ठ {{page}} / {{total}}",
+    "showing": "{{total}} में से {{start}} से {{end}} दिखा रहा है"
   },
   "watch": {
     "preparing": "वीडियो खुल रहा है…",

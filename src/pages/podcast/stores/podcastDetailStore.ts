@@ -28,6 +28,15 @@ interface DetailState {
   episodes: CuratedEpisodeLite[];
   isLoading: boolean;
   isEpisodesLoading: boolean;
+  /** "Look through older episodes" is fetching a wider window. */
+  isFetchingMore: boolean;
+  /** How many episodes the curated source says the show holds (what we have transcribed). */
+  curatedTotal: number;
+  /** How wide the two episode requests are now; "older episodes" widens both. */
+  rssMax: number;
+  curatedLimit: number;
+  /** The last request came back full, so another window probably exists behind it. */
+  hasMore: boolean;
   notFound: boolean;
   error: string | null;
 
@@ -38,6 +47,7 @@ interface DetailState {
   myRequest: PodcastRequest | null;
 
   load: (feedId: number) => Promise<void>;
+  loadOlder: (feedId: number) => Promise<void>;
   refreshEpisodes: (feedId: number) => Promise<void>;
   submitRequest: (feedId: number, message?: string) => Promise<void>;
   clearRefreshResult: () => void;
@@ -84,7 +94,7 @@ function mergeEpisodes(
     if (c.title) byTitle.set(c.title.trim().toLowerCase(), c);
   }
 
-  return rss.map((raw) => {
+  const merged = rss.map((raw) => {
     const ep = normalizeRssEpisode(raw, feedId);
     const match = byEpisodeId.get(ep.episode_id) ?? byTitle.get(ep.title.trim().toLowerCase());
     if (!match) return ep;
@@ -99,7 +109,16 @@ function mergeEpisodes(
       publish_date: ep.publish_date ?? match.publish_date,
     };
   });
+
+  // The index list is capped, curated data reaches further back: keep the curated episodes older than
+  // the newest window too (index order first, curated tail appended), as the website does.
+  const seen = new Set(merged.map((e) => e.episode_id));
+  for (const c of curatedRows) if (!seen.has(c.episode_id)) merged.push(c);
+  return merged;
 }
+
+const RSS_WINDOW = 100;
+const CURATED_WINDOW = 500;
 
 export const usePodcastDetailStore = create<DetailState>()(
   immer((set, get) => ({
@@ -109,6 +128,11 @@ export const usePodcastDetailStore = create<DetailState>()(
     episodes: [],
     isLoading: false,
     isEpisodesLoading: false,
+    isFetchingMore: false,
+    curatedTotal: 0,
+    rssMax: RSS_WINDOW,
+    curatedLimit: CURATED_WINDOW,
+    hasMore: false,
     notFound: false,
     error: null,
     isRefreshing: false,
@@ -126,6 +150,11 @@ export const usePodcastDetailStore = create<DetailState>()(
         s.podcast = null;
         s.curated = null;
         s.episodes = [];
+        s.curatedTotal = 0;
+        s.rssMax = RSS_WINDOW;
+        s.curatedLimit = CURATED_WINDOW;
+        s.hasMore = false;
+        s.isFetchingMore = false;
         s.refreshResult = null;
         s.myRequest = null;
       });
@@ -152,8 +181,8 @@ export const usePodcastDetailStore = create<DetailState>()(
       }
 
       const [rssRes, curatedRes] = await Promise.allSettled([
-        getPodcastEpisodes(feedId, 100),
-        getCuratedEpisodes(feedId, { status: 'all', limit: 500 }),
+        getPodcastEpisodes(feedId, RSS_WINDOW),
+        getCuratedEpisodes(feedId, { status: 'all', limit: CURATED_WINDOW }),
       ]);
       if (get().feedId !== feedId) return;
 
@@ -166,6 +195,8 @@ export const usePodcastDetailStore = create<DetailState>()(
       set((s) => {
         s.curated = curatedPodcast;
         s.episodes = mergeEpisodes(rss, curatedRows, feedId);
+        s.curatedTotal = curatedRes.status === 'fulfilled' ? (curatedRes.value.total ?? 0) : 0;
+        s.hasMore = rss.length >= RSS_WINDOW || curatedRows.length >= CURATED_WINDOW;
         s.isEpisodesLoading = false;
         if (rssRes.status === 'rejected' && curatedRes.status === 'rejected') {
           s.error = String(rssRes.reason);
@@ -183,6 +214,39 @@ export const usePodcastDetailStore = create<DetailState>()(
           // A missing request status just hides the badge.
         }
       }
+    },
+
+    /** "Look through older episodes": asks both sources for a wider window. */
+    loadOlder: async (feedId: number) => {
+      if (get().feedId !== feedId || get().isFetchingMore) return;
+      const rssMax = get().rssMax + RSS_WINDOW * 2;
+      const curatedLimit = get().curatedLimit + CURATED_WINDOW;
+      set((s) => {
+        s.isFetchingMore = true;
+      });
+      const [rssRes, curatedRes] = await Promise.allSettled([
+        getPodcastEpisodes(feedId, rssMax),
+        getCuratedEpisodes(feedId, { status: 'all', limit: curatedLimit }),
+      ]);
+      if (get().feedId !== feedId) return;
+      const rss = rssRes.status === 'fulfilled' ? (rssRes.value.episodes ?? []) : [];
+      const curatedRows =
+        curatedRes.status === 'fulfilled' ? (curatedRes.value.episodes ?? []) : [];
+      set((s) => {
+        s.isFetchingMore = false;
+        if (rssRes.status === 'rejected' && curatedRes.status === 'rejected') {
+          s.error = String(rssRes.reason);
+          return;
+        }
+        const before = s.episodes.length;
+        const merged = mergeEpisodes(rss, curatedRows, feedId);
+        s.rssMax = rssMax;
+        s.curatedLimit = curatedLimit;
+        s.episodes = merged;
+        // A short slice means that source is exhausted; a window that added nothing ends the walk.
+        s.hasMore =
+          merged.length > before && (rss.length >= rssMax || curatedRows.length >= curatedLimit);
+      });
     },
 
     /** Pulls the podcast's RSS again server-side and enqueues new episodes. */
@@ -248,6 +312,9 @@ export const usePodcastDetailStore = create<DetailState>()(
         s.podcast = null;
         s.curated = null;
         s.episodes = [];
+        s.curatedTotal = 0;
+        s.hasMore = false;
+        s.isFetchingMore = false;
         s.notFound = false;
         s.error = null;
         s.refreshResult = null;

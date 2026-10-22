@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { CheckCircle2, History, Loader2, Play } from 'lucide-react';
+import { CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useAuthStore } from '@/stores/authStore';
 import { useImportAndPlay } from '../../hooks/useImportAndPlay';
 import { getMyListeningHistory, type HistoryEpisode } from '../../services/podcastAccount';
 import { mergeHistory, type HistoryEntry, type LocalListeningRow } from '../../utils/accountMerge';
 import { stamp } from '../../utils/semantic';
-import type { RawPodcastEpisode } from '../../types';
+import type { CefrLevel, RawPodcastEpisode } from '../../types';
+import { CefrBadge } from '../hub/CefrBadge';
+import { EpisodeRowShell, LibraryEmpty, LibraryError, RowsSkeleton } from './LibraryParts';
+
+const LEVELS: readonly string[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const asCefr = (v: string | null | undefined): CefrLevel | null =>
+  v && LEVELS.includes(v) ? (v as CefrLevel) : null;
 
 interface ListeningSnapshot {
   in_progress: LocalListeningRow[];
@@ -72,86 +77,75 @@ export function HistoryTab() {
     if (e.cloud) return resumeHistoryEpisode(e.cloud);
   };
 
-  if (loading && entries.length === 0) {
-    return (
-      <div className="flex justify-center py-14">
-        <LoadingSpinner />
-      </div>
-    );
+  if (loading && entries.length === 0) return <RowsSkeleton />;
+
+  if (loadError && entries.length === 0) {
+    return <LibraryError message={t('unknownError')} retryLabel={t('retry')} onRetry={load} />;
   }
 
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-14 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <History className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-semibold text-foreground">{t('historyEmptyTitle')}</p>
-        <p className="max-w-sm text-sm text-muted-foreground">{t('historyEmptyDesc')}</p>
-        {loadError && <p className="text-sm text-error">{loadError}</p>}
-      </div>
+      <LibraryEmpty
+        icon={Clock}
+        title={t('historyEmptyTitle')}
+        description={t('historyEmptyDesc')}
+      />
     );
   }
 
   return (
-    <div className="space-y-2">
-      {(error || loadError) && (
-        <div className="rounded-lg border border-error/30 bg-error/10 px-4 py-2.5 text-sm text-error">
-          {error ?? loadError}
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      {error && (
+        <div
+          role="alert"
+          className="border-b border-border bg-error/10 px-4 py-2.5 text-[12.5px] text-foreground"
+        >
+          {error}
         </div>
       )}
       {entries.map((e) => {
         const busy = importingId === (e.localEpisodeId ?? e.cloud?.id);
-        const pct =
-          e.durationSeconds > 0
-            ? Math.min(100, Math.round((e.progressSeconds / e.durationSeconds) * 100))
-            : 0;
+        const ratio =
+          e.durationSeconds > 0 ? Math.min(1, e.progressSeconds / e.durationSeconds) : 0;
+        const band = asCefr(e.cloud?.difficulty_band ?? e.cloud?.cefr_level);
         return (
-          <button
+          <EpisodeRowShell
             key={e.key}
-            type="button"
+            imageUrl={e.imageUrl}
+            title={e.title}
+            show={e.showTitle}
+            detail={
+              e.completed ? (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-success">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {t('historyCompleted')}
+                </span>
+              ) : (
+                <>
+                  <div className="h-1 w-24 overflow-hidden rounded-full bg-border">
+                    <div
+                      className="h-full rounded-full bg-accent"
+                      style={{ width: `${Math.round(ratio * 100)}%` }}
+                    />
+                  </div>
+                  {e.durationSeconds > 0 && (
+                    <span className="tabular-nums">
+                      {stamp(e.progressSeconds)} / {stamp(e.durationSeconds)}
+                    </span>
+                  )}
+                </>
+              )
+            }
+            trailing={
+              busy ? (
+                <Loader2 className="h-4 w-4 animate-spin text-accent" />
+              ) : (
+                <CefrBadge level={band} />
+              )
+            }
             onClick={() => open(e)}
             disabled={busy}
-            className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted/40 disabled:opacity-60"
-          >
-            <span className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
-              {e.imageUrl && (
-                <img
-                  src={e.imageUrl}
-                  alt=""
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-foreground">{e.title}</span>
-              <span className="block truncate text-xs text-muted-foreground">{e.showTitle}</span>
-              {!e.completed && e.durationSeconds > 0 && (
-                <span className="mt-1.5 flex items-center gap-2">
-                  <span className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-                    <span className="block h-full bg-primary" style={{ width: `${pct}%` }} />
-                  </span>
-                  <span className="text-[10px] tabular-nums text-muted-foreground">
-                    {stamp(e.progressSeconds)}
-                  </span>
-                </span>
-              )}
-            </span>
-            {busy ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
-            ) : e.completed ? (
-              <span className="inline-flex shrink-0 items-center gap-1 text-xs text-success">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                {t('historyCompleted')}
-              </span>
-            ) : (
-              <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary">
-                <Play className="h-3.5 w-3.5" />
-                {t('resume')}
-              </span>
-            )}
-          </button>
+          />
         );
       })}
     </div>

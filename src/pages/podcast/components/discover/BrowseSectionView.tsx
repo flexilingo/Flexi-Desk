@@ -20,10 +20,10 @@ import {
   ShieldAlert,
   Loader2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useDiscoverStore } from '../../stores/discoverStore';
-import { useAuthStore } from '@/stores/authStore';
-import { PodcastCardCompact } from './PodcastCardCompact';
+import { PodcastTileGrid } from '../hub/PodcastTileCard';
+import { HubPager } from '../hub/HubPager';
+import type { CuratedPodcast, PodcastIndexFeed } from '../../types';
 import type { LucideIcon } from 'lucide-react';
 
 const PAGE_SIZE = 24;
@@ -54,16 +54,12 @@ const SECTION_MAP: Record<string, SectionConfig> = {
 };
 
 export function BrowseSectionView() {
-  const session = useAuthStore((s) => s.session);
   const {
     browseSectionItems,
     browseSectionTotal,
     browseSectionLoading,
     followedPodcasts,
-    followedFeedIds,
-    followingFeedId,
     fetchBrowseSection,
-    followPodcast,
   } = useDiscoverStore();
 
   const { section } = useParams<{ section: string }>();
@@ -150,54 +146,18 @@ export function BrowseSectionView() {
             </p>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {isFollowed
-              ? displayItems.map((p) => {
-                  const podcast = p as (typeof followedPodcasts)[number];
-                  return (
-                    <PodcastCardCompact
-                      key={podcast.id}
-                      data={{ type: 'curated', podcast }}
-                      isFollowed={followedFeedIds.has(podcast.feed_id)}
-                      onClick={handleCloudPodcastClick}
-                    />
-                  );
-                })
-              : displayItems.map((feed) => (
-                  <PodcastCardCompact
-                    key={feed.id}
-                    data={{ type: 'feed', podcast: feed }}
-                    isFollowed={followedFeedIds.has(feed.id)}
-                    isFollowing={followingFeedId === feed.id}
-                    onFollow={session ? followPodcast : undefined}
-                    onClick={handleCloudPodcastClick}
-                  />
-                ))}
-          </div>
+          <PodcastTileGrid
+            podcasts={displayItems as (CuratedPodcast | PodcastIndexFeed)[]}
+            onOpen={handleCloudPodcastClick}
+          />
 
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(Math.max(1, page - 1))}
-                disabled={page <= 1}
-              >
-                {t('common:podcast.previous')}
-              </Button>
-              <span className="text-sm text-muted-foreground px-4">
-                {page} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page >= totalPages}
-              >
-                {t('common:podcast.next')}
-              </Button>
-            </div>
-          )}
+          <HubPager
+            page={page}
+            totalPages={totalPages}
+            totalCount={total}
+            pageSize={PAGE_SIZE}
+            onPageChange={handlePageChange}
+          />
         </>
       )}
     </div>

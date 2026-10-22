@@ -68,5 +68,31 @@
     "filters": "Bộ lọc",
     "all": "Tất cả",
     "showResults_other": "Hiện {{count}} cuốn sách"
+  },
+  "series": {
+    "season": "Phần {{n}}",
+    "seasonEpisode": "Phần {{season}} · Tập {{n}}",
+    "episodeNav": "Các tập",
+    "prevEpisode": "Tập trước",
+    "nextEpisode": "Tập tiếp theo",
+    "allEpisodes": "Tất cả các tập",
+    "gateTitle": "Đọc tiếp — miễn phí khi có tài khoản",
+    "gateBody": "Trang đầu của mỗi tập trong phần này mở cho mọi người. Hãy đăng nhập hoặc tạo tài khoản miễn phí để đọc tiếp. Vị trí đọc và các từ bạn chạm vào sẽ được lưu.",
+    "gateCta": "Đăng nhập để đọc tiếp",
+    "metaTitle": "{{title}} — truyện nhiều tập bằng tiếng {{language}} | FlexiLingo",
+    "metaDescription": "{{title}}: truyện {{count}} tập bằng tiếng {{language}} dành cho người học. Chạm vào bất kỳ từ nào để xem nghĩa.",
+    "kicker": "Truyện nhiều tập bằng tiếng {{language}}",
+    "episodes": "{{count}} tập",
+    "seasons": "{{count}} phần",
+    "start": "Bắt đầu từ tập 1",
+    "seasonNav": "Các phần",
+    "loginNote": "Trang đầu của mỗi tập là miễn phí. Phần còn lại miễn phí khi có tài khoản.",
+    "listHeading": "Truyện nhiều tập",
+    "open": "Xem tất cả các tập"
+  },
+  "pagination": {
+    "showing": "Hiển thị {{start}} đến {{end}} trong số {{total}}",
+    "previous": "Trước",
+    "next": "Tiếp"
   }
 }

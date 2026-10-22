@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bookmark, Loader2, Trash2 } from 'lucide-react';
+import { Bookmark, Clock, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useAuthStore } from '@/stores/authStore';
 import { useFavoritesStore } from '../../stores/favoritesStore';
 import { useImportAndPlay } from '../../hooks/useImportAndPlay';
@@ -13,6 +11,14 @@ import {
   type FavoriteEpisode,
 } from '../../services/podcastAccount';
 import { mergeFavourites, type SavedEntry } from '../../utils/accountMerge';
+import type { CefrLevel } from '../../types';
+import { CefrBadge } from '../hub/CefrBadge';
+import { EpisodeRowShell, LibraryEmpty, LibraryError, RowsSkeleton } from './LibraryParts';
+
+const LEVELS: readonly string[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+/** The API types the band as a free string; only the six real levels render. */
+const asCefr = (v: string | null | undefined): CefrLevel | null =>
+  v && LEVELS.includes(v) ? (v as CefrLevel) : null;
 
 function formatDuration(seconds: number, t: TFunction): string | null {
   if (!seconds) return null;
@@ -83,84 +89,80 @@ export function SavedEpisodesTab() {
     }
   };
 
-  if (loading && entries.length === 0) {
-    return (
-      <div className="flex justify-center py-14">
-        <LoadingSpinner />
-      </div>
-    );
+  if (loading && entries.length === 0) return <RowsSkeleton />;
+
+  if (loadError && entries.length === 0) {
+    return <LibraryError message={t('unknownError')} retryLabel={t('retry')} onRetry={load} />;
   }
 
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-14 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <Bookmark className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-semibold text-foreground">{t('savedEpisodesEmptyTitle')}</p>
-        <p className="max-w-sm text-sm text-muted-foreground">{t('savedEpisodesEmptyDesc')}</p>
-        {loadError && <p className="text-sm text-error">{loadError}</p>}
-      </div>
+      <LibraryEmpty
+        icon={Bookmark}
+        title={t('savedEpisodesEmptyTitle')}
+        description={t('savedEpisodesEmptyDesc')}
+      />
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
       {(error || loadError) && (
-        <div className="rounded-lg border border-error/30 bg-error/10 px-4 py-2.5 text-sm text-error">
+        <div
+          role="alert"
+          className="border-b border-border bg-error/10 px-4 py-2.5 text-[12.5px] text-foreground"
+        >
           {error ?? loadError}
         </div>
       )}
       {entries.map((e) => {
         const busy = importingId === (e.localEpisodeId ?? e.cloud?.id);
         const duration = formatDuration(e.durationSeconds, t);
+        const band = asCefr(e.cloud?.difficultyBand ?? e.cloud?.cefrLevel);
         return (
-          <div
-            key={e.key}
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
-          >
-            <button
-              type="button"
+          <div key={e.key} className="group relative">
+            <EpisodeRowShell
+              imageUrl={e.imageUrl}
+              title={e.title || t('savedEpisodeUnavailable')}
+              show={e.showTitle}
+              detail={
+                <>
+                  {duration && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {duration}
+                    </span>
+                  )}
+                  {!e.available && <span className="text-error">{t('savedEpisodeGone')}</span>}
+                </>
+              }
+              trailing={
+                busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                ) : (
+                  <CefrBadge level={band} />
+                )
+              }
               onClick={() => open(e)}
               disabled={!e.available || busy}
-              className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-60"
-            >
-              <span className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
-                {e.imageUrl && (
-                  <img
-                    src={e.imageUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-foreground">
-                  {e.title || t('savedEpisodeUnavailable')}
-                </span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {[e.showTitle, duration, e.available ? null : t('savedEpisodeGone')]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </span>
-              </span>
-              {busy && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
-            </button>
-            <Button
-              variant="outline"
-              size="sm"
+              dimmed={!e.available}
+              rightInset
+            />
+            {/* Sits above the row rather than inside it, so un-saving never opens the player. */}
+            <button
+              type="button"
               onClick={() => remove(e)}
               disabled={removingKey === e.key}
-              title={t('savedEpisodeRemove')}
               aria-label={t('savedEpisodeRemove')}
+              title={t('savedEpisodeRemove')}
+              className="absolute end-14 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-[7px] text-accent opacity-0 transition-opacity hover:bg-accent/10 focus:opacity-100 disabled:cursor-not-allowed disabled:opacity-40 group-hover:opacity-100"
             >
               {removingKey === e.key ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Trash2 className="h-4 w-4" />
+                <Bookmark className="h-4 w-4 fill-current" />
               )}
-            </Button>
+            </button>
           </div>
         );
       })}

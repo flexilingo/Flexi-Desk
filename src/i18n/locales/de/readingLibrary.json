@@ -70,5 +70,33 @@
     "all": "Alle",
     "showResults_one": "{{count}} Buch anzeigen",
     "showResults_other": "{{count}} Bücher anzeigen"
+  },
+  "series": {
+    "season": "Staffel {{n}}",
+    "seasonEpisode": "Staffel {{season}} · Folge {{n}}",
+    "episodeNav": "Folgen",
+    "prevEpisode": "Vorherige Folge",
+    "nextEpisode": "Nächste Folge",
+    "allEpisodes": "Alle Folgen",
+    "gateTitle": "Weiterlesen – kostenlos mit Konto",
+    "gateBody": "Die erste Seite jeder Folge dieser Staffel ist für alle offen. Melde dich an oder erstelle ein kostenloses Konto, um weiterzulesen. Deine Stelle und die angetippten Wörter werden gespeichert.",
+    "gateCta": "Anmelden und weiterlesen",
+    "metaTitle": "{{title}} – Fortsetzungsgeschichte auf {{language}} | FlexiLingo",
+    "metaDescription": "{{title}}: eine Geschichte auf {{language}} in {{count}} Folgen für Lernende. Tippe auf ein Wort, um seine Bedeutung zu sehen.",
+    "kicker": "Fortsetzungsgeschichte auf {{language}}",
+    "episodes_one": "{{count}} Folge",
+    "episodes_other": "{{count}} Folgen",
+    "seasons_one": "{{count}} Staffel",
+    "seasons_other": "{{count}} Staffeln",
+    "start": "Mit Folge 1 beginnen",
+    "seasonNav": "Staffeln",
+    "loginNote": "Die erste Seite jeder Folge ist kostenlos. Der Rest ist mit Konto kostenlos.",
+    "listHeading": "Geschichten in Folgen",
+    "open": "Alle Folgen ansehen"
+  },
+  "pagination": {
+    "showing": "{{start}} bis {{end}} von {{total}}",
+    "previous": "Zurück",
+    "next": "Weiter"
   }
 }

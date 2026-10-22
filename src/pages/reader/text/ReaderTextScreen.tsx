@@ -49,6 +49,7 @@ export function ReaderTextScreen({
   errorText,
   onLanguageChange,
   notice,
+  gate,
 }: {
   title: string;
   subtitle?: string;
@@ -67,6 +68,8 @@ export function ReaderTextScreen({
   errorText: string;
   /** Omitted where the language is not the reader's to change — a published book declares it. */
   onLanguageChange?: (language: string) => void;
+  /** Replaces the page (and its error) with an invitation — a page that needs a free account. */
+  gate?: ReactNode;
   /** A line under the toolbar — the language-corrected note. */
   notice?: ReactNode;
 }) {
@@ -147,7 +150,9 @@ export function ReaderTextScreen({
               the surface rather than the surface itself. */}
           <div className="mx-auto max-w-[68ch] space-y-4">
             <div className="rounded-xl border border-border bg-card p-6 sm:p-8 lg:p-10">
-              {pager.error ? (
+              {gate ? (
+                gate
+              ) : pager.error ? (
                 <div
                   role="alert"
                   className="flex flex-wrap items-center gap-3 rounded-lg border border-error/40 bg-error/10 px-3 py-2 text-sm text-error"
@@ -208,7 +213,7 @@ export function ReaderTextScreen({
                   hasNext={pager.hasNext}
                   onPrev={pager.prev}
                   onNext={pager.next}
-                  disabled={pager.isFetching || !!pager.error}
+                  disabled={pager.isFetching || (!!pager.error && !gate)}
                   end={pageEnd}
                 />
               </div>

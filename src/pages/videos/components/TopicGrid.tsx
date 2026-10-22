@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { getVideos } from '../lib/videosApi';
 import { useCloudQuery } from '../lib/useCloudQuery';
 
@@ -11,7 +10,7 @@ function TopicCard({ tag, onSelect }: { tag: string; onSelect: (tag: string) => 
   );
   const items = currentData?.items ?? [];
   const cover = items.find((v) => !!v.thumbnail)?.thumbnail;
-  if (loading) return <Skeleton className="aspect-[3/2] rounded-xl" />;
+  if (loading) return <div className="aspect-[3/2] animate-pulse rounded-xl bg-muted" />;
   if (items.length === 0) return null;
   return (
     <button
@@ -19,7 +18,7 @@ function TopicCard({ tag, onSelect }: { tag: string; onSelect: (tag: string) => 
       onClick={() => onSelect(tag)}
       className="group relative isolate block aspect-[3/2] w-full overflow-hidden rounded-xl text-start transition-shadow duration-200 hover:shadow-md"
     >
-      <div className="absolute inset-0 bg-primary">
+      <div className="absolute inset-0 bg-olive-600">
         {cover && (
           <img
             src={cover}
@@ -30,6 +29,7 @@ function TopicCard({ tag, onSelect }: { tag: string; onSelect: (tag: string) => 
         )}
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/25" />
+      <div className="absolute inset-0 bg-olive-700/15" />
       <div className="relative z-10 flex h-full flex-col justify-between p-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md">
           <Globe className="h-4 w-4" />

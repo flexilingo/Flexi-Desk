@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Send, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Send, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ export function RequestPodcastPanel({ feedId }: { feedId: number }) {
           ? 'border-error/30 bg-error/10 text-error'
           : 'border-accent/30 bg-accent/10 text-accent';
     return (
-      <div className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm ${tone}`}>
+      <div className={`flex items-start gap-2.5 rounded-[9px] border px-4 py-3 text-sm ${tone}`}>
         <Icon className="mt-0.5 h-4 w-4 shrink-0" />
         <div>
           <p className="font-semibold">{t(`podcast.requestStatus_${status}`)}</p>
@@ -53,9 +53,9 @@ export function RequestPodcastPanel({ feedId }: { feedId: number }) {
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+    <div className="space-y-3 rounded-[9px] border border-border bg-card p-5 shadow-xs">
       <div>
-        <h3 className="text-sm font-bold text-foreground">{t('podcast.requestTitle')}</h3>
+        <h3 className="text-[15px] font-bold text-foreground">{t('podcast.requestTitle')}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">{t('podcast.requestHint')}</p>
       </div>
 
@@ -67,12 +67,8 @@ export function RequestPodcastPanel({ feedId }: { feedId: number }) {
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           className="min-w-60 flex-1 text-sm"
         />
-        <Button onClick={handleSubmit} disabled={isRequesting} size="sm">
-          {isRequesting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
+        <Button onClick={handleSubmit} loading={isRequesting} variant="accent" size="sm">
+          {!isRequesting && <Send className="h-4 w-4" />}
           {t('podcast.requestSubmit')}
         </Button>
       </div>

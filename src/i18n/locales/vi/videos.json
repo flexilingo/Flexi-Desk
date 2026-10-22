@@ -105,7 +105,8 @@
   "pagination": {
     "previous": "Trước",
     "next": "Tiếp",
-    "page": "Trang {{page}} trên {{total}}"
+    "page": "Trang {{page}} trên {{total}}",
+    "showing": "Hiển thị {{start}} đến {{end}} trong số {{total}}"
   },
   "watch": {
     "preparing": "Đang mở video…",

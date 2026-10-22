@@ -73,5 +73,41 @@
     "filters": "عوامل التصفية",
     "all": "الكل",
     "showResults": "عرض {{count}} كتاب"
+  },
+  "series": {
+    "season": "الموسم {{n}}",
+    "seasonEpisode": "الموسم {{season}} · الحلقة {{n}}",
+    "episodeNav": "الحلقات",
+    "prevEpisode": "الحلقة السابقة",
+    "nextEpisode": "الحلقة التالية",
+    "allEpisodes": "كل الحلقات",
+    "gateTitle": "تابع القراءة مجانًا بحساب",
+    "gateBody": "الصفحة الأولى من كل حلقة في هذا الموسم متاحة للجميع. سجّل الدخول أو أنشئ حسابًا مجانيًا لقراءة البقية. يُحفظ مكانك والكلمات التي تنقر عليها.",
+    "gateCta": "سجّل الدخول لمتابعة القراءة",
+    "metaTitle": "{{title}} — قصة بالحلقات باللغة {{language}} | FlexiLingo",
+    "metaDescription": "{{title}}: قصة من {{count}} حلقة باللغة {{language}} لمتعلمي اللغة. انقر على أي كلمة لترى معناها.",
+    "kicker": "قصة بالحلقات باللغة {{language}}",
+    "episodes_zero": "{{count}} حلقة",
+    "episodes_one": "حلقة واحدة",
+    "episodes_two": "حلقتان",
+    "episodes_few": "{{count}} حلقات",
+    "episodes_many": "{{count}} حلقة",
+    "episodes_other": "{{count}} حلقة",
+    "seasons_zero": "{{count}} موسمًا",
+    "seasons_one": "موسم واحد",
+    "seasons_two": "موسمان",
+    "seasons_few": "{{count}} مواسم",
+    "seasons_many": "{{count}} موسمًا",
+    "seasons_other": "{{count}} موسمًا",
+    "start": "ابدأ من الحلقة 1",
+    "seasonNav": "المواسم",
+    "loginNote": "الصفحة الأولى من كل حلقة مجانية. والباقي مجاني بحساب.",
+    "listHeading": "قصص بالحلقات",
+    "open": "عرض كل الحلقات"
+  },
+  "pagination": {
+    "showing": "عرض {{start}} إلى {{end}} من {{total}}",
+    "previous": "السابق",
+    "next": "التالي"
   }
 }

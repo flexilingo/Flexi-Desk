@@ -1,25 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Plus,
-  Rss,
-  Loader2,
-  Flame,
-  Star,
-  GraduationCap,
-  Newspaper,
-  FlaskConical,
-  Globe,
-  Palette,
-  Cpu,
-  Headphones,
-} from 'lucide-react';
+import { Headphones, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@/components/ui/input';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { Button } from '@/components/ui/button';
 import { useDiscoverStore } from '../../stores/discoverStore';
-import { usePodcastStore } from '../../stores/podcastStore';
-import { useAuthStore } from '@/stores/authStore';
 import { useImportAndPlay } from '../../hooks/useImportAndPlay';
 import { getCuratedList } from '../../services/podcastCloud';
 import {
@@ -28,24 +13,22 @@ import {
   type PodcastReading,
   type SemanticHit,
 } from '../../services/podcastSearch';
-import { HorizontalSection } from './HorizontalSection';
-import { PodcastCardCompact } from './PodcastCardCompact';
-import type { CuratedPodcast, PodcastFeed, PodcastIndexFeed } from '../../types';
-import type { LucideIcon } from 'lucide-react';
+import type { CuratedPodcast } from '../../types';
 
-import { PodcastHubHero } from '../hub/PodcastHubHero';
+import { PodcastPageHeader } from '../PodcastPageHeader';
 import { PodcastFilterPills } from '../hub/PodcastFilterPills';
 import { FeaturedPodcastCard } from '../hub/FeaturedPodcastCard';
-import { EpisodeLevelGrid } from '../hub/EpisodeLevelGrid';
-import { HotEpisodesSection } from '../hub/HotEpisodesSection';
-import { NewEpisodesListSection } from '../hub/NewEpisodesListSection';
+import { CategoryGrid } from '../hub/CategoryGrid';
+import { EpisodeCardGrid } from '../hub/EpisodeCardGrid';
+import { HubPager } from '../hub/HubPager';
+import { PodcastTileGrid } from '../hub/PodcastTileCard';
 import { HubViewList } from '../hub/HubViewList';
 import { SemanticEpisodeResults } from '../hub/SemanticEpisodeResults';
 import {
   EPISODE_VIEWS,
   HUB_PAGE_SIZE,
   applyReading,
-  effectiveView,
+  hasActiveFilter,
   parseHubParams,
   serializeHubParams,
   DURATION_MAX_MINUTES,
@@ -54,74 +37,41 @@ import {
 import { exactTitleFirst } from '../../utils/exactTitle';
 import { keepSemanticHits, laneOrder, planSearchLanes } from '../../utils/semantic';
 
-/** Matches front's hub page size. */
+/** Matches the website's hub page size. */
 const FILTER_PAGE_SIZE = HUB_PAGE_SIZE;
 const PI_PAGE_SIZE = 20;
-
-const CATEGORY_CONFIG: { cat: string; slug: string; labelKey: string; icon: LucideIcon }[] = [
-  { cat: 'Education', slug: 'education', labelKey: 'podcast.catEducation', icon: GraduationCap },
-  { cat: 'News', slug: 'news', labelKey: 'podcast.catNews', icon: Newspaper },
-  { cat: 'Arts', slug: 'arts', labelKey: 'podcast.catArts', icon: Palette },
-  { cat: 'Science', slug: 'science', labelKey: 'podcast.catScience', icon: FlaskConical },
-  { cat: 'Society-Culture', slug: 'society', labelKey: 'podcast.catSocietyCulture', icon: Globe },
-  { cat: 'Technology', slug: 'technology', labelKey: 'podcast.catTechnology', icon: Cpu },
-];
 
 export function DiscoverView() {
   const { t } = useTranslation('common');
   const { t: tp } = useTranslation('podcastUi');
-  const session = useAuthStore((s) => s.session);
 
   const {
-    trendingFeeds,
-    isTrendingLoading,
-    categoryFeeds,
-    categoryLoading,
-    followedFeedIds,
-    followingFeedId,
-    starterPodcasts,
-    isStarterLoading,
     popularPodcasts,
-    popularEpisodes,
-    isPopularEpisodesLoading,
-    newEpisodes,
-    isNewEpisodesLoading,
+    curatedRow,
+    isCuratedRowLoading,
     episodesByLevel,
     episodesByLevelTotal,
     isEpisodesByLevelLoading,
     fetchEpisodesByLevel,
-    publicStats,
-    curatedRow,
-    isCuratedRowLoading,
     filterResults,
     filterTotal,
-    filterSource,
     isFilterLoading,
     piSearchResults,
     isPiSearchLoading,
     searchPodcastIndex,
-    fetchAll,
-    followPodcast,
+    fetchPopularPodcasts,
+    fetchCuratedRow,
     fetchFilteredResults,
   } = useDiscoverStore();
   const navigate = useNavigate();
   const {
     playEpisodeByLevel,
-    playCuratedEpisode,
     playSemanticHit,
     importingId,
     error: importError,
   } = useImportAndPlay();
 
-  const { feeds: localFeeds, isLoadingFeeds, isAddingFeed, addFeed, loadFeed } = usePodcastStore();
-
-  // Subscribing then opening a feed is one motion; navigation is the router's.
-  const openFeedRoute = (feed: PodcastFeed) => {
-    loadFeed(feed);
-    navigate(`/podcast/feed/${feed.id}`);
-  };
-
-  const [feedUrl, setFeedUrl] = useState('');
+  const openPodcastRoute = (feedId: number) => navigate(`/podcast/show/${feedId}`);
 
   // Every filter, the view and the page live in the URL, so Back from a show or an episode returns to
   // the same list, and a refresh opens exactly this one.
@@ -155,12 +105,14 @@ export function DiscoverView() {
   }, [searchInput, update]);
 
   const { q: debouncedSearch, cefr, topic, language, duration, page } = params;
-  const view = effectiveView(params);
+  const view = params.view;
   const searching = debouncedSearch.trim() !== '';
 
+  // The featured pick: the most-listened show, else the top curated one.
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchPopularPodcasts();
+    fetchCuratedRow();
+  }, [fetchPopularPodcasts, fetchCuratedRow]);
 
   // READ THE SENTENCE FIRST, in the one place the whole product reads it ("podcasts for kids" is a
   // category, "beginner" means A2). Checked against the query it answers: a reading of the last
@@ -376,471 +328,204 @@ export function DiscoverView() {
       .join(' \u00B7 ');
   }, [read, t, tp]);
 
-  const handleAddFeed = async () => {
-    if (!feedUrl.trim()) return;
-    await addFeed(feedUrl.trim());
-    setFeedUrl('');
-  };
-
-  // A cloud podcast opens its detail page. It used to force-subscribe the whole
-  // RSS feed locally just to look at it, which is not what a click means.
-  const openPodcastRoute = (feedId: number) => navigate(`/podcast/show/${feedId}`);
-
-  const handleCloudPodcastClick = (feedId: number) => openPodcastRoute(feedId);
-
-  const handleOpenCurated = (p: CuratedPodcast) => openPodcastRoute(p.feed_id);
-
-  const handleLocalFeedClick = (feedId: string) => {
-    const feed = localFeeds.find((f) => f.id === feedId);
-    if (feed) openFeedRoute(feed);
-  };
-
-  // Smart featured: prefer most-listened, fall back to top curated
+  // Smart featured: prefer most-listened, fall back to top curated.
   const featured = popularPodcasts[0] ?? curatedRow[0];
-  const restCurated = curatedRow.slice(1);
+  const filtered = hasActiveFilter(params, view);
 
-  const totalPages = Math.ceil(filterTotal / FILTER_PAGE_SIZE);
+  const searchHeading = (text: string) => (
+    <p className="text-sm font-medium text-muted-foreground">{text}</p>
+  );
 
   const podcastsLane = (isFilterLoading || filterResults.length > 0) && plan.podcasts && (
-    <section key="podcasts" className="space-y-3">
-      <h2 className="text-sm font-bold text-foreground">
-        {tp('searchPodcastsSection')}
-        {filterTotal > 0 ? ` (${filterTotal})` : ''}
-      </h2>
-      {isFilterLoading ? (
-        <div className="flex min-h-40 items-center justify-center">
-          <Loader2 className="h-7 w-7 animate-spin text-primary" />
-        </div>
-      ) : (
-        <PodcastGrid
-          results={curatedRanked.items}
-          source={filterSource}
-          followedFeedIds={followedFeedIds}
-          followingFeedId={followingFeedId}
-          onFollow={session ? followPodcast : undefined}
-          onClick={handleCloudPodcastClick}
-        />
-      )}
-    </section>
-  );
-  const episodesLane = (
-    <div key="episodes">
-      <EpisodeLevelGrid
-        episodes={episodesByLevel}
-        total={episodesByLevelTotal}
-        isLoading={isEpisodesByLevelLoading}
-        page={page}
-        pageSize={FILTER_PAGE_SIZE}
-        onPageChange={(p) => update({ page: p })}
-        onPlay={playEpisodeByLevel}
-        onOpenPodcast={openPodcastRoute}
-        heading={`${tp('searchEpisodesSection')}${episodesByLevelTotal > 0 ? ` (${episodesByLevelTotal})` : ''}`}
-        hideWhenEmpty
+    <div key="podcasts" className="space-y-3">
+      {searchHeading(`${tp('searchPodcastsSection')}${filterTotal > 0 ? ` (${filterTotal})` : ''}`)}
+      <PodcastTileGrid
+        podcasts={curatedRanked.items}
+        isLoading={isFilterLoading}
+        onOpen={openPodcastRoute}
+        total={filterTotal}
       />
     </div>
   );
+  const episodesLane = plan.episodes &&
+    (isEpisodesByLevelLoading || episodesByLevel.length > 0) && (
+      <div key="episodes" className="space-y-3">
+        {searchHeading(
+          `${tp('searchEpisodesSection')}${episodesByLevelTotal > 0 ? ` (${episodesByLevelTotal})` : ''}`,
+        )}
+        <EpisodeCardGrid
+          episodes={episodesByLevel}
+          isLoading={isEpisodesByLevelLoading}
+          skeletonCount={12}
+          onPlay={playEpisodeByLevel}
+          onOpenPodcast={openPodcastRoute}
+        />
+        <HubPager
+          page={page}
+          totalPages={Math.max(1, Math.ceil(episodesByLevelTotal / FILTER_PAGE_SIZE))}
+          totalCount={episodesByLevelTotal}
+          pageSize={FILTER_PAGE_SIZE}
+          onPageChange={(p) => {
+            update({ page: p });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      </div>
+    );
   const discoverLane = (isPiSearchLoading || piDeduped.length > 0) && plan.discover && (
-    <section key="discover" className="space-y-3">
-      <h2 className="text-sm font-bold text-foreground">
+    <div key="discover" className="space-y-3">
+      <p className="text-sm font-medium text-muted-foreground">
         {tp('searchDiscoverSection')}
         {!isPiSearchLoading && piDeduped.length > 0 && (
-          <span className="ml-1 font-normal text-muted-foreground">({piDeduped.length})</span>
+          <span className="ms-1 font-normal text-caption">({piDeduped.length})</span>
         )}
-      </h2>
-      <PodcastGrid
-        results={piRanked.items}
-        source="podcastindex"
-        followedFeedIds={followedFeedIds}
-        followingFeedId={followingFeedId}
-        onFollow={session ? followPodcast : undefined}
-        onClick={handleCloudPodcastClick}
+      </p>
+      <PodcastTileGrid
+        podcasts={piRanked.items}
+        isLoading={isPiSearchLoading}
+        onOpen={openPodcastRoute}
+        total={piDeduped.length}
       />
       {hasMorePi && !isPiSearchLoading && (
         <div className="flex justify-center pt-1">
-          <Button variant="outline" size="sm" onClick={() => setPiMax((n) => n + PI_PAGE_SIZE)}>
+          <Button variant="outline" onClick={() => setPiMax((n) => n + PI_PAGE_SIZE)}>
             {tp('loadMore')}
           </Button>
         </div>
       )}
       {isPiSearchLoading && piMax > PI_PAGE_SIZE && (
         <div className="flex justify-center pt-1">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <Loader2 className="h-5 w-5 animate-spin text-accent" />
         </div>
       )}
-    </section>
+    </div>
   );
   const lanes = { podcasts: podcastsLane, episodes: episodesLane, discover: discoverLane };
 
   return (
-    <div className="space-y-6">
-      {/* Hero */}
-      <PodcastHubHero stats={publicStats} />
+    <div className="space-y-5">
+      <PodcastPageHeader active="browse" />
 
       {importError && (
-        <div className="rounded-lg border border-error/30 bg-error/10 px-4 py-2.5 text-sm text-error">
+        <p
+          role="alert"
+          className="rounded-lg border border-error/30 bg-error/10 px-4 py-2.5 text-sm text-error"
+        >
           {importError}
-        </div>
+        </p>
       )}
 
-      {/* RSS Feed Input */}
-      <div className="flex items-center gap-2">
-        <Input
-          value={feedUrl}
-          onChange={(e) => setFeedUrl(e.target.value)}
-          placeholder={t('podcast.rssFeedUrl')}
-          onKeyDown={(e) => e.key === 'Enter' && handleAddFeed()}
-          className="flex-1 font-mono text-sm"
+      <div className="space-y-5 md:space-y-6">
+        {/* The hub's single filter bar */}
+        <PodcastFilterPills
+          searchQuery={searchInput}
+          onSearchChange={(q) => {
+            setSearchInput(q);
+            // Clearing is immediate; typing waits for the debounce.
+            if (q === '') update({ q: '' });
+          }}
+          isSearching={isSearching}
+          selectedCefr={cefr}
+          onCefrChange={(v) => update({ cefr: v })}
+          selectedTopic={topic}
+          onTopicChange={(v) => update({ topic: v })}
+          selectedLanguage={language}
+          onLanguageChange={(v) => update({ language: v })}
+          selectedDuration={duration}
+          onDurationChange={(v) => update({ duration: v })}
+          // Episode length only means something where the results ARE episodes.
+          showDuration={searching || EPISODE_VIEWS.includes(view)}
+          view={searching ? undefined : view}
+          onViewChange={(v) => update({ view: v })}
+          // A search answers in several lanes, each with its own count.
+          resultCount={searching ? undefined : viewTotal}
+          resultKind={EPISODE_VIEWS.includes(view) ? 'episodes' : 'podcasts'}
         />
-        <Button onClick={handleAddFeed} disabled={isAddingFeed || !feedUrl.trim()} size="sm">
-          {isAddingFeed ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-          {t('podcast.addFeed')}
-        </Button>
+
+        {searching ? (
+          /* ===== Search mode: the lanes, then what is said inside episodes ===== */
+          <>
+            {(eff.described || eff.browsing) && (
+              <p className="text-sm text-caption">
+                {eff.browsing ? tp('readAsBrowse') : tp('readAs', { filters: readingLabel })}
+              </p>
+            )}
+            {laneOrder(exactInDiscover).map((key) => lanes[key])}
+
+            {nothingFound && (
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-border bg-card py-12 text-center">
+                  <Headphones className="mx-auto mb-4 h-12 w-12 text-caption" />
+                  <p className="text-muted-foreground">{tp('noResults')}</p>
+                </div>
+                {rescue.length > 0 && (
+                  <div className="space-y-3">
+                    {searchHeading(tp('readAsBrowse'))}
+                    <PodcastTileGrid
+                      podcasts={rescue}
+                      onOpen={openPodcastRoute}
+                      total={rescue.length}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {plan.semantic && (
+              <SemanticEpisodeResults
+                hits={semanticHits}
+                isLoading={semanticLoading}
+                query={debouncedSearch}
+                openingId={importingId}
+                onOpen={(hit, startAt) => playSemanticHit(hit, startAt)}
+              />
+            )}
+          </>
+        ) : (
+          /* ===== Discovery: the editor's pick, the chosen view, the categories ===== */
+          <div className="w-full space-y-8 md:space-y-10">
+            {isCuratedRowLoading && !featured ? (
+              <div className="min-h-[200px] animate-pulse rounded-2xl border border-border bg-muted" />
+            ) : (
+              featured && (
+                <FeaturedPodcastCard
+                  podcast={featured}
+                  onListen={(p) => openPodcastRoute(p.feed_id)}
+                />
+              )
+            )}
+
+            <section>
+              <HubViewList
+                view={view}
+                cefr={cefr}
+                topic={topic}
+                language={language}
+                duration={duration}
+                page={page}
+                onPageChange={(p) => update({ page: p })}
+                onTotalChange={setViewTotal}
+                showTotal={!filtered}
+              />
+            </section>
+
+            <CategoryGrid />
+          </div>
+        )}
       </div>
 
-      {/* The hub's single filter bar */}
-      <PodcastFilterPills
-        searchQuery={searchInput}
-        onSearchChange={(q) => {
-          setSearchInput(q);
-          // Clearing is immediate; typing waits for the debounce.
-          if (q === '') update({ q: '' });
-        }}
-        isSearching={isSearching}
-        selectedCefr={cefr}
-        onCefrChange={(v) => update({ cefr: v })}
-        selectedTopic={topic}
-        onTopicChange={(v) => update({ topic: v })}
-        selectedLanguage={language}
-        onLanguageChange={(v) => update({ language: v })}
-        selectedDuration={duration}
-        onDurationChange={(v) => update({ duration: v })}
-        // Episode length only means something where the results ARE episodes.
-        showDuration={searching || EPISODE_VIEWS.includes(view)}
-        view={searching ? undefined : view}
-        onViewChange={(v) => update({ view: v })}
-        resultCount={searching || view === 'overview' ? undefined : viewTotal}
-        resultKind={EPISODE_VIEWS.includes(view) ? 'episodes' : 'podcasts'}
-      />
-
-      {searching ? (
-        /* ===== Search mode: the lanes, then what is said inside episodes ===== */
-        <div className="space-y-8">
-          {(eff.described || eff.browsing) && (
-            <p className="text-sm text-muted-foreground">
-              {eff.browsing ? tp('readAsBrowse') : tp('readAs', { filters: readingLabel })}
-            </p>
-          )}
-          {laneOrder(exactInDiscover).map((key) => lanes[key])}
-
-          {totalPages > 1 && plan.podcasts && !isFilterLoading && filterResults.length > 0 && (
-            <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={() => update({ page: Math.max(1, page - 1) })}
-                disabled={page <= 1}
-                className="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-              >
-                {t('podcast.previous')}
-              </button>
-              <span className="px-3 text-sm tabular-nums text-muted-foreground">
-                {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => update({ page: Math.min(totalPages, page + 1) })}
-                disabled={page >= totalPages}
-                className="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-              >
-                {t('podcast.next')}
-              </button>
-            </div>
-          )}
-
-          {nothingFound && (
-            <div className="space-y-5">
-              <NoResults />
-              {rescue.length > 0 && (
-                <section className="space-y-3">
-                  <h2 className="text-sm font-bold text-foreground">{tp('readAsBrowse')}</h2>
-                  <PodcastGrid
-                    results={rescue}
-                    source="db"
-                    followedFeedIds={followedFeedIds}
-                    followingFeedId={followingFeedId}
-                    onFollow={session ? followPodcast : undefined}
-                    onClick={handleCloudPodcastClick}
-                  />
-                </section>
-              )}
-            </div>
-          )}
-
-          {plan.semantic && (
-            <SemanticEpisodeResults
-              hits={semanticHits}
-              isLoading={semanticLoading}
-              query={debouncedSearch}
-              openingId={importingId}
-              onOpen={(hit, startAt) => playSemanticHit(hit, startAt)}
-            />
-          )}
-        </div>
-      ) : view !== 'overview' ? (
-        /* ===== A view (Just analyzed, New podcasts, Latest, Most popular, Curated) narrowed by the bar ===== */
-        <HubViewList
-          view={view}
-          cefr={cefr}
-          topic={topic}
-          language={language}
-          duration={duration}
-          page={page}
-          onPageChange={(p) => update({ page: p })}
-          onTotalChange={setViewTotal}
-        />
-      ) : (
-        /* ===== Overview: desk's discovery page (subscriptions, trending, categories) ===== */
-        <div className="space-y-8">
-          {/* Starter podcasts for brand-new users */}
-          {localFeeds.length === 0 && !isLoadingFeeds && starterPodcasts.length > 0 && (
-            <div className="space-y-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
-              <h3 className="text-sm font-semibold text-foreground">{tp('starterTitle')}</h3>
-              {isStarterLoading ? (
-                <div className="flex items-center gap-2 py-2 text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-xs">{tp('starterLoading')}</span>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {starterPodcasts.map((p) => {
-                    const url = p.rssUrl ?? '';
-                    return (
-                      <button
-                        key={url}
-                        onClick={() => addFeed(url)}
-                        disabled={isAddingFeed || !url}
-                        className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                          <Headphones className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-foreground">{p.title}</p>
-                          <p className="truncate text-xs text-muted-foreground">{p.description}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Featured podcast (smart) */}
-          {featured && <FeaturedPodcastCard podcast={featured} onListen={handleOpenCurated} />}
-
-          {/* My Subscriptions (local feeds) — "See all" opens the local library */}
-          {localFeeds.length > 0 && (
-            <HorizontalSection
-              title={t('podcast.mySubscriptions')}
-              icon={Rss}
-              isLoading={isLoadingFeeds}
-              isEmpty={localFeeds.length === 0}
-              onMoreClick={() => navigate('/podcast/library')}
-            >
-              {localFeeds.map((feed) => (
-                <button
-                  key={feed.id}
-                  onClick={() => handleLocalFeedClick(feed.id)}
-                  className="w-50 shrink-0 snap-start overflow-hidden rounded-lg border border-border bg-card text-left transition-all hover:shadow-md hover:border-primary/30 active:scale-[0.98]"
-                >
-                  <div className="relative h-36 bg-muted">
-                    {feed.artworkUrl ? (
-                      <img
-                        src={feed.artworkUrl}
-                        alt={feed.title}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <Headphones className="h-10 w-10 text-muted-foreground/40" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="mb-0.5 line-clamp-1 text-sm font-semibold text-foreground">
-                      {feed.title}
-                    </p>
-                    {feed.author && (
-                      <p className="mb-2 line-clamp-1 text-xs text-muted-foreground">
-                        {feed.author}
-                      </p>
-                    )}
-                    <p className="text-[10px] text-muted-foreground">
-                      {tp('episodesCount', { count: feed.episodeCount })}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </HorizontalSection>
-          )}
-
-          {/* Hot This Week */}
-          <HotEpisodesSection
-            episodes={popularEpisodes}
-            isLoading={isPopularEpisodesLoading}
-            openingId={importingId}
-            onOpen={playCuratedEpisode}
-          />
-
-          {/* Just Analyzed */}
-          <NewEpisodesListSection
-            episodes={newEpisodes}
-            isLoading={isNewEpisodesLoading}
-            openingId={importingId}
-            onOpen={playCuratedEpisode}
-          />
-
-          {/* Curated by FlexiLingo (horizontal) */}
-          {restCurated.length > 0 && (
-            <HorizontalSection
-              title={t('podcast.curatedByFlexiLingo')}
-              icon={Star}
-              isLoading={isCuratedRowLoading}
-              isEmpty={restCurated.length === 0}
-            >
-              {restCurated.map((p) => (
-                <PodcastCardCompact
-                  key={p.id}
-                  data={{ type: 'curated', podcast: p }}
-                  isFollowed={followedFeedIds.has(p.feed_id)}
-                  isFollowing={followingFeedId === p.feed_id}
-                  onFollow={session ? followPodcast : undefined}
-                  onClick={handleCloudPodcastClick}
-                />
-              ))}
-            </HorizontalSection>
-          )}
-
-          {/* Trending Among Learners */}
-          {popularPodcasts.length > 0 && (
-            <HorizontalSection
-              title={t('podcast.trendingAmongLearners')}
-              icon={Flame}
-              isLoading={false}
-              isEmpty={popularPodcasts.length === 0}
-            >
-              {popularPodcasts.map((p) => (
-                <PodcastCardCompact
-                  key={p.id}
-                  data={{ type: 'curated', podcast: p }}
-                  isFollowed={followedFeedIds.has(p.feed_id)}
-                  isFollowing={followingFeedId === p.feed_id}
-                  onFollow={session ? followPodcast : undefined}
-                  onClick={handleCloudPodcastClick}
-                />
-              ))}
-            </HorizontalSection>
-          )}
-
-          {/* Trending Now (PodcastIndex) */}
-          <HorizontalSection
-            title={t('podcast.trendingNow')}
-            icon={Flame}
-            isLoading={isTrendingLoading}
-            isEmpty={trendingFeeds.length === 0}
-            onMoreClick={() => navigate('/podcast/browse/trending')}
+      <div className="mt-12 text-center">
+        <p className="text-xs text-muted-foreground">
+          {tp('poweredByPodcastIndex')}{' '}
+          <button
+            type="button"
+            onClick={() => void openUrl('https://podcastindex.org')}
+            className="font-medium text-accent transition-colors hover:text-accent/80"
           >
-            {trendingFeeds.map((feed) => (
-              <PodcastCardCompact
-                key={feed.id}
-                data={{ type: 'feed', podcast: feed }}
-                isFollowed={followedFeedIds.has(feed.id)}
-                isFollowing={followingFeedId === feed.id}
-                onFollow={session ? followPodcast : undefined}
-                onClick={handleCloudPodcastClick}
-              />
-            ))}
-          </HorizontalSection>
-
-          {/* Category rows */}
-          {CATEGORY_CONFIG.map(({ cat, slug, labelKey, icon }) => (
-            <HorizontalSection
-              key={cat}
-              title={t(labelKey)}
-              icon={icon}
-              isLoading={categoryLoading[cat] ?? false}
-              isEmpty={!categoryFeeds[cat] || categoryFeeds[cat].length === 0}
-              onMoreClick={() => navigate(`/podcast/browse/${slug}`)}
-            >
-              {(categoryFeeds[cat] ?? []).map((feed) => (
-                <PodcastCardCompact
-                  key={feed.id}
-                  data={{ type: 'feed', podcast: feed }}
-                  isFollowed={followedFeedIds.has(feed.id)}
-                  isFollowing={followingFeedId === feed.id}
-                  onFollow={session ? followPodcast : undefined}
-                  onClick={handleCloudPodcastClick}
-                />
-              ))}
-            </HorizontalSection>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Grid of cloud podcasts — rows come from either the curated DB or PodcastIndex. */
-function PodcastGrid({
-  results,
-  source,
-  followedFeedIds,
-  followingFeedId,
-  onFollow,
-  onClick,
-}: {
-  results: (CuratedPodcast | PodcastIndexFeed)[];
-  source: 'db' | 'podcastindex' | null;
-  followedFeedIds: Set<number>;
-  followingFeedId: number | null;
-  onFollow?: (feedId: number) => void;
-  onClick: (feedId: number) => void;
-}) {
-  const isFeed = source === 'podcastindex';
-  return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-      {results.map((podcast) => {
-        const feedId = isFeed
-          ? (podcast as PodcastIndexFeed).id
-          : (podcast as CuratedPodcast).feed_id;
-        return (
-          <PodcastCardCompact
-            key={feedId}
-            data={
-              isFeed
-                ? { type: 'feed', podcast: podcast as PodcastIndexFeed }
-                : { type: 'curated', podcast: podcast as CuratedPodcast }
-            }
-            isFollowed={followedFeedIds.has(feedId)}
-            isFollowing={followingFeedId === feedId}
-            onFollow={onFollow}
-            onClick={onClick}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function NoResults() {
-  const { t } = useTranslation('common');
-  return (
-    <div className="py-12 text-center">
-      <Headphones className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
-      <p className="text-muted-foreground">{t('podcast.noResults')}</p>
+            PodcastIndex.org
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

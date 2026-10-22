@@ -52,8 +52,10 @@ export function RelatedEpisodes({ seedEpisodeId, excludeFeedId, language }: Prop
   if (hits.length === 0) return null;
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <h2 className="px-5 pb-2 pt-4 text-sm font-bold text-foreground">{t('relatedHeading')}</h2>
+    <section className="overflow-hidden rounded-[9px] border border-border bg-card shadow-xs">
+      <div className="px-5 pb-2 pt-4">
+        <h2 className="text-[15px] font-bold text-foreground">{t('relatedHeading')}</h2>
+      </div>
       {error && <p className="px-5 pb-2 text-sm text-error">{error}</p>}
       <div className="grid sm:grid-cols-2 xl:grid-cols-3">
         {hits.map((hit) => {
@@ -64,9 +66,9 @@ export function RelatedEpisodes({ seedEpisodeId, excludeFeedId, language }: Prop
               type="button"
               disabled={importingId === hit.content_id}
               onClick={() => playSemanticHit(hit)}
-              className="flex w-full items-center gap-3 border-t border-border px-5 py-3 text-left transition-colors hover:bg-muted/40 disabled:opacity-60"
+              className="flex w-full items-center gap-3 border-t border-border/60 px-5 py-3 text-start transition-colors hover:bg-muted/60 disabled:opacity-60"
             >
-              <span className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+              <span className="h-12 w-12 shrink-0 overflow-hidden rounded-[7px] bg-muted">
                 {ep.image_url && (
                   <img
                     src={ep.image_url}
@@ -83,7 +85,7 @@ export function RelatedEpisodes({ seedEpisodeId, excludeFeedId, language }: Prop
                 >
                   {hit.title}
                 </span>
-                <span className="mt-1 line-clamp-1 block text-[11.5px] text-muted-foreground">
+                <span className="mt-1 line-clamp-1 block text-[11.5px] text-caption">
                   {[ep.podcast_title, hit.cefr_level, hit.language?.toUpperCase()]
                     .filter(Boolean)
                     .join(' · ')}

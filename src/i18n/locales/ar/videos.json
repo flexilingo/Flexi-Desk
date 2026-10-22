@@ -108,7 +108,8 @@
   "pagination": {
     "previous": "السابق",
     "next": "التالي",
-    "page": "الصفحة {{page}} من {{total}}"
+    "page": "الصفحة {{page}} من {{total}}",
+    "showing": "عرض {{start}} إلى {{end}} من {{total}}"
   },
   "watch": {
     "preparing": "جارٍ فتح الفيديو…",

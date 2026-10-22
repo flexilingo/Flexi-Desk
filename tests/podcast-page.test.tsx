@@ -59,7 +59,7 @@ describe('podcast page', () => {
 
   it('renders the discovery hub even when every endpoint returns an empty object', () => {
     renderAt('/podcast');
-    expect(screen.getByText('podcast.hubTitle')).toBeInTheDocument();
+    expect(screen.getByText('podcastUi:hubPageTitle')).toBeInTheDocument();
   });
 
   it('renders the library route', () => {

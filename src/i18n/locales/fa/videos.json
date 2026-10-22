@@ -104,7 +104,8 @@
   "pagination": {
     "previous": "قبلی",
     "next": "بعدی",
-    "page": "صفحهٔ {{page}} از {{total}}"
+    "page": "صفحهٔ {{page}} از {{total}}",
+    "showing": "نمایش {{start}} تا {{end}} از {{total}}"
   },
   "watch": {
     "preparing": "در حال باز کردن ویدیو…",

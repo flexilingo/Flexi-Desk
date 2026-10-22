@@ -1,41 +1,93 @@
 import {
-  Check,
-  ChevronDown,
   Clock,
   Drama,
-  GraduationCap,
   Globe,
+  GraduationCap,
   Landmark,
-  Layers,
-  Loader2,
   MessageCircle,
   Microscope,
   Newspaper,
   Search,
-  X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
+import { LocaleBadge } from '@/components/WordDialog/LocaleBadge';
+import {
+  FilterBar,
+  FilterChips,
+  FilterClearAll,
+  FilterDropdown,
+  FilterGroup,
+  FilterPills,
+  FilterSearch,
+  FilterSelect,
+  type FilterChip,
+  type FilterOption,
+} from '@/components/ui/filters';
 import type { CefrLevel, TopicCategory } from '../../types';
 import {
+  DEFAULT_HUB_VIEW,
   DURATION_CEILINGS,
   HUB_VIEWS,
   PODCAST_LANGUAGES,
   VIEW_LABEL_KEY,
-  VALID_CEFR,
   type HubView,
 } from '../../utils/hubParams';
 
-/** Only the topics the difficulty pipeline actually tags episodes with. */
-const TOPICS: { topic: TopicCategory; icon: LucideIcon; labelKey: string }[] = [
-  { topic: 'education', icon: GraduationCap, labelKey: 'podcast.topicEducation' },
-  { topic: 'news', icon: Newspaper, labelKey: 'podcast.topicNews' },
-  { topic: 'science', icon: Microscope, labelKey: 'podcast.topicScience' },
-  { topic: 'storytelling', icon: Drama, labelKey: 'podcast.topicStorytelling' },
-  { topic: 'conversation', icon: MessageCircle, labelKey: 'podcast.topicConversation' },
-  { topic: 'culture', icon: Landmark, labelKey: 'podcast.topicCulture' },
+// Each level keeps its own colour: carried by the pill when active, and by the always-visible dot when idle.
+const CEFR_ACTIVE: Record<CefrLevel, string> = {
+  A1: 'bg-cefr-a1/20 text-cefr-a1 shadow-xs',
+  A2: 'bg-cefr-a2/20 text-cefr-a2 shadow-xs',
+  B1: 'bg-cefr-b1/25 text-cefr-b1 shadow-xs',
+  B2: 'bg-cefr-b2/20 text-cefr-b2 shadow-xs',
+  C1: 'bg-cefr-c1/20 text-cefr-c1 shadow-xs',
+  C2: 'bg-cefr-c2/20 text-cefr-c2 shadow-xs',
+};
+const CEFR_DOT: Record<CefrLevel, string> = {
+  A1: 'bg-cefr-a1',
+  A2: 'bg-cefr-a2',
+  B1: 'bg-cefr-b1',
+  B2: 'bg-cefr-b2',
+  C1: 'bg-cefr-c1',
+  C2: 'bg-cefr-c2',
+};
+const CEFR_LEVELS: { level: CefrLevel; labelKey: string }[] = [
+  { level: 'A1', labelKey: 'podcast.cefrBeginner' },
+  { level: 'A2', labelKey: 'podcast.cefrElementary' },
+  { level: 'B1', labelKey: 'podcast.cefrIntermediate' },
+  { level: 'B2', labelKey: 'podcastUi:cefrUpperIntermediate' },
+  { level: 'C1', labelKey: 'podcast.cefrAdvanced' },
+  { level: 'C2', labelKey: 'podcast.cefrProficiency' },
+];
+
+// Each topic keeps its own coloured line icon so the menu reads as a lively set rather than a grey strip.
+const TOPICS: { topic: TopicCategory; icon: LucideIcon; color: string; labelKey: string }[] = [
+  {
+    topic: 'education',
+    icon: GraduationCap,
+    color: 'text-accent',
+    labelKey: 'podcast.topicEducation',
+  },
+  { topic: 'news', icon: Newspaper, color: 'text-primary-light', labelKey: 'podcast.topicNews' },
+  { topic: 'science', icon: Microscope, color: 'text-success', labelKey: 'podcast.topicScience' },
+  {
+    topic: 'storytelling',
+    icon: Drama,
+    color: 'text-warning',
+    labelKey: 'podcast.topicStorytelling',
+  },
+  {
+    topic: 'conversation',
+    icon: MessageCircle,
+    color: 'text-accent/70',
+    labelKey: 'podcast.topicConversation',
+  },
+  {
+    topic: 'culture',
+    icon: Landmark,
+    color: 'text-primary-light',
+    labelKey: 'podcast.topicCulture',
+  },
 ];
 
 interface Props {
@@ -53,7 +105,7 @@ interface Props {
   onDurationChange?: (minutes: number | undefined) => void;
   /** Off on the podcast views, where an episode length means nothing. */
   showDuration?: boolean;
-  /** Omitted while a search is active: a search replaces the sections with results. */
+  /** Omitted while a search is active: a search replaces the view with results. */
   view?: HubView;
   onViewChange?: (view: HubView) => void;
   /** How many results the active view holds under these filters; undefined while counting. */
@@ -62,14 +114,14 @@ interface Props {
 }
 
 /**
- * The hub's single filter bar, as on the website: search, level pills (a second tap keeps the level),
- * language, view, topic and length dropdowns, one Clear all, and under it one removable chip per
- * active filter with the match count.
+ * The hub's single filter bar, as on the website: search, level pills (the word shows on the level
+ * you picked), language in a box of its own, then view / topic / length, one Clear all, and under it
+ * one removable chip per active filter with the match count.
  */
 export function PodcastFilterPills({
   searchQuery,
   onSearchChange,
-  isSearching,
+  isSearching = false,
   selectedCefr,
   onCefrChange,
   selectedTopic,
@@ -87,8 +139,9 @@ export function PodcastFilterPills({
   const { t } = useTranslation('common');
   const { t: tp } = useTranslation('podcastUi');
   const durationEnabled = showDuration && !!onDurationChange;
-  const viewEnabled = !!view && !!onViewChange;
 
+  // One reset for the whole bar, search included. The view is left alone: it says what you are
+  // reading, not what you filtered. Duration counts only while its control is on screen.
   const hasAny =
     !!searchQuery ||
     !!selectedCefr ||
@@ -103,25 +156,60 @@ export function PodcastFilterPills({
     onDurationChange?.(undefined);
   };
 
-  const topicLabel = (topic: TopicCategory) =>
-    t(TOPICS.find((x) => x.topic === topic)?.labelKey ?? topic);
-  const languageLabel = (code: string) =>
-    PODCAST_LANGUAGES.find((l) => l.code === code)?.label ?? code.toUpperCase();
+  const viewOptions: FilterOption[] = HUB_VIEWS.map((v) => ({
+    id: v,
+    label: tp(VIEW_LABEL_KEY[v]),
+  }));
+  const topicOptions: FilterOption[] = TOPICS.map(({ topic, icon: Icon, color, labelKey }) => ({
+    id: topic,
+    label: t(labelKey),
+    icon: <Icon className={`h-4 w-4 ${color}`} />,
+  }));
+  const languageOptions: FilterOption[] = PODCAST_LANGUAGES.map(({ code, label }) => ({
+    id: code,
+    label,
+    icon: <LocaleBadge code={code} size={18} />,
+  }));
+  const durationOptions: FilterOption[] = DURATION_CEILINGS.map((minutes) => ({
+    id: String(minutes),
+    label: tp('filterDurationUnder', { minutes }),
+  }));
+  const levelOptions = [
+    { id: '', label: t('podcast.filterAllLevels') },
+    ...CEFR_LEVELS.map(({ level, labelKey }) => ({
+      id: level,
+      label: level,
+      sublabel: t(labelKey),
+      dotClass: CEFR_DOT[level],
+      activeClass: CEFR_ACTIVE[level],
+    })),
+  ];
 
-  const chips: { key: string; label: string; onRemove: () => void }[] = [];
-  if (selectedCefr)
-    chips.push({ key: 'cefr', label: selectedCefr, onRemove: () => onCefrChange(undefined) });
-  if (selectedTopic) {
+  const chips: FilterChip[] = [];
+  const chosenLevel = CEFR_LEVELS.find(({ level }) => level === selectedCefr);
+  if (chosenLevel) {
+    chips.push({
+      key: 'cefr',
+      label: `${chosenLevel.level} · ${t(chosenLevel.labelKey)}`,
+      icon: <span className={`h-1.5 w-1.5 rounded-full ${CEFR_DOT[chosenLevel.level]}`} />,
+      onRemove: () => onCefrChange(undefined),
+    });
+  }
+  const chosenTopic = TOPICS.find(({ topic }) => topic === selectedTopic);
+  if (chosenTopic) {
     chips.push({
       key: 'topic',
-      label: topicLabel(selectedTopic),
+      label: t(chosenTopic.labelKey),
       onRemove: () => onTopicChange(undefined),
     });
   }
   if (selectedLanguage) {
     chips.push({
       key: 'language',
-      label: languageLabel(selectedLanguage),
+      label:
+        PODCAST_LANGUAGES.find((l) => l.code === selectedLanguage)?.label ??
+        selectedLanguage.toUpperCase(),
+      icon: <LocaleBadge code={selectedLanguage} size={18} />,
       onRemove: () => onLanguageChange(undefined),
     });
   }
@@ -133,223 +221,97 @@ export function PodcastFilterPills({
     });
   }
   if (searchQuery) {
-    chips.push({ key: 'q', label: `“${searchQuery}”`, onRemove: () => onSearchChange('') });
+    chips.push({
+      key: 'q',
+      label: `“${searchQuery}”`,
+      icon: <Search className="h-3 w-3 opacity-70" />,
+      onRemove: () => onSearchChange(''),
+    });
   }
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        {isSearching ? (
-          <Loader2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
-        ) : (
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        )}
-        <input
+      <FilterBar>
+        <FilterSearch
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={onSearchChange}
           placeholder={t('podcast.searchPlaceholder')}
-          className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+          isFetching={isSearching}
+          clearLabel={tp('clearSearch')}
+          className="w-full sm:w-56 lg:w-72"
         />
-        {searchQuery.length > 0 && (
-          <button
-            type="button"
-            aria-label={tp('clearSearch')}
-            onClick={() => onSearchChange('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Pill
-          label={t('podcast.filterAllLevels')}
-          active={!selectedCefr}
-          onClick={() => onCefrChange(undefined)}
+        {/* Level: the primary filter, inline. Only the code shows; the word appears on the chosen one. */}
+        <FilterPills
+          value={selectedCefr ?? ''}
+          options={levelOptions}
+          onChange={(id) => onCefrChange((id || undefined) as CefrLevel | undefined)}
+          sublabelMode="active"
         />
-        {VALID_CEFR.map((level) => (
-          // A second tap on the chosen level keeps it; "All levels" is how it is cleared.
-          <Pill
-            key={level}
-            label={level}
-            active={selectedCefr === level}
-            onClick={() => onCefrChange(level)}
+
+        {/* Language right after the level, in a box of its own. */}
+        <FilterGroup clearable={false}>
+          <FilterDropdown
+            label={tp('filterByLanguage')}
+            value={selectedLanguage ?? ''}
+            options={languageOptions}
+            onChange={(v) => onLanguageChange(v || undefined)}
+            allLabel={t('podcast.filterAllLanguages')}
+            clearLabel={tp('clearFilters')}
+            icon={<Globe className="h-3.5 w-3.5 opacity-70" />}
           />
-        ))}
+        </FilterGroup>
 
-        <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-
-        <Dropdown
-          icon={Globe}
-          label={t('podcast.filterAllLanguages')}
-          value={selectedLanguage ?? ''}
-          options={PODCAST_LANGUAGES.map((l) => ({ id: l.code, label: l.label }))}
-          allLabel={t('podcast.filterAllLanguages')}
-          onChange={(v) => onLanguageChange(v || undefined)}
-        />
-        {viewEnabled && (
-          <Dropdown
-            icon={Layers}
-            label={tp('filterView')}
-            value={view}
-            defaultValue="overview"
-            options={HUB_VIEWS.map((v) => ({ id: v, label: tp(VIEW_LABEL_KEY[v]) }))}
-            onChange={(v) => onViewChange?.((v || 'overview') as HubView)}
+        <FilterGroup clearable={false}>
+          {view && onViewChange && (
+            <>
+              <FilterSelect
+                label={tp('filterView')}
+                value={view}
+                defaultValue={DEFAULT_HUB_VIEW}
+                options={viewOptions}
+                onChange={(v) => onViewChange(v as HubView)}
+              />
+              <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+            </>
+          )}
+          <FilterDropdown
+            label={tp('filterTopic')}
+            value={selectedTopic ?? ''}
+            options={topicOptions}
+            onChange={(v) => onTopicChange((v || undefined) as TopicCategory | undefined)}
+            allLabel={tp('filterAllTopics')}
+            clearLabel={tp('clearFilters')}
+            icon={<GraduationCap className="h-3.5 w-3.5 opacity-70" />}
           />
-        )}
-        <Dropdown
-          icon={GraduationCap}
-          label={tp('filterTopic')}
-          value={selectedTopic ?? ''}
-          options={TOPICS.map(({ topic, labelKey }) => ({ id: topic, label: t(labelKey) }))}
-          allLabel={tp('filterAllTopics')}
-          onChange={(v) => onTopicChange((v || undefined) as TopicCategory | undefined)}
-        />
-        {durationEnabled && (
-          <Dropdown
-            icon={Clock}
-            label={tp('filterDuration')}
-            value={selectedDuration ? String(selectedDuration) : ''}
-            options={DURATION_CEILINGS.map((m) => ({
-              id: String(m),
-              label: tp('filterDurationUnder', { minutes: m }),
-            }))}
-            allLabel={tp('filterAnyDuration')}
-            onChange={(v) => onDurationChange?.(v ? Number(v) : undefined)}
-          />
-        )}
+          {/* Length: only on the episode views; a podcast has no single length. */}
+          {durationEnabled && (
+            <FilterDropdown
+              label={tp('filterDuration')}
+              value={selectedDuration ? String(selectedDuration) : ''}
+              options={durationOptions}
+              onChange={(v) => onDurationChange?.(v ? Number(v) : undefined)}
+              allLabel={tp('filterAnyDuration')}
+              clearLabel={tp('clearFilters')}
+              icon={<Clock className="h-3.5 w-3.5 opacity-70" />}
+            />
+          )}
+        </FilterGroup>
 
-        {hasAny && (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <X className="h-3.5 w-3.5" />
-            {tp('clearAllFilters')}
-          </button>
-        )}
-      </div>
+        <FilterClearAll show={hasAny} onClear={clearAll} label={tp('clearAllFilters')} />
+      </FilterBar>
 
-      {(chips.length > 0 || resultCount != null) && (
-        <div className="flex flex-wrap items-center gap-2">
-          {chips.map((c) => (
-            <span
-              key={c.key}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground"
-            >
-              {c.label}
-              <button
-                type="button"
-                aria-label={tp('removeFilter', { name: c.label })}
-                onClick={c.onRemove}
-                className="rounded-full text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-          {resultCount != null && (
-            <span className="text-xs text-muted-foreground">
-              {tp(resultKind === 'podcasts' ? 'matchCountPodcasts' : 'matchCountEpisodes', {
+      <FilterChips
+        chips={chips}
+        summary={
+          resultCount != null
+            ? tp(resultKind === 'podcasts' ? 'matchCountPodcasts' : 'matchCountEpisodes', {
                 count: resultCount,
-              })}
-            </span>
-          )}
-        </div>
-      )}
+              })
+            : undefined
+        }
+        removeLabel={(name) => tp('removeFilter', { name })}
+      />
     </div>
-  );
-}
-
-function Dropdown({
-  icon: Icon,
-  label,
-  value,
-  options,
-  allLabel,
-  defaultValue = '',
-  onChange,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  options: { id: string; label: string }[];
-  /** The "nothing chosen" row; omitted where a choice is always made (the view). */
-  allLabel?: string;
-  defaultValue?: string;
-  onChange: (id: string) => void;
-}) {
-  const current = options.find((o) => o.id === value);
-  const chosen = !!current && value !== defaultValue;
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
-            chosen
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted',
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" />
-          {current && (chosen || !allLabel) ? current.label : label}
-          <ChevronDown className="h-3 w-3 opacity-70" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-52 p-1">
-        {allLabel && <Option label={allLabel} active={!value} onClick={() => onChange('')} />}
-        {options.map((o) => (
-          <Option
-            key={o.id}
-            label={o.label}
-            active={value === o.id}
-            onClick={() => onChange(o.id)}
-          />
-        ))}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function Option({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted"
-    >
-      {label}
-      {active && <Check className="h-3.5 w-3.5 text-primary" />}
-    </button>
-  );
-}
-
-function Pill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
-        active
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted',
-      )}
-    >
-      {label}
-    </button>
   );
 }

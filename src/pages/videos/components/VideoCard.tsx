@@ -15,7 +15,7 @@ export function VideoCard({ video }: { video: VideoSummary }) {
   const href = `/videos/watch/${video.id}`;
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg">
+    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[0_10px_28px_rgba(14,36,10,0.12)]">
       <Link to={href} className="block" aria-label={video.title}>
         <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-muted">
           {!imgError && video.thumbnail ? (
@@ -31,17 +31,21 @@ export function VideoCard({ video }: { video: VideoSummary }) {
           )}
           <div
             aria-hidden
-            className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/55 to-transparent"
+            className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ink/55 to-transparent"
           />
           {video.pinned && (
-            <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-md bg-primary/90 px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground backdrop-blur-sm">
+            <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-md bg-olive-450/90 px-1.5 py-0.5 text-[10px] font-semibold text-cream-50 backdrop-blur-sm">
               <Pin className="h-2.5 w-2.5" aria-hidden />
               {t('pinned')}
             </span>
           )}
-          <LevelBadge level={video.cefr_level} className="absolute end-2 top-2" />
+          <LevelBadge
+            level={video.cefr_level}
+            size="md"
+            className="absolute end-2 top-2 drop-shadow-md"
+          />
           {dur && (
-            <span className="absolute bottom-2 end-2 inline-flex items-center gap-1 rounded-md bg-black/75 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white backdrop-blur-sm">
+            <span className="absolute bottom-2 end-2 inline-flex items-center gap-1 rounded-md bg-ink/75 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-cream-50 backdrop-blur-sm">
               <Clock className="h-2.5 w-2.5" /> {dur}
             </span>
           )}

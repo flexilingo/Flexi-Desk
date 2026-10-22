@@ -283,9 +283,12 @@ export function ReaderToolbar({
           />
           {/* One size with the number beside it: a bold 14 next to a faint 12
               read as two different things. */}
-          <span className="ms-1 pe-1 text-[13px] tabular-nums text-muted-foreground">
-            / {totalPages}
-          </span>
+          {/* Hidden while the total is unknown (it reads as 1 on a later page of a gated book). */}
+          {totalPages >= currentPage && (
+            <span className="ms-1 pe-1 text-[13px] tabular-nums text-muted-foreground">
+              / {totalPages}
+            </span>
+          )}
           <button
             type="button"
             onClick={() => onGoToPage(currentPage + 1)}

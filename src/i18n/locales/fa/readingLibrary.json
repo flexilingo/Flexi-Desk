@@ -68,5 +68,33 @@
     "filters": "فیلترها",
     "all": "همه",
     "showResults": "نمایش {{count}} کتاب"
+  },
+  "series": {
+    "season": "فصل {{n}}",
+    "seasonEpisode": "فصل {{season}} · قسمت {{n}}",
+    "episodeNav": "قسمت‌ها",
+    "prevEpisode": "قسمت قبلی",
+    "nextEpisode": "قسمت بعدی",
+    "allEpisodes": "همه‌ی قسمت‌ها",
+    "gateTitle": "ادامه‌ی خواندن با حساب رایگان",
+    "gateBody": "صفحه‌ی اول هر قسمتِ این فصل برای همه باز است. برای خواندن بقیه وارد شوید یا یک حساب رایگان بسازید. جای شما و لغت‌هایی که لمس می‌کنید ذخیره می‌شود.",
+    "gateCta": "ورود و ادامه‌ی خواندن",
+    "metaTitle": "{{title}} — داستان دنباله‌دار به {{language}} | FlexiLingo",
+    "metaDescription": "{{title}}: داستانی {{count}} قسمتی به {{language}} برای زبان‌آموزان. روی هر کلمه بزنید تا معنی‌اش را ببینید.",
+    "kicker": "داستان دنباله‌دار به {{language}}",
+    "episodes_one": "{{count}} قسمت",
+    "episodes_other": "{{count}} قسمت",
+    "seasons_one": "{{count}} فصل",
+    "seasons_other": "{{count}} فصل",
+    "start": "شروع از قسمت ۱",
+    "seasonNav": "فصل‌ها",
+    "loginNote": "صفحه‌ی اول هر قسمت رایگان است. بقیه با حساب رایگان.",
+    "listHeading": "داستان‌های دنباله‌دار",
+    "open": "دیدن همه‌ی قسمت‌ها"
+  },
+  "pagination": {
+    "showing": "نمایش {{start}} تا {{end}} از {{total}}",
+    "previous": "قبلی",
+    "next": "بعدی"
   }
 }

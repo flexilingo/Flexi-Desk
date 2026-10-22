@@ -1,4 +1,5 @@
 import { supabaseCall } from '@/lib/supabase';
+import { noteSeriesSupport } from '../library/library-capability';
 
 /**
  * The cloud Library, through `supabaseCall` (never `fetch` from JS). Names follow
@@ -21,6 +22,12 @@ export interface LibraryBook {
   series_slug: string | null;
   series_title: string | null;
   series_order: number | null;
+  /** Season within the series; absent on a backend without series seasons. */
+  series_season?: number | null;
+  /** Number within the season, for display (series_order runs across seasons). */
+  series_episode?: number | null;
+  /** Later seasons of a serial: signed-out readers get page 1 only. */
+  requires_login?: boolean;
   tags: string[];
   cover_path: string | null;
   word_count: number;
@@ -36,6 +43,56 @@ export interface LibraryFacets {
   languages: { code: string; count: number }[];
   levels: { code: CefrLevel; count: number }[];
   series: { slug: string; title: string; language: string; count: number }[];
+}
+
+/** A series card on the library page: `series_list` of the catalog answer (new backends only). */
+export interface LibrarySeriesCard {
+  slug: string;
+  language: string;
+  title: string;
+  summary: string;
+  cover_path: string | null;
+  episode_count: number;
+  season_count: number;
+  levels: CefrLevel[];
+}
+
+/** One episode on a series page. */
+export interface LibraryEpisode {
+  id: string;
+  slug: string;
+  title: string;
+  level: CefrLevel;
+  summary: string;
+  series_season: number;
+  series_order: number | null;
+  series_episode: number | null;
+  requires_login: boolean;
+  cover_path: string | null;
+  word_count: number;
+  page_count: number;
+}
+
+export interface LibrarySeason {
+  number: number;
+  title: string | null;
+  summary: string | null;
+  level: string | null;
+  requires_login: boolean;
+  episodes: LibraryEpisode[];
+}
+
+/** `library?action=series` */
+export interface LibrarySeriesPage {
+  series: {
+    slug: string;
+    language: string;
+    title: string;
+    summary: string;
+    cover_path: string | null;
+    episode_count: number;
+  };
+  seasons: LibrarySeason[];
 }
 
 export interface LibraryShelfItem {
@@ -54,13 +111,27 @@ export interface LibraryCatalogArgs {
   series?: string;
 }
 
-export const getLibraryCatalog = (args: LibraryCatalogArgs = {}) => {
+export const getLibraryCatalog = async (args: LibraryCatalogArgs = {}) => {
   const p = new URLSearchParams({ action: 'catalog' });
   if (args.language) p.set('language', args.language);
   if (args.level) p.set('level', args.level);
   if (args.series) p.set('series', args.series);
-  return supabaseCall<{ books: LibraryBook[]; facets: LibraryFacets }>('GET', `/library?${p}`);
+  const r = await supabaseCall<{
+    books: LibraryBook[];
+    facets: LibraryFacets;
+    series_list?: LibrarySeriesCard[];
+  }>('GET', `/library?${p}`);
+  // The answer itself says whether the backend knows series: no extra probe request.
+  noteSeriesSupport(r);
+  return r;
 };
+
+/** One series with its published episodes by season (`library?action=series`, public). */
+export const getLibrarySeries = (language: string, slug: string) =>
+  supabaseCall<LibrarySeriesPage>(
+    'GET',
+    `/library?action=series&language=${encodeURIComponent(language)}&slug=${encodeURIComponent(slug)}`,
+  );
 
 export const getLibraryShelf = () =>
   supabaseCall<{ items: LibraryShelfItem[] }>('GET', '/library?action=shelf');
@@ -78,7 +149,18 @@ export const setLibraryPosition = (body: { book_id: string; page: number; scroll
 export interface LibraryBookDetail {
   book: LibraryBook;
   first_page: { page_number: number; chapter_title: string | null; content: string } | null;
-  series: { id: string; slug: string; title: string; level: CefrLevel; series_order: number }[];
+  series: {
+    id: string;
+    slug: string;
+    title: string;
+    level: CefrLevel;
+    series_order: number;
+    series_season?: number | null;
+    series_episode?: number | null;
+    requires_login?: boolean;
+  }[];
+  /** Season titles; present only on a backend that knows series seasons. */
+  series_meta?: { title: string; seasons: { number: number; title: string | null }[] } | null;
 }
 
 /** One page of a book (`library?action=page` / `public-page`). */
@@ -97,11 +179,14 @@ export interface LibraryPage {
   has_next: boolean;
 }
 
-export const getLibraryBook = (bookId: string) =>
-  supabaseCall<LibraryBookDetail>(
+export const getLibraryBook = async (bookId: string) => {
+  const r = await supabaseCall<LibraryBookDetail>(
     'GET',
     `/library?action=book&book_id=${encodeURIComponent(bookId)}`,
   );
+  noteSeriesSupport(r);
+  return r;
+};
 
 /** Needs an account. */
 export const getLibraryPage = (bookId: string, page: number) =>

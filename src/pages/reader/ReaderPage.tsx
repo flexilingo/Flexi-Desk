@@ -7,6 +7,7 @@ import { PdfReaderScreen } from './pdf/PdfReaderScreen';
 import { TextDocumentPage } from './text/TextDocumentPage';
 import { BookPage } from './library/BookPage';
 import { LibraryPage } from './library/LibraryPage';
+import { SeriesPage } from './library/SeriesPage';
 
 /**
  * Reader routes.
@@ -16,6 +17,7 @@ import { LibraryPage } from './library/LibraryPage';
  *   text/:documentId   a pasted text or a web page, read as text
  *   book/:bookId       a ready-made library book
  *   library            the whole library
+ *   library/series/…   one series with its seasons (only linked when the backend serves series)
  */
 
 function ReaderPdf() {
@@ -52,6 +54,7 @@ export function ReaderPage() {
       <Route path="text/:documentId" element={<TextDocumentPage />} />
       <Route path="book/:bookId" element={<BookPage />} />
       <Route path="library" element={<LibraryPage />} />
+      <Route path="library/series/:language/:slug" element={<SeriesPage />} />
     </Routes>
   );
 }

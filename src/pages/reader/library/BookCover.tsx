@@ -1,12 +1,32 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { CefrBadge } from '@/components/common/CefrBadge';
-import type { CefrLevel } from '../services/libraryService';
 import { coverUrl } from './format';
 
 // A single-hue ramp for books without artwork: the level badge carries the
 // information, the colour only has to tell one book from the next.
 const TONES = ['bg-primary', 'bg-primary-dark', 'bg-primary/80', 'bg-primary-dark/80'];
+
+// The website's cover badge: the level's own solid colour, white text.
+const LEVEL_BG: Record<string, string> = {
+  A1: 'bg-cefr-a1',
+  A2: 'bg-cefr-a2',
+  B1: 'bg-cefr-b1',
+  B2: 'bg-cefr-b2',
+  C1: 'bg-cefr-c1',
+  C2: 'bg-cefr-c2',
+};
+function LevelBadge({ level }: { level: string }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold text-white',
+        LEVEL_BG[level] ?? 'bg-muted-foreground',
+      )}
+    >
+      {level}
+    </span>
+  );
+}
 
 /** Stable per book, so a cover keeps its colour between visits and pages. */
 function toneFor(slug: string): string {
@@ -44,7 +64,7 @@ export function BookCover({
 
   if (coverPath && failed !== coverPath) {
     return (
-      <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-muted shadow-sm">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-[7px] bg-muted shadow-sm">
         <img
           src={coverUrl(coverPath)}
           alt={alt}
@@ -54,7 +74,7 @@ export function BookCover({
         />
         {showLevel && (
           <span className="absolute end-2 top-2">
-            <CefrBadge level={level as CefrLevel} className="bg-card" />
+            <LevelBadge level={level} />
           </span>
         )}
       </div>
@@ -79,7 +99,7 @@ export function BookCover({
   return (
     <div
       className={cn(
-        'relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-md text-primary-foreground shadow-sm',
+        'relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-[7px] text-primary-foreground shadow-sm',
         toneFor(slug),
         small ? 'p-2' : 'p-3.5',
       )}
@@ -102,7 +122,7 @@ export function BookCover({
         ) : (
           <span />
         )}
-        <CefrBadge level={level as CefrLevel} className="bg-card" />
+        <LevelBadge level={level} />
       </span>
       <span
         className={cn(

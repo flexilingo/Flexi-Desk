@@ -108,7 +108,8 @@
   "pagination": {
     "previous": "Précédent",
     "next": "Suivant",
-    "page": "Page {{page}} sur {{total}}"
+    "page": "Page {{page}} sur {{total}}",
+    "showing": "Affichage de {{start}} à {{end}} sur {{total}}"
   },
   "watch": {
     "preparing": "Ouverture de la vidéo…",

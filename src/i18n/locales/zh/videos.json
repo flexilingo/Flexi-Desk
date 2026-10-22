@@ -103,7 +103,8 @@
   "pagination": {
     "previous": "上一页",
     "next": "下一页",
-    "page": "第 {{page}} 页，共 {{total}} 页"
+    "page": "第 {{page}} 页，共 {{total}} 页",
+    "showing": "显示第 {{start}} 到 {{end}} 项，共 {{total}} 项"
   },
   "watch": {
     "preparing": "正在打开视频…",

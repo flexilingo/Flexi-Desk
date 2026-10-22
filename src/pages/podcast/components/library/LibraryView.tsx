@@ -1,75 +1,31 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Rss, Bookmark, Heart, History, Search } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useSearchParams } from 'react-router-dom';
+import { PodcastPageHeader } from '../PodcastPageHeader';
+import { parsePodcastTab, type PodcastTab } from '../../utils/podcastTabs';
 import { FeedListView } from '../FeedListView';
 import { SavedEpisodesTab } from './SavedEpisodesTab';
 import { SavedPodcastsTab } from './SavedPodcastsTab';
 import { HistoryTab } from './HistoryTab';
 
-type Tab = 'local' | 'saved' | 'episodes' | 'history';
-
-const TABS: { value: Tab; labelKey: string; icon: typeof Rss }[] = [
-  { value: 'local', labelKey: 'common:podcast.tabLocal', icon: Rss },
-  { value: 'saved', labelKey: 'common:podcast.tabSaved', icon: Bookmark },
-  { value: 'episodes', labelKey: 'podcastUi:tabSavedEpisodes', icon: Heart },
-  { value: 'history', labelKey: 'common:podcast.tabHistory', icon: History },
-];
+/** The tab shown when the address names none: subscriptions kept on this computer, as before. */
+const DEFAULT_LIBRARY_TAB: PodcastTab = 'local';
 
 /**
- * The library unions desk's *local* subscriptions (offline-first, the only tab that
- * works with no network) with the cloud-account surfaces front has: followed
- * podcasts and cross-device listening history.
+ * The podcasts page's other tabs, as the website lays them out under the same header and tab strip
+ * as the hub: Saved, Saved episodes and History from the account (merged with what this computer
+ * holds), plus desk's own "My feeds" for local, offline-first subscriptions. The tab lives in the
+ * address (`?tab=`), so Back and refresh keep it.
  */
 export function LibraryView() {
-  const { t } = useTranslation('common');
-  const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>('local');
-
-  // Remember the last tab within a session so navigating back doesn't reset it.
-  useEffect(() => {
-    const saved = sessionStorage.getItem('podcast.libraryTab');
-    if (saved === 'local' || saved === 'saved' || saved === 'episodes' || saved === 'history')
-      setTab(saved);
-  }, []);
-  useEffect(() => {
-    sessionStorage.setItem('podcast.libraryTab', tab);
-  }, [tab]);
+  const [searchParams] = useSearchParams();
+  const parsed = parsePodcastTab(searchParams.get('tab'));
+  const tab: PodcastTab = parsed && parsed !== 'browse' ? parsed : DEFAULT_LIBRARY_TAB;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1.5">
-          {TABS.map(({ value, labelKey, icon: Icon }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setTab(value)}
-              aria-pressed={tab === value}
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors',
-                tab === value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-card text-muted-foreground hover:bg-muted',
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {t(labelKey)}
-            </button>
-          ))}
-        </div>
-
-        <Button variant="outline" size="sm" onClick={() => navigate('/podcast')}>
-          <Search className="h-4 w-4" />
-          {t('podcast.discover')}
-        </Button>
-      </div>
-
+    <div className="space-y-5">
+      <PodcastPageHeader active={tab} />
       {tab === 'local' && <FeedListView />}
       {tab === 'saved' && <SavedPodcastsTab />}
-      {tab === 'episodes' && <SavedEpisodesTab />}
+      {tab === 'savedEpisodes' && <SavedEpisodesTab />}
       {tab === 'history' && <HistoryTab />}
     </div>
   );

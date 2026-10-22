@@ -123,13 +123,8 @@ export function CatalogPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <MonitorPlay className="h-6 w-6 text-accent" />
-          {t('title')}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
-      </div>
+      {/* No visible title: the filters are the first thing the viewer needs (the website keeps the h1 for SEO only). */}
+      <h1 className="sr-only">{t('title')}</h1>
 
       <VideoFilterBar
         state={state}
@@ -194,7 +189,7 @@ export function CatalogPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-8 md:space-y-10">
           <section>
             <p className="mb-4 text-[12.5px] text-muted-foreground">{t(`views.${view}Hint`)}</p>
             <VideoGrid

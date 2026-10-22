@@ -20,7 +20,7 @@ export function SignInForMusic({ compact = false }: { compact?: boolean }) {
         compact ? 'px-6 py-8' : 'px-6 py-14',
       )}
     >
-      <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+      <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-olive-500/[0.12]">
         <Music className="h-6 w-6 text-primary" />
         <Lock className="absolute -bottom-0.5 -end-0.5 h-4 w-4 rounded-full bg-card p-0.5 text-accent" />
       </span>

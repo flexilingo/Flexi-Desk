@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   DURATION_MAX_MINUTES,
   applyReading,
-  effectiveView,
   hasActiveFilter,
   parseHubParams,
   serializeHubParams,
@@ -27,7 +26,7 @@ import type { PodcastReading, SemanticHit } from '@/pages/podcast/services/podca
 import type { FavoriteEpisode, HistoryEpisode } from '@/pages/podcast/services/podcastAccount';
 
 const parse = (qs: string) => parseHubParams(new URLSearchParams(qs));
-const base: HubParams = { q: '', view: 'overview', page: 1 };
+const base: HubParams = { q: '', view: 'analyzed', page: 1 };
 
 describe('hub filters in the URL', () => {
   it('the untouched hub is a bare URL', () => {
@@ -51,7 +50,7 @@ describe('hub filters in the URL', () => {
   });
 
   it('writes page=1 once anything is chosen, and the view only without a search', () => {
-    expect(serializeHubParams({ ...base, cefr: 'A2' })).toBe('cefr=A2&view=overview&page=1');
+    expect(serializeHubParams({ ...base, cefr: 'A2' })).toBe('cefr=A2&view=analyzed&page=1');
     expect(serializeHubParams({ ...base, q: 'coffee', cefr: 'A2' })).toBe(
       'cefr=A2&q=coffee&page=1',
     );
@@ -61,12 +60,6 @@ describe('hub filters in the URL', () => {
   it('drops values the hub cannot draw', () => {
     const p = parse('cefr=Z9&topic=cooking&duration=15&view=nope&page=-4');
     expect(p).toEqual(base);
-  });
-
-  it('a filter on the overview turns it into the filtered Just analyzed list', () => {
-    expect(effectiveView({ ...base, cefr: 'B2' })).toBe('analyzed');
-    expect(effectiveView(base)).toBe('overview');
-    expect(effectiveView({ ...base, cefr: 'B2', view: 'popular' })).toBe('popular');
   });
 
   it('length only counts as a filter on episode views', () => {
