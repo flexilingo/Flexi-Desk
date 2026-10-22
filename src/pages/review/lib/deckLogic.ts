@@ -318,8 +318,14 @@ export function filterPublicDecks(
 export type CloneMode = 'copy' | 'translate';
 
 /** The deck's own meaning language needs no translation: that is an instant copy. */
+export function normalizeLangCode(code: string | null | undefined): string {
+  return (code || '').trim().toLowerCase().replace('_', '-').split('-')[0];
+}
+
 export function decideCloneMode(deckMeaningLanguage: string, chosenLanguage: string): CloneMode {
-  return chosenLanguage === deckMeaningLanguage ? 'copy' : 'translate';
+  return normalizeLangCode(chosenLanguage) === normalizeLangCode(deckMeaningLanguage)
+    ? 'copy'
+    : 'translate';
 }
 
 export interface LibraryCopy {

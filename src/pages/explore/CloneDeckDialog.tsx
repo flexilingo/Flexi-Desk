@@ -26,6 +26,7 @@ import {
 import {
   copiesOf,
   decideCloneMode,
+  normalizeLangCode,
   deckMeaningLang,
   deckSourceLang,
   ownedMeaningLanguages,
@@ -77,7 +78,8 @@ export function CloneDeckDialog({ deck, open, onClose }: Props) {
   useEffect(() => {
     if (!open || !deck) return;
     // The learner's own language first, unless they already hold the deck in it.
-    setTarget(nativeLang && !owned.has(nativeLang) ? nativeLang : deckMeaning);
+    const own = normalizeLangCode(nativeLang);
+    setTarget(own && !owned.has(own) ? own : deckMeaning);
     setQuality('basic');
     setError(null);
     setResult(null);

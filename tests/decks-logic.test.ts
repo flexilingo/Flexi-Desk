@@ -229,6 +229,8 @@ describe('saving a public deck', () => {
   it('copies when the meaning language matches, translates otherwise', () => {
     expect(decideCloneMode('fa', 'fa')).toBe('copy');
     expect(decideCloneMode('fa', 'fr')).toBe('translate');
+    expect(decideCloneMode('en', 'en-US')).toBe('copy');
+    expect(decideCloneMode('EN', 'en_gb')).toBe('copy');
   });
 
   it('knows which languages the learner already holds, per source deck', () => {
