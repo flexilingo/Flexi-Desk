@@ -126,11 +126,6 @@
     "next": "下一页"
   },
   "listen": {
-    "start": "朗读",
-    "startTitle": "在底部播放器中逐句朗读这本书",
-    "continue": "继续收听",
-    "continueTitle": "从第 {{page}} 页第 {{n}} 句继续",
-    "listening": "正在朗读",
     "playTitle": "播放或暂停（空格）",
     "prevTitle": "上一句（←）——已经开始时则重读这一句",
     "nextTitle": "下一句（→）",

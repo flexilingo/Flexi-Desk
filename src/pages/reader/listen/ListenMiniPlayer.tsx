@@ -11,10 +11,11 @@ import {
   MINI_ICON_BUTTON,
   MiniPlayerBar,
 } from '@/pages/podcast/components/mini/MiniPlayerBar';
-import { MiniSubtitleLine } from '@/pages/podcast/components/mini/MiniSubtitleLine';
+import { cleanWord, tokenize } from '@/components/lookup/tokenize';
 import { bookReadPath, coverUrl } from '../library/format';
 import { useListenStore } from './listenStore';
 import { useListenKeys } from './use-listen-keys';
+import { useWordFollow } from './use-word-follow';
 
 /**
  * The player bar while a library book is read aloud — the same bar as a podcast's, in its
@@ -48,6 +49,8 @@ export function ListenMiniPlayer() {
     next: act.next,
     repeat: act.toggleRepeat,
   });
+
+  useWordFollow(!!source && status === 'playing');
 
   if (!source) return null;
   const sentence = sentences[index];
@@ -90,15 +93,14 @@ export function ListenMiniPlayer() {
       {problem === 'silent' ? t('listen.noVoice') : t('public.pageError')}
     </div>
   ) : sentence ? (
-    <div lang={source.language}>
-      <MiniSubtitleLine
-        text={sentence.text}
-        onWordClick={(w) => {
-          act.pause();
-          setWord(w);
-        }}
-      />
-    </div>
+    <ListenSentenceLine
+      text={sentence.text}
+      language={source.language}
+      onWord={(w) => {
+        act.pause();
+        setWord(w);
+      }}
+    />
   ) : null;
 
   return (
@@ -191,5 +193,49 @@ export function ListenMiniPlayer() {
         description={t('listen.signInBody')}
       />
     </>
+  );
+}
+
+/**
+ * The sentence being read, above the bar, in the page's own words (the same split as the page,
+ * so the word being said is the same n-th word in both places). Each word opens the word dialog.
+ */
+function ListenSentenceLine({
+  text,
+  language,
+  onWord,
+}: {
+  text: string;
+  language: string;
+  onWord: (word: string) => void;
+}) {
+  let n = 0;
+  return (
+    <div className="relative border-t border-border bg-card/95 backdrop-blur">
+      <div className="overflow-x-auto px-5 py-2">
+        <p
+          data-listen-line=""
+          lang={language}
+          dir="auto"
+          className="text-center text-base leading-relaxed text-foreground"
+        >
+          {tokenize(text).map((token, i) =>
+            token.word ? (
+              <button
+                key={i}
+                type="button"
+                data-listen-word={n++}
+                onClick={() => cleanWord(token.text).length > 1 && onWord(cleanWord(token.text))}
+                className="inline cursor-pointer rounded-[4px] transition-colors decoration-terra-400 underline-offset-2 hover:text-accent hover:underline"
+              >
+                {token.text}
+              </button>
+            ) : (
+              <span key={i}>{token.text}</span>
+            ),
+          )}
+        </p>
+      </div>
+    </div>
   );
 }

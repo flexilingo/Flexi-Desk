@@ -126,7 +126,6 @@ export function ReaderToolbar({
   onToggleCheatsheet,
   onGoToPage,
   onChangeFile,
-  listen,
   children,
 }: {
   fileName: string;
@@ -184,8 +183,6 @@ export function ReaderToolbar({
   onGoToPage: (pageNumber: number) => void;
   /** Omitted for a stored document: it is not "a file you opened", it is a book you own. */
   onChangeFile?: () => void;
-  /** The «Listen» player of a library book: first in the row, with the other listening tools. */
-  listen?: ReactNode;
   /** Anything this surface adds to the end of the row — the page deck, for one. */
   children?: ReactNode;
 }) {
@@ -310,7 +307,6 @@ export function ReaderToolbar({
         between every group was one more thing to look at.
       */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        {listen && <div className="flex items-center">{listen}</div>}
         {(onToggleAudio || onToggleVideo) && (
           <div className="flex items-center">
             {onToggleAudio && (

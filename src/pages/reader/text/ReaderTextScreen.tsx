@@ -14,7 +14,6 @@ import { ReaderToolbar } from './ReaderToolbar';
 import { ReaderPageBody } from './ReaderPageBody';
 import { ReaderPager } from './ReaderPager';
 import { usePersistedPreference } from './persisted-preference';
-import { ListenControls } from './ListenControls';
 import { useReaderListen } from '../listen/useReaderListen';
 import { ListenStrip } from '../listen/ListenStrip';
 import type { ListenInvite, ListenSource } from '../listen/listenStore';
@@ -271,7 +270,6 @@ export function ReaderTextScreen({
         onToggleCheatsheet={
           cheatsheetSupported ? () => setCheatsheetOpen((open) => !open) : undefined
         }
-        listen={listen ? <ListenControls listen={player} /> : undefined}
       >
         <ReaderDeckButton
           pageText={pager.text}

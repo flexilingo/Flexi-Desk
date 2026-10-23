@@ -396,6 +396,45 @@ function playBlob(
   });
 }
 
+/**
+ * Where the voice is inside what it says, finely enough to follow it word by word: the cloud
+ * clip being played (and how far into it the sound is), the device voice's last word boundary,
+ * or — the system voice — nothing finer than the text.
+ */
+export type SpeechProgress =
+  | { engine: 'cloud'; text: string; chunks: string[]; chunkIndex: number; fraction: number }
+  | { engine: 'device'; text: string; charIndex: number }
+  | { engine: 'system'; text: string };
+
+let progressOf: {
+  mine: number;
+  engine: SpeechEngine;
+  text: string;
+  chunks?: string[];
+  chunkIndex?: number;
+  charIndex?: number;
+} | null = null;
+
+/** What is being said right now and where the voice is in it; null while nothing is sounding. */
+export function getSpeechProgress(): SpeechProgress | null {
+  const p = progressOf;
+  if (!p || p.mine !== ticket || !state.speaking) return null;
+  if (p.engine === 'cloud') {
+    const duration = liveAudio?.duration ?? 0;
+    const fraction =
+      Number.isFinite(duration) && duration > 0 ? (liveAudio?.currentTime ?? 0) / duration : 0;
+    return {
+      engine: 'cloud',
+      text: p.text,
+      chunks: p.chunks ?? [p.text],
+      chunkIndex: p.chunkIndex ?? 0,
+      fraction,
+    };
+  }
+  if (p.engine === 'device') return { engine: 'device', text: p.text, charIndex: p.charIndex ?? 0 };
+  return { engine: 'system', text: p.text };
+}
+
 async function runCloud(
   text: string,
   lang: string | undefined,
@@ -408,6 +447,7 @@ async function runCloud(
     if (ticket !== mine) return 'done';
     // A failure after sound has started must not replay the start on the next engine.
     if (!clip) return i === 0 ? 'failed' : 'done';
+    progressOf = { mine, engine: 'cloud', text, chunks, chunkIndex: i };
     if ((await playBlob(clip, mine, text, lang, opts)) === 'failed')
       return i === 0 ? 'failed' : 'done';
     if (ticket !== mine) return 'done';
@@ -436,6 +476,13 @@ function runDevice(
     };
     const cancel = () => end('done');
     cancelCurrent = cancel;
+    progressOf = { mine, engine: 'device', text, charIndex: 0 };
+    // The device voice says where each word starts: exact word-by-word following.
+    utterance.onboundary = (event) => {
+      const name = (event as { name?: string }).name;
+      if (progressOf?.mine === mine && (!name || name === 'word'))
+        progressOf.charIndex = event.charIndex;
+    };
     utterance.onstart = () => {
       if (ticket === mine) setState({ speaking: true, loading: false, text, lang: lang ?? null });
     };
@@ -450,6 +497,7 @@ function runDevice(
 
 async function runSystem(text: string, lang: string | undefined, mine: number): Promise<Outcome> {
   systemActive = true;
+  progressOf = { mine, engine: 'system', text };
   if (ticket === mine) setState({ speaking: true, loading: false, text, lang: lang ?? null });
   try {
     await invoke('tutor_speak_text', { text, language: lang ? baseLangCode(lang) : null });
@@ -484,6 +532,7 @@ async function runPlan(
 
 export function stop(): void {
   ticket += 1;
+  progressOf = null;
   const cancel = cancelCurrent;
   cancelCurrent = null;
   cancel?.();

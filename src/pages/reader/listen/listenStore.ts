@@ -61,6 +61,8 @@ interface ListenState {
   sentences: PageSentence[];
   /** The sentence being read (or paused on). */
   index: number;
+  /** Which piece of that sentence the voice is saying (a very long sentence is said in pieces). */
+  piece: number;
   status: ListenStatus;
   rate: ListenRate;
   volume: number;
@@ -155,14 +157,15 @@ export const useListenStore = create<ListenState>()((set, get) => {
     const sentence = s.sentences[index];
     if (!s.source || !sentence) return;
     const language = s.source.language;
-    set({ index, status: 'playing', invite: null, problem: null });
+    set({ index, piece: 0, status: 'playing', invite: null, problem: null });
     startedAt = Date.now();
     savePlace();
     // The next sentence, fetched while this one is said.
     for (const piece of s.sentences[index + 1]?.pieces ?? [])
       prefetchSpeech(piece, language, voice());
 
-    for (const piece of sentence.pieces) {
+    for (const [k, piece] of sentence.pieces.entries()) {
+      if (k > 0) set({ piece: k });
       const outcome = await speakThrough(piece, language, voice());
       if (run !== id) return;
       if (outcome !== 'ended') {
@@ -206,6 +209,7 @@ export const useListenStore = create<ListenState>()((set, get) => {
     hasNext: false,
     sentences: [],
     index: 0,
+    piece: 0,
     status: 'paused',
     rate: 1,
     volume: 1,

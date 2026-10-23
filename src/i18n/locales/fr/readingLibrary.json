@@ -133,11 +133,6 @@
     "next": "Suivant"
   },
   "listen": {
-    "start": "Écouter",
-    "startTitle": "Lire le livre à voix haute, phrase par phrase, dans le lecteur en bas",
-    "continue": "Reprendre l’écoute",
-    "continueTitle": "Depuis la page {{page}}, phrase {{n}}",
-    "listening": "Écoute",
     "playTitle": "Lecture ou pause (Espace)",
     "prevTitle": "Phrase précédente (←) — ou celle-ci depuis le début, une fois commencée",
     "nextTitle": "Phrase suivante (→)",

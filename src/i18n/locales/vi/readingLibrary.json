@@ -126,11 +126,6 @@
     "next": "Tiếp"
   },
   "listen": {
-    "start": "Nghe",
-    "startTitle": "Đọc to cuốn sách, từng câu một, trong trình phát ở cuối màn hình",
-    "continue": "Nghe tiếp",
-    "continueTitle": "Từ trang {{page}}, câu {{n}}",
-    "listening": "Đang nghe",
     "playTitle": "Phát hoặc tạm dừng (Phím cách)",
     "prevTitle": "Câu trước (←) — hoặc đọc lại câu này nếu đã bắt đầu",
     "nextTitle": "Câu sau (→)",

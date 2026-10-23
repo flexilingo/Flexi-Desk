@@ -186,13 +186,14 @@ describe('a library episode, laid out like the website', () => {
     useSubscriptionStore.setState({ subscription: { tier: 'free' } as never, hasResolved: true, isLoading: false });
     open(1);
     // Offered once the page is on screen.
-    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.start' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'listen.start' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.stripTitle' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'listen.stripTitle' }));
     expect(useListenStore.getState().source?.bookId).toBe('e1');
     expect(await screen.findByText('listen.proTitle')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'listen.proCta' })).toHaveAttribute('href', '/subscription');
-    // The toolbar is now the bar's play / pause switch.
-    expect(screen.getByRole('button', { name: 'listen.listening' })).toBeInTheDocument();
+    // The strip now says where the bar is; the toolbar has no second Listen button.
+    expect(screen.getByText('listen.stripPaused{"n":"1","total":"1"}')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'listen.start' })).toBeNull();
   });
 
   it('a paragraph’s speaker plays the bar from that paragraph (free)', async () => {
@@ -208,8 +209,8 @@ describe('a library episode, laid out like the website', () => {
   it('Listen asks a signed-out reader to sign in first', async () => {
     open(1);
     // Offered once the page is on screen.
-    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.start' })).toBeEnabled());
-    fireEvent.click(screen.getByRole('button', { name: 'listen.start' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.stripTitle' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'listen.stripTitle' }));
     expect(await screen.findByText('listen.signInTitle')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /listen\.signInCta/ })).toBeInTheDocument();
   });

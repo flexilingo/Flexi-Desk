@@ -133,11 +133,6 @@
     "next": "Weiter"
   },
   "listen": {
-    "start": "Anhören",
-    "startTitle": "Das Buch Satz für Satz vorlesen lassen, im Player unten",
-    "continue": "Weiterhören",
-    "continueTitle": "Ab Seite {{page}}, Satz {{n}}",
-    "listening": "Wird vorgelesen",
     "playTitle": "Abspielen oder Pause (Leertaste)",
     "prevTitle": "Vorheriger Satz (←) — oder diesen noch einmal, wenn er schon läuft",
     "nextTitle": "Nächster Satz (→)",

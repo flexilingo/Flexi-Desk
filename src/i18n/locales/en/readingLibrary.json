@@ -133,11 +133,6 @@
     "next": "Next"
   },
   "listen": {
-    "start": "Listen",
-    "startTitle": "Read the book aloud, sentence by sentence, in the player at the bottom",
-    "continue": "Continue listening",
-    "continueTitle": "From page {{page}}, sentence {{n}}",
-    "listening": "Listening",
     "playTitle": "Play or pause (Space)",
     "prevTitle": "Previous sentence (←) — or this one again once you are into it",
     "nextTitle": "Next sentence (→)",

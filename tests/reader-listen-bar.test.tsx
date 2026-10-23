@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { SpeakOutcome } from '@/lib/speech';
 
-const voice = vi.hoisted(() => ({ said: [] as string[] }));
+const voice = vi.hoisted(() => ({ said: [] as string[], progress: null as unknown }));
 vi.mock('@/lib/speech', () => ({
   speakThrough: (text: string) => {
     voice.said.push(text);
@@ -12,6 +12,7 @@ vi.mock('@/lib/speech', () => ({
   stop: () => {},
   prefetchSpeech: () => {},
   adjustSpeech: () => {},
+  getSpeechProgress: () => voice.progress,
   speak: async () => {},
   getSpeechState: () => ({ speaking: false, loading: false, text: null, lang: null }),
   useSpeechState: () => ({ speaking: false, loading: false, text: null, lang: null }),
@@ -36,6 +37,7 @@ const TEXT = Array.from({ length: 42 }, (_, i) => `Sentence number ${i + 1} is h
 
 beforeEach(() => {
   voice.said.length = 0;
+  voice.progress = null;
   useListenStore.setState({
     source: {
       bookId: 'b1',
@@ -123,5 +125,35 @@ describe('the player bar reading a book', () => {
     bar();
     fireEvent.click(screen.getByRole('button', { name: 'np.closePlayer' }));
     expect(useListenStore.getState().source).toBeNull();
+  });
+
+  it('marks the word being said — on the page and in the bar’s line — and moves with the voice', async () => {
+    // The page's sentence 7, as TappableText draws it while the bar reads that page.
+    const page = document.createElement('p');
+    page.innerHTML =
+      '<span data-sentence="0:6" data-listen-active=""><span data-flexi-word="Sentence">Sentence</span> ' +
+      '<span data-flexi-word="number">number</span> <span data-flexi-word="7">7</span> ' +
+      '<span data-flexi-word="is">is</span> <span data-flexi-word="here">here</span>.</span>';
+    document.body.appendChild(page);
+    useListenStore.setState({ status: 'playing' });
+    voice.progress = {
+      engine: 'device',
+      text: 'Sentence number 7 is here.',
+      charIndex: 'Sentence number '.length,
+    };
+    bar();
+    const onPage = () => Array.from(page.querySelectorAll('[data-flexi-word]'));
+    await vi.waitFor(() => expect(onPage()[2].classList.contains('bg-accent/30')).toBe(true));
+    expect(screen.getByRole('button', { name: '7' }).classList.contains('bg-accent/30')).toBe(true);
+    expect(onPage().filter((el) => el.classList.contains('bg-accent/30'))).toHaveLength(1);
+
+    voice.progress = { engine: 'device', text: 'Sentence number 7 is here.', charIndex: 21 };
+    await vi.waitFor(() => expect(onPage()[4].classList.contains('bg-accent/30')).toBe(true));
+    expect(onPage()[2].classList.contains('bg-accent/30')).toBe(false);
+
+    // Paused: nothing is being said, nothing is marked (the sentence keeps its own tint).
+    act(() => useListenStore.setState({ status: 'paused' }));
+    expect(onPage().some((el) => el.classList.contains('bg-accent/30'))).toBe(false);
+    page.remove();
   });
 });

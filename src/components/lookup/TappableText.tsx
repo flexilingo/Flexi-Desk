@@ -434,6 +434,8 @@ function SentenceMark({
   return (
     <span
       data-sentence={id}
+      // The player's word follower looks for the word being said inside this sentence only.
+      data-listen-active={active ? '' : undefined}
       className={`rounded-[3px] transition-colors duration-300 box-decoration-clone ${
         active ? 'bg-primary/[0.11]' : ''
       }`}
