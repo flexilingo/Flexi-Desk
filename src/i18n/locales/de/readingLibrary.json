@@ -142,12 +142,12 @@
     "position": "{{n}} von {{total}} · Seite {{page}} von {{pages}}",
     "playFromHere": "Ab hier abspielen",
     "noVoice": "Keine Stimme konnte diesen Satz lesen. Wähle in den Einstellungen eine andere Stimme.",
-    "proTitle": "Die ganze Folge mit Pro anhören",
-    "proBody": "Pro liest jede Seite vor, eine nach der anderen, während du im Text mitliest. Der Lautsprecher nach jedem Absatz bleibt kostenlos.",
+    "proTitle": "Mit Pro weiterhören",
+    "proBody": "Mit Pro liest das Buch von selbst weiter, Seite für Seite und Folge für Folge. Ohne Pro wird jede Seite einzeln vorgelesen – die ersten {{n}} Folgen einer Reihe laufen für alle am Stück.",
     "proCta": "Pro ansehen",
-    "signInTitle": "Melde dich an, um weiterzuhören",
-    "signInBody": "Alle Seiten nacheinander vorlesen zu lassen gehört zu Pro. Melde dich zuerst an — der Lautsprecher nach jedem Absatz bleibt kostenlos.",
-    "signInCta": "Anmelden",
+    "signInTitle": "Kostenlos registrieren und weiterhören",
+    "signInBody": "Die ersten {{n}} Folgen jeder Reihe werden für alle vorgelesen. Mit einem kostenlosen Konto hörst du weiter.",
+    "signInCta": "Kostenlos registrieren",
     "stripTitle": "Diese Seite anhören",
     "stripMeta_one": "{{count}} Satz · etwa {{minutes}} Min.",
     "stripMeta_other": "{{count}} Sätze · etwa {{minutes}} Min.",
@@ -156,6 +156,7 @@
     "stripContinue": "oder weiter ab Seite {{page}}, Satz {{n}}",
     "hintNew": "Neu: hören, während du liest.",
     "hintBody": "Drück auf Abspielen: Die Seite wird dir vorgelesen, der gelesene Satz ist im Text markiert.",
-    "space": "Leertaste"
+    "space": "Leertaste",
+    "lockedTitle": "Kostenlos registrieren und anhören"
   }
 }

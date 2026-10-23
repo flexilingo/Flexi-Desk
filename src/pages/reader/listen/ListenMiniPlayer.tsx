@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { subscriptionUrl } from '@/components/layout/sidebarConfig';
+import { FREE_LISTEN_EPISODES } from './listen-access';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, ArrowRight, Crown, Headphones, Keyboard, Repeat1 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -72,13 +75,14 @@ export function ListenMiniPlayer() {
         {invite === 'pro' ? t('listen.proTitle') : t('listen.signInTitle')}
       </p>
       {invite === 'pro' ? (
-        <Link
-          to="/subscription"
+        <button
+          type="button"
+          onClick={() => void openUrl(subscriptionUrl(i18n.language))}
           className="inline-flex h-8 items-center gap-1.5 rounded-md bg-accent px-3 text-[13px] font-semibold text-accent-foreground transition-colors hover:bg-accent/90"
         >
           <Crown className="h-3.5 w-3.5" />
           {t('listen.proCta')}
-        </Link>
+        </button>
       ) : (
         <button
           type="button"
@@ -194,7 +198,7 @@ export function ListenMiniPlayer() {
       <SignInDialog
         open={signInOpen}
         onOpenChange={setSignInOpen}
-        description={t('listen.signInBody')}
+        description={t('listen.signInBody', { n: FREE_LISTEN_EPISODES })}
       />
     </>
   );

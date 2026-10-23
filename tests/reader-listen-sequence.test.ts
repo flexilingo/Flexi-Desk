@@ -18,9 +18,12 @@ import { listenKeyOf } from '@/pages/reader/listen/use-listen-keys';
 import { speak, speakThrough, stop, type VoiceLike } from '@/lib/speech';
 import { splitParagraphs, splitSentences } from '@/components/lookup/tokenize';
 
-const PRO: ListenFacts = { hasNext: true, hasPrev: true, signedIn: true, pro: true };
-const FREE: ListenFacts = { hasNext: true, hasPrev: true, signedIn: true, pro: false };
-const SIGNED_OUT: ListenFacts = { hasNext: true, hasPrev: false, signedIn: false, pro: false };
+// A book past the open episodes, read by the cloud voice: the page-end rule bites (the whole
+// access matrix is in reader-listen-access.test.ts).
+const GATED = { voice: 'cloud' as const, seriesOrder: null, nextEpisode: null };
+const PRO: ListenFacts = { ...GATED, hasNext: true, hasPrev: true, signedIn: true, pro: true };
+const FREE: ListenFacts = { ...GATED, hasNext: true, hasPrev: true, signedIn: true, pro: false };
+const SIGNED_OUT: ListenFacts = { ...GATED, hasNext: true, hasPrev: false, signedIn: false, pro: false };
 
 const PAGE = 'Margaret arrived at noon. She put the bag down.\n\n"Thirty years," she said. Then she left.';
 
@@ -108,7 +111,7 @@ describe('after a sentence', () => {
   });
 });
 
-describe('the page-end rule (Pro)', () => {
+describe('the page-end rule on a gated book (Pro)', () => {
   it('the last page ends the reading for everyone', () => {
     for (const f of [PRO, FREE, SIGNED_OUT]) {
       expect(atPageEnd({ ...f, hasNext: false })).toEqual({ kind: 'stop', reason: 'end' });

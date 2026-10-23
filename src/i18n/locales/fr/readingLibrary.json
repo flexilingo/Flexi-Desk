@@ -142,12 +142,12 @@
     "position": "{{n}} sur {{total}} · page {{page}} sur {{pages}}",
     "playFromHere": "Lire à partir d’ici",
     "noVoice": "Aucune voix n’a pu lire cette phrase. Choisissez une autre voix dans les Réglages.",
-    "proTitle": "Écoutez tout l’épisode avec Pro",
-    "proBody": "Pro lit chaque page à voix haute, l’une après l’autre, pendant que vous suivez le texte. Le haut-parleur après chaque paragraphe reste gratuit.",
+    "proTitle": "Continuez l’écoute avec Pro",
+    "proBody": "Avec Pro, le livre se poursuit tout seul, page après page et épisode après épisode. Sans Pro, chaque page est lue séparément — et les {{n}} premiers épisodes d’une série s’enchaînent pour tout le monde.",
     "proCta": "Découvrir Pro",
-    "signInTitle": "Connectez-vous pour continuer l’écoute",
-    "signInBody": "La lecture à voix haute de toutes les pages, l’une après l’autre, fait partie de Pro. Connectez-vous d’abord — le haut-parleur après chaque paragraphe reste gratuit.",
-    "signInCta": "Se connecter",
+    "signInTitle": "Inscrivez-vous gratuitement pour continuer l’écoute",
+    "signInBody": "Les {{n}} premiers épisodes de chaque série sont lus à voix haute pour tout le monde. Un compte gratuit vous permet de continuer.",
+    "signInCta": "Inscription gratuite",
     "stripTitle": "Écouter cette page",
     "stripMeta_one": "{{count}} phrase · environ {{minutes}} min",
     "stripMeta_other": "{{count}} phrases · environ {{minutes}} min",
@@ -156,6 +156,7 @@
     "stripContinue": "ou reprendre page {{page}}, phrase {{n}}",
     "hintNew": "Nouveau : écoutez en lisant.",
     "hintBody": "Appuyez sur lecture : la page vous est lue et la phrase lue est marquée dans le texte.",
-    "space": "Espace"
+    "space": "Espace",
+    "lockedTitle": "Inscrivez-vous gratuitement pour écouter"
   }
 }

@@ -1,10 +1,25 @@
 import { create } from 'zustand';
-import { adjustSpeech, prefetchSpeech, speakThrough, stop as stopSpeech } from '@/lib/speech';
+import i18n from 'i18next';
+import {
+  adjustSpeech,
+  plannedVoice,
+  prefetchSpeech,
+  speakThrough,
+  stop as stopSpeech,
+} from '@/lib/speech';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import { useAuthStore } from '@/stores/authStore';
 import { isPaidTier, useSubscriptionStore } from '@/stores/subscriptionStore';
 import { usePlayerStore } from '@/pages/podcast/stores/playerStore';
-import { getLibraryPage, getPublicLibraryPage, type LibraryPage } from '../services/libraryService';
+import {
+  getLibraryBook,
+  getLibraryPage,
+  getPublicLibraryPage,
+  type LibraryPage,
+} from '../services/libraryService';
+import { seriesSupported } from '../library/library-capability';
+import { listenStart, type ListenAccessFacts } from './listen-access';
+import { listenSourceOf, type ListenSource } from './listen-source';
 import { isLoginGated } from '../library/series';
 import {
   afterSentence,
@@ -37,16 +52,7 @@ import {
  * the player pauses there rather than talking over it.
  */
 
-export interface ListenSource {
-  bookId: string;
-  title: string;
-  /** "The Tuesday Class · Season 2 · Episode 3", or the author. */
-  subtitle: string;
-  language: string;
-  coverPath: string | null;
-  /** A later season: signed out, only page 1 can be read. */
-  requiresLogin: boolean;
-}
+export type { ListenSource };
 
 export type ListenStatus = 'loading' | 'playing' | 'paused';
 
@@ -107,12 +113,12 @@ const SAVE_DELAY_MS = 800;
 export const useListenStore = create<ListenState>()((set, get) => {
   const facts = (): ListenFacts => {
     const s = get();
-    const signedIn = !!useAuthStore.getState().session;
+    const next = s.source?.nextEpisode;
     return {
+      ...listenAccessFacts(s.source),
       hasNext: s.hasNext,
       hasPrev: s.page > 1,
-      signedIn,
-      pro: signedIn && isPaidTier(useSubscriptionStore.getState().subscription?.tier),
+      nextEpisode: next ? { order: next.order } : null,
     };
   };
 
@@ -148,6 +154,7 @@ export const useListenStore = create<ListenState>()((set, get) => {
     if (move.kind === 'speak') void speakAt(move.index);
     else if (move.kind === 'turn') void openPage(get().page + 1, 0, true);
     else if (move.kind === 'back') void openPage(get().page - 1, 'last', true);
+    else if (move.kind === 'nextEpisode') void openNextEpisode();
     else
       halt({
         invite: move.reason === 'signIn' || move.reason === 'pro' ? move.reason : null,
@@ -178,6 +185,30 @@ export const useListenStore = create<ListenState>()((set, get) => {
       }
     }
     apply(afterSentence(index, get().sentences.length, 'ended', get().repeat, facts()));
+  }
+
+  /** The book is read: on to the next episode, from its first page (the rule allowed it). */
+  async function openNextEpisode() {
+    const id = ++run;
+    const next = get().source?.nextEpisode;
+    if (!next) return halt();
+    savePlace(true);
+    stopSpeech();
+    set({ status: 'loading', invite: null, problem: null });
+    try {
+      const detail = await getLibraryBook(next.bookId);
+      if (run !== id) return;
+      const t = i18n.getFixedT(null, 'readingLibrary');
+      set({
+        source: listenSourceOf(detail, seriesSupported(), (key, options) =>
+          String(t(key, options)),
+        ),
+        page: 1,
+      });
+      void openPage(1, 0, true);
+    } catch {
+      if (run === id) halt({ problem: 'page' });
+    }
   }
 
   async function openPage(page: number, at: number | 'last', play: boolean) {
@@ -223,6 +254,9 @@ export const useListenStore = create<ListenState>()((set, get) => {
     readerOpen: null,
 
     start: (source, at) => {
+      // The access rule decides first: a locked book (or one whose session is still loading)
+      // does not start — the page offers sign-up instead.
+      if (listenStart(listenAccessFacts(source)) !== 'play') return;
       // One player: a podcast, a video or a recording in the bar gives way.
       const player = usePlayerStore.getState();
       if (player.currentEpisode) player.stop();
@@ -336,4 +370,31 @@ export async function getListenPlace(bookId: string): Promise<ListenPlace | null
   } catch {
     return null;
   }
+}
+
+/**
+ * What the access rule needs to know right now: the voice that will speak this book, whether the
+ * reader is signed in and on a paid plan (null while either is still loading), and where the book
+ * sits in its series.
+ */
+export function listenAccessFacts(
+  source: Pick<ListenSource, 'language' | 'seriesOrder'> | null,
+): ListenAccessFacts {
+  const auth = useAuthStore.getState();
+  const signedIn = auth.isLoading ? null : !!auth.session;
+  const sub = useSubscriptionStore.getState();
+  const pro =
+    signedIn === null
+      ? null
+      : !signedIn
+        ? false
+        : sub.hasResolved
+          ? isPaidTier(sub.subscription?.tier)
+          : null;
+  return {
+    voice: plannedVoice(source?.language) ?? 'local',
+    signedIn,
+    pro,
+    seriesOrder: source?.seriesOrder ?? null,
+  };
 }

@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReaderPagerState } from '../text/useReaderPager';
 import { pageSentences, sentenceOfParagraph, type ListenPlace } from '../text/listen-sequence';
-import { getListenPlace, useListenStore, type ListenSource } from './listenStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { listenStart } from './listen-access';
+import {
+  getListenPlace,
+  listenAccessFacts,
+  useListenStore,
+  type ListenSource,
+} from './listenStore';
 
 /**
  * A reader page and the «Listen» player, kept together while both are on the same book: the
@@ -28,6 +36,10 @@ export function useReaderListen({
   const status = useListenStore((s) => s.status);
   const invite = useListenStore((s) => s.invite);
   const ready = enabled && !!source && !pager.isLoading && !pager.error && pager.text.trim() !== '';
+  // The access rule, re-read whenever the session or the plan changes (the voice is read fresh).
+  useAuthStore((s) => `${s.isLoading}:${!!s.session}`);
+  useSubscriptionStore((s) => `${s.hasResolved}:${s.subscription?.tier ?? ''}`);
+  const access = source ? listenStart(listenAccessFacts(source)) : 'wait';
 
   // Where listening was left in this book — asked again whenever the bar closes on it.
   const [place, setPlace] = useState<ListenPlace | null>(null);
@@ -102,6 +114,8 @@ export function useReaderListen({
     position: active && sentences.length ? { n: index + 1, total: sentences.length, page } : null,
     /** The page on screen can be read aloud. */
     ready,
+    /** The player on this book: play, locked until the reader signs up, or not known yet. */
+    access,
     status,
     /** The sentence marked in the text: on this page, while the bar is on this book. */
     activeSentence: current ? { paragraph: current.paragraph, sentence: current.sentence } : null,

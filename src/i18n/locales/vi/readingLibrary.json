@@ -135,12 +135,12 @@
     "position": "{{n}}/{{total}} · trang {{page}}/{{pages}}",
     "playFromHere": "Phát từ đây",
     "noVoice": "Không giọng đọc nào đọc được câu này. Hãy chọn giọng khác trong Cài đặt.",
-    "proTitle": "Nghe trọn tập với Pro",
-    "proBody": "Pro đọc to từng trang, hết trang này sang trang khác, trong khi bạn theo dõi văn bản. Nút loa sau mỗi đoạn vẫn miễn phí.",
+    "proTitle": "Nghe liền mạch với Pro",
+    "proBody": "Với Pro, sách tự đọc tiếp từng trang, từng tập. Không có Pro, mỗi trang được đọc riêng — còn {{n}} tập đầu của mỗi loạt truyện được phát liền mạch cho tất cả mọi người.",
     "proCta": "Xem Pro",
-    "signInTitle": "Đăng nhập để nghe tiếp",
-    "signInBody": "Đọc to tất cả các trang, lần lượt từng trang, là tính năng Pro. Hãy đăng nhập trước — nút loa sau mỗi đoạn vẫn miễn phí.",
-    "signInCta": "Đăng nhập",
+    "signInTitle": "Đăng ký miễn phí để nghe tiếp",
+    "signInBody": "{{n}} tập đầu của mỗi loạt truyện được đọc cho tất cả mọi người. Tài khoản miễn phí giúp bạn nghe tiếp.",
+    "signInCta": "Đăng ký miễn phí",
     "stripTitle": "Nghe trang này",
     "stripMeta_other": "{{count}} câu · khoảng {{minutes}} phút",
     "stripPlaying": "Đang phát · câu {{n}}/{{total}}",
@@ -148,6 +148,7 @@
     "stripContinue": "hoặc nghe tiếp từ trang {{page}}, câu {{n}}",
     "hintNew": "Mới: vừa đọc vừa nghe.",
     "hintBody": "Nhấn phát để nghe đọc trang này; câu đang đọc được đánh dấu trong văn bản.",
-    "space": "Phím cách"
+    "space": "Phím cách",
+    "lockedTitle": "Đăng ký miễn phí để nghe"
   }
 }

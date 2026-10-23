@@ -30,7 +30,11 @@ export function ReaderPageBody({
   listen?: {
     activeSentence: { paragraph: number; sentence: number } | null;
     activeParagraph: number | null;
-    playFrom: (paragraph: number) => void;
+    /**
+     * «Play from here» into the player bar. Absent where the player is locked for this reader:
+     * each paragraph's speaker then reads just its paragraph — free for everyone, always.
+     */
+    playFrom?: (paragraph: number) => void;
     playLabel: string;
   };
 }) {
@@ -49,7 +53,7 @@ export function ReaderPageBody({
         markLookedUp
         onSpeakWord={onSpeakWord}
         paragraphSpeaker={
-          listen
+          listen?.playFrom
             ? { label: listen.playLabel, onPlay: listen.playFrom, playing: listen.activeParagraph }
             : speakLabel
               ? { label: speakLabel }

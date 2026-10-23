@@ -98,6 +98,8 @@ export function ReaderTextScreen({
     source: ListenSource;
     playLabel: string;
     invite: (kind: ListenInvite, dismiss: () => void) => ReactNode;
+    /** The way in for a reader the player is locked for: sign up (free). */
+    signUp: () => void;
   };
 }) {
   const { t } = useTranslation('reader');
@@ -182,7 +184,9 @@ export function ReaderTextScreen({
         </div>
       ) : (
         <>
-          {listen ? <ListenStrip listen={player} text={pager.text} /> : null}
+          {listen ? (
+            <ListenStrip listen={player} text={pager.text} onSignUp={listen.signUp} />
+          ) : null}
           {!hintSeen && (
             <p className="mb-6 flex items-start gap-2 rounded-lg bg-primary/[0.08] px-3.5 py-2.5 text-[13px] leading-5 text-primary">
               <Pointer className="mt-0.5 h-4 w-4 shrink-0" />
@@ -210,7 +214,9 @@ export function ReaderTextScreen({
                 ? {
                     activeSentence: player.activeSentence,
                     activeParagraph: player.activeParagraph,
-                    playFrom: player.playFromParagraph,
+                    // The paragraph speakers stay free: where the player is locked they read just
+                    // their paragraph instead of playing from there.
+                    playFrom: player.access === 'play' ? player.playFromParagraph : undefined,
                     playLabel: listen.playLabel,
                   }
                 : undefined

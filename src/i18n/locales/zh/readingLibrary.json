@@ -135,12 +135,12 @@
     "position": "第 {{n}}/{{total}} 句 · 第 {{page}}/{{pages}} 页",
     "playFromHere": "从这里播放",
     "noVoice": "没有可用的语音朗读这一句。请在设置中选择其他语音。",
-    "proTitle": "用 Pro 收听整集",
-    "proBody": "Pro 会一页接一页地朗读全部内容，你可以边听边看文字。每段后面的朗读按钮仍然免费。",
+    "proTitle": "用 Pro 连续收听",
+    "proBody": "有了 Pro，书会一页接一页、一集接一集地自动朗读下去。没有 Pro 时每页单独朗读——每个系列的前 {{n}} 集对所有人连续播放。",
     "proCta": "了解 Pro",
-    "signInTitle": "登录后继续收听",
-    "signInBody": "一页接一页地朗读全部页面是 Pro 功能。请先登录——每段后面的朗读按钮仍然免费。",
-    "signInCta": "登录",
+    "signInTitle": "免费注册，继续收听",
+    "signInBody": "每个系列的前 {{n}} 集所有人都可以收听。注册免费账号即可继续。",
+    "signInCta": "免费注册",
     "stripTitle": "收听本页",
     "stripMeta": "{{count}} 句 · 约 {{minutes}} 分钟",
     "stripPlaying": "正在播放 · 第 {{n}}/{{total}} 句",
@@ -148,6 +148,7 @@
     "stripContinue": "或从第 {{page}} 页第 {{n}} 句继续",
     "hintNew": "新功能：边读边听。",
     "hintBody": "按下播放，页面会读给你听，正在朗读的句子会在文中标出。",
-    "space": "空格"
+    "space": "空格",
+    "lockedTitle": "免费注册即可收听"
   }
 }

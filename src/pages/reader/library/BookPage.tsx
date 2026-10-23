@@ -43,6 +43,10 @@ import { errorCodeOf, useReaderErrorText } from '../lib/use-error-text';
 import { ReaderFrame } from '../text/ReaderFrame';
 import { ReaderTextScreen } from '../text/ReaderTextScreen';
 import type { ListenInvite, ListenSource } from '../listen/listenStore';
+import { listenSourceOf } from '../listen/listen-source';
+import { FREE_LISTEN_EPISODES } from '../listen/listen-access';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { subscriptionUrl } from '@/components/layout/sidebarConfig';
 import { useReaderPager } from '../text/useReaderPager';
 import { bookReadPath, coverFor, languageName, readingMinutes, seriesReadPath } from './format';
 import { BookCover, LevelBadge } from './BookCover';
@@ -666,20 +670,13 @@ export function BookPage() {
   );
 
   // The book as the player bar shows it.
-  const listenSource: ListenSource = {
-    bookId: book.id,
-    title: book.title,
-    subtitle:
-      isEpisode && book.series_title
-        ? `${book.series_title} · ${episodeLabel}`
-        : tl('book.by', { author: book.author }),
-    language: book.language,
-    coverPath: coverFor(book),
-    requiresLogin: book.requires_login === true,
-  };
+  const listenSource: ListenSource = listenSourceOf(detail!, withSeries, (key, options) =>
+    String(tl(key, options)),
+  );
+  const freeEpisodes = { n: FREE_LISTEN_EPISODES };
 
-  // Where «Listen» stopped at the end of a page: an account first, then Pro. The speaker after
-  // each paragraph stays free either way.
+  // Where «Listen» stopped at the end of a page or an episode: an account first, then Pro (the
+  // site's pricing, as everywhere else in the app). The speaker after each paragraph stays free.
   const listenInvite = (kind: ListenInvite, dismiss: () => void) => (
     <div className="relative rounded-xl border border-primary/30 bg-primary/[0.08] p-5">
       <button
@@ -699,14 +696,18 @@ export function BookPage() {
         {kind === 'pro' ? tl('listen.proTitle') : tl('listen.signInTitle')}
       </p>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-        {kind === 'pro' ? tl('listen.proBody') : tl('listen.signInBody')}
+        {kind === 'pro'
+          ? tl('listen.proBody', freeEpisodes)
+          : tl('listen.signInBody', freeEpisodes)}
       </p>
       {kind === 'pro' ? (
-        <Button asChild variant="accent" className="mt-4">
-          <Link to="/subscription">
-            <Crown className="h-4 w-4" />
-            {tl('listen.proCta')}
-          </Link>
+        <Button
+          variant="accent"
+          className="mt-4"
+          onClick={() => void openUrl(subscriptionUrl(i18n.language))}
+        >
+          <Crown className="h-4 w-4" />
+          {tl('listen.proCta')}
         </Button>
       ) : (
         <Button variant="accent" className="mt-4" onClick={() => setSignInFor('listen')}>
@@ -731,6 +732,7 @@ export function BookPage() {
           source: listenSource,
           playLabel: tl('listen.playFromHere'),
           invite: listenInvite,
+          signUp: () => setSignInFor('listen'),
         }}
         gate={
           gated ? (
@@ -792,7 +794,9 @@ export function BookPage() {
       <SignInDialog
         open={signInFor !== null}
         onOpenChange={(open) => !open && setSignInFor(null)}
-        description={signInFor === 'listen' ? tl('listen.signInBody') : tl('series.gateBody')}
+        description={
+          signInFor === 'listen' ? tl('listen.signInBody', freeEpisodes) : tl('series.gateBody')
+        }
       />
     </ReaderFrame>
   );

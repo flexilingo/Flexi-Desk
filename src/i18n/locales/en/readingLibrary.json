@@ -142,12 +142,12 @@
     "position": "{{n}} of {{total}} · page {{page}} of {{pages}}",
     "playFromHere": "Play from here",
     "noVoice": "No voice could read this sentence. Pick another voice in Settings.",
-    "proTitle": "Listen to the whole episode with Pro",
-    "proBody": "Pro reads every page aloud, one after another, while you follow the text. The speaker after each paragraph stays free.",
+    "proTitle": "Keep listening with Pro",
+    "proBody": "With Pro the book reads on by itself, page after page and episode after episode. Without Pro each page is read on its own — and the first {{n}} episodes of a series play straight through for everyone.",
     "proCta": "See Pro",
-    "signInTitle": "Sign in to keep listening",
-    "signInBody": "Reading every page aloud, one after another, is part of Pro. Sign in first — the speaker after each paragraph stays free.",
-    "signInCta": "Sign in",
+    "signInTitle": "Sign up free to keep listening",
+    "signInBody": "The first {{n}} episodes of every series are read aloud for everyone. A free account lets you keep going.",
+    "signInCta": "Sign up free",
     "stripTitle": "Listen to this page",
     "stripMeta_one": "{{count}} sentence · about {{minutes}} min",
     "stripMeta_other": "{{count}} sentences · about {{minutes}} min",
@@ -156,6 +156,7 @@
     "stripContinue": "or continue from page {{page}}, sentence {{n}}",
     "hintNew": "New: listen while you read.",
     "hintBody": "Press play and the page is read to you, the sentence being read marked in the text.",
-    "space": "Space"
+    "space": "Space",
+    "lockedTitle": "Sign up free to listen"
   }
 }

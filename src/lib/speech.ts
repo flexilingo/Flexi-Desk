@@ -232,6 +232,15 @@ function currentEnv(lang: string | undefined): SpeechEnv {
   };
 }
 
+/**
+ * The voice that will speak a text in this language right now: FlexiLingo's cloud voice, the
+ * computer's own (the device's voice or the system speech), or none at all.
+ */
+export function plannedVoice(lang?: string): 'cloud' | 'local' | null {
+  const first = planEngines(currentEnv(lang), getSpeechPreference())[0];
+  return first === undefined ? null : first === 'cloud' ? 'cloud' : 'local';
+}
+
 /** Engines that can speak right now (for a settings screen). */
 export function availableEngines(lang?: string): SpeechEngine[] {
   const env = currentEnv(lang);

@@ -1,6 +1,7 @@
 import { paragraphChunks } from '@/components/lookup/ParagraphSpeakButton';
 import { splitParagraphs, splitSentences } from '@/components/lookup/tokenize';
 import type { SpeakOutcome } from '@/lib/speech';
+import { episodeTurn, pageTurn, type ListenAccessFacts } from '../listen/listen-access';
 
 /**
  * The «Listen» player's order of reading, as pure functions: a page is read sentence by
@@ -8,9 +9,10 @@ import type { SpeakOutcome } from '@/lib/speech';
  * split `TappableText` uses), a sentence too long for the voice in the paragraph speaker's
  * pieces. At the end of a page the player turns to the next one — or stops, and says why.
  *
- * Who may go on past a page: the page on screen is read for everyone; turning to the next
- * page by itself — or with Next on a page's last sentence — is Pro. A signed-out reader is
- * first asked to sign in, a signed-in reader without Pro is offered Pro.
+ * Who may go on past a page or an episode is the access rule (`listen-access.ts`): the first
+ * episodes of a series are open to everyone, the computer's own voice is never limited, and
+ * otherwise reading on by itself is Pro — a signed-out reader is first asked to sign up, a
+ * signed-in reader without Pro is offered Pro.
  */
 
 /** One sentence of a page, where the page shows it. */
@@ -23,15 +25,14 @@ export interface PageSentence {
   pieces: string[];
 }
 
-/** What the page-end rule needs to know about the reader and the book. */
-export interface ListenFacts {
+/** What the page-end rule needs to know about the reader, the voice and the book. */
+export interface ListenFacts extends ListenAccessFacts {
   /** There is a page after this one. */
   hasNext: boolean;
   /** There is a page before this one. */
   hasPrev: boolean;
-  signedIn: boolean;
-  /** A paid plan (Pro, Lifetime, a trial): reading on page after page. */
-  pro: boolean;
+  /** The episode after this one, for going on at the end of the book; null when there is none. */
+  nextEpisode: { order: number } | null;
 }
 
 export type ListenStop =
@@ -41,6 +42,8 @@ export type ListenStop =
   | 'signIn'
   /** Going on needs Pro. */
   | 'pro'
+  /** Whether it may go on is not known yet (the session or the plan is loading). */
+  | 'wait'
   /** Something else spoke (a word), or stop was pressed elsewhere. */
   | 'interrupted'
   /** No voice could say it. */
@@ -53,6 +56,8 @@ export type ListenMove =
   | { kind: 'turn' }
   /** Go back to the previous page's last sentence. */
   | { kind: 'back' }
+  /** The book is read: go on to the next episode, from its first page. */
+  | { kind: 'nextEpisode' }
   | { kind: 'stop'; reason: ListenStop };
 
 /** Previous, within this long of a sentence's start, goes to the sentence before; later, it says this one again. */
@@ -93,12 +98,14 @@ export function clampSentence(index: number | 'last', count: number): number {
   return Math.min(Math.max(0, Math.floor(index)), count - 1);
 }
 
-/** The end of a page: turn by itself, or stop and say why. */
+/** The end of a page: turn the page (or, at the end of the book, go on to the next episode), or stop and say why. */
 export function atPageEnd(facts: ListenFacts): ListenMove {
-  if (!facts.hasNext) return { kind: 'stop', reason: 'end' };
-  if (!facts.signedIn) return { kind: 'stop', reason: 'signIn' };
-  if (!facts.pro) return { kind: 'stop', reason: 'pro' };
-  return { kind: 'turn' };
+  if (facts.hasNext) {
+    const go = pageTurn(facts);
+    return go.kind === 'go' ? { kind: 'turn' } : { kind: 'stop', reason: go.reason };
+  }
+  const on = episodeTurn(facts, facts.nextEpisode);
+  return on.kind === 'go' ? { kind: 'nextEpisode' } : { kind: 'stop', reason: on.reason };
 }
 
 /** Where a page begins: the sentence asked for, or — an empty page — the page-end rule. */

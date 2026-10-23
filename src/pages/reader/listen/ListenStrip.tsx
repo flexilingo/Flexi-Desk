@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Pause, Play, Sparkles, X } from 'lucide-react';
+import { Loader2, Lock, Pause, Play, Sparkles, X } from 'lucide-react';
 import { useSpeechState } from '@/lib/speech';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import { listenEstimate } from '../text/listen-sequence';
@@ -15,8 +15,21 @@ export const LISTEN_HINT_KEY = 'library_listen_hint_seen';
  * The way into listening, where reading starts: at the top of the page, a filled play button
  * that cannot be mistaken for a label, «Listen to this page», how much there is to hear, and the
  * key that starts it. While the player bar reads this book it says where it is, with pause.
+ *
+ * Where the access rule locks the player for this reader (signed out, the cloud voice, a book
+ * past the open episodes), the strip stays — with a lock, «sign up free to listen», and sign-up
+ * behind the button. While the session is loading the button simply waits (no lock flashes).
  */
-export function ListenStrip({ listen, text }: { listen: ReaderListen; text: string }) {
+export function ListenStrip({
+  listen,
+  text,
+  onSignUp,
+}: {
+  listen: ReaderListen;
+  text: string;
+  /** Opens sign-up (the strip's button while the player is locked). */
+  onSignUp: () => void;
+}) {
   const { t, i18n } = useTranslation('readingLibrary');
   const { t: tp } = useTranslation('podcastUi');
   const speech = useSpeechState();
@@ -44,7 +57,11 @@ export function ListenStrip({ listen, text }: { listen: ReaderListen; text: stri
     if (!hintSeen) seeHint();
     listen.start(0);
   };
-  useListenKeys(listen.ready && !barBusy, { playPause: start }, ['playPause']);
+  const locked = !listen.active && listen.access === 'signUp';
+  const waitingForAccess = !listen.active && listen.access === 'wait';
+  useListenKeys(listen.ready && !barBusy && listen.access === 'play', { playPause: start }, [
+    'playPause',
+  ]);
 
   const position = listen.position;
   const playing = listen.active && listen.status !== 'paused';
@@ -55,14 +72,20 @@ export function ListenStrip({ listen, text }: { listen: ReaderListen; text: stri
       <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/50 px-3 py-2.5">
         <button
           type="button"
-          onClick={listen.active ? listen.playPause : start}
-          disabled={!listen.active && !listen.ready}
-          aria-label={playing ? tp('np.pause') : t('listen.stripTitle')}
-          title={playing ? tp('np.pause') : t('listen.playTitle')}
+          onClick={listen.active ? listen.playPause : locked ? onSignUp : start}
+          disabled={!listen.active && !locked && (!listen.ready || waitingForAccess)}
+          aria-label={
+            playing ? tp('np.pause') : locked ? t('listen.lockedTitle') : t('listen.stripTitle')
+          }
+          title={
+            playing ? tp('np.pause') : locked ? t('listen.lockedTitle') : t('listen.playTitle')
+          }
           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-sm transition-colors hover:bg-accent/90 disabled:opacity-50"
         >
           {listen.active && waiting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
+          ) : locked ? (
+            <Lock className="h-4 w-4" />
           ) : playing ? (
             <Pause className="h-4 w-4 fill-current" />
           ) : (
@@ -80,13 +103,15 @@ export function ListenStrip({ listen, text }: { listen: ReaderListen; text: stri
             </p>
           ) : (
             <>
-              <p className="text-sm font-bold text-foreground">{t('listen.stripTitle')}</p>
+              <p className="text-sm font-bold text-foreground">
+                {locked ? t('listen.lockedTitle') : t('listen.stripTitle')}
+              </p>
               <p className="text-xs text-muted-foreground">
                 {t('listen.stripMeta', {
                   count: estimate.sentences,
                   minutes: num.format(estimate.minutes),
                 })}
-                {listen.place ? (
+                {listen.place && !locked ? (
                   <>
                     {' · '}
                     <button
@@ -106,14 +131,14 @@ export function ListenStrip({ listen, text }: { listen: ReaderListen; text: stri
           )}
         </div>
 
-        {!listen.active && !barBusy && (
+        {!listen.active && !barBusy && listen.access === 'play' && (
           <kbd className="hidden shrink-0 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground shadow-xs sm:inline-block">
             {t('listen.space')}
           </kbd>
         )}
       </div>
 
-      {!hintSeen && !listen.active && (
+      {!hintSeen && !listen.active && !locked && (
         <div className="flex items-start gap-2.5 rounded-lg bg-accent/10 px-3 py-2 text-[13px] leading-snug">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
           <p className="min-w-0 flex-1 text-foreground">

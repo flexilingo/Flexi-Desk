@@ -29,11 +29,16 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
-// The voice itself is not under test here: every piece "runs to its end" at once.
+// The voice itself is not under test here: a piece holds (as if being said) unless a test lets
+// it end at once; which voice would speak (the cloud's or the computer's own) is the test's call.
+const speech = vi.hoisted(() => ({ ends: false, voice: 'local' as 'cloud' | 'local' }));
 vi.mock('@/lib/speech', async (original) => ({
   ...(await original<typeof import('@/lib/speech')>()),
-  speakThrough: vi.fn(async () => 'ended'),
+  speakThrough: vi.fn(() => (speech.ends ? Promise.resolve('ended') : new Promise(() => {}))),
+  plannedVoice: () => speech.voice,
 }));
+const opener = vi.hoisted(() => ({ openUrl: vi.fn(async () => {}) }));
+vi.mock('@tauri-apps/plugin-opener', () => opener);
 
 import { fireEvent, waitFor } from '@testing-library/react';
 import { useAuthStore } from '@/stores/authStore';
@@ -83,9 +88,11 @@ const bookOf = (order: number) => ({
 function open(order: number, pageCount = 2) {
   call.mockImplementation((...args: unknown[]) => {
     const path = args.map(String).join(' ');
+    const asked = Number(/book_id=e(\d+)/.exec(path)?.[1] ?? order);
+    const pageAsked = Number(/page=(\d+)/.exec(path)?.[1] ?? 1);
     if (path.includes('action=book'))
       return Promise.resolve({
-        book: { ...bookOf(order), page_count: pageCount },
+        book: { ...bookOf(asked), page_count: pageCount },
         first_page: null,
         series: SERIES,
         series_meta: { title: 'The Tuesday Class', seasons: [{ number: 1, title: 'Room 4' }, { number: 2, title: 'The New Room' }] },
@@ -104,18 +111,18 @@ function open(order: number, pageCount = 2) {
       });
     if (path.includes('page'))
       return Promise.resolve({
-        book_id: `e${order}`,
+        book_id: `e${asked}`,
         title: 'x',
         language: 'en',
-        page_number: 1,
+        page_number: pageAsked,
         page_count: pageCount,
         chapter_title: null,
         content: 'Margaret arrived at the library at noon.',
         word_count: 7,
         char_count: 40,
         truncated: false,
-        has_prev: false,
-        has_next: pageCount > 1,
+        has_prev: pageAsked > 1,
+        has_next: pageAsked < pageCount,
       });
     return Promise.resolve({ items: [] });
   });
@@ -133,6 +140,9 @@ afterEach(() => useListenStore.getState().close());
 beforeEach(() => {
   call.mockReset();
   settings.clear();
+  speech.ends = false;
+  speech.voice = 'local';
+  opener.openUrl.mockClear();
   resetSeriesSupport();
   useAuthStore.setState({ session: null, isLoading: false });
 });
@@ -181,16 +191,19 @@ describe('a library episode, laid out like the website', () => {
     expect(screen.getByText('public.fitFree{}')).toBeInTheDocument();
   });
 
-  it('Listen opens the player bar on this book; a free reader gets page 1, then Pro is offered in the reading column', async () => {
+  it('cloud voice, a free reader on a gated book: page 1, then the Pro offer (the site’s pricing) in the reading column', async () => {
     useAuthStore.setState({ session: { user: { id: 'u' } } as never, isLoading: false });
     useSubscriptionStore.setState({ subscription: { tier: 'free' } as never, hasResolved: true, isLoading: false });
-    open(1);
+    speech.voice = 'cloud';
+    speech.ends = true;
+    open(7);
     // Offered once the page is on screen.
     await waitFor(() => expect(screen.getByRole('button', { name: 'listen.stripTitle' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'listen.stripTitle' }));
-    expect(useListenStore.getState().source?.bookId).toBe('e1');
+    expect(useListenStore.getState().source?.bookId).toBe('e7');
     expect(await screen.findByText('listen.proTitle')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'listen.proCta' })).toHaveAttribute('href', '/subscription');
+    fireEvent.click(screen.getByRole('button', { name: /listen\.proCta/ }));
+    expect(opener.openUrl).toHaveBeenCalledWith(expect.stringContaining('/dashboard/subscription'));
     // The strip now says where the bar is; the toolbar has no second Listen button.
     expect(screen.getByText('listen.stripPaused{"n":"1","total":"1"}')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'listen.start' })).toBeNull();
@@ -206,13 +219,32 @@ describe('a library episode, laid out like the website', () => {
     expect(useListenStore.getState().source?.bookId).toBe('e1');
   });
 
-  it('Listen asks a signed-out reader to sign in first', async () => {
+  it('signed out, cloud voice, a gated book: the strip is locked behind sign-up; the paragraph speakers stay free', async () => {
+    speech.voice = 'cloud';
+    open(7);
+    expect(await screen.findByRole('button', { name: 'listen.lockedTitle' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'listen.stripTitle' })).toBeNull();
+    // Each paragraph's speaker reads just its paragraph: no player, no sign-up gate.
+    expect(screen.queryByRole('button', { name: 'listen.playFromHere' })).toBeNull();
+    const speakers = screen.getAllByRole('button', { name: 'book.readAloud' });
+    fireEvent.click(speakers[0]);
+    expect(useListenStore.getState().source).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('signed out, cloud voice, one of the first five episodes: the strip plays, no lock', async () => {
+    speech.voice = 'cloud';
     open(1);
-    // Offered once the page is on screen.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.stripTitle' })).toBeEnabled());
+    expect(screen.queryByRole('button', { name: 'listen.lockedTitle' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'listen.playFromHere' }).length).toBeGreaterThan(0);
+  });
+
+  it('the computer’s own voice has no limits: a signed-out reader listens to a gated book', async () => {
+    open(7);
     await waitFor(() => expect(screen.getByRole('button', { name: 'listen.stripTitle' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'listen.stripTitle' }));
-    expect(await screen.findByText('listen.signInTitle')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /listen\.signInCta/ })).toBeInTheDocument();
+    expect(useListenStore.getState().source?.bookId).toBe('e7');
   });
 
   it('the listen strip at the top of the page: a play button, what there is to hear, Space, and a one-time note', async () => {
