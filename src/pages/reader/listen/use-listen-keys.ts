@@ -46,23 +46,29 @@ export function listenKeyOf(event: KeyLike): ListenKey | null {
 
 /**
  * The player's keys while a book is being read aloud: Space plays and pauses, ← → step a
- * sentence, R repeats the sentence. Off while nothing is loaded.
+ * sentence, R repeats the sentence. Off while nothing is loaded. `only` takes just some of them
+ * (the listen strip: Space starts the page, the arrows still scroll it).
  */
-export function useListenKeys(enabled: boolean, act: Record<ListenKey, () => void>) {
+export function useListenKeys(
+  enabled: boolean,
+  act: Partial<Record<ListenKey, () => void>>,
+  only?: ListenKey[],
+) {
   const latest = useRef(act);
   latest.current = act;
+  const taken = only?.join(',') ?? '';
 
   useEffect(() => {
     if (!enabled) return;
     let spaceTaken = false;
     const onKeyDown = (event: KeyboardEvent) => {
       const key = listenKeyOf(event);
-      if (!key) return;
+      if (!key || (taken && !taken.split(',').includes(key)) || !latest.current[key]) return;
       event.preventDefault();
       // Holding a key down repeats only the steps; Space would flicker between play and pause.
       if (event.repeat && key !== 'prev' && key !== 'next') return;
       if (key === 'playPause') spaceTaken = true;
-      latest.current[key]();
+      latest.current[key]?.();
     };
     // A focused button clicks itself on Space's keyup: right after pressing play with the mouse,
     // that would pause and resume in one keystroke.
@@ -77,5 +83,5 @@ export function useListenKeys(enabled: boolean, act: Record<ListenKey, () => voi
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [enabled]);
+  }, [enabled, taken]);
 }

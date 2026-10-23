@@ -16,6 +16,7 @@ import { ReaderPager } from './ReaderPager';
 import { usePersistedPreference } from './persisted-preference';
 import { ListenControls } from './ListenControls';
 import { useReaderListen } from '../listen/useReaderListen';
+import { ListenStrip } from '../listen/ListenStrip';
 import type { ListenInvite, ListenSource } from '../listen/listenStore';
 import type { ReaderPagerState } from './useReaderPager';
 import {
@@ -182,6 +183,7 @@ export function ReaderTextScreen({
         </div>
       ) : (
         <>
+          {listen ? <ListenStrip listen={player} text={pager.text} /> : null}
           {!hintSeen && (
             <p className="mb-6 flex items-start gap-2 rounded-lg bg-primary/[0.08] px-3.5 py-2.5 text-[13px] leading-5 text-primary">
               <Pointer className="mt-0.5 h-4 w-4 shrink-0" />

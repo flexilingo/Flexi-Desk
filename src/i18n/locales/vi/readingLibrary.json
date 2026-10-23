@@ -145,6 +145,14 @@
     "proCta": "Xem Pro",
     "signInTitle": "Đăng nhập để nghe tiếp",
     "signInBody": "Đọc to tất cả các trang, lần lượt từng trang, là tính năng Pro. Hãy đăng nhập trước — nút loa sau mỗi đoạn vẫn miễn phí.",
-    "signInCta": "Đăng nhập"
+    "signInCta": "Đăng nhập",
+    "stripTitle": "Nghe trang này",
+    "stripMeta_other": "{{count}} câu · khoảng {{minutes}} phút",
+    "stripPlaying": "Đang phát · câu {{n}}/{{total}}",
+    "stripPaused": "Tạm dừng · câu {{n}}/{{total}}",
+    "stripContinue": "hoặc nghe tiếp từ trang {{page}}, câu {{n}}",
+    "hintNew": "Mới: vừa đọc vừa nghe.",
+    "hintBody": "Nhấn phát để nghe đọc trang này; câu đang đọc được đánh dấu trong văn bản.",
+    "space": "Phím cách"
   }
 }

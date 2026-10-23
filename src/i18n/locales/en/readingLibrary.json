@@ -152,6 +152,15 @@
     "proCta": "See Pro",
     "signInTitle": "Sign in to keep listening",
     "signInBody": "Reading every page aloud, one after another, is part of Pro. Sign in first — the speaker after each paragraph stays free.",
-    "signInCta": "Sign in"
+    "signInCta": "Sign in",
+    "stripTitle": "Listen to this page",
+    "stripMeta_one": "{{count}} sentence · about {{minutes}} min",
+    "stripMeta_other": "{{count}} sentences · about {{minutes}} min",
+    "stripPlaying": "Playing · sentence {{n}} of {{total}}",
+    "stripPaused": "Paused · sentence {{n}} of {{total}}",
+    "stripContinue": "or continue from page {{page}}, sentence {{n}}",
+    "hintNew": "New: listen while you read.",
+    "hintBody": "Press play and the page is read to you, the sentence being read marked in the text.",
+    "space": "Space"
   }
 }

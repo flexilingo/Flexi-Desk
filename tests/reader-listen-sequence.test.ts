@@ -5,6 +5,7 @@ import {
   atPageEnd,
   clampSentence,
   firstMove,
+  listenEstimate,
   nextRate,
   pageSentences,
   parseListenPlace,
@@ -58,6 +59,27 @@ describe('a page as the player reads it', () => {
     expect(clampSentence(-2, 4)).toBe(0);
     expect(clampSentence('last', 4)).toBe(3);
     expect(clampSentence(3, 0)).toBe(0);
+  });
+});
+
+describe('what the listen strip promises', () => {
+  it('the page’s sentences, and about how long they take at 150 words a minute', () => {
+    const sentence = (i: number) =>
+      `Sentence ${i} has exactly the right number of words to make the sums easy, ${'word '.repeat(23).trim()}.`;
+    const text = Array.from({ length: 8 }, (_, i) => sentence(i + 1)).join(' ');
+    expect(text.split(/\s+/)).toHaveLength(8 * 37);
+    expect(listenEstimate(text)).toEqual({ sentences: 8, minutes: 2 });
+  });
+
+  it('a short page is still about a minute; an empty one is nothing', () => {
+    expect(listenEstimate('Then she left.')).toEqual({ sentences: 1, minutes: 1 });
+    expect(listenEstimate('')).toEqual({ sentences: 0, minutes: 0 });
+  });
+
+  it('counts words, not dashes or stray punctuation', () => {
+    const words = Array.from({ length: 225 }, () => 'word').join(' — ');
+    expect(listenEstimate(`${words}.`).minutes).toBe(2);
+    expect(listenEstimate(`${words}.`, 75).minutes).toBe(3);
   });
 });
 

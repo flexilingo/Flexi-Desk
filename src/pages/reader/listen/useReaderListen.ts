@@ -88,6 +88,8 @@ export function useReaderListen({
   return {
     /** The bar is reading (or paused on) this book. */
     active,
+    /** Where the bar is in this book: the sentence of the page it reads. */
+    position: active && sentences.length ? { n: index + 1, total: sentences.length, page } : null,
     /** The page on screen can be read aloud. */
     ready,
     status,

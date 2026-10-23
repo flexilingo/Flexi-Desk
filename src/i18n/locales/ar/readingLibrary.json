@@ -175,6 +175,19 @@
     "proCta": "اكتشف Pro",
     "signInTitle": "سجّل الدخول لمتابعة الاستماع",
     "signInBody": "قراءة كل الصفحات بصوت عالٍ، واحدة تلو الأخرى، جزء من Pro. سجّل الدخول أولًا — زر السماعة بعد كل فقرة يبقى مجانيًا.",
-    "signInCta": "تسجيل الدخول"
+    "signInCta": "تسجيل الدخول",
+    "stripTitle": "استمع إلى هذه الصفحة",
+    "stripMeta_zero": "{{count}} جملة · نحو {{minutes}} دقيقة",
+    "stripMeta_one": "جملة واحدة · نحو {{minutes}} دقيقة",
+    "stripMeta_two": "جملتان · نحو {{minutes}} دقيقة",
+    "stripMeta_few": "{{count}} جمل · نحو {{minutes}} دقيقة",
+    "stripMeta_many": "{{count}} جملة · نحو {{minutes}} دقيقة",
+    "stripMeta_other": "{{count}} جملة · نحو {{minutes}} دقيقة",
+    "stripPlaying": "قيد التشغيل · الجملة {{n}} من {{total}}",
+    "stripPaused": "متوقف مؤقتًا · الجملة {{n}} من {{total}}",
+    "stripContinue": "أو تابع من الصفحة {{page}}، الجملة {{n}}",
+    "hintNew": "جديد: استمع وأنت تقرأ.",
+    "hintBody": "اضغط تشغيل فتُقرأ لك الصفحة، وتُميَّز الجملة المقروءة في النص.",
+    "space": "مسافة"
   }
 }

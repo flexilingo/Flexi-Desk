@@ -145,6 +145,14 @@
     "proCta": "了解 Pro",
     "signInTitle": "登录后继续收听",
     "signInBody": "一页接一页地朗读全部页面是 Pro 功能。请先登录——每段后面的朗读按钮仍然免费。",
-    "signInCta": "登录"
+    "signInCta": "登录",
+    "stripTitle": "收听本页",
+    "stripMeta": "{{count}} 句 · 约 {{minutes}} 分钟",
+    "stripPlaying": "正在播放 · 第 {{n}}/{{total}} 句",
+    "stripPaused": "已暂停 · 第 {{n}}/{{total}} 句",
+    "stripContinue": "或从第 {{page}} 页第 {{n}} 句继续",
+    "hintNew": "新功能：边读边听。",
+    "hintBody": "按下播放，页面会读给你听，正在朗读的句子会在文中标出。",
+    "space": "空格"
   }
 }

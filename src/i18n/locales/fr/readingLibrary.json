@@ -152,6 +152,15 @@
     "proCta": "Découvrir Pro",
     "signInTitle": "Connectez-vous pour continuer l’écoute",
     "signInBody": "La lecture à voix haute de toutes les pages, l’une après l’autre, fait partie de Pro. Connectez-vous d’abord — le haut-parleur après chaque paragraphe reste gratuit.",
-    "signInCta": "Se connecter"
+    "signInCta": "Se connecter",
+    "stripTitle": "Écouter cette page",
+    "stripMeta_one": "{{count}} phrase · environ {{minutes}} min",
+    "stripMeta_other": "{{count}} phrases · environ {{minutes}} min",
+    "stripPlaying": "Lecture · phrase {{n}} sur {{total}}",
+    "stripPaused": "En pause · phrase {{n}} sur {{total}}",
+    "stripContinue": "ou reprendre page {{page}}, phrase {{n}}",
+    "hintNew": "Nouveau : écoutez en lisant.",
+    "hintBody": "Appuyez sur lecture : la page vous est lue et la phrase lue est marquée dans le texte.",
+    "space": "Espace"
   }
 }

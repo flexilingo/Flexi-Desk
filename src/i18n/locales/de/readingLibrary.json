@@ -152,6 +152,15 @@
     "proCta": "Pro ansehen",
     "signInTitle": "Melde dich an, um weiterzuhören",
     "signInBody": "Alle Seiten nacheinander vorlesen zu lassen gehört zu Pro. Melde dich zuerst an — der Lautsprecher nach jedem Absatz bleibt kostenlos.",
-    "signInCta": "Anmelden"
+    "signInCta": "Anmelden",
+    "stripTitle": "Diese Seite anhören",
+    "stripMeta_one": "{{count}} Satz · etwa {{minutes}} Min.",
+    "stripMeta_other": "{{count}} Sätze · etwa {{minutes}} Min.",
+    "stripPlaying": "Wird gelesen · Satz {{n}} von {{total}}",
+    "stripPaused": "Pausiert · Satz {{n}} von {{total}}",
+    "stripContinue": "oder weiter ab Seite {{page}}, Satz {{n}}",
+    "hintNew": "Neu: hören, während du liest.",
+    "hintBody": "Drück auf Abspielen: Die Seite wird dir vorgelesen, der gelesene Satz ist im Text markiert.",
+    "space": "Leertaste"
   }
 }

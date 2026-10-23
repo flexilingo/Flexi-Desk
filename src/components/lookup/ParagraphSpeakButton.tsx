@@ -58,17 +58,18 @@ export function ParagraphSpeakButton({
   playing?: boolean;
 }) {
   if (onPlay) {
+    // Small and quiet beside the text: the way into listening is the strip above the page.
     return (
       <button
         type="button"
         onClick={onPlay}
         aria-label={label}
         title={label}
-        className={`ms-1.5 inline-flex h-6 w-6 translate-y-[-1px] items-center justify-center rounded-full align-middle transition-colors hover:bg-success/15 ${
-          playing ? 'text-accent' : 'text-success'
+        className={`ms-1 inline-flex h-5 w-5 translate-y-[-1px] items-center justify-center rounded-full align-middle transition-colors hover:bg-success/10 hover:text-success ${
+          playing ? 'text-accent' : 'text-muted-foreground/45'
         }`}
       >
-        {playing ? <AudioLines className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+        {playing ? <AudioLines className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
       </button>
     );
   }

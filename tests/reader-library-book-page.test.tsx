@@ -213,4 +213,26 @@ describe('a library episode, laid out like the website', () => {
     expect(await screen.findByText('listen.signInTitle')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /listen\.signInCta/ })).toBeInTheDocument();
   });
+
+  it('the listen strip at the top of the page: a play button, what there is to hear, Space, and a one-time note', async () => {
+    open(1);
+    const play = await screen.findByRole('button', { name: 'listen.stripTitle' });
+    expect(screen.getByText('listen.stripMeta{"count":1,"minutes":"1"}')).toBeInTheDocument();
+    expect(screen.getByText('listen.space')).toBeInTheDocument();
+    // The note shows once, and closes for good.
+    expect(await screen.findByText('listen.hintNew')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'series.close' }));
+    expect(screen.queryByText('listen.hintNew')).toBeNull();
+
+    await waitFor(() => expect(play).toBeEnabled());
+    fireEvent.click(play);
+    expect(useListenStore.getState().source?.bookId).toBe('e1');
+  });
+
+  it('Space on the page starts listening when the bar is free', async () => {
+    open(1);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.stripTitle' })).toBeEnabled());
+    fireEvent.keyDown(window, { key: ' ' });
+    expect(useListenStore.getState().source?.bookId).toBe('e1');
+  });
 });
