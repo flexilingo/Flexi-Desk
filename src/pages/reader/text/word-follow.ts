@@ -96,5 +96,16 @@ export function spokenWordIndex(
   return null;
 }
 
-/** What marks the word being said: a stronger tint than the sentence's, on the word itself — nothing moves. */
-export const SPOKEN_WORD_CLASSES = ['bg-accent/30', 'text-foreground'];
+/**
+ * What marks the word being said: an olive tint on the word itself (nothing moves) — the site's
+ * and the phone's `olive-500/30` with `olive-700` text, here in the theme's olive so the dark
+ * theme keeps it legible. Terra stays for the one action on the page.
+ */
+export const SPOKEN_WORD_CLASSES = ['bg-primary-light/30', 'text-primary'];
+
+/**
+ * What marks the sentence being said — only when the voice cannot say where its words are (the
+ * system voice). With a word marked, a tinted sentence around it would be a highlight inside a
+ * highlight.
+ */
+export const SPOKEN_SENTENCE_CLASSES = ['bg-primary/[0.11]'];

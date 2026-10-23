@@ -72,6 +72,8 @@ interface ListenState {
   invite: ListenInvite | null;
   /** No voice could say the sentence, or the page would not load. */
   problem: 'silent' | 'page' | null;
+  /** The book whose reader page is open right now (its text is on screen), if any. */
+  readerOpen: string | null;
 
   /** Opens the bar on a book at a page and sentence and starts reading. */
   start: (
@@ -91,6 +93,8 @@ interface ListenState {
   follow: (at: { page: number; text: string; hasNext: boolean; pageCount: number }) => void;
   dismissInvite: () => void;
   close: () => void;
+  /** A book's reader page opened (its id) or closed (null). */
+  setReaderOpen: (bookId: string | null) => void;
 }
 
 /** Every start, pause, page and close bumps it: a reading that sees a newer one is over. */
@@ -216,6 +220,7 @@ export const useListenStore = create<ListenState>()((set, get) => {
     repeat: false,
     invite: null,
     problem: null,
+    readerOpen: null,
 
     start: (source, at) => {
       // One player: a podcast, a video or a recording in the bar gives way.
@@ -304,6 +309,8 @@ export const useListenStore = create<ListenState>()((set, get) => {
     },
 
     dismissInvite: () => set({ invite: null }),
+
+    setReaderOpen: (bookId) => set({ readerOpen: bookId }),
 
     close: () => {
       if (!get().source) return;

@@ -20,8 +20,9 @@ import { useWordFollow } from './use-word-follow';
 /**
  * The player bar while a library book is read aloud — the same bar as a podcast's, in its
  * «sentence» mode: previous / next sentence, where it is («7 of 42 · page 1 of 11»), speed,
- * repeat-this-sentence, the sentence being read above it (its words open the word dialog), and
- * the way back to the book. Space, ← → and R work from anywhere but a text box or a dialog.
+ * repeat-this-sentence, the sentence being read above it (its words open the word dialog) —
+ * left out while the book's own page is open, where the text is right there — and the way
+ * back to the book. Space, ← → and R work from anywhere but a text box or a dialog.
  */
 export function ListenMiniPlayer() {
   const { t, i18n } = useTranslation('readingLibrary');
@@ -38,6 +39,8 @@ export function ListenMiniPlayer() {
   const repeat = useListenStore((s) => s.repeat);
   const invite = useListenStore((s) => s.invite);
   const problem = useListenStore((s) => s.problem);
+  // The book's own page is open: its text is right there, so the bar leaves out the sentence line.
+  const readerHere = useListenStore((s) => !!s.source && s.readerOpen === s.source.bookId);
   const act = useListenStore.getState();
   const speech = useSpeechState();
   const [word, setWord] = useState<string | null>(null);
@@ -50,7 +53,7 @@ export function ListenMiniPlayer() {
     repeat: act.toggleRepeat,
   });
 
-  useWordFollow(!!source && status === 'playing');
+  useWordFollow(!!source, !!source && status === 'playing');
 
   if (!source) return null;
   const sentence = sentences[index];
@@ -92,8 +95,9 @@ export function ListenMiniPlayer() {
       <AlertCircle className="h-4 w-4 shrink-0" />
       {problem === 'silent' ? t('listen.noVoice') : t('public.pageError')}
     </div>
-  ) : sentence ? (
+  ) : sentence && !readerHere ? (
     <ListenSentenceLine
+      key={`${page}:${index}`}
       text={sentence.text}
       language={source.language}
       onWord={(w) => {

@@ -416,8 +416,8 @@ export function TappableText({
 
 /**
  * One sentence of the page, for the player bar: found by `data-sentence` to keep it in view, and
- * softly tinted while it is read — a background on the words themselves, line by line, so
- * nothing moves. Where there is no player it adds nothing to the page.
+ * flagged while it is read so the player can mark the word being said inside it (or, with a voice
+ * that cannot tell its words, the sentence itself). Where there is no player it adds nothing.
  */
 function SentenceMark({
   on,
@@ -436,9 +436,7 @@ function SentenceMark({
       data-sentence={id}
       // The player's word follower looks for the word being said inside this sentence only.
       data-listen-active={active ? '' : undefined}
-      className={`rounded-[3px] transition-colors duration-300 box-decoration-clone ${
-        active ? 'bg-primary/[0.11]' : ''
-      }`}
+      className="rounded-[3px] transition-colors duration-300 box-decoration-clone"
     >
       {children}
     </span>

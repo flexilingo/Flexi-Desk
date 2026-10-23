@@ -57,6 +57,7 @@ beforeEach(() => {
     repeat: false,
     invite: null,
     problem: null,
+    readerOpen: null,
   });
 });
 afterEach(() => useListenStore.getState().close());
@@ -127,7 +128,7 @@ describe('the player bar reading a book', () => {
     expect(useListenStore.getState().source).toBeNull();
   });
 
-  it('marks the word being said — on the page and in the bar’s line — and moves with the voice', async () => {
+  const pageSentence = () => {
     // The page's sentence 7, as TappableText draws it while the bar reads that page.
     const page = document.createElement('p');
     page.innerHTML =
@@ -135,6 +136,13 @@ describe('the player bar reading a book', () => {
       '<span data-flexi-word="number">number</span> <span data-flexi-word="7">7</span> ' +
       '<span data-flexi-word="is">is</span> <span data-flexi-word="here">here</span>.</span>';
     document.body.appendChild(page);
+    return page;
+  };
+  const WORD = 'bg-primary-light/30';
+  const SENTENCE = 'bg-primary/[0.11]';
+
+  it('marks the word being said — on the page and in the bar’s line — and moves with the voice', async () => {
+    const page = pageSentence();
     useListenStore.setState({ status: 'playing' });
     voice.progress = {
       engine: 'device',
@@ -143,17 +151,50 @@ describe('the player bar reading a book', () => {
     };
     bar();
     const onPage = () => Array.from(page.querySelectorAll('[data-flexi-word]'));
-    await vi.waitFor(() => expect(onPage()[2].classList.contains('bg-accent/30')).toBe(true));
-    expect(screen.getByRole('button', { name: '7' }).classList.contains('bg-accent/30')).toBe(true);
-    expect(onPage().filter((el) => el.classList.contains('bg-accent/30'))).toHaveLength(1);
+    await vi.waitFor(() => expect(onPage()[2].classList.contains(WORD)).toBe(true));
+    expect(screen.getByRole('button', { name: '7' }).classList.contains(WORD)).toBe(true);
+    expect(onPage().filter((el) => el.classList.contains(WORD))).toHaveLength(1);
+    // A word is marked, so the sentence carries no tint of its own.
+    expect(page.querySelector('[data-listen-active]')?.classList.contains(SENTENCE)).toBe(false);
 
     voice.progress = { engine: 'device', text: 'Sentence number 7 is here.', charIndex: 21 };
-    await vi.waitFor(() => expect(onPage()[4].classList.contains('bg-accent/30')).toBe(true));
-    expect(onPage()[2].classList.contains('bg-accent/30')).toBe(false);
+    await vi.waitFor(() => expect(onPage()[4].classList.contains(WORD)).toBe(true));
+    expect(onPage()[2].classList.contains(WORD)).toBe(false);
 
-    // Paused: nothing is being said, nothing is marked (the sentence keeps its own tint).
+    // Paused: the word stays marked — the place to come back to.
     act(() => useListenStore.setState({ status: 'paused' }));
-    expect(onPage().some((el) => el.classList.contains('bg-accent/30'))).toBe(false);
+    voice.progress = null;
+    await new Promise((r) => setTimeout(r, 200));
+    expect(onPage()[4].classList.contains(WORD)).toBe(true);
+
+    // Closing the bar leaves no mark behind.
+    act(() => useListenStore.getState().close());
+    expect(onPage().some((el) => el.classList.contains(WORD))).toBe(false);
     page.remove();
+  });
+
+  it('the system voice cannot tell its words: the sentence is marked instead', async () => {
+    const page = pageSentence();
+    useListenStore.setState({ status: 'playing' });
+    voice.progress = { engine: 'system', text: 'Sentence number 7 is here.' };
+    bar();
+    const sentence = page.querySelector('[data-listen-active]')!;
+    await vi.waitFor(() => expect(sentence.classList.contains(SENTENCE)).toBe(true));
+    expect(page.querySelectorAll(`.${CSS.escape(WORD)}`)).toHaveLength(0);
+    page.remove();
+  });
+
+  it('leaves out its sentence line while the book’s own page is open, and shows it elsewhere', () => {
+    useListenStore.setState({ readerOpen: 'b1' });
+    const view = bar();
+    expect(screen.queryByRole('button', { name: '7' })).toBeNull();
+    expect(screen.getByText('The Lesson Plans')).toBeInTheDocument();
+    act(() => useListenStore.setState({ readerOpen: null }));
+    view.rerender(
+      <MemoryRouter>
+        <ListenMiniPlayer />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('button', { name: '7' })).toBeInTheDocument();
   });
 });

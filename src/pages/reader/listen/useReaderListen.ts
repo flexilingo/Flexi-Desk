@@ -40,6 +40,16 @@ export function useReaderListen({
     };
   }, [bookId, active]);
 
+  // The bar knows this book's text is on screen (it then leaves out its own sentence line).
+  useEffect(() => {
+    if (!bookId) return;
+    const store = useListenStore.getState();
+    store.setReaderOpen(bookId);
+    return () => {
+      if (useListenStore.getState().readerOpen === bookId) store.setReaderOpen(null);
+    };
+  }, [bookId]);
+
   const latest = useRef({ pager, source, ready });
   latest.current = { pager, source, ready };
 
