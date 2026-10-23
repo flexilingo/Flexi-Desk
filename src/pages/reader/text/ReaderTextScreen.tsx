@@ -14,6 +14,8 @@ import { ReaderToolbar } from './ReaderToolbar';
 import { ReaderPageBody } from './ReaderPageBody';
 import { ReaderPager } from './ReaderPager';
 import { usePersistedPreference } from './persisted-preference';
+import { ListenControls } from './ListenControls';
+import { usePageListen, type ListenInvite } from './usePageListen';
 import type { ReaderPagerState } from './useReaderPager';
 import {
   TEXT_SCALE_DEFAULT,
@@ -52,6 +54,7 @@ export function ReaderTextScreen({
   gate,
   speakLabel,
   around,
+  listen,
 }: {
   title: string;
   subtitle?: string;
@@ -84,6 +87,16 @@ export function ReaderTextScreen({
    * than the window's width.
    */
   around?: (card: ReactNode) => ReactNode;
+  /**
+   * The «Listen» player (library books): reads the page aloud paragraph by paragraph and,
+   * for Pro, page after page. Off when absent. `invite` draws what the reader is offered
+   * where it stopped for an account or for Pro.
+   */
+  listen?: {
+    signedIn: boolean;
+    pro: boolean;
+    invite: (kind: ListenInvite, dismiss: () => void) => ReactNode;
+  };
 }) {
   const { t } = useTranslation('reader');
   const { t: tDesk } = useTranslation('readerDesk');
@@ -117,6 +130,28 @@ export function ReaderTextScreen({
 
   // Each tap cuts the last word off rather than queueing behind it (the speech module does that).
   const speakWord = useCallback((word: string) => void speak(word, language), [language]);
+
+  const player = usePageListen({
+    pager,
+    language,
+    enabled: !!listen && !gate,
+    signedIn: listen?.signedIn ?? false,
+    pro: listen?.pro ?? false,
+  });
+  // The paragraph being read stays in view: scrolled to only when it is not already well inside.
+  useEffect(() => {
+    if (player.active === null) return;
+    const box = scroller.current;
+    const el = box?.querySelector<HTMLElement>(`[data-paragraph="${player.active}"]`);
+    if (!box || !el) return;
+    const view = box.getBoundingClientRect();
+    const here = el.getBoundingClientRect();
+    if (here.top >= view.top + 48 && here.bottom <= view.bottom - 48) return;
+    el.scrollIntoView?.({
+      block: here.height > view.height * 0.6 ? 'start' : 'center',
+      behavior: 'smooth',
+    });
+  }, [player.active]);
 
   const card = (
     <div className="rounded-xl border border-border bg-card p-6 sm:p-8 lg:p-10">
@@ -166,6 +201,7 @@ export function ReaderTextScreen({
             scale={scale}
             onSpeakWord={tapToSpeak ? speakWord : undefined}
             speakLabel={speakLabel}
+            activeParagraph={listen ? player.active : undefined}
           />
           {pager.truncated && (
             <p className="mt-6 border-t border-border pt-4 text-xs text-muted-foreground">
@@ -173,6 +209,9 @@ export function ReaderTextScreen({
             </p>
           )}
           {pageBelow}
+          {listen && player.invite ? (
+            <div className="mt-8">{listen.invite(player.invite, player.dismissInvite)}</div>
+          ) : null}
         </>
       )}
 
@@ -218,6 +257,7 @@ export function ReaderTextScreen({
         onToggleCheatsheet={
           cheatsheetSupported ? () => setCheatsheetOpen((open) => !open) : undefined
         }
+        listen={listen ? <ListenControls listen={player} /> : undefined}
       >
         <ReaderDeckButton
           pageText={pager.text}

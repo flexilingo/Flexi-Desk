@@ -29,7 +29,15 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
+// The voice itself is not under test here: every piece "runs to its end" at once.
+vi.mock('@/lib/speech', async (original) => ({
+  ...(await original<typeof import('@/lib/speech')>()),
+  speakThrough: vi.fn(async () => 'ended'),
+}));
+
+import { fireEvent, waitFor } from '@testing-library/react';
 import { useAuthStore } from '@/stores/authStore';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { BookPage } from '@/pages/reader/library/BookPage';
 import { resetSeriesSupport } from '@/pages/reader/library/library-capability';
 
@@ -168,5 +176,27 @@ describe('a library episode, laid out like the website', () => {
     expect(await screen.findByText(/series\.orderNote\{/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'series.orderNoteLink' })).toHaveAttribute('href', '/reader/book/e1');
     expect(screen.getByText('public.fitFree{}')).toBeInTheDocument();
+  });
+
+  it('Listen reads page 1 for a free reader, then offers Pro where the reading stopped', async () => {
+    useAuthStore.setState({ session: { user: { id: 'u' } } as never, isLoading: false });
+    useSubscriptionStore.setState({ subscription: { tier: 'free' } as never, hasResolved: true, isLoading: false });
+    open(1);
+    // Offered once the page is on screen.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.start' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'listen.start' }));
+    expect(await screen.findByText('listen.proTitle')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'listen.proCta' })).toHaveAttribute('href', '/subscription');
+    // The paragraph speakers are still there, free.
+    expect(screen.getAllByRole('button', { name: 'book.readAloud' }).length).toBeGreaterThan(0);
+  });
+
+  it('Listen asks a signed-out reader to sign in first', async () => {
+    open(1);
+    // Offered once the page is on screen.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'listen.start' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'listen.start' }));
+    expect(await screen.findByText('listen.signInTitle')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /listen\.signInCta/ })).toBeInTheDocument();
   });
 });

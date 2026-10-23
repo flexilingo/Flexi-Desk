@@ -16,13 +16,16 @@ import {
   BookOpen,
   CheckCircle2,
   Clock,
+  Crown,
   FileText,
+  Headphones,
   Layers,
   Lock,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { isPaidTier, useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useAuthStore } from '@/stores/authStore';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import {
@@ -39,6 +42,7 @@ import { SignInDialog } from '@/components/auth/SignInDialog';
 import { errorCodeOf, useReaderErrorText } from '../lib/use-error-text';
 import { ReaderFrame } from '../text/ReaderFrame';
 import { ReaderTextScreen } from '../text/ReaderTextScreen';
+import type { ListenInvite } from '../text/usePageListen';
 import { useReaderPager } from '../text/useReaderPager';
 import { bookReadPath, coverFor, languageName, readingMinutes, seriesReadPath } from './format';
 import { BookCover, LevelBadge } from './BookCover';
@@ -104,8 +108,18 @@ export function BookPage() {
   const signedIn = !!session;
 
   const [detail, setDetail] = useState<LibraryBookDetail | null>(null);
-  const [signInOpen, setSignInOpen] = useState(false);
+  // What the sign-in was asked for: reading on past the gate, or listening on.
+  const [signInFor, setSignInFor] = useState<'gate' | 'listen' | null>(null);
   const withSeries = useSyncExternalStore(subscribeSeriesSupport, seriesSupported);
+  // Listening on, page after page, is Pro (a paid plan or a trial) — the app's own plan state.
+  const subscription = useSubscriptionStore((s) => s.subscription);
+  const subResolved = useSubscriptionStore((s) => s.hasResolved);
+  const subLoading = useSubscriptionStore((s) => s.isLoading);
+  const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
+  useEffect(() => {
+    if (signedIn && !subResolved && !subLoading) void fetchSubscription();
+  }, [signedIn, subResolved, subLoading, fetchSubscription]);
+  const pro = signedIn && isPaidTier(subscription?.tier);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [bookmark, setBookmark] = useState<{ ready: boolean; last?: number; onShelf: boolean }>({
     ready: false,
@@ -652,6 +666,45 @@ export function BookPage() {
     </div>
   );
 
+  // Where «Listen» stopped at the end of a page: an account first, then Pro. The speaker after
+  // each paragraph stays free either way.
+  const listenInvite = (kind: ListenInvite, dismiss: () => void) => (
+    <div className="relative rounded-xl border border-primary/30 bg-primary/[0.08] p-5">
+      <button
+        type="button"
+        onClick={dismiss}
+        className="absolute end-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label={tl('series.close')}
+      >
+        <X className="h-4 w-4" />
+      </button>
+      <p className="flex items-center gap-2 pe-8 text-base font-bold text-foreground">
+        {kind === 'pro' ? (
+          <Crown className="h-4 w-4 shrink-0 text-accent" />
+        ) : (
+          <Headphones className="h-4 w-4 shrink-0 text-primary" />
+        )}
+        {kind === 'pro' ? tl('listen.proTitle') : tl('listen.signInTitle')}
+      </p>
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+        {kind === 'pro' ? tl('listen.proBody') : tl('listen.signInBody')}
+      </p>
+      {kind === 'pro' ? (
+        <Button asChild variant="accent" className="mt-4">
+          <Link to="/subscription">
+            <Crown className="h-4 w-4" />
+            {tl('listen.proCta')}
+          </Link>
+        </Button>
+      ) : (
+        <Button variant="accent" className="mt-4" onClick={() => setSignInFor('listen')}>
+          {tl('listen.signInCta')}
+          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <ReaderFrame>
       <ReaderTextScreen
@@ -662,6 +715,7 @@ export function BookPage() {
         pager={pager}
         errorText={errorText(pager.error)}
         around={around}
+        listen={{ signedIn, pro, invite: listenInvite }}
         gate={
           gated ? (
             <div className="rounded-xl border border-primary/30 bg-primary/[0.08] p-5">
@@ -672,15 +726,10 @@ export function BookPage() {
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                 {tl('series.gateBody')}
               </p>
-              <Button variant="accent" className="mt-4" onClick={() => setSignInOpen(true)}>
+              <Button variant="accent" className="mt-4" onClick={() => setSignInFor('gate')}>
                 {tl('series.gateCta')}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Button>
-              <SignInDialog
-                open={signInOpen}
-                onOpenChange={setSignInOpen}
-                description={tl('series.gateBody')}
-              />
             </div>
           ) : undefined
         }
@@ -723,6 +772,11 @@ export function BookPage() {
             </Button>
           )
         }
+      />
+      <SignInDialog
+        open={signInFor !== null}
+        onOpenChange={(open) => !open && setSignInFor(null)}
+        description={signInFor === 'listen' ? tl('listen.signInBody') : tl('series.gateBody')}
       />
     </ReaderFrame>
   );

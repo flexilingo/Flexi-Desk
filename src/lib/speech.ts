@@ -431,3 +431,37 @@ export function speak(text: string, lang?: string, opts: SpeakOptions = {}): Pro
       if (ticket === mine) setState(IDLE);
     });
 }
+
+/** How one `speakThrough` ended. */
+export type SpeakOutcome = 'ended' | 'cut' | 'unavailable';
+
+/**
+ * `speak`, for a reader that chains pieces: says whether the piece ran to its end, was cut
+ * off (by `stop` or by anything else speaking — one voice at a time), or never made a sound
+ * (no engine could say it). A chain goes on only after 'ended'.
+ */
+export async function speakThrough(
+  text: string,
+  lang?: string,
+  opts: SpeakOptions = {},
+): Promise<SpeakOutcome> {
+  const clean = text?.trim();
+  if (!clean) return 'ended';
+  const plan = opts.engines ?? planEngines(currentEnv(lang), getSpeechPreference());
+  if (plan.length === 0) return 'unavailable';
+  const done = speak(clean, lang, { ...opts, engines: plan });
+  // `speak` has taken its ticket synchronously: any later speak or stop moves it on.
+  const mine = ticket;
+  // The system voice reports itself speaking before `speak` even returns.
+  let sounded = state.speaking;
+  const off = subscribeSpeech(() => {
+    if (ticket === mine && state.speaking) sounded = true;
+  });
+  try {
+    await done;
+  } finally {
+    off();
+  }
+  if (ticket !== mine) return 'cut';
+  return sounded ? 'ended' : 'unavailable';
+}

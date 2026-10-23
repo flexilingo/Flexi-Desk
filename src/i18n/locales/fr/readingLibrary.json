@@ -131,5 +131,18 @@
     "showing": "Affichage de {{start}} à {{end}} sur {{total}}",
     "previous": "Précédent",
     "next": "Suivant"
+  },
+  "listen": {
+    "start": "Écouter",
+    "startTitle": "Lire la page à voix haute, paragraphe par paragraphe",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "stop": "Arrêter",
+    "proTitle": "Écoutez tout l’épisode avec Pro",
+    "proBody": "Pro lit chaque page à voix haute, l’une après l’autre, pendant que vous suivez le texte. Le haut-parleur après chaque paragraphe reste gratuit.",
+    "proCta": "Découvrir Pro",
+    "signInTitle": "Connectez-vous pour continuer l’écoute",
+    "signInBody": "La lecture à voix haute de toutes les pages, l’une après l’autre, fait partie de Pro. Connectez-vous d’abord — le haut-parleur après chaque paragraphe reste gratuit.",
+    "signInCta": "Se connecter"
   }
 }

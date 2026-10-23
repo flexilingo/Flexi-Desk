@@ -58,6 +58,7 @@ export function TappableText({
   markLookedUp = false,
   onSpeakWord,
   paragraphSpeaker,
+  activeParagraph,
 }: {
   text: string;
   className?: string;
@@ -66,6 +67,11 @@ export function TappableText({
   language?: string;
   /** A speaker after every paragraph that reads it aloud (library books). Off when absent. */
   paragraphSpeaker?: { label: string };
+  /**
+   * The paragraph the «Listen» player is reading, softly highlighted (null: none right now).
+   * Absent where there is no player — the paragraphs then carry no highlight styles at all.
+   */
+  activeParagraph?: number | null;
   /**
    * Resting on a word puts a speaker under it. Off by default: it belongs to
    * reading a page, not to every place a word happens to be tappable.
@@ -295,10 +301,20 @@ export function TappableText({
       {paragraphs.map((sentences, pi) => (
         <p
           key={pi}
+          // Found by the player to keep the paragraph it reads in view.
+          data-paragraph={pi}
           // A bullet paragraph is hung off its marker rather than wrapped under
-          // it, so a list reads as a list instead of as justified prose.
+          // it, so a list reads as a list instead of as justified prose. The
+          // player's highlight is a tint with a ring of the same tint around it,
+          // so it reaches past the text without moving a single line.
           className={`${className ?? ''} ${
             sentences[0]?.sentence.startsWith('• ') ? 'ps-6 -indent-4' : ''
+          } ${
+            activeParagraph === undefined
+              ? ''
+              : `rounded-sm transition-[background-color,box-shadow] duration-300 ${
+                  activeParagraph === pi ? 'bg-primary/[0.07] ring-[6px] ring-primary/[0.07]' : ''
+                }`
           }`.trim()}
         >
           {sentences.map(({ sentence, tokens }, si) => (

@@ -131,5 +131,18 @@
     "showing": "Showing {{start}} to {{end}} of {{total}}",
     "previous": "Previous",
     "next": "Next"
+  },
+  "listen": {
+    "start": "Listen",
+    "startTitle": "Read the page aloud, paragraph by paragraph",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop",
+    "proTitle": "Listen to the whole episode with Pro",
+    "proBody": "Pro reads every page aloud, one after another, while you follow the text. The speaker after each paragraph stays free.",
+    "proCta": "See Pro",
+    "signInTitle": "Sign in to keep listening",
+    "signInBody": "Reading every page aloud, one after another, is part of Pro. Sign in first — the speaker after each paragraph stays free.",
+    "signInCta": "Sign in"
   }
 }

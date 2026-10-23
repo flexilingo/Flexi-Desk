@@ -124,5 +124,18 @@
     "showing": "Hiển thị {{start}} đến {{end}} trong số {{total}}",
     "previous": "Trước",
     "next": "Tiếp"
+  },
+  "listen": {
+    "start": "Nghe",
+    "startTitle": "Đọc to trang này, từng đoạn một",
+    "pause": "Tạm dừng",
+    "resume": "Tiếp tục",
+    "stop": "Dừng",
+    "proTitle": "Nghe trọn tập với Pro",
+    "proBody": "Pro đọc to từng trang, hết trang này sang trang khác, trong khi bạn theo dõi văn bản. Nút loa sau mỗi đoạn vẫn miễn phí.",
+    "proCta": "Xem Pro",
+    "signInTitle": "Đăng nhập để nghe tiếp",
+    "signInBody": "Đọc to tất cả các trang, lần lượt từng trang, là tính năng Pro. Hãy đăng nhập trước — nút loa sau mỗi đoạn vẫn miễn phí.",
+    "signInCta": "Đăng nhập"
   }
 }

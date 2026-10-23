@@ -131,5 +131,18 @@
     "showing": "{{start}} bis {{end}} von {{total}}",
     "previous": "Zurück",
     "next": "Weiter"
+  },
+  "listen": {
+    "start": "Anhören",
+    "startTitle": "Die Seite Absatz für Absatz vorlesen",
+    "pause": "Pause",
+    "resume": "Fortsetzen",
+    "stop": "Stopp",
+    "proTitle": "Die ganze Folge mit Pro anhören",
+    "proBody": "Pro liest jede Seite vor, eine nach der anderen, während du im Text mitliest. Der Lautsprecher nach jedem Absatz bleibt kostenlos.",
+    "proCta": "Pro ansehen",
+    "signInTitle": "Melde dich an, um weiterzuhören",
+    "signInBody": "Alle Seiten nacheinander vorlesen zu lassen gehört zu Pro. Melde dich zuerst an — der Lautsprecher nach jedem Absatz bleibt kostenlos.",
+    "signInCta": "Anmelden"
   }
 }

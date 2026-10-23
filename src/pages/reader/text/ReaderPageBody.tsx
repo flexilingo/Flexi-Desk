@@ -14,6 +14,7 @@ export function ReaderPageBody({
   scale,
   onSpeakWord,
   speakLabel,
+  activeParagraph,
 }: {
   text: string;
   language: string;
@@ -22,6 +23,8 @@ export function ReaderPageBody({
   onSpeakWord?: (word: string) => void;
   /** A speaker after every paragraph reads it aloud (library books); off when absent. */
   speakLabel?: string;
+  /** The paragraph the «Listen» player is reading; absent where there is no player. */
+  activeParagraph?: number | null;
 }) {
   return (
     <div
@@ -38,6 +41,7 @@ export function ReaderPageBody({
         markLookedUp
         onSpeakWord={onSpeakWord}
         paragraphSpeaker={speakLabel ? { label: speakLabel } : undefined}
+        activeParagraph={activeParagraph}
       />
     </div>
   );

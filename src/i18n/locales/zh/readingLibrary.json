@@ -124,5 +124,18 @@
     "showing": "显示第 {{start}} 到 {{end}} 项，共 {{total}} 项",
     "previous": "上一页",
     "next": "下一页"
+  },
+  "listen": {
+    "start": "朗读",
+    "startTitle": "逐段朗读本页",
+    "pause": "暂停",
+    "resume": "继续",
+    "stop": "停止",
+    "proTitle": "用 Pro 收听整集",
+    "proBody": "Pro 会一页接一页地朗读全部内容，你可以边听边看文字。每段后面的朗读按钮仍然免费。",
+    "proCta": "了解 Pro",
+    "signInTitle": "登录后继续收听",
+    "signInBody": "一页接一页地朗读全部页面是 Pro 功能。请先登录——每段后面的朗读按钮仍然免费。",
+    "signInCta": "登录"
   }
 }
