@@ -6,6 +6,7 @@ import { SpeakButton } from './SpeakButton';
 import { ParagraphSpeakButton } from './ParagraphSpeakButton';
 import { useLookup } from './lookup-context';
 import { cleanWord, splitParagraphs, splitSentences, tokenize } from './tokenize';
+import { addLookedUp, isLookedUp, loadLookedUp, subscribeLookedUp } from './looked-up-words';
 
 /**
  * How long the cursor must REST on a word before it is offered a voice.
@@ -86,9 +87,10 @@ export function TappableText({
    */
   speakOnHover?: boolean;
   /**
-   * A word that was looked up keeps a dotted underline for as long as its page
-   * is open. The word dialog covers the page, and closing it used to drop the
-   * reader back into a wall of text with no sign of where they had been.
+   * A word the learner has looked up keeps a dotted underline — on this page and on every page
+   * they read after (the account's list when signed in, this machine's otherwise). The word
+   * dialog covers the page, and closing it used to drop the reader back into a wall of text with
+   * no sign of where they had been.
    */
   markLookedUp?: boolean;
   /**
@@ -146,16 +148,37 @@ export function TappableText({
     [text],
   );
 
-  // A new page reuses the same spans with new words in them, so the highlight
-  // and the looked-up marks have to be taken off the DOM by hand — the node
-  // survives, its word does not.
+  // A new page reuses the same spans with new words in them, so the highlight has to be
+  // taken off the DOM by hand — the node survives, its word does not.
   useEffect(() => {
     clearHot();
-    host.current?.querySelectorAll<HTMLElement>('[data-looked-up]').forEach((el) => {
-      el.classList.remove(...LOOKED_UP);
-      delete el.dataset.lookedUp;
-    });
   }, [text, clearHot]);
+
+  // Every word the learner has looked up in this language keeps its mark, on this page and
+  // every page after: set straight on the spans (the node survives a page turn, its word does
+  // not, so each page is marked afresh), and again whenever the list grows.
+  useEffect(() => {
+    const block = host.current;
+    if (!block) return;
+    const remark = () => {
+      block.querySelectorAll<HTMLElement>('[data-flexi-word]').forEach((el) => {
+        const marked = el.dataset.lookedUp !== undefined;
+        const should =
+          markLookedUp && !!language && isLookedUp(language, el.dataset.flexiWord ?? '');
+        if (should === marked) return;
+        if (should) {
+          el.classList.add(...LOOKED_UP);
+          el.dataset.lookedUp = '';
+        } else {
+          el.classList.remove(...LOOKED_UP);
+          delete el.dataset.lookedUp;
+        }
+      });
+    };
+    if (markLookedUp && language) loadLookedUp(language);
+    remark();
+    return markLookedUp ? subscribeLookedUp(remark) : undefined;
+  }, [text, markLookedUp, language, lookup]);
 
   /** Open a word, marking it on the page first when the host asked for that. */
   const open = (el: HTMLElement, word: string, sentence: string) => {
@@ -181,6 +204,8 @@ export function TappableText({
     if (markLookedUp) {
       el.classList.add(...LOOKED_UP);
       el.dataset.lookedUp = '';
+      // Kept, and marked wherever else this word is on the page (or will be).
+      if (language) addLookedUp(language, word);
     }
     lookup?.(word, sentence);
   };

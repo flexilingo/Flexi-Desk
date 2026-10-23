@@ -42,6 +42,7 @@ import { directionOf, sourceLanguages, targetLanguages } from './languages';
 import { readLastTab, rememberTab } from './lastTab';
 import { rememberDeck, useLastDeck } from './lastDeck';
 import { bumpSeen } from './lookupCounts';
+import { addLookedUp } from '@/components/lookup/looked-up-words';
 import { addErrorCode, useAddWordToDeck } from './useAddWordToDeck';
 import { pronounce, usePronunciationSettings, voiceFor } from './pronounce';
 import { PronounceButton } from './PronounceButton';
@@ -192,6 +193,8 @@ function WordDialogInner({
       .then((details) => {
         lookupCache.set(lookupKey, details);
         void logLookup({ word, source: sourceLanguage, details, context: sourceContext });
+        // Marked as looked up on every page in this language from now on.
+        addLookedUp(sourceLanguage, word);
         if (!live) return;
         setSeen({ word, count: bumpSeen(sourceLanguage, word) });
         setLookup({ key: lookupKey, attempt, details, error: null });
