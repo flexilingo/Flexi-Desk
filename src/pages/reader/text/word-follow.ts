@@ -104,8 +104,13 @@ export function spokenWordIndex(
 export const SPOKEN_WORD_CLASSES = ['bg-primary-light/30', 'text-primary'];
 
 /**
- * What marks the sentence being said — only when the voice cannot say where its words are (the
- * system voice). With a word marked, a tinted sentence around it would be a highlight inside a
- * highlight.
+ * What marks the sentence being said when the voice cannot say where its words are (the system
+ * voice): the sentence is the only mark, so it is a clear tint.
  */
 export const SPOKEN_SENTENCE_CLASSES = ['bg-primary/[0.11]'];
+
+/**
+ * Behind a marked word, the sentence keeps only a breath of the same colour: it places the
+ * sentence without becoming a second highlight around the word.
+ */
+export const SPOKEN_SENTENCE_FAINT_CLASSES = ['bg-primary/[0.05]'];

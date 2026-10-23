@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { getSpeechProgress } from '@/lib/speech';
-import { SPOKEN_SENTENCE_CLASSES, SPOKEN_WORD_CLASSES, spokenWordIndex } from '../text/word-follow';
+import {
+  SPOKEN_SENTENCE_CLASSES,
+  SPOKEN_SENTENCE_FAINT_CLASSES,
+  SPOKEN_WORD_CLASSES,
+  spokenWordIndex,
+} from '../text/word-follow';
 import { useListenStore } from './listenStore';
 
 /** About twelve times a second: smooth to the eye, nothing to the machine. */
@@ -20,8 +25,9 @@ const PLACES: Array<[host: string, word: string]> = [
 
 /**
  * While the bar plays, marks the word being said — a class on the word's own span, added and
- * taken away straight on the page: no re-render per tick, nothing moves. A voice that cannot say
- * where its words are (the system voice) marks the sentence instead.
+ * taken away straight on the page: no re-render per tick, nothing moves. Its sentence keeps only a
+ * faint wash; a voice that cannot say where its words are (the system voice) tints the sentence
+ * clearly instead.
  *
  * Paused, the last word stays marked (the place the reader will come back to); between two
  * sentences, while the next one is being fetched, the last mark waits for the next. Closing the
@@ -30,6 +36,7 @@ const PLACES: Array<[host: string, word: string]> = [
 export function useWordFollow(open: boolean, playing: boolean) {
   const words = useRef<Element[]>([]);
   const sentence = useRef<Element | null>(null);
+  const sentenceFaint = useRef(false);
 
   const markWords = (next: Element[]) => {
     for (const el of words.current) {
@@ -40,11 +47,12 @@ export function useWordFollow(open: boolean, playing: boolean) {
     }
     words.current = next;
   };
-  const markSentence = (next: Element | null) => {
-    if (sentence.current === next) return;
-    sentence.current?.classList.remove(...SPOKEN_SENTENCE_CLASSES);
-    next?.classList.add(...SPOKEN_SENTENCE_CLASSES);
+  const markSentence = (next: Element | null, faint = false) => {
+    if (sentence.current === next && sentenceFaint.current === faint) return;
+    sentence.current?.classList.remove(...SPOKEN_SENTENCE_CLASSES, ...SPOKEN_SENTENCE_FAINT_CLASSES);
+    next?.classList.add(...(faint ? SPOKEN_SENTENCE_FAINT_CLASSES : SPOKEN_SENTENCE_CLASSES));
     sentence.current = next;
+    sentenceFaint.current = faint;
   };
   const latest = useRef({ markWords, markSentence });
   latest.current = { markWords, markSentence };
@@ -79,7 +87,7 @@ export function useWordFollow(open: boolean, playing: boolean) {
       }
       const at = spokenWordIndex(current.pieces, s.piece, progress);
       if (at === null) return;
-      setSentence(null);
+      setSentence(document.querySelector(PAGE_SENTENCE), true);
       const next: Element[] = [];
       for (const [host, word] of PLACES) {
         const el = document.querySelector(host)?.querySelectorAll(word)[at];

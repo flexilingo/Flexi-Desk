@@ -140,6 +140,7 @@ describe('the player bar reading a book', () => {
   };
   const WORD = 'bg-primary-light/30';
   const SENTENCE = 'bg-primary/[0.11]';
+  const SENTENCE_FAINT = 'bg-primary/[0.05]';
 
   it('marks the word being said — on the page and in the bar’s line — and moves with the voice', async () => {
     const page = pageSentence();
@@ -154,8 +155,10 @@ describe('the player bar reading a book', () => {
     await vi.waitFor(() => expect(onPage()[2].classList.contains(WORD)).toBe(true));
     expect(screen.getByRole('button', { name: '7' }).classList.contains(WORD)).toBe(true);
     expect(onPage().filter((el) => el.classList.contains(WORD))).toHaveLength(1);
-    // A word is marked, so the sentence carries no tint of its own.
-    expect(page.querySelector('[data-listen-active]')?.classList.contains(SENTENCE)).toBe(false);
+    // A word is marked, so the sentence keeps only a faint wash, not a second highlight.
+    const sentence = page.querySelector('[data-listen-active]')!;
+    expect(sentence.classList.contains(SENTENCE)).toBe(false);
+    expect(sentence.classList.contains(SENTENCE_FAINT)).toBe(true);
 
     voice.progress = { engine: 'device', text: 'Sentence number 7 is here.', charIndex: 21 };
     await vi.waitFor(() => expect(onPage()[4].classList.contains(WORD)).toBe(true));
@@ -170,6 +173,7 @@ describe('the player bar reading a book', () => {
     // Closing the bar leaves no mark behind.
     act(() => useListenStore.getState().close());
     expect(onPage().some((el) => el.classList.contains(WORD))).toBe(false);
+    expect(sentence.classList.contains(SENTENCE_FAINT)).toBe(false);
     page.remove();
   });
 
@@ -180,6 +184,7 @@ describe('the player bar reading a book', () => {
     bar();
     const sentence = page.querySelector('[data-listen-active]')!;
     await vi.waitFor(() => expect(sentence.classList.contains(SENTENCE)).toBe(true));
+    expect(sentence.classList.contains(SENTENCE_FAINT)).toBe(false);
     expect(page.querySelectorAll(`.${CSS.escape(WORD)}`)).toHaveLength(0);
     page.remove();
   });
