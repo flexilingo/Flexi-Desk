@@ -1,42 +1,55 @@
 import { useTranslation } from 'react-i18next';
-import { Headphones, Loader2, Pause, Play, Square } from 'lucide-react';
+import { Headphones, Loader2, Pause, Play } from 'lucide-react';
 import { useSpeechState } from '@/lib/speech';
 import { ReaderToolbarItem } from './ReaderToolbar';
-import type { PageListen } from './usePageListen';
+import type { ReaderListen } from '../listen/useReaderListen';
 
-/** The «Listen» player on the reader's bar: Listen, then Pause / Resume and Stop. */
-export function ListenControls({ listen }: { listen: PageListen }) {
-  const { t } = useTranslation('readingLibrary');
+/**
+ * «Listen» on the reader's bar. It opens the player bar at the foot of the window (the same bar
+ * a podcast uses); while the bar reads this book it is the play / pause switch. Where listening
+ * was left earlier in this book, it offers to continue there.
+ */
+export function ListenControls({ listen }: { listen: ReaderListen }) {
+  const { t, i18n } = useTranslation('readingLibrary');
   const speech = useSpeechState();
+  const num = new Intl.NumberFormat(i18n.language);
 
-  if (listen.status === 'idle') {
+  if (listen.active) {
+    const waiting = listen.status === 'loading' || (listen.status === 'playing' && speech.loading);
     return (
       <ReaderToolbarItem
-        icon={Headphones}
-        label={t('listen.start')}
-        title={t('listen.startTitle')}
-        onClick={listen.start}
-        disabled={!listen.available}
+        icon={waiting ? Loader2 : listen.status === 'playing' ? Pause : Play}
+        busy={waiting}
+        label={t('listen.listening')}
+        title={t('listen.playTitle')}
+        onClick={listen.playPause}
+        active
       />
     );
   }
 
-  // The first piece is still being fetched or chosen: the pause button says so.
-  const waiting = listen.status === 'playing' && speech.loading;
+  if (listen.place) {
+    const place = listen.place;
+    return (
+      <ReaderToolbarItem
+        icon={Headphones}
+        label={t('listen.continue')}
+        title={t('listen.continueTitle', {
+          page: num.format(place.page),
+          n: num.format(place.sentence + 1),
+        })}
+        onClick={listen.continueFromPlace}
+      />
+    );
+  }
+
   return (
-    <>
-      {listen.status === 'playing' ? (
-        <ReaderToolbarItem
-          icon={waiting ? Loader2 : Pause}
-          busy={waiting}
-          label={t('listen.pause')}
-          onClick={listen.pause}
-          active
-        />
-      ) : (
-        <ReaderToolbarItem icon={Play} label={t('listen.resume')} onClick={listen.resume} active />
-      )}
-      <ReaderToolbarItem icon={Square} label={t('listen.stop')} onClick={listen.stop} />
-    </>
+    <ReaderToolbarItem
+      icon={Headphones}
+      label={t('listen.start')}
+      title={t('listen.startTitle')}
+      onClick={() => listen.start(0)}
+      disabled={!listen.ready}
+    />
   );
 }

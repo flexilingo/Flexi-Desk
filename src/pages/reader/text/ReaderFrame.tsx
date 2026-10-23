@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ReaderFrameContext } from './reader-frame-context';
+import { useListenStore } from '../listen/listenStore';
 
 const FULL_SCREEN_KEY = 'reader-full-screen';
 
@@ -30,6 +31,7 @@ export function ReaderFrame({ children }: { children: ReactNode }) {
   const { t } = useTranslation('reader');
   const [fullScreen, setFullScreenState] = useState(readFullScreen);
   const [hasToolbar, setHasToolbar] = useState(false);
+  const listening = useListenStore((s) => !!s.source);
 
   const setFullScreen = useCallback((on: boolean) => {
     setFullScreenState(on);
@@ -51,6 +53,8 @@ export function ReaderFrame({ children }: { children: ReactNode }) {
         className={cn(
           'flex min-h-0 min-w-0 flex-1 flex-col bg-muted',
           fullScreen && 'fixed inset-0 z-40 bg-background',
+          // The player bar stays over a full-screen page; the page ends above it.
+          fullScreen && listening && 'pb-28',
         )}
       >
         {!hasToolbar && (

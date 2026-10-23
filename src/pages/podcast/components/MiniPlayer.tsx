@@ -6,6 +6,8 @@ import { usePodcastStore } from '../stores/podcastStore';
 import { useJobStore } from '@/stores/jobStore';
 import { VideoHost } from '@/pages/videos/player/VideoHost';
 import { BookMiniPlayer } from '@/pages/reader/book/BookMiniPlayer';
+import { ListenMiniPlayer } from '@/pages/reader/listen/ListenMiniPlayer';
+import { useListenStore } from '@/pages/reader/listen/listenStore';
 import { WordDialog } from '@/components/WordDialog';
 import { episodeSourceLang } from '../utils/difficulty';
 import {
@@ -24,10 +26,14 @@ import { MiniSubtitleLine } from './mini/MiniSubtitleLine';
  * The persistent mini player (website: `GlobalMiniPlayer`). A podcast docks a full-width bar under
  * every page, with an opt-in (CC) subtitle line whose words open the word dialog; a catalogue video
  * keeps its picture in a floating box (YouTube needs a visible player); a book track uses the same
- * bar in book mode (line steps, the book's own subtitles, the listen count).
+ * bar in book mode (line steps, the book's own subtitles, the listen count); a library book read
+ * aloud uses it in sentence mode (`ListenMiniPlayer`).
  */
 export function MiniPlayer() {
   const currentEpisode = usePlayerStore((s) => s.currentEpisode);
+  // A library book read aloud is the bar's fourth source; only one source is ever loaded.
+  const listening = useListenStore((s) => !!s.source);
+  if (listening) return <ListenMiniPlayer />;
   if (!currentEpisode) return null;
   if (currentEpisode.youtubeId) return <VideoHost />;
   if (currentEpisode.bookTrack) return <BookMiniPlayer />;

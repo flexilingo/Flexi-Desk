@@ -31,8 +31,8 @@ describe.each(NAMESPACES)('%s namespace', (ns) => {
 
   it('has the website key counts', () => {
     // readingLibrary: 58 + series (19 + 6 progress) + pagination (3) + book.readAloud
-    // + the redesign (fit cards 15 incl. 6 level hints, series tiles/fit 6) + the Listen player (11)
-    expect(en.size).toBe(ns === 'reader' ? 241 : 119);
+    // + the redesign (fit cards 15 incl. 6 level hints, series tiles/fit 6) + the Listen player bar (20)
+    expect(en.size).toBe(ns === 'reader' ? 241 : 128);
   });
 
   it.each(LOCALES.filter((l) => l !== 'en'))('%s has the same keys and placeholders as en', (l) => {

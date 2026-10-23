@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
 import { TEXT_WORD_MARKERS, snapSelectionToWords } from '@/pages/reader/text/snap-selection';
@@ -58,20 +58,28 @@ export function TappableText({
   markLookedUp = false,
   onSpeakWord,
   paragraphSpeaker,
-  activeParagraph,
+  activeSentence,
 }: {
   text: string;
   className?: string;
   wordClassName?: string;
   /** The language the words are IN — what their voice should sound like. */
   language?: string;
-  /** A speaker after every paragraph that reads it aloud (library books). Off when absent. */
-  paragraphSpeaker?: { label: string };
   /**
-   * The paragraph the «Listen» player is reading, softly highlighted (null: none right now).
-   * Absent where there is no player — the paragraphs then carry no highlight styles at all.
+   * A speaker after every paragraph (library books). It reads the paragraph aloud itself, or —
+   * with `onPlay` — starts the player bar from there («play from here»); `playing` is the
+   * paragraph the bar is reading. Off when absent.
    */
-  activeParagraph?: number | null;
+  paragraphSpeaker?: {
+    label: string;
+    onPlay?: (paragraph: number) => void;
+    playing?: number | null;
+  };
+  /**
+   * The sentence the player bar is reading, softly marked (null: none right now). Absent where
+   * there is no player — the sentences then carry no wrapper at all.
+   */
+  activeSentence?: { paragraph: number; sentence: number } | null;
   /**
    * Resting on a word puts a speaker under it. Off by default: it belongs to
    * reading a page, not to every place a word happens to be tappable.
@@ -301,62 +309,59 @@ export function TappableText({
       {paragraphs.map((sentences, pi) => (
         <p
           key={pi}
-          // Found by the player to keep the paragraph it reads in view.
           data-paragraph={pi}
           // A bullet paragraph is hung off its marker rather than wrapped under
-          // it, so a list reads as a list instead of as justified prose. The
-          // player's highlight is a tint with a ring of the same tint around it,
-          // so it reaches past the text without moving a single line.
+          // it, so a list reads as a list instead of as justified prose.
           className={`${className ?? ''} ${
             sentences[0]?.sentence.startsWith('• ') ? 'ps-6 -indent-4' : ''
-          } ${
-            activeParagraph === undefined
-              ? ''
-              : `rounded-sm transition-[background-color,box-shadow] duration-300 ${
-                  activeParagraph === pi ? 'bg-primary/[0.07] ring-[6px] ring-primary/[0.07]' : ''
-                }`
           }`.trim()}
         >
           {sentences.map(({ sentence, tokens }, si) => (
             <Fragment key={si}>
               {si > 0 && ' '}
-              {tokens.map((token, ti) =>
-                token.word ? (
-                  <span
-                    key={ti}
-                    role="button"
-                    tabIndex={0}
-                    // Read by the selection snapper and the hover handler, which
-                    // work off the DOM rather than off React state — a page is
-                    // hundreds of words and none of them may re-render on a
-                    // cursor moving across the line.
-                    data-flexi-word={cleanWord(token.text)}
-                    // The SENTENCE is the context, never the page: a 2,000-char
-                    // prompt translates worse and costs more than the one
-                    // sentence the word actually sits in.
-                    onClick={(e) => open(e.currentTarget, cleanWord(token.text), sentence)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        open(e.currentTarget, cleanWord(token.text), sentence);
+              <SentenceMark
+                on={activeSentence !== undefined}
+                id={`${pi}:${si}`}
+                active={activeSentence?.paragraph === pi && activeSentence.sentence === si}
+              >
+                {tokens.map((token, ti) =>
+                  token.word ? (
+                    <span
+                      key={ti}
+                      role="button"
+                      tabIndex={0}
+                      // Read by the selection snapper and the hover handler, which
+                      // work off the DOM rather than off React state — a page is
+                      // hundreds of words and none of them may re-render on a
+                      // cursor moving across the line.
+                      data-flexi-word={cleanWord(token.text)}
+                      // The SENTENCE is the context, never the page: a 2,000-char
+                      // prompt translates worse and costs more than the one
+                      // sentence the word actually sits in.
+                      onClick={(e) => open(e.currentTarget, cleanWord(token.text), sentence)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          open(e.currentTarget, cleanWord(token.text), sentence);
+                        }
+                      }}
+                      // The hover tint is what says a word can be tapped — without
+                      // it the page reads as plain text. Same tint the dwell
+                      // highlight uses, so the two never disagree. Only where there
+                      // is a real hover, and focus only from the keyboard: on a
+                      // phone a tap left both stuck on the word until the next tap.
+                      className={
+                        wordClassName ??
+                        'cursor-pointer rounded-[3px] transition-colors [@media(hover:hover)]:hover:bg-accent/15 focus-visible:bg-accent/20 focus:outline-none'
                       }
-                    }}
-                    // The hover tint is what says a word can be tapped — without
-                    // it the page reads as plain text. Same tint the dwell
-                    // highlight uses, so the two never disagree. Only where there
-                    // is a real hover, and focus only from the keyboard: on a
-                    // phone a tap left both stuck on the word until the next tap.
-                    className={
-                      wordClassName ??
-                      'cursor-pointer rounded-[3px] transition-colors [@media(hover:hover)]:hover:bg-accent/15 focus-visible:bg-accent/20 focus:outline-none'
-                    }
-                  >
-                    {token.text}
-                  </span>
-                ) : (
-                  <Fragment key={ti}>{token.text}</Fragment>
-                ),
-              )}
+                    >
+                      {token.text}
+                    </span>
+                  ) : (
+                    <Fragment key={ti}>{token.text}</Fragment>
+                  ),
+                )}
+              </SentenceMark>
             </Fragment>
           ))}
           {paragraphSpeaker && sentences.length > 0 ? (
@@ -364,6 +369,8 @@ export function TappableText({
               sentences={sentences.map((x) => x.sentence)}
               lang={language}
               label={paragraphSpeaker.label}
+              onPlay={paragraphSpeaker.onPlay ? () => paragraphSpeaker.onPlay?.(pi) : undefined}
+              playing={paragraphSpeaker.playing === pi}
             />
           ) : null}
         </p>
@@ -404,5 +411,34 @@ export function TappableText({
         </span>
       )}
     </div>
+  );
+}
+
+/**
+ * One sentence of the page, for the player bar: found by `data-sentence` to keep it in view, and
+ * softly tinted while it is read — a background on the words themselves, line by line, so
+ * nothing moves. Where there is no player it adds nothing to the page.
+ */
+function SentenceMark({
+  on,
+  id,
+  active,
+  children,
+}: {
+  on: boolean;
+  id: string;
+  active: boolean;
+  children: ReactNode;
+}) {
+  if (!on) return <>{children}</>;
+  return (
+    <span
+      data-sentence={id}
+      className={`rounded-[3px] transition-colors duration-300 box-decoration-clone ${
+        active ? 'bg-primary/[0.11]' : ''
+      }`}
+    >
+      {children}
+    </span>
   );
 }

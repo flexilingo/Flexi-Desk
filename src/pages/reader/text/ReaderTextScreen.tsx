@@ -15,7 +15,8 @@ import { ReaderPageBody } from './ReaderPageBody';
 import { ReaderPager } from './ReaderPager';
 import { usePersistedPreference } from './persisted-preference';
 import { ListenControls } from './ListenControls';
-import { usePageListen, type ListenInvite } from './usePageListen';
+import { useReaderListen } from '../listen/useReaderListen';
+import type { ListenInvite, ListenSource } from '../listen/listenStore';
 import type { ReaderPagerState } from './useReaderPager';
 import {
   TEXT_SCALE_DEFAULT,
@@ -88,13 +89,14 @@ export function ReaderTextScreen({
    */
   around?: (card: ReactNode) => ReactNode;
   /**
-   * The «Listen» player (library books): reads the page aloud paragraph by paragraph and,
-   * for Pro, page after page. Off when absent. `invite` draws what the reader is offered
-   * where it stopped for an account or for Pro.
+   * The «Listen» player (library books): the app's player bar reading the book sentence by
+   * sentence — page after page for Pro. `source` is the book; `playLabel` names a paragraph's
+   * «play from here»; `invite` draws what the reader is offered where reading stopped for an
+   * account or for Pro. Off when absent.
    */
   listen?: {
-    signedIn: boolean;
-    pro: boolean;
+    source: ListenSource;
+    playLabel: string;
     invite: (kind: ListenInvite, dismiss: () => void) => ReactNode;
   };
 }) {
@@ -131,18 +133,19 @@ export function ReaderTextScreen({
   // Each tap cuts the last word off rather than queueing behind it (the speech module does that).
   const speakWord = useCallback((word: string) => void speak(word, language), [language]);
 
-  const player = usePageListen({
+  const player = useReaderListen({
+    source: listen?.source ?? null,
     pager,
-    language,
     enabled: !!listen && !gate,
-    signedIn: listen?.signedIn ?? false,
-    pro: listen?.pro ?? false,
   });
-  // The paragraph being read stays in view: scrolled to only when it is not already well inside.
+  // The sentence being read stays in view: scrolled to only when it is not already well inside.
+  const marked = player.activeSentence
+    ? `${player.activeSentence.paragraph}:${player.activeSentence.sentence}`
+    : null;
   useEffect(() => {
-    if (player.active === null) return;
+    if (marked === null) return;
     const box = scroller.current;
-    const el = box?.querySelector<HTMLElement>(`[data-paragraph="${player.active}"]`);
+    const el = box?.querySelector<HTMLElement>(`[data-sentence="${marked}"]`);
     if (!box || !el) return;
     const view = box.getBoundingClientRect();
     const here = el.getBoundingClientRect();
@@ -151,7 +154,7 @@ export function ReaderTextScreen({
       block: here.height > view.height * 0.6 ? 'start' : 'center',
       behavior: 'smooth',
     });
-  }, [player.active]);
+  }, [marked]);
 
   const card = (
     <div className="rounded-xl border border-border bg-card p-6 sm:p-8 lg:p-10">
@@ -201,7 +204,16 @@ export function ReaderTextScreen({
             scale={scale}
             onSpeakWord={tapToSpeak ? speakWord : undefined}
             speakLabel={speakLabel}
-            activeParagraph={listen ? player.active : undefined}
+            listen={
+              listen
+                ? {
+                    activeSentence: player.activeSentence,
+                    activeParagraph: player.activeParagraph,
+                    playFrom: player.playFromParagraph,
+                    playLabel: listen.playLabel,
+                  }
+                : undefined
+            }
           />
           {pager.truncated && (
             <p className="mt-6 border-t border-border pt-4 text-xs text-muted-foreground">

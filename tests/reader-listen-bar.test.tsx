@@ -1,0 +1,127 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import type { SpeakOutcome } from '@/lib/speech';
+
+const voice = vi.hoisted(() => ({ said: [] as string[] }));
+vi.mock('@/lib/speech', () => ({
+  speakThrough: (text: string) => {
+    voice.said.push(text);
+    return new Promise<SpeakOutcome>(() => {});
+  },
+  stop: () => {},
+  prefetchSpeech: () => {},
+  adjustSpeech: () => {},
+  speak: async () => {},
+  getSpeechState: () => ({ speaking: false, loading: false, text: null, lang: null }),
+  useSpeechState: () => ({ speaking: false, loading: false, text: null, lang: null }),
+}));
+vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn(async () => null), convertFileSrc: (p: string) => p }));
+vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => () => {}) }));
+vi.mock('@/components/WordDialog', () => ({ WordDialog: () => null }));
+vi.mock('@/components/auth/SignInDialog', () => ({ SignInDialog: () => null }));
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, o?: Record<string, unknown>) => (o ? `${key}${JSON.stringify(o)}` : key),
+    i18n: { language: 'en', exists: () => true },
+  }),
+  initReactI18next: { type: '3rdParty', init: () => {} },
+}));
+
+import { ListenMiniPlayer } from '@/pages/reader/listen/ListenMiniPlayer';
+import { useListenStore } from '@/pages/reader/listen/listenStore';
+import { pageSentences } from '@/pages/reader/text/listen-sequence';
+
+const TEXT = Array.from({ length: 42 }, (_, i) => `Sentence number ${i + 1} is here.`).join(' ');
+
+beforeEach(() => {
+  voice.said.length = 0;
+  useListenStore.setState({
+    source: {
+      bookId: 'b1',
+      title: 'The Lesson Plans',
+      subtitle: 'The Tuesday Class · Season 2 · Episode 3',
+      language: 'en',
+      coverPath: null,
+      requiresLogin: false,
+    },
+    page: 1,
+    pageCount: 11,
+    hasNext: true,
+    sentences: pageSentences(TEXT),
+    index: 6,
+    status: 'paused',
+    rate: 1,
+    repeat: false,
+    invite: null,
+    problem: null,
+  });
+});
+afterEach(() => useListenStore.getState().close());
+
+const bar = () =>
+  render(
+    <MemoryRouter>
+      <ListenMiniPlayer />
+    </MemoryRouter>,
+  );
+
+describe('the player bar reading a book', () => {
+  it('shows the book, where it is and the sentence being read', () => {
+    bar();
+    expect(screen.getByText('The Lesson Plans')).toBeInTheDocument();
+    expect(
+      screen.getByText('listen.position{"n":"7","total":"42","page":"1","pages":"11"}'),
+    ).toBeInTheDocument();
+    // The sentence above the bar, its words each a button for the word dialog.
+    expect(screen.getByRole('button', { name: '7' })).toBeInTheDocument();
+    expect(screen.getByTitle('listen.shortcuts')).toBeInTheDocument();
+  });
+
+  it('previous / next step a sentence; speed and repeat are switches', () => {
+    bar();
+    fireEvent.click(screen.getByRole('button', { name: 'listen.nextTitle' }));
+    expect(useListenStore.getState().index).toBe(7);
+    expect(voice.said.at(-1)).toBe('Sentence number 8 is here.');
+    fireEvent.click(screen.getByRole('button', { name: 'listen.prevTitle' }));
+    expect(useListenStore.getState().index).toBe(6);
+
+    fireEvent.click(screen.getByRole('button', { name: /listen\.speed/ }));
+    expect(useListenStore.getState().rate).toBe(1.25);
+    const repeat = screen.getByRole('button', { name: 'listen.repeat' });
+    fireEvent.click(repeat);
+    expect(useListenStore.getState().repeat).toBe(true);
+    expect(repeat).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('keys: Space plays, → and ← step, R repeats — not while typing', () => {
+    bar();
+    act(() => {
+      fireEvent.keyDown(window, { key: ' ' });
+    });
+    expect(useListenStore.getState().status).toBe('playing');
+    expect(voice.said.at(-1)).toBe('Sentence number 7 is here.');
+    act(() => {
+      fireEvent.keyDown(window, { key: 'ArrowRight' });
+    });
+    expect(useListenStore.getState().index).toBe(7);
+    act(() => {
+      fireEvent.keyDown(window, { key: 'r' });
+    });
+    expect(useListenStore.getState().repeat).toBe(true);
+
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    act(() => {
+      fireEvent.keyDown(input, { key: 'ArrowRight' });
+    });
+    expect(useListenStore.getState().index).toBe(7);
+    input.remove();
+  });
+
+  it('close takes the book out of the bar', () => {
+    bar();
+    fireEvent.click(screen.getByRole('button', { name: 'np.closePlayer' }));
+    expect(useListenStore.getState().source).toBeNull();
+  });
+});

@@ -1,4 +1,4 @@
-import { Loader2, Square, Volume2 } from 'lucide-react';
+import { AudioLines, Loader2, Square, Volume2 } from 'lucide-react';
 import { getSpeechState, speak, stop, useSpeechState } from '@/lib/speech';
 
 /** The cloud voice refuses more than 500 characters; leave headroom. */
@@ -40,8 +40,43 @@ let chain = 0;
 /**
  * The speaker at the end of a paragraph: reads the whole paragraph aloud with the app's
  * voice stack, piece by piece, and stops when tapped again or when anything else speaks.
+ *
+ * With `onPlay` it is «play from here» instead: the player bar starts at this paragraph's first
+ * sentence, and the speaker shows when the bar is reading this paragraph (`playing`).
  */
 export function ParagraphSpeakButton({
+  sentences,
+  lang,
+  label,
+  onPlay,
+  playing = false,
+}: {
+  sentences: string[];
+  lang?: string;
+  label: string;
+  onPlay?: () => void;
+  playing?: boolean;
+}) {
+  if (onPlay) {
+    return (
+      <button
+        type="button"
+        onClick={onPlay}
+        aria-label={label}
+        title={label}
+        className={`ms-1.5 inline-flex h-6 w-6 translate-y-[-1px] items-center justify-center rounded-full align-middle transition-colors hover:bg-success/15 ${
+          playing ? 'text-accent' : 'text-success'
+        }`}
+      >
+        {playing ? <AudioLines className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+      </button>
+    );
+  }
+  return <SpeakParagraph sentences={sentences} lang={lang} label={label} />;
+}
+
+/** The paragraph read by the speaker itself (where there is no player bar). */
+function SpeakParagraph({
   sentences,
   lang,
   label,
@@ -61,7 +96,8 @@ export function ParagraphSpeakButton({
       if (chain !== id) return;
       await speak(piece, lang);
       // Something else started speaking (or stop was pressed): this chain is over.
-      if (chain !== id || (getSpeechState().text !== null && getSpeechState().text !== piece)) return;
+      if (chain !== id || (getSpeechState().text !== null && getSpeechState().text !== piece))
+        return;
     }
   };
 

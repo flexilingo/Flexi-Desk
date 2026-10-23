@@ -28,7 +28,7 @@ function formatTime(s: number): string {
 
 export const MINI_ICON_BUTTON =
   'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40';
-const ICON_ACTIVE =
+export const MINI_ICON_ACTIVE =
   'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary-light/40 bg-primary-light/15 text-primary transition-colors';
 const PLAY_BUTTON =
   'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-colors hover:bg-accent/90';
@@ -38,6 +38,9 @@ const PLAY_BUTTON =
  * under every page, a seek line on its top edge, the artwork and title (expands to the full player),
  * the transport in the middle, and CC, the subtitle state, volume, expand and close on the right.
  * The optional subtitle line sits above it.
+ *
+ * Every source of the one player uses it: a podcast, a textbook recording (line steps), and a
+ * library book read aloud (sentence steps, a position instead of the clock, its own controls).
  */
 export function MiniPlayerBar({
   title,
@@ -64,6 +67,9 @@ export function MiniPlayerBar({
   isProcessing = false,
   onTranscribe,
   subtitleLine,
+  position,
+  extraControls,
+  playLabel,
 }: {
   title: string;
   showName?: string | null;
@@ -82,8 +88,16 @@ export function MiniPlayerBar({
   /** What expanding opens (the full player; a book track's book). */
   expandLabel?: string;
   onExit: () => void;
-  /** A line back / forward in place of -5s / +5s, where the line times are known (book tracks). */
-  lineSteps?: { onPrev: () => void; onNext: () => void } | null;
+  /**
+   * A line back / forward in place of -5s / +5s, where the line times are known (book tracks) —
+   * or a sentence back / forward (a book read aloud), with its own names.
+   */
+  lineSteps?: {
+    onPrev: () => void;
+    onNext: () => void;
+    prevLabel?: string;
+    nextLabel?: string;
+  } | null;
   hasTranscription?: boolean;
   ccEnabled?: boolean;
   onToggleCC?: () => void;
@@ -93,6 +107,12 @@ export function MiniPlayerBar({
   /** No transcript yet: make one (opens the player, where the subtitles are made). */
   onTranscribe?: () => void;
   subtitleLine?: ReactNode;
+  /** In place of the clock: where the player is ("7 of 42 · page 1 of 11"). */
+  position?: ReactNode;
+  /** The source's own controls, before the volume (speed, repeat). */
+  extraControls?: ReactNode;
+  /** The play button's tooltip (its keyboard shortcut). */
+  playLabel?: string;
 }) {
   const { t } = useTranslation('podcastUi');
   const [showVolume, setShowVolume] = useState(false);
@@ -181,8 +201,8 @@ export function MiniPlayerBar({
               <button
                 type="button"
                 onClick={lineSteps.onPrev}
-                title={t('np.prevLineHint')}
-                aria-label={t('np.prevLine')}
+                title={lineSteps.prevLabel ?? t('np.prevLineHint')}
+                aria-label={lineSteps.prevLabel ?? t('np.prevLine')}
                 className={MINI_ICON_BUTTON}
                 disabled={playbackError}
               >
@@ -212,6 +232,7 @@ export function MiniPlayerBar({
                 type="button"
                 onClick={onPlayPause}
                 aria-label={isPlaying ? t('np.pause') : t('np.play')}
+                title={playLabel}
                 className={PLAY_BUTTON}
               >
                 {playIcon}
@@ -221,8 +242,8 @@ export function MiniPlayerBar({
               <button
                 type="button"
                 onClick={lineSteps.onNext}
-                title={t('np.nextLineHint')}
-                aria-label={t('np.nextLine')}
+                title={lineSteps.nextLabel ?? t('np.nextLineHint')}
+                aria-label={lineSteps.nextLabel ?? t('np.nextLine')}
                 className={MINI_ICON_BUTTON}
                 disabled={playbackError}
               >
@@ -240,10 +261,12 @@ export function MiniPlayerBar({
                 <RotateCw className="h-4 w-4" />
               </button>
             )}
-            <span className="ms-2 whitespace-nowrap text-xs tabular-nums">
-              <span className="font-semibold text-foreground">{formatTime(currentTime)}</span>
-              <span className="text-caption"> / {formatTime(duration)}</span>
-            </span>
+            {position ?? (
+              <span className="ms-2 whitespace-nowrap text-xs tabular-nums">
+                <span className="font-semibold text-foreground">{formatTime(currentTime)}</span>
+                <span className="text-caption"> / {formatTime(duration)}</span>
+              </span>
+            )}
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
@@ -254,12 +277,13 @@ export function MiniPlayerBar({
                 title={t('np.ccLabel')}
                 aria-label={t('np.ccLabel')}
                 aria-pressed={ccEnabled}
-                className={ccEnabled ? ICON_ACTIVE : MINI_ICON_BUTTON}
+                className={ccEnabled ? MINI_ICON_ACTIVE : MINI_ICON_BUTTON}
               >
                 <Captions className="h-4 w-4" />
               </button>
             )}
             {ccLock}
+            {extraControls}
             {isProcessing && (
               <span title={t('np.transcribing')} className={MINI_ICON_BUTTON}>
                 <Loader2 className="h-4 w-4 animate-spin text-warning" />

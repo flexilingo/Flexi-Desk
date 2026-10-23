@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { isPaidTier, useSubscriptionStore } from '@/stores/subscriptionStore';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useAuthStore } from '@/stores/authStore';
 import { getSetting, setSetting } from '@/lib/tauri-bridge';
 import {
@@ -42,7 +42,7 @@ import { SignInDialog } from '@/components/auth/SignInDialog';
 import { errorCodeOf, useReaderErrorText } from '../lib/use-error-text';
 import { ReaderFrame } from '../text/ReaderFrame';
 import { ReaderTextScreen } from '../text/ReaderTextScreen';
-import type { ListenInvite } from '../text/usePageListen';
+import type { ListenInvite, ListenSource } from '../listen/listenStore';
 import { useReaderPager } from '../text/useReaderPager';
 import { bookReadPath, coverFor, languageName, readingMinutes, seriesReadPath } from './format';
 import { BookCover, LevelBadge } from './BookCover';
@@ -111,15 +111,14 @@ export function BookPage() {
   // What the sign-in was asked for: reading on past the gate, or listening on.
   const [signInFor, setSignInFor] = useState<'gate' | 'listen' | null>(null);
   const withSeries = useSyncExternalStore(subscribeSeriesSupport, seriesSupported);
-  // Listening on, page after page, is Pro (a paid plan or a trial) — the app's own plan state.
-  const subscription = useSubscriptionStore((s) => s.subscription);
+  // Listening on, page after page, is Pro (a paid plan or a trial): the player reads the app's own
+  // plan state, so make sure it is known.
   const subResolved = useSubscriptionStore((s) => s.hasResolved);
   const subLoading = useSubscriptionStore((s) => s.isLoading);
   const fetchSubscription = useSubscriptionStore((s) => s.fetchSubscription);
   useEffect(() => {
     if (signedIn && !subResolved && !subLoading) void fetchSubscription();
   }, [signedIn, subResolved, subLoading, fetchSubscription]);
-  const pro = signedIn && isPaidTier(subscription?.tier);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [bookmark, setBookmark] = useState<{ ready: boolean; last?: number; onShelf: boolean }>({
     ready: false,
@@ -666,6 +665,19 @@ export function BookPage() {
     </div>
   );
 
+  // The book as the player bar shows it.
+  const listenSource: ListenSource = {
+    bookId: book.id,
+    title: book.title,
+    subtitle:
+      isEpisode && book.series_title
+        ? `${book.series_title} · ${episodeLabel}`
+        : tl('book.by', { author: book.author }),
+    language: book.language,
+    coverPath: coverFor(book),
+    requiresLogin: book.requires_login === true,
+  };
+
   // Where «Listen» stopped at the end of a page: an account first, then Pro. The speaker after
   // each paragraph stays free either way.
   const listenInvite = (kind: ListenInvite, dismiss: () => void) => (
@@ -715,7 +727,11 @@ export function BookPage() {
         pager={pager}
         errorText={errorText(pager.error)}
         around={around}
-        listen={{ signedIn, pro, invite: listenInvite }}
+        listen={{
+          source: listenSource,
+          playLabel: tl('listen.playFromHere'),
+          invite: listenInvite,
+        }}
         gate={
           gated ? (
             <div className="rounded-xl border border-primary/30 bg-primary/[0.08] p-5">

@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MiniPlayer } from '@/pages/podcast/components/MiniPlayer';
 import { usePlayerStore } from '@/pages/podcast/stores/playerStore';
+import { useListenStore } from '@/pages/reader/listen/listenStore';
 import { usePodcastMediaSession } from '@/pages/podcast/hooks/usePodcastMediaSession';
 
 import { useJobEvents } from '@/hooks/useJobEvents';
@@ -23,7 +24,9 @@ export function Shell() {
   // Hide the mini player while the full player route is open.
   // The PDF, text and book readers own their scrolling (pages, side panels).
   const fillsPage = /^\/reader\/(pdf|text|book)\//.test(pathname);
-  const showMiniPlayer = currentEpisode && !pathname.startsWith('/podcast/player/');
+  // A library book read aloud docks in the same bar, on every page.
+  const listening = useListenStore((s) => !!s.source);
+  const showMiniPlayer = listening || (currentEpisode && !pathname.startsWith('/podcast/player/'));
 
   return (
     // A column: the app above, the mini player docked full width under it (website: the bottom

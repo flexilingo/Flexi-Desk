@@ -14,7 +14,7 @@ export function ReaderPageBody({
   scale,
   onSpeakWord,
   speakLabel,
-  activeParagraph,
+  listen,
 }: {
   text: string;
   language: string;
@@ -23,8 +23,16 @@ export function ReaderPageBody({
   onSpeakWord?: (word: string) => void;
   /** A speaker after every paragraph reads it aloud (library books); off when absent. */
   speakLabel?: string;
-  /** The paragraph the «Listen» player is reading; absent where there is no player. */
-  activeParagraph?: number | null;
+  /**
+   * The player bar on this page (library books): the sentence it reads is marked, and each
+   * paragraph's speaker plays the bar from there. Absent where there is no player.
+   */
+  listen?: {
+    activeSentence: { paragraph: number; sentence: number } | null;
+    activeParagraph: number | null;
+    playFrom: (paragraph: number) => void;
+    playLabel: string;
+  };
 }) {
   return (
     <div
@@ -40,8 +48,14 @@ export function ReaderPageBody({
         speakOnHover={!onSpeakWord}
         markLookedUp
         onSpeakWord={onSpeakWord}
-        paragraphSpeaker={speakLabel ? { label: speakLabel } : undefined}
-        activeParagraph={activeParagraph}
+        paragraphSpeaker={
+          listen
+            ? { label: listen.playLabel, onPlay: listen.playFrom, playing: listen.activeParagraph }
+            : speakLabel
+              ? { label: speakLabel }
+              : undefined
+        }
+        activeSentence={listen ? listen.activeSentence : undefined}
       />
     </div>
   );

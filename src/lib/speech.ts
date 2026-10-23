@@ -251,7 +251,21 @@ export interface SpeakOptions {
   accent?: 'us' | 'uk';
   /** Try exactly these engines, in this order (a settings sample). */
   engines?: SpeechEngine[];
+  /** Speed, 0.5–2: the cloud clip and the device voice follow it; the system voice cannot. */
+  rate?: number;
+  /** Loudness 0–1, for the cloud clip and the device voice. */
+  volume?: number;
+  /**
+   * Keep the cloud clips and reuse them — a reader's player saying a sentence again, or the next
+   * one fetched ahead (`prefetchSpeech`). Off for everything else: a word is said once.
+   */
+  cache?: boolean;
 }
+
+const clampRate = (rate: number | undefined) =>
+  rate && Number.isFinite(rate) ? Math.min(2, Math.max(0.5, rate)) : 1;
+const clampVolume = (volume: number | undefined) =>
+  volume === undefined || !Number.isFinite(volume) ? 1 : Math.min(1, Math.max(0, volume));
 
 const CLOUD_TIMEOUT_MS = 8000;
 
@@ -295,16 +309,74 @@ async function fetchClip(
   return null;
 }
 
+/** The cloud clips a player asked to keep, newest last; a failed fetch is not kept. */
+const clipCache = new Map<string, Promise<Blob | null>>();
+const CLIP_CACHE_SIZE = 24;
+
+function cachedClip(text: string, lang: string | undefined, accent?: string): Promise<Blob | null> {
+  const key = `${baseLangCode(lang ?? 'en')}|${accent ?? ''}|${text}`;
+  const hit = clipCache.get(key);
+  if (hit) {
+    clipCache.delete(key);
+    clipCache.set(key, hit);
+    return hit;
+  }
+  const pending = fetchClip(text, lang, accent);
+  clipCache.set(key, pending);
+  void pending.then((blob) => {
+    if (!blob && clipCache.get(key) === pending) clipCache.delete(key);
+  });
+  while (clipCache.size > CLIP_CACHE_SIZE) {
+    const oldest = clipCache.keys().next().value;
+    if (oldest === undefined) break;
+    clipCache.delete(oldest);
+  }
+  return pending;
+}
+
+/**
+ * Fetches the cloud voice for a text ahead of time, so it starts at once when its turn comes.
+ * Only when the cloud voice is the one that will speak (signed in, chosen or automatic).
+ */
+export function prefetchSpeech(text: string, lang?: string, opts: SpeakOptions = {}): void {
+  const clean = text?.trim();
+  if (!clean) return;
+  const plan = opts.engines ?? planEngines(currentEnv(lang), getSpeechPreference());
+  if (plan[0] !== 'cloud') return;
+  const accent = opts.accent ?? getSpeechAccent();
+  for (const chunk of chunkText(clean)) void cachedClip(chunk, lang, accent);
+}
+
+/** Forget the kept clips (tests; a sign-out). */
+export function clearSpeechCache(): void {
+  clipCache.clear();
+}
+
+/** The cloud clip sounding right now, so a speed or volume change reaches it at once. */
+let liveAudio: HTMLAudioElement | null = null;
+
+/** Applies a new speed / volume to what is sounding now (the cloud clip; a device voice keeps its own until the next text). */
+export function adjustSpeech(opts: { rate?: number; volume?: number }): void {
+  if (!liveAudio) return;
+  if (opts.rate !== undefined) liveAudio.playbackRate = clampRate(opts.rate);
+  if (opts.volume !== undefined) liveAudio.volume = clampVolume(opts.volume);
+}
+
 function playBlob(
   blob: Blob,
   mine: number,
   text: string,
   lang: string | undefined,
+  opts: SpeakOptions = {},
 ): Promise<Outcome> {
   return new Promise<Outcome>((resolve) => {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
+    audio.playbackRate = clampRate(opts.rate);
+    audio.volume = clampVolume(opts.volume);
+    liveAudio = audio;
     const end = (outcome: Outcome) => {
+      if (liveAudio === audio) liveAudio = null;
       if (cancelCurrent === cancel) cancelCurrent = null;
       audio.onplaying = audio.onended = audio.onerror = null;
       URL.revokeObjectURL(url);
@@ -332,22 +404,30 @@ async function runCloud(
 ): Promise<Outcome> {
   const chunks = chunkText(text);
   for (let i = 0; i < chunks.length; i++) {
-    const clip = await fetchClip(chunks[i], lang, opts.accent);
+    const clip = await (opts.cache ? cachedClip : fetchClip)(chunks[i], lang, opts.accent);
     if (ticket !== mine) return 'done';
     // A failure after sound has started must not replay the start on the next engine.
     if (!clip) return i === 0 ? 'failed' : 'done';
-    if ((await playBlob(clip, mine, text, lang)) === 'failed') return i === 0 ? 'failed' : 'done';
+    if ((await playBlob(clip, mine, text, lang, opts)) === 'failed')
+      return i === 0 ? 'failed' : 'done';
     if (ticket !== mine) return 'done';
   }
   return 'done';
 }
 
-function runDevice(text: string, lang: string | undefined, mine: number): Promise<Outcome> {
+function runDevice(
+  text: string,
+  lang: string | undefined,
+  mine: number,
+  opts: SpeakOptions = {},
+): Promise<Outcome> {
   return new Promise<Outcome>((resolve) => {
     const synth = window.speechSynthesis;
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = langTag(lang);
+    utterance.rate = clampRate(opts.rate);
+    utterance.volume = clampVolume(opts.volume);
     const voice = pickVoice(synth.getVoices(), lang);
     if (voice) utterance.voice = voice;
     const end = (outcome: Outcome) => {
@@ -396,7 +476,7 @@ async function runPlan(
       engine === 'cloud'
         ? await runCloud(text, lang, opts, mine)
         : engine === 'device'
-          ? await runDevice(text, lang, mine)
+          ? await runDevice(text, lang, mine, opts)
           : await runSystem(text, lang, mine);
     if (outcome === 'done' || ticket !== mine) return;
   }

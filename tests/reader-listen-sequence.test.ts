@@ -1,99 +1,167 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  RESTART_WINDOW_MS,
+  afterSentence,
   atPageEnd,
+  clampSentence,
   firstMove,
-  nextMove,
-  pagePieces,
-  pieceAfter,
-  pieceFrom,
+  nextRate,
+  pageSentences,
+  parseListenPlace,
+  sentenceOfParagraph,
+  stepNext,
+  stepPrev,
   type ListenFacts,
 } from '@/pages/reader/text/listen-sequence';
+import { listenKeyOf } from '@/pages/reader/listen/use-listen-keys';
 import { speak, speakThrough, stop, type VoiceLike } from '@/lib/speech';
+import { splitParagraphs, splitSentences } from '@/components/lookup/tokenize';
 
-const PRO: ListenFacts = { hasNext: true, signedIn: true, pro: true };
-const FREE: ListenFacts = { hasNext: true, signedIn: true, pro: false };
-const SIGNED_OUT: ListenFacts = { hasNext: true, signedIn: false, pro: false };
+const PRO: ListenFacts = { hasNext: true, hasPrev: true, signedIn: true, pro: true };
+const FREE: ListenFacts = { hasNext: true, hasPrev: true, signedIn: true, pro: false };
+const SIGNED_OUT: ListenFacts = { hasNext: true, hasPrev: false, signedIn: false, pro: false };
 
-describe('a page as the voice reads it', () => {
-  it('one entry per paragraph on screen, in the paragraph speaker’s pieces', () => {
-    const long = Array.from({ length: 12 }, (_, i) => `Sentence ${i + 1} of a long paragraph in Toronto.`).join(' ');
-    const pieces = pagePieces(`First one. Still first.\n\n${long}\n\nLast.`);
-    expect(pieces).toHaveLength(3);
-    expect(pieces[0]).toEqual(['First one. Still first.']);
-    expect(pieces[1].length).toBeGreaterThan(1);
-    expect(pieces[1].join(' ')).toBe(long);
-    expect(pieces[2]).toEqual(['Last.']);
+const PAGE = 'Margaret arrived at noon. She put the bag down.\n\n"Thirty years," she said. Then she left.';
+
+describe('a page as the player reads it', () => {
+  it('sentence by sentence, exactly as the page shows them', () => {
+    const sentences = pageSentences(PAGE);
+    const shown = splitParagraphs(PAGE).flatMap((p) => splitSentences(p));
+    expect(sentences.map((s) => s.text)).toEqual(shown);
+    expect(sentences.map((s) => [s.paragraph, s.sentence])).toEqual([
+      [0, 0],
+      [0, 1],
+      [1, 0],
+      [1, 1],
+    ]);
+    expect(sentences.every((s) => s.pieces.length === 1 && s.pieces[0] === s.text)).toBe(true);
   });
 
-  it('goes piece by piece, then paragraph by paragraph, skipping ones with nothing to say', () => {
-    const pieces = [['a1', 'a2'], [], ['c1']];
-    expect(pieceFrom(pieces, { paragraph: 0, chunk: 0 })).toEqual({ paragraph: 0, chunk: 0 });
-    expect(pieceAfter(pieces, { paragraph: 0, chunk: 0 })).toEqual({ paragraph: 0, chunk: 1 });
-    expect(pieceAfter(pieces, { paragraph: 0, chunk: 1 })).toEqual({ paragraph: 2, chunk: 0 });
-    expect(pieceAfter(pieces, { paragraph: 2, chunk: 0 })).toBeNull();
-    expect(pieceFrom([[], []], { paragraph: 0, chunk: 0 })).toBeNull();
+  it('a run-on sentence is stepped through in the runs the page shows, each short enough for the voice', () => {
+    const long = `${Array.from({ length: 120 }, () => 'word').join(' ')}.`;
+    const sentences = pageSentences(long);
+    expect(sentences.length).toBe(splitSentences(long).length);
+    expect(sentences.length).toBeGreaterThan(1);
+    expect(sentences.map((s) => s.text).join(' ')).toBe(long);
+    expect(sentences.flatMap((s) => s.pieces).every((p) => p.length <= 440)).toBe(true);
+  });
+
+  it('«play from here» starts at the paragraph’s first sentence', () => {
+    const sentences = pageSentences(PAGE);
+    expect(sentenceOfParagraph(sentences, 0)).toBe(0);
+    expect(sentenceOfParagraph(sentences, 1)).toBe(2);
+    expect(sentenceOfParagraph(sentences, 9)).toBe(3);
+  });
+
+  it('a remembered place is kept on the page; «last» is the page’s last sentence', () => {
+    expect(clampSentence(7, 4)).toBe(3);
+    expect(clampSentence(-2, 4)).toBe(0);
+    expect(clampSentence('last', 4)).toBe(3);
+    expect(clampSentence(3, 0)).toBe(0);
   });
 });
 
-describe('the end of a page', () => {
-  it('the last page ends the reading (the next-episode button is there)', () => {
+describe('after a sentence', () => {
+  it('the next sentence, then the page-end rule', () => {
+    expect(afterSentence(0, 4, 'ended', false, FREE)).toEqual({ kind: 'speak', index: 1 });
+    expect(afterSentence(3, 4, 'ended', false, PRO)).toEqual({ kind: 'turn' });
+    expect(afterSentence(3, 4, 'ended', false, FREE)).toEqual({ kind: 'stop', reason: 'pro' });
+    expect(afterSentence(3, 4, 'ended', false, SIGNED_OUT)).toEqual({ kind: 'stop', reason: 'signIn' });
+    expect(afterSentence(3, 4, 'ended', false, { ...PRO, hasNext: false })).toEqual({ kind: 'stop', reason: 'end' });
+  });
+
+  it('repeat says the same sentence again — even the last one, without turning the page', () => {
+    expect(afterSentence(1, 4, 'ended', true, PRO)).toEqual({ kind: 'speak', index: 1 });
+    expect(afterSentence(3, 4, 'ended', true, PRO)).toEqual({ kind: 'speak', index: 3 });
+  });
+
+  it('cut off by another voice, or no voice at all: it stops there (repeat or not)', () => {
+    expect(afterSentence(1, 4, 'cut', true, PRO)).toEqual({ kind: 'stop', reason: 'interrupted' });
+    expect(afterSentence(1, 4, 'unavailable', false, PRO)).toEqual({ kind: 'stop', reason: 'silent' });
+  });
+
+  it('an empty page goes straight to the page-end rule', () => {
+    expect(firstMove(0, 0, PRO)).toEqual({ kind: 'turn' });
+    expect(firstMove(5, 4, PRO)).toEqual({ kind: 'speak', index: 3 });
+  });
+});
+
+describe('the page-end rule (Pro)', () => {
+  it('the last page ends the reading for everyone', () => {
     for (const f of [PRO, FREE, SIGNED_OUT]) {
       expect(atPageEnd({ ...f, hasNext: false })).toEqual({ kind: 'stop', reason: 'end' });
     }
   });
-
-  it('Pro turns to the next page by itself', () => {
+  it('Pro turns the page; without Pro it is offered; signed out, signing in comes first', () => {
     expect(atPageEnd(PRO)).toEqual({ kind: 'turn' });
-  });
-
-  it('a signed-in reader without Pro is offered Pro; a signed-out reader is asked to sign in first', () => {
     expect(atPageEnd(FREE)).toEqual({ kind: 'stop', reason: 'pro' });
     expect(atPageEnd(SIGNED_OUT)).toEqual({ kind: 'stop', reason: 'signIn' });
-    // Even with Pro set, no account means signing in comes first.
-    expect(atPageEnd({ hasNext: true, signedIn: false, pro: true })).toEqual({ kind: 'stop', reason: 'signIn' });
+    expect(atPageEnd({ ...SIGNED_OUT, pro: true })).toEqual({ kind: 'stop', reason: 'signIn' });
   });
 });
 
-describe('the next move', () => {
-  const pieces = [['a1', 'a2'], ['b1']];
-
-  it('reading the page on screen is free for everyone', () => {
-    for (const f of [SIGNED_OUT, FREE, PRO]) {
-      expect(firstMove(pieces, { paragraph: 0, chunk: 0 }, f)).toEqual({
-        kind: 'speak',
-        at: { paragraph: 0, chunk: 0 },
-      });
-    }
+describe('next and previous', () => {
+  it('next steps a sentence; on the page’s last sentence it follows the page-end rule', () => {
+    expect(stepNext(0, 4, FREE)).toEqual({ kind: 'speak', index: 1 });
+    expect(stepNext(3, 4, PRO)).toEqual({ kind: 'turn' });
+    expect(stepNext(3, 4, FREE)).toEqual({ kind: 'stop', reason: 'pro' });
+    expect(stepNext(3, 4, SIGNED_OUT)).toEqual({ kind: 'stop', reason: 'signIn' });
   });
 
-  it('after a piece that ran to its end: the next piece, then the page-end rule', () => {
-    expect(nextMove(pieces, { paragraph: 0, chunk: 0 }, 'ended', FREE)).toEqual({
-      kind: 'speak',
-      at: { paragraph: 0, chunk: 1 },
-    });
-    expect(nextMove(pieces, { paragraph: 0, chunk: 1 }, 'ended', FREE)).toEqual({
-      kind: 'speak',
-      at: { paragraph: 1, chunk: 0 },
-    });
-    expect(nextMove(pieces, { paragraph: 1, chunk: 0 }, 'ended', PRO)).toEqual({ kind: 'turn' });
-    expect(nextMove(pieces, { paragraph: 1, chunk: 0 }, 'ended', FREE)).toEqual({ kind: 'stop', reason: 'pro' });
-    expect(nextMove(pieces, { paragraph: 1, chunk: 0 }, 'ended', SIGNED_OUT)).toEqual({
-      kind: 'stop',
-      reason: 'signIn',
-    });
+  it('previous within 1.5 s of a sentence’s start goes to the one before', () => {
+    expect(stepPrev(2, 0, PRO)).toEqual({ kind: 'speak', index: 1 });
+    expect(stepPrev(2, RESTART_WINDOW_MS, PRO)).toEqual({ kind: 'speak', index: 1 });
   });
 
-  it('something else speaking, or no voice at all, stops the reading', () => {
-    expect(nextMove(pieces, { paragraph: 0, chunk: 0 }, 'cut', PRO)).toEqual({ kind: 'stop', reason: 'interrupted' });
-    expect(nextMove(pieces, { paragraph: 0, chunk: 0 }, 'unavailable', PRO)).toEqual({
-      kind: 'stop',
-      reason: 'silent',
-    });
+  it('previous later than 1.5 s into a sentence says it again from its start', () => {
+    expect(stepPrev(2, RESTART_WINDOW_MS + 1, PRO)).toEqual({ kind: 'speak', index: 2 });
+    expect(stepPrev(0, 4000, FREE)).toEqual({ kind: 'speak', index: 0 });
   });
 
-  it('resume says the interrupted piece again; an empty page goes straight to the page-end rule', () => {
-    expect(firstMove(pieces, { paragraph: 0, chunk: 1 }, PRO)).toEqual({ kind: 'speak', at: { paragraph: 0, chunk: 1 } });
-    expect(firstMove([], { paragraph: 0, chunk: 0 }, PRO)).toEqual({ kind: 'turn' });
+  it('previous on a page’s first sentence goes back to the page before (free), or stays on the book’s first', () => {
+    expect(stepPrev(0, 0, FREE)).toEqual({ kind: 'back' });
+    expect(stepPrev(0, 0, SIGNED_OUT)).toEqual({ kind: 'speak', index: 0 });
+  });
+});
+
+describe('speed and the remembered place', () => {
+  it('speed goes round 1 → 1.25 → 0.75 → 1', () => {
+    expect(nextRate(1)).toBe(1.25);
+    expect(nextRate(1.25)).toBe(0.75);
+    expect(nextRate(0.75)).toBe(1);
+  });
+
+  it('a stored place is read back, junk is not', () => {
+    expect(parseListenPlace('{"page":3,"sentence":7}')).toEqual({ page: 3, sentence: 7 });
+    expect(parseListenPlace('{"page":0,"sentence":1}')).toBeNull();
+    expect(parseListenPlace('nope')).toBeNull();
+    expect(parseListenPlace(null)).toBeNull();
+  });
+});
+
+describe('the player keys', () => {
+  const body = document.createElement('div');
+  const input = document.createElement('input');
+  const inDialog = document.createElement('button');
+  const dialog = document.createElement('div');
+  dialog.setAttribute('role', 'dialog');
+  dialog.appendChild(inDialog);
+  document.body.append(body, input, dialog);
+
+  it('Space, ← → and R anywhere on the page', () => {
+    expect(listenKeyOf({ key: ' ', target: body })).toBe('playPause');
+    expect(listenKeyOf({ key: 'ArrowLeft', target: body })).toBe('prev');
+    expect(listenKeyOf({ key: 'ArrowRight', target: body })).toBe('next');
+    expect(listenKeyOf({ key: 'r', target: body })).toBe('repeat');
+    expect(listenKeyOf({ key: 'R', target: body })).toBe('repeat');
+    expect(listenKeyOf({ key: 'x', target: body })).toBeNull();
+  });
+
+  it('never while typing, in a dialog, with a modifier, or once something else took the key', () => {
+    expect(listenKeyOf({ key: ' ', target: input })).toBeNull();
+    expect(listenKeyOf({ key: 'r', target: inDialog })).toBeNull();
+    expect(listenKeyOf({ key: 'ArrowLeft', target: body, metaKey: true })).toBeNull();
+    expect(listenKeyOf({ key: ' ', target: body, defaultPrevented: true })).toBeNull();
   });
 });
 

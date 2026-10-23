@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -39,6 +39,7 @@ import { fireEvent, waitFor } from '@testing-library/react';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { BookPage } from '@/pages/reader/library/BookPage';
+import { useListenStore } from '@/pages/reader/listen/listenStore';
 import { resetSeriesSupport } from '@/pages/reader/library/library-capability';
 
 const entry = (order: number, season: number, n: number) => ({
@@ -127,6 +128,8 @@ function open(order: number, pageCount = 2) {
   );
 }
 
+afterEach(() => useListenStore.getState().close());
+
 beforeEach(() => {
   call.mockReset();
   settings.clear();
@@ -178,17 +181,28 @@ describe('a library episode, laid out like the website', () => {
     expect(screen.getByText('public.fitFree{}')).toBeInTheDocument();
   });
 
-  it('Listen reads page 1 for a free reader, then offers Pro where the reading stopped', async () => {
+  it('Listen opens the player bar on this book; a free reader gets page 1, then Pro is offered in the reading column', async () => {
     useAuthStore.setState({ session: { user: { id: 'u' } } as never, isLoading: false });
     useSubscriptionStore.setState({ subscription: { tier: 'free' } as never, hasResolved: true, isLoading: false });
     open(1);
     // Offered once the page is on screen.
     await waitFor(() => expect(screen.getByRole('button', { name: 'listen.start' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'listen.start' }));
+    expect(useListenStore.getState().source?.bookId).toBe('e1');
     expect(await screen.findByText('listen.proTitle')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'listen.proCta' })).toHaveAttribute('href', '/subscription');
-    // The paragraph speakers are still there, free.
-    expect(screen.getAllByRole('button', { name: 'book.readAloud' }).length).toBeGreaterThan(0);
+    // The toolbar is now the bar's play / pause switch.
+    expect(screen.getByRole('button', { name: 'listen.listening' })).toBeInTheDocument();
+  });
+
+  it('a paragraph’s speaker plays the bar from that paragraph (free)', async () => {
+    useAuthStore.setState({ session: { user: { id: 'u' } } as never, isLoading: false });
+    useSubscriptionStore.setState({ subscription: { tier: 'free' } as never, hasResolved: true, isLoading: false });
+    open(1);
+    const speaker = await screen.findByRole('button', { name: 'listen.playFromHere' });
+    fireEvent.click(speaker);
+    expect(useListenStore.getState()).toMatchObject({ page: 1, index: 0 });
+    expect(useListenStore.getState().source?.bookId).toBe('e1');
   });
 
   it('Listen asks a signed-out reader to sign in first', async () => {

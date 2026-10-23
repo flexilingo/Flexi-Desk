@@ -3,7 +3,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const invokeMock = vi.fn();
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...a: unknown[]) => invokeMock(...a) }));
 
-import { planEngines, speak, stop, availableEngines, type SpeechEnv } from '@/lib/speech';
+import {
+  planEngines,
+  speak,
+  stop,
+  availableEngines,
+  clearSpeechCache,
+  prefetchSpeech,
+  type SpeechEnv,
+} from '@/lib/speech';
 import { chunkText, cloudPaths, regionFor } from '@/lib/speechVoices';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -119,6 +127,7 @@ describe('speak fallback order', () => {
   });
   afterEach(() => {
     stop();
+    clearSpeechCache();
     useAuthStore.setState({ session: null });
     Reflect.deleteProperty(window, '__TAURI_INTERNALS__');
     vi.unstubAllGlobals();
@@ -163,6 +172,19 @@ describe('speak fallback order', () => {
     expect(order).toEqual(['supabase_fetch_bytes', 'supabase_fetch_bytes', 'tutor_speak_text']);
     expect(deviceSpoken).toEqual(['hello']);
     expect(invokeMock.mock.calls[2][1]).toEqual({ text: 'hello', language: 'en' });
+  });
+
+  it('a reader’s player fetches the next clip ahead and reuses it; a word is still fetched each time', async () => {
+    invokeMock.mockResolvedValue(new Uint8Array([1, 2, 3]).buffer);
+    const fetches = () => invokeMock.mock.calls.filter((c) => c[0] === 'supabase_fetch_bytes').length;
+    prefetchSpeech('The next sentence.', 'en');
+    await new Promise((r) => setTimeout(r, 0));
+    expect(fetches()).toBe(1);
+    await speak('The next sentence.', 'en', { cache: true });
+    expect(fetches()).toBe(1);
+    expect(audioPlayed).toBe(1);
+    await speak('The next sentence.', 'en');
+    expect(fetches()).toBe(2);
   });
 
   it('reports which engines are available', () => {
