@@ -127,8 +127,13 @@ interface ListenState {
   prev: () => void;
   /** Read from this sentence of the page. */
   jump: (index: number) => void;
-  /** The bar's line, on a page played from its narration file: play from this second of it. */
+  /**
+   * The bar's line, on a page played from its narration file: go to this second of it — playing,
+   * it plays on from there; paused, it only moves there (as on the website).
+   */
   seekTime: (seconds: number) => void;
+  /** The bar's line, sentence by sentence: playing, read from that sentence; paused, only move there. */
+  seekSentence: (index: number) => void;
   /** Keeps the sentence in step with the narration file; the word being said, or null. */
   followAudio: () => WordPlace | null;
   toggleRepeat: () => void;
@@ -499,6 +504,8 @@ export const useListenStore = create<ListenState>()((set, get) => {
         });
         return;
       }
+      // The file was not loaded yet, but the bar was moved while paused: play from that second.
+      if (s.pageAudio && s.clock && s.problem !== 'page') return playAudioAt(s.index, s.clock.time);
       // Resume says the sentence again from its start; a page that never loaded is asked again.
       if (s.sentences.length && s.problem !== 'page') void speakAt(s.index);
       else void openPage(s.page, s.index, true);
@@ -539,7 +546,23 @@ export const useListenStore = create<ListenState>()((set, get) => {
       if (!s.source || !track) return;
       const length = s.clock?.duration || track.duration;
       const t = Math.max(0, length > 0 ? Math.min(seconds, length) : seconds);
-      playAudioAt(placeAt(track, t)?.sentence ?? s.index, t);
+      const sentence = placeAt(track, t)?.sentence ?? s.index;
+      if (s.status === 'paused') {
+        set({ index: sentence, piece: 0, clock: { time: t, duration: length } });
+        if (audioEl && loadedUrl === track.url) seekTo(audioEl, t);
+        savePlace();
+        return;
+      }
+      playAudioAt(sentence, t);
+    },
+
+    seekSentence: (index) => {
+      const s = get();
+      if (!s.source || !s.sentences.length || s.status === 'loading') return;
+      const at = clampSentence(index, s.sentences.length);
+      if (s.status === 'playing') return void speakAt(at);
+      set({ index: at, piece: 0 });
+      savePlace();
     },
 
     followAudio,

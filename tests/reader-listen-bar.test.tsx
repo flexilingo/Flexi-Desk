@@ -239,5 +239,8 @@ describe('the seek bar', () => {
       fireEvent.pointerUp(slider, { clientX: 210, pointerId: 1 });
     });
     expect(useListenStore.getState().index).toBe(21);
+    // Paused (as the bar starts here): it only moves there — nothing is read until play.
+    expect(useListenStore.getState().status).toBe('paused');
+    expect(voice.said).toEqual([]);
   });
 });

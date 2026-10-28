@@ -362,6 +362,23 @@ describe('the player on a page with narration', () => {
     expect(state().index).toBe(2);
   });
 
+  it('the bar moved while paused: it only moves there (as on the website), and play goes on from there', () => {
+    openAt(1);
+    playTo(1);
+    state().pause();
+    const plays = audio.el.plays;
+    state().seekTime(5.1);
+    expect(state().status).toBe('paused');
+    expect(audio.el.paused).toBe(true);
+    expect(audio.el.plays).toBe(plays);
+    expect(audio.el.currentTime).toBe(5.1);
+    expect(state().index).toBe(2);
+    expect(state().clock?.time).toBe(5.1);
+    state().playPause();
+    expect(state().status).toBe('playing');
+    expect(audio.el.currentTime).toBe(5.1);
+  });
+
   it('pause keeps the place; play goes on from it', () => {
     openAt(1);
     playTo(3.3);

@@ -194,7 +194,7 @@ export function ListenMiniPlayer() {
         onPlayPause={act.playPause}
         onSkip={(s) => (s < 0 ? act.prev() : act.next())}
         onSeek={(time) =>
-          pageAudio ? act.seekTime(time) : act.jump(Math.min(count - 1, Math.floor(time)))
+          pageAudio ? act.seekTime(time) : act.seekSentence(Math.min(count - 1, Math.floor(time)))
         }
         // ← / → step a sentence (the bar's own keys), on the seek bar too.
         seekStep={0}
