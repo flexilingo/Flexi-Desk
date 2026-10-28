@@ -53,8 +53,12 @@ const HAN_RE = /\p{Script=Han}/u;
  * so requiring one would return a whole page as a single sentence. The Latin,
  * Arabic and Persian forms must be followed by whitespace or the end of the
  * string, which is what keeps `3.14`, `Dr. Smith` and `www.x.com` intact.
+ *
+ * Closing quotes and brackets right after the terminator stay with their sentence
+ * (`« Ça va ? »`, `"Stop."`, `「好。」`) — on their own they would be a sentence with no
+ * words, which the reader can neither mark nor read aloud.
  */
-const SENTENCE_END = /[。！？]+|[.!?؟۔]+(?=\s|$)/g;
+const SENTENCE_END = /[。！？]+[」』”’）)]*|[.!?؟۔]+(?:\s*[»"”’)\]]+)?(?=\s|$)/g;
 
 /**
  * Above this, a run without terminating punctuation is broken at a space.

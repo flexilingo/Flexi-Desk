@@ -39,6 +39,22 @@ describe('tokenize', () => {
     ]);
   });
 
+  it('keeps a closing quote with its sentence — never a sentence with no words', () => {
+    expect(splitSentences('« Qu\'est-ce qui se passe ? »')).toEqual(['« Qu\'est-ce qui se passe ? »']);
+    expect(splitSentences('« Ça va ? » demande Marc. Il sourit.')).toEqual([
+      '« Ça va ? »',
+      'demande Marc.',
+      'Il sourit.',
+    ]);
+    expect(splitSentences('« Ça va\u00a0?\u00a0» Oui.')).toEqual(['« Ça va\u00a0?\u00a0»', 'Oui.']);
+    expect(splitSentences('He said "Stop." Then he left.')).toEqual(['He said "Stop."', 'Then he left.']);
+    expect(splitSentences('He left. "Wait," she said.')).toEqual(['He left.', '"Wait," she said.']);
+    expect(splitSentences('他说：「好。」然后走了。')).toEqual(['他说：「好。」', '然后走了。']);
+    for (const text of ['« Qu\'est-ce qui se passe ? »', 'He said "Stop." Then he left.']) {
+      expect(splitSentences(text).every((s) => tokenize(s).some((t) => t.word))).toBe(true);
+    }
+  });
+
   it('breaks an over-long un-punctuated run at spaces', () => {
     const long = Array.from({ length: 120 }, () => 'word').join(' ');
     const parts = splitSentences(long);

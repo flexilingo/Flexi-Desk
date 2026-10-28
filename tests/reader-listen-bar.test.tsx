@@ -182,6 +182,23 @@ describe('the player bar reading a book', () => {
     page.remove();
   });
 
+  it('paused, the bar moved: the old word loses its mark and the new place is marked clearly', async () => {
+    const page = pageSentence();
+    useListenStore.setState({ status: 'playing' });
+    voice.progress = { engine: 'device', text: 'Sentence number 7 is here.', charIndex: 21 };
+    bar();
+    const onPage = () => Array.from(page.querySelectorAll('[data-flexi-word]'));
+    await vi.waitFor(() => expect(onPage()[4].classList.contains(WORD)).toBe(true));
+    act(() => useListenStore.setState({ status: 'paused' }));
+    voice.progress = null;
+    act(() => useListenStore.getState().seekSentence(20));
+    const sentence = page.querySelector('[data-listen-active]')!;
+    await vi.waitFor(() => expect(sentence.classList.contains(SENTENCE)).toBe(true));
+    expect(onPage().some((el) => el.classList.contains(WORD))).toBe(false);
+    expect(voice.said).toEqual([]);
+    page.remove();
+  });
+
   it('the system voice cannot tell its words: the sentence is marked instead', async () => {
     const page = pageSentence();
     useListenStore.setState({ status: 'playing' });

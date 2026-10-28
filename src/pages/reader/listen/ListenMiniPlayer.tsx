@@ -198,6 +198,16 @@ export function ListenMiniPlayer() {
         }
         // ← / → step a sentence (the bar's own keys), on the seek bar too.
         seekStep={0}
+        valueText={
+          pageAudio || !count
+            ? undefined
+            : t('listen.position', {
+                n: num.format(index + 1),
+                total: num.format(count),
+                page: num.format(page),
+                pages: num.format(pageCount),
+              })
+        }
         onVolumeChange={act.setVolume}
         onExpand={() => navigate(bookReadPath(source.bookId, page))}
         expandLabel={tDesk('book.backToBook')}

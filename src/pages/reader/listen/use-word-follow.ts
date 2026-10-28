@@ -76,6 +76,25 @@ export function useWordFollow(open: boolean, playing: boolean) {
     [],
   );
 
+  // Paused, the bar moved the place: the old word's mark goes, and the sentence Play will start
+  // from is marked clearly (the page shows it a frame later).
+  useEffect(() => {
+    if (!open || playing) return;
+    let frame = 0;
+    const unsubscribe = useListenStore.subscribe((s, prev) => {
+      if (s.status !== 'paused' || (s.index === prev.index && s.page === prev.page)) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        latest.current.markWords([]);
+        latest.current.markSentence(document.querySelector(PAGE_SENTENCE));
+      });
+    });
+    return () => {
+      unsubscribe();
+      cancelAnimationFrame(frame);
+    };
+  }, [open, playing]);
+
   useEffect(() => {
     if (!playing) return;
     const tick = () => {

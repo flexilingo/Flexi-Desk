@@ -72,6 +72,7 @@ export function MiniPlayerBar({
   extraControls,
   playLabel,
   seekStep = 5,
+  valueText,
 }: {
   title: string;
   showName?: string | null;
@@ -117,6 +118,8 @@ export function MiniPlayerBar({
   playLabel?: string;
   /** How far ← / → on the focused seek bar move (seconds); 0 leaves the keys to the page's own. */
   seekStep?: number;
+  /** What a screen reader says for the seek bar, when its units are not times (sentences). */
+  valueText?: string;
 }) {
   const { t } = useTranslation('podcastUi');
   const [showVolume, setShowVolume] = useState(false);
@@ -161,7 +164,10 @@ export function MiniPlayerBar({
           aria-valuemin={0}
           aria-valuemax={Math.round(duration)}
           aria-valuenow={Math.round(drag !== null ? drag * duration : currentTime)}
-          aria-valuetext={`${formatTime(drag !== null ? drag * duration : currentTime)} / ${formatTime(duration)}`}
+          aria-valuetext={
+            valueText ??
+            `${formatTime(drag !== null ? drag * duration : currentTime)} / ${formatTime(duration)}`
+          }
           onPointerDown={(e) => {
             if (duration <= 0) return;
             e.currentTarget.setPointerCapture?.(e.pointerId);
