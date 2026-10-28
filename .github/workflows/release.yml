@@ -90,6 +90,6 @@ jobs:
           releaseBody: 'See the assets below for platform-specific installers.'
           releaseDraft: true
           prerelease: false
-          uploadUpdaterJson: true
+          includeUpdaterJson: true
           updaterJsonPreferNsis: true
           args: ${{ matrix.args }}

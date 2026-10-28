@@ -43,6 +43,12 @@
     "dark": "Tối",
     "system": "Hệ thống"
   },
+  "usage": {
+    "title": "Thống kê sử dụng",
+    "subtitle": "Giúp chúng tôi biết ứng dụng được dùng thế nào",
+    "toggle": "Chia sẻ dữ liệu sử dụng ẩn danh",
+    "what": "Khi bật, ứng dụng gửi một lượt đếm khi mở và những màn hình bạn dùng, kèm phiên bản ứng dụng, hệ điều hành và ngôn ngữ ứng dụng. Không bao giờ gửi tệp, văn bản, từ vựng hay bản ghi âm của bạn."
+  },
   "data": {
     "title": "Xuất & nhập",
     "subtitle": "Chuyển từ vựng của bạn vào và ra khỏi máy này",

@@ -43,6 +43,12 @@
     "dark": "Dark",
     "system": "System"
   },
+  "usage": {
+    "title": "Usage statistics",
+    "subtitle": "Help us see how the app is used",
+    "toggle": "Share anonymous usage",
+    "what": "When on, the app sends a count when it opens and which screens you use, with the app version, your system and the app language. Never your files, text, words or recordings."
+  },
   "data": {
     "title": "Export & import",
     "subtitle": "Move your vocabulary in and out of this computer",

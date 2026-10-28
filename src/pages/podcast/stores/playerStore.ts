@@ -143,6 +143,9 @@ export const usePlayerStore = create<PlayerState>()(
     });
 
     audio.addEventListener('error', () => {
+      // Closing the player empties the source on purpose; the element then reports the empty
+      // src as an error. Nothing is playing, so there is nothing to tell anyone.
+      if (!audio.getAttribute('src')) return;
       const code = audio.error?.code;
       const msg = audio.error?.message || 'Unknown audio error';
       const codeNames: Record<number, string> = {

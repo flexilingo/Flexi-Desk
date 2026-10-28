@@ -29,6 +29,7 @@ import { SetupWizard } from '@/components/onboarding/SetupWizard';
 import { getSetting } from '@/lib/tauri-bridge';
 import { UpdateToast } from '@/components/UpdateToast';
 import { useUpdaterStore } from '@/stores/updaterStore';
+import { useUsageStats } from '@/hooks/useUsageStats';
 
 function App() {
   // Initialize theme system (applies dark class to <html>)
@@ -38,6 +39,9 @@ function App() {
   useDirection();
 
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null); // null = loading
+
+  // Anonymous usage counts: launches, versions, screen names (off in Settings).
+  useUsageStats(showOnboarding === false);
 
   // Initialize auth + check onboarding state
   useEffect(() => {

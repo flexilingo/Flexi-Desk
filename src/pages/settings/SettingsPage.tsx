@@ -34,6 +34,7 @@ import {
 
 import { SyncSettings } from '@/pages/settings/SyncSettings';
 import { UpdatesSection } from '@/pages/settings/components/UpdatesSection';
+import { UsageSection } from '@/pages/settings/components/UsageSection';
 import { AiSettingsSection } from '@/pages/settings/components/AiSettingsSection';
 import { ExportDialog } from '@/pages/settings/ExportDialog';
 import { LanguageSearchSelect } from '@/pages/account/components/LanguageSearchSelect';
@@ -490,6 +491,7 @@ function GeneralSection() {
       <LanguagesSection />
       <AppearanceSection />
       <UpdatesSection />
+      <UsageSection />
     </div>
   );
 }

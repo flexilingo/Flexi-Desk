@@ -43,6 +43,12 @@
     "dark": "Dunkel",
     "system": "System"
   },
+  "usage": {
+    "title": "Nutzungsstatistik",
+    "subtitle": "Hilf uns zu sehen, wie die App genutzt wird",
+    "toggle": "Anonyme Nutzung teilen",
+    "what": "Wenn eingeschaltet, sendet die App beim Öffnen eine Zählung und welche Bildschirme du nutzt, mit App-Version, System und App-Sprache. Niemals deine Dateien, Texte, Wörter oder Aufnahmen."
+  },
   "data": {
     "title": "Export & Import",
     "subtitle": "Bringe deinen Wortschatz in diesen Computer hinein und aus ihm heraus",

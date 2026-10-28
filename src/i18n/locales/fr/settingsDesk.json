@@ -43,6 +43,12 @@
     "dark": "Sombre",
     "system": "Système"
   },
+  "usage": {
+    "title": "Statistiques d’utilisation",
+    "subtitle": "Aidez-nous à voir comment l’application est utilisée",
+    "toggle": "Partager l’utilisation anonyme",
+    "what": "Activé, l’application envoie un comptage à son ouverture et les écrans que vous utilisez, avec la version de l’application, votre système et la langue de l’application. Jamais vos fichiers, textes, mots ou enregistrements."
+  },
   "data": {
     "title": "Export et import",
     "subtitle": "Sortez ou importez votre vocabulaire sur cet ordinateur",
