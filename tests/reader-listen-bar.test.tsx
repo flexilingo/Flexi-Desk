@@ -225,3 +225,19 @@ describe('the computer has no voice for the book’s language', () => {
     expect(screen.queryByText(/book\.noLanguageVoice/)).toBeNull();
   });
 });
+
+describe('the seek bar', () => {
+  it('is a slider: a click sends the reader to that sentence', () => {
+    bar();
+    const slider = screen.getByRole('slider');
+    slider.getBoundingClientRect = () =>
+      ({ left: 0, width: 420, top: 0, height: 14, right: 420, bottom: 14, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+    act(() => {
+      fireEvent.pointerDown(slider, { clientX: 210, pointerId: 1 });
+    });
+    act(() => {
+      fireEvent.pointerUp(slider, { clientX: 210, pointerId: 1 });
+    });
+    expect(useListenStore.getState().index).toBe(21);
+  });
+});

@@ -257,6 +257,7 @@
     "npSpeed": "Tempo",
     "speed": "Wiedergabegeschwindigkeit",
     "volume": "Lautstärke",
+    "seek": "Position wählen",
     "mute": "Stummschalten",
     "unmute": "Ton einschalten",
     "vocabLabel": "Vokabeln",

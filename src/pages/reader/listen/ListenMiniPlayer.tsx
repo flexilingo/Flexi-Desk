@@ -196,6 +196,8 @@ export function ListenMiniPlayer() {
         onSeek={(time) =>
           pageAudio ? act.seekTime(time) : act.jump(Math.min(count - 1, Math.floor(time)))
         }
+        // ← / → step a sentence (the bar's own keys), on the seek bar too.
+        seekStep={0}
         onVolumeChange={act.setVolume}
         onExpand={() => navigate(bookReadPath(source.bookId, page))}
         expandLabel={tDesk('book.backToBook')}
@@ -219,6 +221,13 @@ export function ListenMiniPlayer() {
                     pages: num.format(pageCount),
                   })}
                 </span>
+                {/* Played from the page's file: where in it, as any player says. */}
+                {pageAudio && (
+                  <span className="ms-2">
+                    {clockText(clock?.time ?? 0)} /{' '}
+                    {clockText(clock?.duration || pageAudio.duration)}
+                  </span>
+                )}
               </>
             ) : null}
           </span>
@@ -317,4 +326,10 @@ function ListenSentenceLine({
       </div>
     </div>
   );
+}
+
+/** Seconds as m:ss. */
+function clockText(seconds: number): string {
+  const s = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }

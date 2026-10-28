@@ -252,6 +252,7 @@
     "npSpeed": "速度",
     "speed": "播放速度",
     "volume": "音量",
+    "seek": "调整播放进度",
     "mute": "静音",
     "unmute": "取消静音",
     "vocabLabel": "词汇",

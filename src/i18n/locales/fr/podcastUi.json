@@ -271,6 +271,7 @@
     "npSpeed": "Vitesse",
     "speed": "Vitesse de lecture",
     "volume": "Volume",
+    "seek": "Se déplacer dans la lecture",
     "mute": "Couper le son",
     "unmute": "Activer le son",
     "vocabLabel": "Lexique",

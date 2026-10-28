@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
 import {
   AlertCircle,
   Captions,
@@ -70,6 +71,7 @@ export function MiniPlayerBar({
   position,
   extraControls,
   playLabel,
+  seekStep = 5,
 }: {
   title: string;
   showName?: string | null;
@@ -113,12 +115,24 @@ export function MiniPlayerBar({
   extraControls?: ReactNode;
   /** The play button's tooltip (its keyboard shortcut). */
   playLabel?: string;
+  /** How far ← / → on the focused seek bar move (seconds); 0 leaves the keys to the page's own. */
+  seekStep?: number;
 }) {
   const { t } = useTranslation('podcastUi');
   const [showVolume, setShowVolume] = useState(false);
   const [failedArtwork, setFailedArtwork] = useState<string | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  // Where the thumb is while it is being dragged (0–1); the play position otherwise.
+  const [drag, setDrag] = useState<number | null>(null);
+  const played = duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0;
+  const progress = (drag ?? played) * 100;
+  const ratioAt = (clientX: number) => {
+    const rect = progressRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0) return 0;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  };
+  const seekBy = (seconds: number) =>
+    onSeek(Math.max(0, Math.min(duration, currentTime + seconds)));
   const isMuted = volume === 0;
   const expand = expandLabel ?? t('np.expandPlayer');
 
@@ -137,19 +151,62 @@ export function MiniPlayerBar({
         dir="ltr"
         className="relative select-none border-t-2 border-t-primary-light/40 bg-muted/90 shadow-md backdrop-blur-md"
       >
+        {/* The seek bar along the top edge: click, or drag its thumb, to go anywhere. The
+            hit area is taller than the line so it is easy to catch. */}
         <div
           ref={progressRef}
-          onClick={(e) => {
-            const rect = progressRef.current?.getBoundingClientRect();
-            if (!rect || duration <= 0) return;
-            onSeek(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * duration);
+          role="slider"
+          tabIndex={duration > 0 ? 0 : -1}
+          aria-label={t('np.seek')}
+          aria-valuemin={0}
+          aria-valuemax={Math.round(duration)}
+          aria-valuenow={Math.round(drag !== null ? drag * duration : currentTime)}
+          aria-valuetext={`${formatTime(drag !== null ? drag * duration : currentTime)} / ${formatTime(duration)}`}
+          onPointerDown={(e) => {
+            if (duration <= 0) return;
+            e.currentTarget.setPointerCapture?.(e.pointerId);
+            setDrag(ratioAt(e.clientX));
           }}
-          className="group absolute inset-x-0 top-0 h-1 cursor-pointer bg-input"
+          onPointerMove={(e) => {
+            if (drag !== null) setDrag(ratioAt(e.clientX));
+          }}
+          onPointerUp={(e) => {
+            if (drag === null) return;
+            setDrag(null);
+            onSeek(ratioAt(e.clientX) * duration);
+          }}
+          onPointerCancel={() => setDrag(null)}
+          onKeyDown={(e) => {
+            if (duration <= 0 || seekStep <= 0) return;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+              e.preventDefault();
+              e.stopPropagation();
+              seekBy(e.key === 'ArrowLeft' ? -seekStep : seekStep);
+            }
+          }}
+          className="group absolute inset-x-0 -top-1.5 z-10 h-3.5 cursor-pointer touch-none outline-none"
         >
-          <div
-            className="h-full bg-gradient-to-r from-olive-600 to-olive-500 transition-[width] duration-150"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="absolute inset-x-0 top-1.5 h-1 bg-input transition-[height] duration-100 group-hover:h-1.5 group-focus-visible:h-1.5">
+            <div
+              className={cn(
+                'h-full bg-gradient-to-r from-olive-600 to-olive-500',
+                drag === null && 'transition-[width] duration-150',
+              )}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          {duration > 0 && (
+            <span
+              aria-hidden
+              className={cn(
+                'absolute top-2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-card bg-olive-600 shadow-sm transition-opacity',
+                drag !== null
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100',
+              )}
+              style={{ left: `${progress}%` }}
+            />
+          )}
         </div>
 
         <div className="flex h-16 items-center gap-3 px-5">
