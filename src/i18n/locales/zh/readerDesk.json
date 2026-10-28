@@ -119,6 +119,9 @@
     "lockedTitle": "字幕：已完整听 {{n}} / {{required}} 遍",
     "lockedHeading": "先听，再读",
     "lockedRule": "这一条录音从头到尾完整听满 {{required}} 遍（不快进）后，字幕才会打开。可以往回拖。快于 1× 不计入。",
-    "lockedProgress": "已完整听：{{n}} / {{required}}"
+    "lockedProgress": "已完整听：{{n}} / {{required}}",
+    "noLanguageVoice": "这台电脑没有{{language}}语音，所以正在用另一种语言的语音朗读。请在电脑的语音设置中添加{{language}}语音，或在设置中选择 FlexiLingo 的语音。",
+    "noLanguageVoiceSignedOut": "这台电脑没有{{language}}语音，所以正在用另一种语言的语音朗读。登录即可听到 FlexiLingo 的自然语音，或在电脑的语音设置中添加{{language}}语音。",
+    "closeNote": "关闭"
   }
 }

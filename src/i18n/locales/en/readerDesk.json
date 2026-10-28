@@ -120,6 +120,9 @@
     "lockedHeading": "Listen first, then read",
     "lockedRule_one": "Subtitles open once you have heard this track all the way through once: from start to finish, without skipping ahead. Going back is fine. Faster than 1× does not count.",
     "lockedRule_other": "Subtitles open once you have heard this track all the way through {{required}} times: from start to finish, without skipping ahead. Going back is fine. Faster than 1× does not count.",
-    "lockedProgress": "Heard in full: {{n}} of {{required}}"
+    "lockedProgress": "Heard in full: {{n}} of {{required}}",
+    "noLanguageVoice": "This computer has no {{language}} voice, so another language's voice is reading. Add a {{language}} voice in your computer's speech settings, or choose FlexiLingo's voice in Settings.",
+    "noLanguageVoiceSignedOut": "This computer has no {{language}} voice, so another language's voice is reading. Sign in to hear FlexiLingo's natural voice, or add a {{language}} voice in your computer's speech settings.",
+    "closeNote": "Close"
   }
 }

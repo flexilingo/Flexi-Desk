@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { SpeakOutcome } from '@/lib/speech';
 
-const voice = vi.hoisted(() => ({ said: [] as string[], progress: null as unknown }));
+const voice = vi.hoisted(() => ({ said: [] as string[], progress: null as unknown, speaks: true }));
 vi.mock('@/lib/speech', () => ({
   speakThrough: (text: string) => {
     voice.said.push(text);
@@ -14,6 +14,7 @@ vi.mock('@/lib/speech', () => ({
   adjustSpeech: () => {},
   getSpeechProgress: () => voice.progress,
   plannedVoice: () => 'local',
+  localVoiceSpeaks: () => voice.speaks,
   speak: async () => {},
   getSpeechState: () => ({ speaking: false, loading: false, text: null, lang: null }),
   useSpeechState: () => ({ speaking: false, loading: false, text: null, lang: null }),
@@ -39,6 +40,7 @@ const TEXT = Array.from({ length: 42 }, (_, i) => `Sentence number ${i + 1} is h
 beforeEach(() => {
   voice.said.length = 0;
   voice.progress = null;
+  voice.speaks = true;
   useListenStore.setState({
     source: {
       bookId: 'b1',
@@ -204,5 +206,22 @@ describe('the player bar reading a book', () => {
       </MemoryRouter>,
     );
     expect(screen.getByRole('button', { name: '7' })).toBeInTheDocument();
+  });
+});
+
+describe('the computer has no voice for the book’s language', () => {
+  it('says so, with how to hear it properly, until its × is pressed', () => {
+    voice.speaks = false;
+    bar();
+    const note = screen.getByText(/book\.noLanguageVoiceSignedOut/);
+    expect(note.textContent).toContain('"language":"English"');
+    expect(screen.getByText('listen.signInCta')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'book.closeNote' }));
+    expect(screen.queryByText(/book\.noLanguageVoice/)).toBeNull();
+  });
+
+  it('says nothing when the computer’s voice speaks the language', () => {
+    bar();
+    expect(screen.queryByText(/book\.noLanguageVoice/)).toBeNull();
   });
 });

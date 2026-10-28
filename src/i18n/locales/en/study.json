@@ -219,6 +219,7 @@
     "abandonConfirm": "Stop this practice session?",
     "loading": "Loading…",
     "preparingSession": "Preparing session…",
+    "preparingWithAi": "Your AI is writing this exercise · {{seconds}} s. On a slower computer this can take up to a minute.",
     "doneTitle": "Practice session done",
     "card": "Cards",
     "recallRate": "Recall rate",

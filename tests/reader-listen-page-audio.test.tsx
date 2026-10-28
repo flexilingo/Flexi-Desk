@@ -18,6 +18,7 @@ vi.mock('@/lib/speech', () => ({
   stop: () => {},
   prefetchSpeech: () => {},
   plannedVoice: () => voice.planned,
+  localVoiceSpeaks: () => true,
   adjustSpeech: () => {},
   speak: async () => {},
   getSpeechProgress: () => null,

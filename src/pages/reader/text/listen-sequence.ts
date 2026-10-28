@@ -170,15 +170,16 @@ export const LISTEN_WPM = 150;
 
 /**
  * What the listen strip promises before play: how many sentences the page has and about how
- * long it takes to hear (words ÷ 150 a minute, never less than a minute).
+ * long it takes to hear (words ÷ 150 a minute rounded up, never less than a minute).
  */
 export function listenEstimate(
   text: string,
   wpm = LISTEN_WPM,
 ): { sentences: number; minutes: number } {
-  const words = text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+  // As the website counts: every run of non-spaces, rounded up.
+  const words = text.split(/\s+/).filter(Boolean).length;
   return {
     sentences: pageSentences(text).length,
-    minutes: words === 0 ? 0 : Math.max(1, Math.round(words / wpm)),
+    minutes: words === 0 ? 0 : Math.max(1, Math.ceil(words / wpm)),
   };
 }

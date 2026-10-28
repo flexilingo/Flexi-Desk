@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Maximize2, Pause, Play, X } from 'lucide-react';
 import { usePlayerStore } from '@/pages/podcast/stores/playerStore';
 import { useVideoSurface, youtubeMedia } from './YouTubeMedia';
 import { MINI_ICON_BUTTON } from '@/pages/podcast/components/mini/MiniPlayerBar';
+import { isExamSession } from './exam-route';
 
 /**
  * The one place the YouTube picture lives, mounted by the Shell (through the mini player) so it
@@ -13,6 +14,8 @@ import { MINI_ICON_BUTTON } from '@/pages/podcast/components/mini/MiniPlayerBar'
  *  - while the watch page is open it renders an empty slot where the picture belongs, and this host
  *    lays itself exactly over that slot (behind the page, which lets clicks through the slot), and
  *  - when the page goes, the same element just changes shape into the floating mini player.
+ * During an exam the floating player pauses and hides: it would sit on the exam's Next button
+ * while the exam clock runs. It comes back, paused, when the exam is left.
  */
 export function VideoHost() {
   const { t } = useTranslation('videos');
@@ -23,6 +26,7 @@ export function VideoHost() {
   const stop = usePlayerStore((s) => s.stop);
   const slot = useVideoSurface((s) => s.slot);
   const started = useVideoSurface((s) => s.started);
+  const inExam = isExamSession(useLocation().pathname);
 
   const hostRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -87,6 +91,10 @@ export function VideoHost() {
     };
   }, []);
 
+  useEffect(() => {
+    if (inExam) youtubeMedia.pause();
+  }, [inExam]);
+
   if (!episode?.youtubeId) return null;
   const docked = slot !== null;
   const expand = () => {
@@ -105,7 +113,9 @@ export function VideoHost() {
         className={
           docked
             ? 'fixed z-40 bg-black'
-            : 'fixed bottom-4 end-4 z-[200] flex w-[400px] flex-col overflow-hidden rounded-md border border-border bg-card shadow-md'
+            : inExam
+              ? 'hidden'
+              : 'fixed bottom-4 end-4 z-[200] flex w-[400px] flex-col overflow-hidden rounded-md border border-border bg-card shadow-md'
         }
       >
         <div

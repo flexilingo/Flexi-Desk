@@ -426,6 +426,7 @@ function StudySession({ sessionId }: { sessionId: string }) {
                 <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-muted-foreground">
                   <Loader2 className="h-6 w-6 animate-spin" />
                   <span className="text-sm">{t('runner.preparingSession')}</span>
+                  {!error && <PreparingNote />}
                   {error && <span className="text-sm text-error">{resolveErr(error)}</span>}
                 </div>
               ) : (
@@ -539,5 +540,24 @@ function StudySession({ sessionId }: { sessionId: string }) {
         </Dialog>
       </div>
     </StudySpeechContext.Provider>
+  );
+}
+
+/** Shown once preparing takes a while: the learner's own AI is writing the exercise (slow on a slow computer). */
+function PreparingNote() {
+  const { t, i18n } = useTranslation('study');
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const started = Date.now();
+    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  if (seconds < 3) return null;
+  return (
+    <span className="max-w-[28em] text-center text-xs text-caption">
+      {t('runner.preparingWithAi', {
+        seconds: new Intl.NumberFormat(i18n.language).format(seconds),
+      })}
+    </span>
   );
 }

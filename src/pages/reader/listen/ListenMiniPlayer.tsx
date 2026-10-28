@@ -4,9 +4,19 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { subscriptionUrl } from '@/components/layout/sidebarConfig';
 import { FREE_LISTEN_EPISODES } from './listen-access';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, ArrowRight, Crown, Headphones, Keyboard, Repeat1 } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  Crown,
+  Headphones,
+  Info,
+  Keyboard,
+  Repeat1,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSpeechState } from '@/lib/speech';
+import { localVoiceSpeaks, plannedVoice, useSpeechState } from '@/lib/speech';
+import { useAuthStore } from '@/stores/authStore';
 import { WordDialog } from '@/components/WordDialog';
 import { SignInDialog } from '@/components/auth/SignInDialog';
 import {
@@ -53,6 +63,9 @@ export function ListenMiniPlayer() {
   const speech = useSpeechState();
   const [word, setWord] = useState<string | null>(null);
   const [signInOpen, setSignInOpen] = useState(false);
+  // The book whose «no voice for this language» note was closed (it stays until its ×).
+  const [voiceNoteClosed, setVoiceNoteClosed] = useState<string | null>(null);
+  const signedIn = useAuthStore((s) => !!s.session);
 
   useListenKeys(!!source && !word && !signInOpen, {
     playPause: act.playPause,
@@ -69,7 +82,46 @@ export function ListenMiniPlayer() {
   const num = new Intl.NumberFormat(i18n.language);
   const loading = status === 'loading' || (status === 'playing' && (speech.loading || buffering));
 
-  const line = invite ? (
+  // The computer's own voice reads this page, and it has no voice for the book's language: the
+  // system reads it with another language's voice — say so, and how to hear it properly.
+  const voiceNote =
+    !pageAudio &&
+    voiceNoteClosed !== source.bookId &&
+    plannedVoice(source.language) === 'local' &&
+    !localVoiceSpeaks(source.language);
+  const languageName =
+    new Intl.DisplayNames([i18n.language], { type: 'language' }).of(source.language) ??
+    source.language;
+  const note = voiceNote ? (
+    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-t border-border bg-card/95 px-5 py-2 text-[13px] text-muted-foreground backdrop-blur">
+      <Info className="h-4 w-4 shrink-0 text-primary" />
+      <span>
+        {tDesk(signedIn ? 'book.noLanguageVoice' : 'book.noLanguageVoiceSignedOut', {
+          language: languageName,
+        })}
+      </span>
+      {!signedIn && (
+        <button
+          type="button"
+          onClick={() => setSignInOpen(true)}
+          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          {t('listen.signInCta')}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => setVoiceNoteClosed(source.bookId)}
+        aria-label={tDesk('book.closeNote')}
+        title={tDesk('book.closeNote')}
+        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  ) : null;
+
+  const main = invite ? (
     <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 border-t border-border bg-card/95 px-5 py-2.5 backdrop-blur">
       <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
         {invite === 'pro' ? (
@@ -115,6 +167,18 @@ export function ListenMiniPlayer() {
       }}
     />
   ) : null;
+  // An invitation or a problem says what matters most on its own.
+  const line =
+    note && main && !invite && !problem ? (
+      <>
+        {note}
+        {main}
+      </>
+    ) : invite || problem ? (
+      main
+    ) : (
+      (note ?? main)
+    );
 
   return (
     <>

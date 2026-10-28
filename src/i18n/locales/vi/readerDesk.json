@@ -119,6 +119,9 @@
     "lockedTitle": "Phụ đề: đã nghe trọn {{n}}/{{required}} lần",
     "lockedHeading": "Nghe trước, đọc sau",
     "lockedRule_other": "Phụ đề mở khi bạn đã nghe trọn bản ghi này {{required}} lần: từ đầu đến cuối, không tua qua. Tua lại thì không sao. Tốc độ nhanh hơn 1× không được tính.",
-    "lockedProgress": "Đã nghe trọn: {{n}}/{{required}} lần"
+    "lockedProgress": "Đã nghe trọn: {{n}}/{{required}} lần",
+    "noLanguageVoice": "Máy tính này không có giọng {{language}}, nên một giọng của ngôn ngữ khác đang đọc. Hãy thêm giọng {{language}} trong cài đặt giọng nói của máy tính, hoặc chọn giọng FlexiLingo trong Cài đặt.",
+    "noLanguageVoiceSignedOut": "Máy tính này không có giọng {{language}}, nên một giọng của ngôn ngữ khác đang đọc. Đăng nhập để nghe giọng tự nhiên của FlexiLingo, hoặc thêm giọng {{language}} trong cài đặt giọng nói của máy tính.",
+    "closeNote": "Đóng"
   }
 }

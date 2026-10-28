@@ -219,6 +219,7 @@
     "abandonConfirm": "停止此练习?",
     "loading": "加载中…",
     "preparingSession": "准备会话中…",
+    "preparingWithAi": "你的 AI 正在编写这道练习 · {{seconds}} 秒。在较慢的电脑上可能需要一分钟左右。",
     "doneTitle": "练习会话结束",
     "card": "卡片",
     "recallRate": "回忆率",

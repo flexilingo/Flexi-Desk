@@ -219,6 +219,7 @@
     "abandonConfirm": "Dừng buổi luyện tập này?",
     "loading": "Đang tải…",
     "preparingSession": "Đang chuẩn bị buổi học…",
+    "preparingWithAi": "AI của bạn đang soạn bài tập này · {{seconds}} giây. Trên máy tính chậm hơn, việc này có thể mất đến một phút.",
     "doneTitle": "Buổi luyện tập hoàn thành",
     "card": "thẻ",
     "recallRate": "Tỷ lệ nhớ lại",

@@ -233,6 +233,15 @@ function currentEnv(lang: string | undefined): SpeechEnv {
 }
 
 /**
+ * Whether the computer's own voice speaks this language. True while its voices are still loading,
+ * and where only the system speech is there (it picks its own voice).
+ */
+export function localVoiceSpeaks(lang?: string): boolean {
+  const env = currentEnv(lang);
+  return !env.deviceAvailable || env.deviceHasVoice;
+}
+
+/**
  * The voice that will speak a text in this language right now: FlexiLingo's cloud voice, the
  * computer's own (the device's voice or the system speech), or none at all.
  */

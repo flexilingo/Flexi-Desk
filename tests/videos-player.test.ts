@@ -204,3 +204,16 @@ describe('the shared player store on a video', () => {
     expect(VIDEO_PLAYER_CAPABILITIES).toEqual({ transcribe: false, sync: false, feedback: false, download: false });
   });
 });
+
+describe('the floating video during an exam', () => {
+  it('is an exam session on the CELPIP and exam session routes only', async () => {
+    const { isExamSession } = await import('@/pages/videos/player/exam-route');
+    expect(isExamSession('/celpip/session/abc')).toBe(true);
+    expect(isExamSession('/exam/tcf/session/abc')).toBe(true);
+    expect(isExamSession('/exam/tcf_quebec/session/abc')).toBe(true);
+    expect(isExamSession('/celpip')).toBe(false);
+    expect(isExamSession('/celpip/results/abc')).toBe(false);
+    expect(isExamSession('/exam/tcf')).toBe(false);
+    expect(isExamSession('/videos/watch/1')).toBe(false);
+  });
+});

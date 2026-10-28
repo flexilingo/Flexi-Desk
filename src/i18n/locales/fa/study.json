@@ -219,6 +219,7 @@
     "abandonConfirm": "این جلسه‌ی Practice رو متوقف می‌کنی؟",
     "loading": "در حال بارگذاری…",
     "preparingSession": "آماده‌سازی جلسه…",
+    "preparingWithAi": "هوش مصنوعی‌ات دارد این تمرین را می‌نویسد · {{seconds}} ثانیه. روی رایانه‌ی کندتر ممکن است تا یک دقیقه طول بکشد.",
     "doneTitle": "جلسه‌ی Practice تمام شد",
     "card": "کارت",
     "recallRate": "نرخ یادآوری",

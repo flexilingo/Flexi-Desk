@@ -79,10 +79,11 @@ describe('what the listen strip promises', () => {
     expect(listenEstimate('')).toEqual({ sentences: 0, minutes: 0 });
   });
 
-  it('counts words, not dashes or stray punctuation', () => {
-    const words = Array.from({ length: 225 }, () => 'word').join(' — ');
+  it('counts as the website does — every run of non-spaces — and rounds up', () => {
+    const words = Array.from({ length: 151 }, () => 'word').join(' ');
     expect(listenEstimate(`${words}.`).minutes).toBe(2);
     expect(listenEstimate(`${words}.`, 75).minutes).toBe(3);
+    expect(listenEstimate('Bonjour — dit-il.').minutes).toBe(1);
   });
 });
 

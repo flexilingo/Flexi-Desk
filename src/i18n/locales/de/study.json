@@ -219,6 +219,7 @@
     "abandonConfirm": "Diese Übungssitzung beenden?",
     "loading": "Wird geladen…",
     "preparingSession": "Sitzung wird vorbereitet…",
+    "preparingWithAi": "Deine KI schreibt diese Übung · {{seconds}} s. Auf einem langsameren Computer kann das bis zu einer Minute dauern.",
     "doneTitle": "Übungssitzung abgeschlossen",
     "card": "Karten",
     "recallRate": "Abrufquote",

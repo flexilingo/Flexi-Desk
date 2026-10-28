@@ -120,6 +120,9 @@
     "lockedHeading": "Erst hören, dann lesen",
     "lockedRule_one": "Die Untertitel öffnen sich, wenn du diesen Track einmal vollständig gehört hast: von Anfang bis Ende, ohne vorzuspulen. Zurückspulen ist erlaubt. Schneller als 1× zählt nicht.",
     "lockedRule_other": "Die Untertitel öffnen sich, wenn du diesen Track {{required}}-mal vollständig gehört hast: von Anfang bis Ende, ohne vorzuspulen. Zurückspulen ist erlaubt. Schneller als 1× zählt nicht.",
-    "lockedProgress": "Vollständig gehört: {{n}} von {{required}}"
+    "lockedProgress": "Vollständig gehört: {{n}} von {{required}}",
+    "noLanguageVoice": "Dieser Computer hat keine Stimme für {{language}}, deshalb liest eine Stimme einer anderen Sprache. Füge in den Spracheinstellungen des Computers eine Stimme für {{language}} hinzu oder wähle in den Einstellungen die FlexiLingo-Stimme.",
+    "noLanguageVoiceSignedOut": "Dieser Computer hat keine Stimme für {{language}}, deshalb liest eine Stimme einer anderen Sprache. Melde dich an, um die natürliche FlexiLingo-Stimme zu hören, oder füge in den Spracheinstellungen des Computers eine Stimme für {{language}} hinzu.",
+    "closeNote": "Schließen"
   }
 }

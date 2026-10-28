@@ -219,6 +219,7 @@
     "abandonConfirm": "Arrêter cette session ?",
     "loading": "Chargement…",
     "preparingSession": "Préparation de la session…",
+    "preparingWithAi": "Votre IA rédige cet exercice · {{seconds}} s. Sur un ordinateur plus lent, cela peut prendre jusqu'à une minute.",
     "doneTitle": "Session terminée",
     "card": "Cartes",
     "recallRate": "Taux de rappel",

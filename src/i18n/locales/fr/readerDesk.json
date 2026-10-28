@@ -120,6 +120,9 @@
     "lockedHeading": "Écoutez d’abord, lisez ensuite",
     "lockedRule_one": "Les sous-titres s’ouvrent quand vous avez écouté cette piste en entier une fois, du début à la fin, sans avancer. Revenir en arrière est permis. Plus vite que 1× ne compte pas.",
     "lockedRule_other": "Les sous-titres s’ouvrent quand vous avez écouté cette piste en entier {{required}} fois, du début à la fin, sans avancer. Revenir en arrière est permis. Plus vite que 1× ne compte pas.",
-    "lockedProgress": "Écoutes complètes : {{n}} sur {{required}}"
+    "lockedProgress": "Écoutes complètes : {{n}} sur {{required}}",
+    "noLanguageVoice": "Cet ordinateur n'a pas de voix en {{language}} : une voix d'une autre langue lit le texte. Ajoutez une voix en {{language}} dans les réglages de synthèse vocale de l'ordinateur, ou choisissez la voix FlexiLingo dans les Réglages.",
+    "noLanguageVoiceSignedOut": "Cet ordinateur n'a pas de voix en {{language}} : une voix d'une autre langue lit le texte. Connectez-vous pour entendre la voix naturelle de FlexiLingo, ou ajoutez une voix en {{language}} dans les réglages de synthèse vocale de l'ordinateur.",
+    "closeNote": "Fermer"
   }
 }
