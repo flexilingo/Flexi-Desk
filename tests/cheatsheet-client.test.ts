@@ -264,8 +264,8 @@ describe('vocabulary → deck cards', () => {
     const cards = vocabCards({ body: page } as never);
     expect(cards.map((c) => c.front)).toEqual(['la famille', 'le père']);
     expect(cards[0]).toMatchObject({ back: 'family', notes: '/fa.mij/' });
-    const fa = '| فرانسه | تلفظ | فارسی |\n|---|---|---|\n| `le père` | /pɛʁ/ | پدر |\n';
-    expect(extractVocab(fa)[0].cards[0].back).toBe('پدر');
+    const fa = '| الفرنسية | النطق | العربية |\n|---|---|---|\n| `le père` | /pɛʁ/ | أب |\n';
+    expect(extractVocab(fa)[0].cards[0].back).toBe('أب');
   });
   it('ignores tables it does not understand', () => {
     expect(extractVocab('| a | b |\n|---|---|\n| x | y |\n')).toEqual([]);

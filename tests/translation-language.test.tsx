@@ -137,7 +137,7 @@ describe('TranslationLanguagePicker', () => {
     render(<TranslationLanguagePicker />);
     fireEvent.click(screen.getByRole('button'));
 
-    for (const native of ['English', 'العربية', 'Français', 'हिन्दी', '中文', 'Español', 'Deutsch', 'Русский', 'Türkçe', 'فارسی']) {
+    for (const native of ['English', 'العربية', 'Français', 'हिन्दी', '中文', 'Español', 'Deutsch', 'Русский', 'Türkçe']) {
       expect(screen.getByText(native)).toBeTruthy();
     }
     expect(screen.getByText('English').closest('button')).toHaveAttribute('aria-pressed', 'true');
@@ -148,11 +148,11 @@ describe('TranslationLanguagePicker', () => {
     fireEvent.click(screen.getByRole('button'));
 
     await act(async () => {
-      fireEvent.click(screen.getByText('فارسی'));
+      fireEvent.click(screen.getByText('العربية'));
     });
 
-    expect(useLanguageStore.getState().nativeLang).toBe('fa');
-    expect(setSetting).toHaveBeenCalledWith('native_language', 'fa');
+    expect(useLanguageStore.getState().nativeLang).toBe('ar');
+    expect(setSetting).toHaveBeenCalledWith('native_language', 'ar');
   });
 
   it('shows no flag emojis — desk uses the language code instead', () => {

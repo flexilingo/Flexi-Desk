@@ -59,7 +59,7 @@ describe('dictation grading (LCS)', () => {
   });
   it('grades accented and non-Latin text, not only ASCII', () => {
     expect(diffWords("C'était très bien", "c'était très bien").accuracy).toBe(1);
-    expect(diffWords('سلام دنیا', 'سلام').accuracy).toBe(0.5);
+    expect(diffWords('مرحبا بالعالم', 'مرحبا').accuracy).toBe(0.5);
   });
 });
 

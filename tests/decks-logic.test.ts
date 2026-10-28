@@ -149,10 +149,10 @@ describe('cards', () => {
   it('hides the meaning-language fields of a foreign deck', () => {
     const notes = {
       ipa: '/bɔ̃ʒuʁ/',
-      definition: 'تعریف فارسی',
-      translation: 'سلام',
+      definition: 'تعريف عربي',
+      translation: 'مرحبا',
       cefr_level: 'A1',
-      examples: [{ source: 'Bonjour tout le monde', en: 'Hello everyone' }, { source: 'سلام', en: 'x' }],
+      examples: [{ source: 'Bonjour tout le monde', en: 'Hello everyone' }, { source: 'مرحبا', en: 'x' }],
     };
     const out = withoutMeaningLanguage(notes, 'bonjour');
     expect(out.definition).toBeUndefined();
