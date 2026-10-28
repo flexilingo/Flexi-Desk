@@ -22,7 +22,8 @@ import { useWordFollow } from './use-word-follow';
 
 /**
  * The player bar while a library book is read aloud — the same bar as a podcast's, in its
- * «sentence» mode: previous / next sentence, where it is («7 of 42 · page 1 of 11»), speed,
+ * «sentence» mode: previous / next sentence, where it is («7 of 42 · page 1 of 11»; the line is
+ * the narration file's real time when the page has one, else the sentence count), speed,
  * repeat-this-sentence, the sentence being read above it (its words open the word dialog) —
  * left out while the book's own page is open, where the text is right there — and the way
  * back to the book. Space, ← → and R work from anywhere but a text box or a dialog.
@@ -42,6 +43,10 @@ export function ListenMiniPlayer() {
   const repeat = useListenStore((s) => s.repeat);
   const invite = useListenStore((s) => s.invite);
   const problem = useListenStore((s) => s.problem);
+  // A page played from its narration file: the line is the file's real time, not the sentence count.
+  const pageAudio = useListenStore((s) => s.pageAudio);
+  const clock = useListenStore((s) => s.clock);
+  const buffering = useListenStore((s) => s.buffering);
   // The book's own page is open: its text is right there, so the bar leaves out the sentence line.
   const readerHere = useListenStore((s) => !!s.source && s.readerOpen === s.source.bookId);
   const act = useListenStore.getState();
@@ -62,7 +67,7 @@ export function ListenMiniPlayer() {
   const sentence = sentences[index];
   const count = sentences.length;
   const num = new Intl.NumberFormat(i18n.language);
-  const loading = status === 'loading' || (status === 'playing' && speech.loading);
+  const loading = status === 'loading' || (status === 'playing' && (speech.loading || buffering));
 
   const line = invite ? (
     <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 border-t border-border bg-card/95 px-5 py-2.5 backdrop-blur">
@@ -119,12 +124,14 @@ export function ListenMiniPlayer() {
         image={source.coverPath ? coverUrl(source.coverPath) : null}
         isPlaying={status !== 'paused'}
         isLoading={loading}
-        currentTime={count ? index + 1 : 0}
-        duration={count}
+        currentTime={pageAudio ? (clock?.time ?? 0) : count ? index + 1 : 0}
+        duration={pageAudio ? clock?.duration || pageAudio.duration : count}
         volume={volume}
         onPlayPause={act.playPause}
         onSkip={(s) => (s < 0 ? act.prev() : act.next())}
-        onSeek={(time) => act.jump(Math.min(count - 1, Math.floor(time)))}
+        onSeek={(time) =>
+          pageAudio ? act.seekTime(time) : act.jump(Math.min(count - 1, Math.floor(time)))
+        }
         onVolumeChange={act.setVolume}
         onExpand={() => navigate(bookReadPath(source.bookId, page))}
         expandLabel={tDesk('book.backToBook')}

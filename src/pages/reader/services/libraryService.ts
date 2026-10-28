@@ -148,7 +148,12 @@ export const setLibraryPosition = (body: { book_id: string; page: number; scroll
 /** A book's meta, its first page and the other episodes of its series (`library?action=book`, public). */
 export interface LibraryBookDetail {
   book: LibraryBook;
-  first_page: { page_number: number; chapter_title: string | null; content: string } | null;
+  first_page: {
+    page_number: number;
+    chapter_title: string | null;
+    content: string;
+    audio?: LibraryPageAudio | null;
+  } | null;
   series: {
     id: string;
     slug: string;
@@ -161,6 +166,23 @@ export interface LibraryBookDetail {
   }[];
   /** Season titles; present only on a backend that knows series seasons. */
   series_meta?: { title: string; seasons: { number: number; title: string | null }[] } | null;
+}
+
+/** One word of a page's pre-generated narration, when it is said (seconds into the file). */
+export interface LibraryWordTiming {
+  word: string;
+  start_s: number;
+  end_s: number;
+}
+
+/**
+ * A page's pre-generated, multi-voice narration (`library_page_audio`) — most pages have none.
+ * `word_timing` is flat, in the page's reading order: one entry per word `tokenize` finds.
+ */
+export interface LibraryPageAudio {
+  audio_url: string;
+  duration_s: number;
+  word_timing: LibraryWordTiming[];
 }
 
 /** One page of a book (`library?action=page` / `public-page`). */
@@ -177,6 +199,8 @@ export interface LibraryPage {
   truncated: boolean;
   has_prev: boolean;
   has_next: boolean;
+  /** The page's pre-generated narration; null (or absent, on an older backend) for none. */
+  audio?: LibraryPageAudio | null;
 }
 
 export const getLibraryBook = async (bookId: string) => {

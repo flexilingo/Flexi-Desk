@@ -88,7 +88,13 @@ export function useReaderListen({
     if (!turned || !active || !r) return;
     const player = useListenStore.getState();
     if (player.page !== p.page) {
-      player.follow({ page: p.page, text: p.text, hasNext: p.hasNext, pageCount: p.total });
+      player.follow({
+        page: p.page,
+        text: p.text,
+        hasNext: p.hasNext,
+        pageCount: p.total,
+        audio: p.audio,
+      });
     }
   }, [pager.page, active]);
 
@@ -101,7 +107,14 @@ export function useReaderListen({
     if (!s) return;
     const store = useListenStore.getState();
     if (at === p.page && r) {
-      store.start(s, { page: at, sentence, text: p.text, hasNext: p.hasNext, pageCount: p.total });
+      store.start(s, {
+        page: at,
+        sentence,
+        text: p.text,
+        hasNext: p.hasNext,
+        pageCount: p.total,
+        audio: p.audio,
+      });
     } else {
       store.start(s, { page: at, sentence });
     }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import type { LibraryPageAudio } from '../services/libraryService';
 
 /** What the text view needs of one page, whichever source it came from. */
 export interface PagerPage {
@@ -12,6 +13,8 @@ export interface PagerPage {
   truncated: boolean;
   has_prev: boolean;
   has_next: boolean;
+  /** A library page's pre-generated narration, if it has one. */
+  audio?: LibraryPageAudio | null;
 }
 
 export interface ReaderPagerOptions {
@@ -208,6 +211,7 @@ export function useReaderPager({
       chapterTitle: data?.chapter_title ?? null,
       hasPrev: data?.has_prev ?? false,
       hasNext: data?.has_next ?? false,
+      audio: data?.audio ?? null,
       isLoading: isReady && !data && !error,
       isFetching: fetching,
       error,
