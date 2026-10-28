@@ -1,5 +1,5 @@
 // GENERATED from flexi-lingo-core/functions/writing-practice/services/rubrics.ts
-// by .fx-wt/desk-port/writing/gen-rubrics.mjs - edit the server file, then regenerate.
+// from the server's writing rubrics; regenerate rather than editing by hand.
 
 use super::types::{Criterion, Rubric};
 

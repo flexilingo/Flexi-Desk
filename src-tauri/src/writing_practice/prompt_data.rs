@@ -1,5 +1,5 @@
 // GENERATED from flexi-lingo-core/functions/writing-practice/services/prompt-generator.ts
-// by .fx-wt/desk-port/writing/gen-rubrics.mjs - edit the server file, then regenerate.
+// from the server's writing rubrics; regenerate rather than editing by hand.
 
 pub static EXAM_INSTRUCTIONS: &[(&str, &str)] = &[
     ("ielts_task1", "Generate an IELTS Academic Writing Task 1 prompt. Include a description of a chart, graph, table, map, or diagram that the student must describe. Provide a clear data description in supplementary_data with key data points the student should reference."),
