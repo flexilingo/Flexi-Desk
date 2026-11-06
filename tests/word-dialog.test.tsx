@@ -137,22 +137,22 @@ describe('word dialog: tabs', () => {
     setup();
     open();
     await screen.findByText('house');
-    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Translate', 'AI']);
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Translate', 'In context']);
     cleanup();
     open({ word: 'city', sourceLang: 'en' });
     await waitFor(() => expect(screen.getAllByRole('tab')).toHaveLength(4));
-    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Translate', 'AI', 'Dictionary', 'M-W']);
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Translate', 'In context', 'Dictionary', 'M-W']);
   });
 
   it('remembers the tab the reader picked for the next word', async () => {
     setup();
     open();
     await screen.findByText('house');
-    fireEvent.click(screen.getByRole('tab', { name: 'AI' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'In context' }));
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('ai_word_analysis', expect.anything()));
     cleanup();
     open({ word: 'chat' });
-    await waitFor(() => expect(screen.getByRole('tab', { name: 'AI' })).toHaveAttribute('aria-selected', 'true'));
+    await waitFor(() => expect(screen.getByRole('tab', { name: 'In context' })).toHaveAttribute('aria-selected', 'true'));
   });
 
   it('AI: uses the user\'s own AI by default, never the cloud', async () => {

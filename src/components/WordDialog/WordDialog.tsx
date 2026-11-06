@@ -505,7 +505,7 @@ function WordDialogInner({
     id === 'google'
       ? t('tabTranslate')
       : id === 'ai'
-        ? 'AI'
+        ? t('tabInContext')
         : id === 'dictionary'
           ? t('tabDictionary')
           : 'M-W';
